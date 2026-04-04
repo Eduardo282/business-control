@@ -1,0 +1,280 @@
+scalar DateTime
+
+type Role {
+  id: ID!
+  name: String!
+}
+
+type User {
+  id: ID!
+  full_name: String!
+
+  email: String!
+  telefono: String
+  role: Role
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+type Client {
+  id: ID!
+  business_name: String!
+  rfc: String
+  email1: String
+  email2: String
+  celular: String
+  telefono: String
+  codigo_postal: String
+  ciudad: String
+  address: String
+  contacts: [Contact!]!
+}
+
+type Contact {
+  id: ID!
+  client_id: ID!
+  full_name: String!
+  email: String
+  phone: String
+  position_title: String
+  has_portal_access: Boolean
+  is_active: Boolean
+  active_services: [ContactProduct!]
+}
+
+type ContactProduct {
+  id: ID!
+  contact_id: ID!
+  contact: Contact!
+  client: Client
+  product: Product!
+  license_key: String
+  start_date: String!
+  expiration_date: String!
+  status: String!
+}
+
+type LoginContactPayload {
+  token: String!
+  contact: Contact!
+}
+
+input RegisterUserInput {
+  full_name: String!
+  email: String!
+  telefono: String!
+  password: String!
+  role_name: String! # ADMIN | VENTAS | SOPORTE
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+  full_name: String
+}
+
+input CreateClientInput {
+  business_name: String!
+  rfc: String
+  email1: String
+  email2: String
+  celular: String
+  telefono: String
+  codigo_postal: String
+  ciudad: String
+}
+
+input CreateContactInput {
+  client_id: ID!
+  full_name: String!
+  email: String
+  phone: String
+  position_title: String
+}
+
+input UpdateClientInput {
+  business_name: String
+  rfc: String
+  email1: String
+  email2: String
+  celular: String
+  telefono: String
+  codigo_postal: String
+  ciudad: String
+}
+
+input UpdateContactInput {
+  full_name: String
+  email: String
+  phone: String
+  position_title: String
+  has_portal_access: Boolean
+  portal_password: String
+}
+
+type SendEmailResponse {
+  success: Boolean!
+  message: String
+}
+
+type Query {
+  me: User
+  roles: [Role!]!
+
+  clients: [Client!]!
+  client(id: ID!): Client
+  searchClients(q: String!): [Client!]!
+  contactsByClient(client_id: ID!): [Contact!]!
+  contact(id: ID!): Contact
+
+  products(client_id: ID): [Product!]!
+  portalProducts: [PortalProduct!]!
+  product(id: ID!): Product
+  searchProducts(q: String!, client_id: ID): [Product!]!
+
+  policies: [ContactProduct!]!
+
+  quotes: [Quote!]!
+  quote(id: ID!): Quote
+  quotesByClient(client_id: ID!): [Quote!]!
+  pendingQuoteRequestsCount: Int!
+  unreadQuoteRequests: [Quote!]!
+}
+
+input CreateContactProductInput {
+  contact_id: ID!
+  product_id: ID!
+  license_key: String
+  start_date: String!
+  expiration_date: String!
+  status: String
+}
+
+type Mutation {
+  createContactProduct(input: CreateContactProductInput!): ContactProduct!
+  deleteContactProduct(id: ID!): Boolean!
+
+  sendQuoteEmail(
+    quote_id: ID!
+    contact_email: String!
+    message: String!
+  ): SendEmailResponse!
+  toggleQuotePortal(id: ID!, access: Boolean!, contact_id: ID): Boolean!
+  loginContact(email: String!, password: String!): LoginContactPayload!
+  registerUser(input: RegisterUserInput!): User!
+  login(input: LoginInput!): AuthPayload!
+
+  createClient(input: CreateClientInput!): Client!
+  bulkCreateClients(inputs: [CreateClientInput!]!): [Client!]!
+  updateClient(id: ID!, input: UpdateClientInput!): Client!
+  deleteClient(id: ID!): Boolean!
+
+  createContact(input: CreateContactInput!): Contact!
+  bulkCreateContacts(inputs: [CreateContactInput!]!): [Contact!]!
+  updateContact(id: ID!, input: UpdateContactInput!): Contact!
+  deleteContact(id: ID!): Boolean!
+
+  createProduct(input: CreateProductInput!): Product!
+  updateProduct(id: ID!, input: UpdateProductInput!): Product!
+  deleteProduct(id: ID!): Boolean!
+  updateProductPrice(id: ID!, price: Float!): Product!
+  clearProductPriceHistory(product_id: ID!): Boolean!
+
+  createQuote(input: CreateQuoteInput!): Quote!
+  resolveQuoteRequest(requestId: ID!, input: CreateQuoteInput!): Quote!
+  deleteQuote(id: ID!): Boolean!
+  markQuoteNotificationRead(id: ID!): Boolean!
+
+  createRole(name: String!): Role!
+  deleteRole(id: ID!): Boolean!
+
+  requestQuote(input: RequestQuoteInput!): Quote!
+}
+
+type PortalProduct {
+  id: ID!
+  name: String!
+  category: String!
+  description: String
+}
+
+input RequestQuoteInput {
+  items: [QuoteItemInput!]!
+}
+
+type Product {
+  id: ID!
+  client_id: ID
+  client: Client
+  name: String!
+  category: String!
+  current_price: Float!
+  users_count: Int
+  description: String
+  price_history: [PriceHistory!]!
+}
+
+type PriceHistory {
+  id: ID!
+  price: Float!
+  changed_at: DateTime!
+}
+
+input CreateProductInput {
+  name: String!
+  category: String!
+  price: Float!
+  users_count: Int
+  description: String
+  client_id: ID
+}
+
+input UpdateProductInput {
+  name: String
+  category: String
+  users_count: Int
+  description: String
+}
+
+type Quote {
+  id: ID!
+  folio: String
+  client: Client
+  user: User
+  contact: Contact
+  created_at: DateTime!
+  total: Float!
+  status: String!
+  notes: String
+  is_sent_to_client_portal: Boolean
+  notification_read: Boolean
+  items: [QuoteItem!]!
+}
+
+type QuoteItem {
+  id: ID!
+  product: Product
+  quantity: Int!
+  base_unit_price: Float
+  unit_price: Float!
+  discount: Float
+  total: Float!
+}
+
+input CreateQuoteInput {
+  client_id: ID!
+  contact_id: ID
+  items: [QuoteItemInput!]!
+  notes: String
+  folio: String
+}
+
+input QuoteItemInput {
+  product_id: ID!
+  quantity: Int!
+  unit_price: Float
+  discount: Float
+}

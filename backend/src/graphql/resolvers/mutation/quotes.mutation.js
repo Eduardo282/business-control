@@ -1,0 +1,57 @@
+import { requireRoles } from "../../../middlewares/role.middleware.js";
+import { createQuoteAction } from "../../actions/quote_actions/createQuote.action.js";
+import { deleteQuoteAction } from "../../actions/quote_actions/deleteQuote.action.js";
+import { sendQuoteEmailAction } from "../../actions/quote_actions/sendQuoteEmail.action.js";
+import { toggleQuotePortalAction } from "../../actions/quote_actions/toggleQuotePortal.action.js";
+import { requestQuoteAction } from "../../actions/quote_actions/requestQuote.action.js";
+import { markQuoteNotificationReadAction } from "../../actions/quote_actions/markQuoteNotificationRead.action.js";
+import { resolveQuoteRequestAction } from "../../actions/quote_actions/resolveQuoteRequest.action.js";
+
+export const createQuote = async (_parent, { input }, ctx) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  return createQuoteAction(input, ctx.user);
+};
+
+export const requestQuote = async (_parent, { input }, ctx) => {
+  if (ctx.user?.role !== "CONTACT_PORTAL") {
+    throw new Error("Access denied");
+  }
+  return requestQuoteAction(input, ctx.user);
+};
+
+export const deleteQuote = async (_parent, { id }, ctx) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]); // Solo admin o ventas pueden borrar
+  return deleteQuoteAction(id);
+};
+
+export const sendQuoteEmail = async (
+  _parent,
+  { quote_id, contact_email, message },
+  ctx,
+) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  return sendQuoteEmailAction({ quote_id, contact_email, message });
+};
+
+export const toggleQuotePortal = async (
+  _parent,
+  { id, access, contact_id },
+  ctx,
+) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  return toggleQuotePortalAction(id, access, contact_id);
+};
+
+export const markQuoteNotificationRead = async (_parent, { id }, ctx) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  return markQuoteNotificationReadAction(id);
+};
+
+export const resolveQuoteRequest = async (
+  _parent,
+  { requestId, input },
+  ctx,
+) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  return resolveQuoteRequestAction(requestId, input, ctx.user);
+};

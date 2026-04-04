@@ -1,0 +1,1053 @@
+import { useEffect, useMemo, useState, useContext, Fragment } from "react";
+import { createPortal } from "react-dom";
+import { axiosClient } from "../../actionsAPI/axiosClient";
+import { deleteContactProductApi } from "../../actionsAPI/contacts.api";
+import { AuthContext } from "../../context/AuthContext";
+import Swal from "sweetalert2";
+
+const PAGE_SIZE = 10;
+
+function inferPolicyType(product) {
+  const source = `${product?.name || ""} ${product?.category || ""}`
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+  return source.includes("poliza") ? "POLICY" : "SERVICE";
+}
+
+function getPolicyStatusLabel(status) {
+  const normalized = String(status || "")
+    .trim()
+    .toUpperCase();
+
+  if (normalized === "ACTIVE") return "ACTIVO";
+  if (normalized === "EXPIRING_SOON") return "Por Vencer";
+  if (normalized === "CANCELLED") return "Inactivo";
+  return "Vencido";
+}
+
+function getPolicyStatusClass(status) {
+  const normalized = String(status || "")
+    .trim()
+    .toUpperCase();
+
+  if (normalized === "ACTIVE") {
+    return "text-emerald-700";
+  }
+  if (normalized === "EXPIRING_SOON") {
+    return "text-amber-600";
+  }
+  if (normalized === "CANCELLED") {
+    return "text-slate-600";
+  }
+  return "text-red-600";
+}
+
+function LicenseTable({ licenseKeys = [] }) {
+  const [page, setPage] = useState(0);
+  const totalPages = Math.ceil(licenseKeys.length / PAGE_SIZE);
+  const slice = licenseKeys.slice(
+    page * PAGE_SIZE,
+    page * PAGE_SIZE + PAGE_SIZE,
+  );
+
+  return (
+    <div className="mt-2">
+      {/* Mini tabla */}
+      <table className="w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
+        <thead>
+          <tr className="bg-gray-100 text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-2 text-left w-12">#</th>
+            <th className="px-3 py-2 text-left">Folio</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100 bg-white">
+          {slice.map((lk, i) => (
+            <tr key={i} className="hover:bg-gray-50">
+              <td className="px-3 py-1.5 text-gray-400 font-mono">
+                {page * PAGE_SIZE + i + 1}
+              </td>
+              <td className="px-3 py-1.5 font-mono text-gray-700">{lk}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-[11px] text-gray-400">
+            Página {page + 1} de {totalPages} &middot; {licenseKeys.length}{" "}
+            folios
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage(0)}
+              disabled={page === 0}
+              className="px-2 py-1 text-[11px] rounded border text-black border-gray-200 disabled:opacity-40 hover:bg-gray-100">
+              &laquo;
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="px-2 py-1 text-[11px] rounded border text-black border-gray-200 disabled:opacity-40 hover:bg-gray-100">
+              Anterior
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page === totalPages - 1}
+              className="px-2 py-1 text-[11px] rounded border text-black border-gray-200 disabled:opacity-40 hover:bg-gray-100">
+              Siguiente
+            </button>
+            <button
+              onClick={() => setPage(totalPages - 1)}
+              disabled={page === totalPages - 1}
+              className="px-2 py-1 text-[11px] rounded border text-black border-gray-200 disabled:opacity-40 hover:bg-gray-100">
+              &raquo;
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+import {
+  FileSpreadsheet,
+  FileText,
+  Trash2,
+  Search,
+  ChevronUp,
+  ChevronDown,
+  ChevronRight,
+  Lightbulb,
+  SlidersHorizontal,
+  X,
+} from "@icons";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+} from "@tanstack/react-table";
+
+function formatPolicyDate(value) {
+  if (!value) return "—";
+  return new Date(value).toLocaleDateString("es-MX");
+}
+
+function listAllPoliciesApi() {
+  return axiosClient
+    .post("", {
+      query: `
+      query {
+        policies {
+          id
+          license_key
+          start_date
+          expiration_date
+          status
+          product {
+            name
+            category
+          }
+          client {
+            business_name
+          }
+          contact {
+            full_name
+            email
+          }
+        }
+      }
+    `,
+    })
+    .then((res) => {
+      if (res.data.errors) throw new Error(res.data.errors[0].message);
+      return res.data.data.policies;
+    });
+}
+
+export default function Policies() {
+  const { user } = useContext(AuthContext);
+  const [policies, setPolicies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [q, setQ] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [activeFilterPickerField, setActiveFilterPickerField] = useState(null);
+  const [filterPickerSearch, setFilterPickerSearch] = useState("");
+  const [filters, setFilters] = useState({
+    product: "",
+    client: "",
+    contact: "",
+    folio: "",
+    vigencia: "",
+    status: "",
+  });
+  const [sorting, setSorting] = useState([]);
+  const [expanded, setExpanded] = useState({});
+
+  const clearFilters = () => {
+    setQ("");
+    setFilters({
+      product: "",
+      client: "",
+      contact: "",
+      folio: "",
+      vigencia: "",
+      status: "",
+    });
+    setActiveFilterPickerField(null);
+    setFilterPickerSearch("");
+  };
+
+  const activeFilterCount =
+    Object.values(filters).filter((v) => v.trim() !== "").length +
+    (q.trim() ? 1 : 0);
+
+  const normalizeSearchText = (value) => {
+    return (value || "")
+      .toString()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  };
+
+  const openFilterPicker = (fieldName) => {
+    setActiveFilterPickerField(fieldName);
+    setFilterPickerSearch("");
+  };
+
+  const closeFilterPicker = () => {
+    setActiveFilterPickerField(null);
+    setFilterPickerSearch("");
+  };
+
+  const applyFilterValue = (value) => {
+    if (!activeFilterPickerField) return;
+
+    setFilters((prev) => ({
+      ...prev,
+      [activeFilterPickerField]: value,
+    }));
+    closeFilterPicker();
+  };
+
+  useEffect(() => {
+    if (!showFilters) {
+      setActiveFilterPickerField(null);
+      setFilterPickerSearch("");
+    }
+  }, [showFilters]);
+
+  const filterPickerOptions = useMemo(() => {
+    if (!activeFilterPickerField) return [];
+
+    // We get unique values from policies based on the selected field
+    const uniqueValues = new Map();
+
+    policies.forEach((p) => {
+      let rawValue = null;
+      if (activeFilterPickerField === "folio") {
+        rawValue = p.license_key;
+      } else if (activeFilterPickerField === "status") {
+        rawValue = getPolicyStatusLabel(p.status);
+      }
+
+      const value = String(rawValue || "").trim();
+      if (!value) return;
+
+      const normalized = normalizeSearchText(value);
+      if (!normalized || uniqueValues.has(normalized)) return;
+
+      uniqueValues.set(normalized, value);
+    });
+
+    return Array.from(uniqueValues.values()).sort((a, b) =>
+      a.localeCompare(b, "es", { sensitivity: "base" }),
+    );
+  }, [policies, activeFilterPickerField]);
+
+  const visibleFilterPickerOptions = useMemo(() => {
+    const s = normalizeSearchText(filterPickerSearch);
+    if (!s) return filterPickerOptions;
+
+    return filterPickerOptions.filter((value) =>
+      normalizeSearchText(value).includes(s),
+    );
+  }, [filterPickerSearch, filterPickerOptions]);
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const data = await listAllPoliciesApi();
+      setPolicies(data);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Eliminar póliza?",
+      text: "Esta acción no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await deleteContactProductApi(id);
+      setPolicies((prev) => prev.filter((p) => p.id !== id));
+      Swal.fire({
+        title: "¡Eliminada!",
+        text: "La póliza ha sido eliminada.",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (e) {
+      Swal.fire("Error", e.message || "Error eliminando la póliza", "error");
+    }
+  };
+
+  const handleDeleteGroup = async (group) => {
+    const count = group?.count || 0;
+    if (!count) return;
+
+    const result = await Swal.fire({
+      title: count === 1 ? "¿Eliminar póliza?" : `¿Eliminar ${count} pólizas?`,
+      text: "Esta acción eliminará todas las licencias del grupo y no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: count === 1 ? "Sí, eliminar" : `Sí, eliminar ${count}`,
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
+
+    const ids = group.policyIds || [];
+    try {
+      for (const id of ids) {
+        await deleteContactProductApi(id);
+      }
+      setPolicies((prev) => prev.filter((p) => !ids.includes(p.id)));
+      Swal.fire({
+        title: "¡Eliminadas!",
+        text: `${count} póliza(s) eliminadas correctamente.`,
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (e) {
+      Swal.fire("Error", e.message || "Error eliminando pólizas", "error");
+    }
+  };
+
+  const groupedPolicies = useMemo(() => {
+    const makeKey = (p) => {
+      const productName = p.product?.name || "";
+      const clientName = p.client?.business_name || "";
+      const contactEmail = p.contact?.email || "";
+      const start = p.start_date || "";
+      const end = p.expiration_date || "";
+      const status = p.status || "";
+      return [productName, clientName, contactEmail, start, end, status].join(
+        "||",
+      );
+    };
+
+    const map = new Map();
+
+    for (const p of policies) {
+      const key = makeKey(p);
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, {
+          id: key,
+          product: p.product,
+          client: p.client,
+          contact: p.contact,
+          start_date: p.start_date,
+          expiration_date: p.expiration_date,
+          status: p.status,
+          count: 1,
+          licenseKeys: p.license_key ? [p.license_key] : [],
+          policyIds: [p.id],
+        });
+      } else {
+        existing.count += 1;
+        existing.policyIds.push(p.id);
+        if (p.license_key) existing.licenseKeys.push(p.license_key);
+      }
+    }
+
+    return Array.from(map.values());
+  }, [policies]);
+
+  const filteredGroups = useMemo(() => {
+    const s = normalizeSearchText(q);
+    const hasFieldFilters = Object.values(filters).some((v) => v.trim() !== "");
+    if (!s && !hasFieldFilters) return groupedPolicies;
+
+    return groupedPolicies.filter((g) => {
+      const productName = g.product?.name || "";
+      const productCategory = g.product?.category || "";
+      const clientName = g.client?.business_name || "";
+      const contactName = g.contact?.full_name || "";
+      const contactEmail = g.contact?.email || "";
+      const licenses = (g.licenseKeys || []).join(" ");
+      const policyType =
+        inferPolicyType(g.product) === "POLICY" ? "poliza" : "servicio";
+
+      const statusRaw = g.status || "";
+      const statusLabel = getPolicyStatusLabel(statusRaw).toLowerCase();
+
+      const locale = "es";
+      const startDate =
+        g.start_date ? new Date(g.start_date).toLocaleDateString(locale) : "";
+      const expDate =
+        g.expiration_date ?
+          new Date(g.expiration_date).toLocaleDateString(locale)
+        : "";
+
+      // Búsqueda global
+      const matchQ =
+        !s ||
+        normalizeSearchText(
+          [
+            productName,
+            productCategory,
+            clientName,
+            contactName,
+            contactEmail,
+            licenses,
+            policyType,
+            statusLabel,
+            startDate,
+            expDate,
+          ].join(" "),
+        ).includes(s);
+
+      // Filtros por campo individuales
+      const matchFilters =
+        !hasFieldFilters ||
+        ((!filters.product ||
+          normalizeSearchText(productName + " " + productCategory).includes(
+            normalizeSearchText(filters.product),
+          )) &&
+          (!filters.client ||
+            normalizeSearchText(clientName).includes(
+              normalizeSearchText(filters.client),
+            )) &&
+          (!filters.contact ||
+            normalizeSearchText(contactName + " " + contactEmail).includes(
+              normalizeSearchText(filters.contact),
+            )) &&
+          (!filters.folio ||
+            normalizeSearchText(licenses).includes(
+              normalizeSearchText(filters.folio),
+            )) &&
+          (!filters.vigencia ||
+            normalizeSearchText(startDate + " " + expDate).includes(
+              normalizeSearchText(filters.vigencia),
+            )) &&
+          (!filters.status ||
+            normalizeSearchText(statusLabel) ===
+              normalizeSearchText(filters.status)));
+
+      return matchQ && matchFilters;
+    });
+  }, [groupedPolicies, q, filters]);
+
+  const exportableGroups = useMemo(() => {
+    return filteredGroups.map((group) => ({
+      servicioPoliza: group.product?.name || "—",
+      tipo: inferPolicyType(group.product) === "POLICY" ? "Póliza" : "Servicio",
+      cliente: group.client?.business_name || "Sin cliente",
+      contacto: group.contact?.full_name || "—",
+      email: group.contact?.email || "",
+      folios: (group.licenseKeys || []).join(", ") || "—",
+      inicio: formatPolicyDate(group.start_date),
+      vence: formatPolicyDate(group.expiration_date),
+      estado: getPolicyStatusLabel(group.status),
+      totalFolios: group.count || 0,
+    }));
+  }, [filteredGroups]);
+
+  const handleExportPDF = async () => {
+    if (!exportableGroups.length) {
+      Swal.fire({
+        title: "Sin datos",
+        text: "No hay registros para exportar.",
+        icon: "info",
+        confirmButtonColor: "#2277B4",
+      });
+      return;
+    }
+
+    try {
+      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+      const autoTable = autoTableModule.default || autoTableModule.autoTable;
+
+      const doc = new jsPDF({ orientation: "landscape" });
+      doc.setFontSize(16);
+      doc.setTextColor(26, 43, 76);
+      doc.text("Servicios y pólizas", 14, 16);
+      doc.setFontSize(10);
+      doc.setTextColor(90, 90, 90);
+      doc.text(`Exportado: ${new Date().toLocaleString("es-MX")}`, 14, 23);
+
+      autoTable(doc, {
+        startY: 28,
+        head: [
+          [
+            "SERVICIO/PÓLIZA",
+            "TIPO",
+            "CLIENTE",
+            "CONTACTO",
+            "FOLIO(S)",
+            "INICIO",
+            "VENCE",
+            "ESTADO",
+            "TOTAL",
+          ],
+        ],
+        body: exportableGroups.map((row) => [
+          row.servicioPoliza,
+          row.tipo,
+          row.cliente,
+          `${row.contacto}${row.email ? `\n${row.email}` : ""}`,
+          row.folios,
+          row.inicio,
+          row.vence,
+          row.estado,
+          row.totalFolios,
+        ]),
+        theme: "grid",
+        headStyles: { fillColor: [34, 119, 180] },
+        styles: { fontSize: 8, cellPadding: 2.5 },
+        columnStyles: {
+          0: { cellWidth: 33 },
+          1: { cellWidth: 16 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 34 },
+          4: { cellWidth: 30 },
+        },
+      });
+
+      doc.save(
+        `Servicios_Polizas_${new Date().toISOString().slice(0, 10)}.pdf`,
+      );
+    } catch (e) {
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo generar el PDF.",
+        icon: "error",
+        confirmButtonColor: "#2277B4",
+      });
+    }
+  };
+
+  const handleExportExcel = async () => {
+    if (!exportableGroups.length) {
+      Swal.fire({
+        title: "Sin datos",
+        text: "No hay registros para exportar.",
+        icon: "info",
+        confirmButtonColor: "#2277B4",
+      });
+      return;
+    }
+
+    try {
+      const XLSX = await import("xlsx");
+      const rows = exportableGroups.map((row) => ({
+        "Servicio/Póliza": row.servicioPoliza,
+        Tipo: row.tipo,
+        Cliente: row.cliente,
+        Contacto: row.contacto,
+        Email: row.email,
+        "Folio(s)": row.folios,
+        Inicio: row.inicio,
+        Vence: row.vence,
+        Estado: row.estado,
+        "Total folios": row.totalFolios,
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "ServiciosPolizas");
+      XLSX.writeFile(
+        wb,
+        `Servicios_Polizas_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    } catch (e) {
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo generar el Excel.",
+        icon: "error",
+        confirmButtonColor: "#2277B4",
+      });
+    }
+  };
+
+  const columns = useMemo(
+    () => [
+      {
+        id: "expander",
+        header: "",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const g = row.original;
+          if ((g.count || 0) <= 1) return null;
+
+          const isOpen = !!expanded[g.id];
+          return (
+            <button
+              onClick={() =>
+                setExpanded((prev) => ({ ...prev, [g.id]: !prev[g.id] }))
+              }
+              className="w-7 h-7 inline-flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+              title={isOpen ? "Ocultar pólizas" : "Ver pólizas"}>
+              {isOpen ?
+                <ChevronDown size={16} />
+              : <ChevronRight size={16} />}
+            </button>
+          );
+        },
+      },
+      {
+        id: "product",
+        header: "Servicios y pólizas ",
+        accessorFn: (row) => row.product?.name,
+        cell: ({ row }) => {
+          const g = row.original;
+          const policyType = inferPolicyType(g.product);
+          const typeLabel = policyType === "POLICY" ? "Póliza" : "Servicio";
+          const typeClasses =
+            policyType === "POLICY" ? "text-blue-700" : "text-emerald-700";
+          return (
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="font-bold text-gray-800 hover:text-[#2277B4]">
+                  {g.product?.name || "—"}
+                </div>
+                <span
+                  className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded border ${typeClasses}`}>
+                  {typeLabel}
+                </span>
+              </div>
+              <div className="text-xs text-gray-500">
+                {g.product?.category || ""}
+              </div>
+              {g.count > 1 && (
+                <div className="text-[10px] text-gray-400 mt-1">
+                  {g.count} pólizas
+                </div>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        id: "client",
+        header: "Cliente",
+        accessorFn: (row) => row.client?.business_name,
+        cell: ({ row }) => (
+          <div className="font-medium text-gray-500">
+            {row.original.client?.business_name || "Sin Cliente"}
+          </div>
+        ),
+      },
+      {
+        id: "contact",
+        header: "Contacto Asignado",
+        accessorFn: (row) => row.contact?.full_name,
+        cell: ({ row }) => (
+          <div className="text-gray-700">
+            {row.original.contact?.full_name || "—"}
+            <div className="text-[10px] text-gray-500">
+              {row.original.contact?.email || ""}
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "license",
+        header: "Folio",
+        accessorFn: (row) => row.count,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const g = row.original;
+          return (
+            <div className="font-mono text-xs text-gray-500">
+              {g.count === 1 ?
+                g.licenseKeys?.[0] || "—"
+              : `Múltiples (${g.count})`}
+            </div>
+          );
+        },
+      },
+      {
+        id: "validity",
+        header: "Vigencia",
+        accessorFn: (row) => row.expiration_date,
+        cell: ({ row }) => (
+          <div className="text-gray-700">
+            <div>
+              Inicia:{" "}
+              {row.original.start_date ?
+                new Date(row.original.start_date).toLocaleDateString()
+              : "—"}
+            </div>
+            <div className="text-xs text-gray-500">
+              Vence:{" "}
+              {row.original.expiration_date ?
+                new Date(row.original.expiration_date).toLocaleDateString()
+              : "—"}
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "status",
+        header: "Estado",
+        accessorFn: (row) => row.status,
+        cell: ({ row }) => {
+          const status = row.original.status;
+          const label = getPolicyStatusLabel(status);
+          const cls = getPolicyStatusClass(status);
+
+          return (
+            <span
+              className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${cls}`}>
+              {label}
+            </span>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: "Acciones",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const g = row.original;
+          if (user?.role?.name !== "ADMIN") return null;
+
+          return (
+            <div className="text-right">
+              <button
+                onClick={() =>
+                  g.count === 1 ?
+                    handleDelete(g.policyIds?.[0])
+                  : handleDeleteGroup(g)
+                }
+                className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-red-800 transition-colors"
+                title={
+                  g.count === 1 ?
+                    "Eliminar Póliza"
+                  : `Eliminar ${g.count} pólizas`
+                }>
+                <Trash2 size={18} />
+              </button>
+            </div>
+          );
+        },
+      },
+    ],
+    [user?.role?.name, expanded],
+  );
+
+  const table = useReactTable({
+    data: filteredGroups,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  return (
+    <div className="space-y-8 pb-20">
+      {/* Header */}
+      <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
+            Historial de servicios y pólizas
+          </h1>
+          <p className="text-sm text-gray-500 mt-1 max-w-lg">
+            Historial completo de servicios y pólizas asignadas a clientes.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Búsqueda global */}
+          <div className="flex gap-1 bg-white p-1 rounded-lg border border-gray-200">
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Buscar póliza..."
+              className="bg-transparent border-none text-sm text-gray-800 placeholder:text-gray-400 px-3 w-40 md:w-52 focus:outline-none"
+            />
+            <div className="px-3 py-1.5 text-gray-400">
+              <Search size={16} />
+            </div>
+          </div>
+
+          <button
+            onClick={handleExportPDF}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 bg-white text-red-700 hover:bg-red-50 transition-colors whitespace-nowrap"
+            title="Exportar a PDF">
+            <FileText size={14} /> Exportar PDF
+          </button>
+
+          <button
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
+            title="Exportar a Excel">
+            <FileSpreadsheet size={14} /> Exportar Excel
+          </button>
+
+          {/* Botón filtros */}
+          <button
+            onClick={() => setShowFilters((v) => !v)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+              showFilters || activeFilterCount > 0 ?
+                "bg-[#2277B4] text-white border-[#2277B4]"
+              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}>
+            <SlidersHorizontal size={15} />
+            Filtros
+            {activeFilterCount > 0 && (
+              <span className="ml-1 bg-white text-[#2277B4] rounded-full text-xs font-bold w-5 h-5 flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {/* Limpiar filtros */}
+          {activeFilterCount > 0 && (
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1 px-2 py-2 rounded-lg text-xs text-red-500 hover:bg-red-50 transition-colors">
+              <X size={14} /> Limpiar
+            </button>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl">
+          {error}
+        </div>
+      )}
+
+      <div className="glass-panel rounded-md overflow-hidden">
+        {activeFilterPickerField &&
+          showFilters &&
+          createPortal(
+            <div
+              className="fixed inset-0 z-[9999] bg-black/45 flex items-center justify-center p-4"
+              onClick={closeFilterPicker}>
+              <div
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+                onClick={(e) => e.stopPropagation()}>
+                <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
+                  <div>
+                    <h3 className="text-white font-bold text-base uppercase">
+                      Filtrar por {activeFilterPickerField}
+                    </h3>
+                    <p className="text-[11px] text-gray-300 mt-1">
+                      Selecciona un valor para filtrar
+                    </p>
+                  </div>
+                  <button
+                    onClick={closeFilterPicker}
+                    className="w-8 h-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                    <Search size={15} className="text-gray-500" />
+                    <input
+                      value={filterPickerSearch}
+                      onChange={(e) => setFilterPickerSearch(e.target.value)}
+                      placeholder="Buscar valor..."
+                      className="w-full bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="h-72 overflow-y-auto rounded-lg border border-gray-100 divide-y divide-gray-100">
+                    {visibleFilterPickerOptions.length > 0 ?
+                      visibleFilterPickerOptions.map((value) => {
+                        const isSelected =
+                          normalizeSearchText(
+                            filters[activeFilterPickerField],
+                          ) === normalizeSearchText(value);
+
+                        return (
+                          <button
+                            key={`${activeFilterPickerField}_${value}`}
+                            onClick={() => applyFilterValue(value)}
+                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                              isSelected ?
+                                "bg-[#2277B4]/10 text-[#125280] font-semibold"
+                              : "text-gray-700 hover:bg-gray-50"
+                            }`}>
+                            {value}
+                          </button>
+                        );
+                      })
+                    : <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                        No hay valores para mostrar.
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )}
+
+        {/* Hint para expandir y Filtros */}
+        <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 text-xs text-[#2277B4] flex items-center justify-between min-h-[44px]">
+          <div className="flex items-center gap-1 shrink-0">
+            <Lightbulb size={14} className="inline" /> Clic en{" "}
+            <ChevronRight size={12} className="inline" /> para más detalles
+          </div>
+
+          <div className="flex items-center gap-2">
+            {showFilters &&
+              [
+                { id: "folio", label: "Folios" },
+                { id: "status", label: "Estado" },
+              ].map((button) => {
+                const selectedValue = String(filters[button.id] || "");
+                return (
+                  <button
+                    key={button.id}
+                    onClick={() => openFilterPicker(button.id)}
+                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] border transition-colors whitespace-nowrap ${
+                      selectedValue ?
+                        "bg-[#2277B4] text-white border-[#2277B4]"
+                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}>
+                    <span className="uppercase font-bold tracking-wide">
+                      {button.label}
+                    </span>
+                  </button>
+                );
+              })}
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50 text-xs uppercase text-[#2277B4]">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header, idx) => (
+                    <th
+                      key={header.id}
+                      className={`p-4 ${idx === 0 ? "rounded-tl-lg" : ""} ${
+                        idx === headerGroup.headers.length - 1 ?
+                          "rounded-tr-lg"
+                        : ""
+                      }`}
+                      onClick={header.column.getToggleSortingHandler()}
+                      style={{
+                        cursor:
+                          header.column.getCanSort() ? "pointer" : "default",
+                      }}>
+                      <div className="flex items-center gap-1">
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                        {header.column.getIsSorted() === "asc" && (
+                          <ChevronUp size={14} />
+                        )}
+                        {header.column.getIsSorted() === "desc" && (
+                          <ChevronDown size={14} />
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-sm">
+              {loading ?
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="p-8 text-center text-gray-500">
+                    Cargando pólizas...
+                  </td>
+                </tr>
+              : table.getRowModel().rows.length === 0 ?
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="p-8 text-center text-gray-500">
+                    No se encontraron pólizas.
+                  </td>
+                </tr>
+              : table.getRowModel().rows.map((row) => (
+                  <Fragment key={row.id}>
+                    <tr
+                      key={row.id}
+                      className="hover:bg-gray-50 transition-colors">
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="p-4 align-top">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+
+                    {!!expanded[row.original.id] &&
+                      (row.original.count || 0) > 1 && (
+                        <tr
+                          key={`${row.id}__expanded`}
+                          className="bg-gray-50/40">
+                          <td colSpan={columns.length} className="px-6 py-4">
+                            <div className="ml-8">
+                              <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mb-2">
+                                Folios ({row.original.count})
+                              </div>
+                              <LicenseTable
+                                licenseKeys={row.original.licenseKeys || []}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                  </Fragment>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

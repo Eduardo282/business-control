@@ -1,0 +1,24 @@
+import { requireRoles } from "../../../middlewares/role.middleware.js";
+import { listClientsAction } from "../../actions/client_actions/listClients.action.js";
+import { getClientAction } from "../../actions/client_actions/getClient.action.js";
+import { searchClientsAction } from "../../actions/client_actions/searchClients.action.js";
+
+
+export const clients = async (_parent, _args, ctx) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  return listClientsAction();
+};
+
+export const client = async (_parent, { id }, ctx) => {
+  // Restringido a Admin/Ventas. Los contactos acceden a los datos a través de 'meContact' o resolutores de contacto directos.
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  const found = await getClientAction(id);
+  if (!found) throw new Error("Cliente no encontrado");
+  return found;
+};
+
+export const searchClients = async (_parent, { q }, ctx) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  if (!q?.trim()) return [];
+  return searchClientsAction(q);
+};

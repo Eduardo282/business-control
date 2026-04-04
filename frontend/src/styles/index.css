@@ -1,0 +1,334 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(34, 119, 180, 0.45);
+  --scrollbar-thumb-hover: #2277b4;
+  --scrollbar-corner: transparent;
+}
+
+.dark {
+  color-scheme: dark;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(148, 163, 184, 0.4);
+  --scrollbar-thumb-hover: #60a5fa;
+  --scrollbar-corner: transparent;
+}
+
+body {
+  background-color: white;
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+}
+
+/* Barra de desplazamiento personalizada */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--scrollbar-corner);
+}
+
+@layer components {
+  .glass-panel {
+    @apply backdrop-blur-xl transition-all duration-300 text-light-text-body dark:text-slate-100;
+
+    /* Modo claro: efecto de vidrio intensificado */
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.5),
+      rgba(255, 255, 255, 0.1)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow:
+      0 4px 30px rgba(0, 0, 0, 0.1),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  }
+
+  .dark .glass-panel {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.03)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    border-left: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .glass-input {
+    @apply text-light-text-body dark:text-slate-100 placeholder:text-light-text-muted dark:placeholder:text-slate-500 outline-none transition-all duration-300;
+
+    /* Entrada de luz */
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8px);
+
+    &:focus {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: rgba(21, 67, 240, 0.5); /* Brand accent */
+      box-shadow: 0 0 0 2px rgba(21, 67, 240, 0.1);
+    }
+  }
+
+  .dark .glass-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    &:focus {
+      box-shadow: 0px 0px 20px 0px rgba(59, 130, 246, 0.2);
+    }
+  }
+
+  .glass-button {
+    @apply backdrop-blur-md transition-all duration-300 shadow-sm dark:shadow-lg hover:shadow-md hover:-translate-y-0.5 text-light-text-primary dark:text-slate-200;
+
+    /* Botón de luz */
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.8),
+      rgba(255, 255, 255, 0.4)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.6);
+
+    /* Estado de hover */
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.95),
+        rgba(255, 255, 255, 0.6)
+      );
+      border: 1px solid rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  .dark .glass-button {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.15),
+      rgba(255, 255, 255, 0.05)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.25),
+        rgba(255, 255, 255, 0.1)
+      );
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-light-text-secondary dark:text-slate-400 font-medium;
+  }
+
+  .nav-item:hover {
+    @apply bg-white/20 dark:bg-white/5 text-light-text-primary dark:text-slate-100 translate-x-1;
+  }
+
+  .nav-item.active {
+    /* Usando color de realce específico #BCC5E6 para el fondo del estado activo en modo claro, y texto azul brillante #1543F0 */
+    @apply bg-light-highlight/20 dark:bg-gradient-to-r dark:from-primary-600/20 dark:to-primary-600/5 border border-light-accent/20 dark:border-primary-500/30 text-light-accent dark:text-primary-400 shadow-[0_0_15px_rgba(21,67,240,0.1)] dark:shadow-[0_0_15px_rgba(59,130,246,0.15)];
+  }
+
+  .glass-flash {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glass-flash::after {
+    content: "";
+    position: absolute;
+    top: -40%;
+    left: -60%;
+    width: 55%;
+    height: 180%;
+    pointer-events: none;
+    background: linear-gradient(120deg, #2277b480, #2277b480, #2277b480);
+    transform: translateX(-180%) rotate(12deg);
+    opacity: 0;
+    animation: glassFlash 3s ease-in-out 1s infinite;
+  }
+
+  .glass-link {
+    @apply inline-flex items-center gap-1 bg-transparent p-0 border-0 shadow-none text-blue-700 transition-colors text-sm font-semibold focus:outline-none;
+    position: relative;
+
+    /* Un toque “vidrio” sin forma de botón */
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+
+  .glass-link > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .glass-link::before {
+    content: "";
+    position: absolute;
+    inset: -2px -4px;
+    border-radius: 10px;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(135deg, #d8dbde, #d8dbde);
+    backdrop-filter: blur(10px);
+    transition: opacity 180ms ease;
+  }
+
+  .glass-link:hover {
+    @apply text-blue-900 underline underline-offset-4;
+  }
+
+  .glass-link:hover::before {
+    opacity: 0.35;
+  }
+
+  .dark .glass-link {
+    @apply text-primary-400;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  .dark .glass-link::before {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.18),
+      rgba(255, 255, 255, 0.04)
+    );
+  }
+}
+
+@keyframes glassFlash {
+  0% {
+    opacity: 0;
+    transform: translateX(-180%) rotate(12deg);
+  }
+  15% {
+    opacity: 0.8;
+  }
+  85% {
+    opacity: 0.15;
+    transform: translateX(260%) rotate(12deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(260%) rotate(12deg);
+  }
+}
+
+/* Utilidades de animación */
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+.animate-delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Price history calendar theme */
+.price-history-datepicker-popper {
+  z-index: 1200 !important;
+}
+
+.price-history-datepicker-calendar.react-datepicker {
+  border: 1px solid #d8e3f2 !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+  box-shadow: 0 18px 38px rgba(26, 43, 76, 0.18) !important;
+  background: #f8fbff !important;
+  font-family: inherit;
+}
+
+.price-history-datepicker-calendar .react-datepicker__header {
+  background: linear-gradient(180deg, #1a2b4c 0%, #244168 100%) !important;
+  border-bottom: 1px solid #2f4f7d !important;
+}
+
+.price-history-datepicker-calendar .react-datepicker__current-month,
+.price-history-datepicker-calendar .react-datepicker__day-name,
+.price-history-datepicker-calendar .react-datepicker__navigation-icon::before {
+  color: #f3f7ff !important;
+}
+
+.price-history-datepicker-calendar .react-datepicker__day,
+.price-history-datepicker-calendar .react-datepicker__time-name {
+  color: #1f2a3d !important;
+  border-radius: 8px;
+}
+
+.price-history-datepicker-calendar .react-datepicker__day:hover {
+  background: #e6f0fb !important;
+  color: #1a2b4c !important;
+}
+
+.price-history-datepicker-calendar .react-datepicker__day--selected,
+.price-history-datepicker-calendar .react-datepicker__day--keyboard-selected {
+  background: #2277b4 !important;
+  color: #ffffff !important;
+}
+
+.price-history-datepicker-calendar .react-datepicker__day--today {
+  border: 1px solid #2277b4;
+  font-weight: 700;
+}
+
+/* Product detail: remove native black number spinner to use custom stepper */
+#price-update-input::-webkit-outer-spin-button,
+#price-update-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#price-update-input {
+  -moz-appearance: textfield;
+}
+
+/* RegistrarProducts: hide native number spinner, custom stepper is rendered in JSX */
+#register-price-input::-webkit-outer-spin-button,
+#register-price-input::-webkit-inner-spin-button,
+#register-users-input::-webkit-outer-spin-button,
+#register-users-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#register-price-input,
+#register-users-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
