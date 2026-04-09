@@ -8,6 +8,7 @@ export const sendQuoteEmailAction = async ({
   quote_id,
   contact_email,
   message,
+  pdf_base64,
 }) => {
   // 1. Obtener datos completos de la cotización
   const connection = await pool.getConnection();
@@ -121,6 +122,23 @@ export const sendQuoteEmailAction = async ({
     throw new Error(
       `El correo ${contact_email} no es válido según ZeroBounce (Status: ${validation.status})`,
     );
+  }
+
+  let providedPdfBuffer = null;
+  if (pdf_base64) {
+    const normalized = String(pdf_base64)
+      .trim()
+      .replace(/^data:application\/pdf;base64,/i, "");
+
+    try {
+      providedPdfBuffer = Buffer.from(normalized, "base64");
+    } catch {
+      throw new Error("El PDF adjunto no tiene un formato base64 válido.");
+    }
+
+    if (!providedPdfBuffer?.length) {
+      throw new Error("El PDF adjunto está vacío.");
+    }
   }
 
   // 3. Generar HTML para PDF
@@ -256,7 +274,7 @@ export const sendQuoteEmailAction = async ({
             <div>
               <h1 class="title">COTIZACIÓN</h1>
               <div class="header-meta">
-                <div class="header-row"><span class="header-label">Folio:</span> <span style="font-family: monospace; color: #0f172a;">#${quote.id}</span></div>
+                <div class="header-row"><span class="header-label">Folio:</span> <span style="font-family: monospace; color: #0f172a;">${quote.folio || "#" + quote.id}</span></div>
                 <div class="header-row"><span class="header-label">Fecha:</span> <span>${new Date(quote.created_at).toLocaleDateString()}</span></div>
                 <div class="header-row"><span class="header-label">Vigencia:</span> <span>15 días naturales</span></div>
               </div>
@@ -363,33 +381,37 @@ export const sendQuoteEmailAction = async ({
   `;
 
   // 4. Crear PDF con Puppeteer
-  let browser;
   let pdfBuffer;
-  try {
-    browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-    const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-    pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
-  } finally {
-    if (browser) await browser.close();
+  if (providedPdfBuffer) {
+    pdfBuffer = providedPdfBuffer;
+  } else {
+    let browser;
+    try {
+      browser = await puppeteer.launch({
+        headless: "new",
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+      const page = await browser.newPage();
+      await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+      pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
+    } finally {
+      if (browser) await browser.close();
+    }
   }
 
   // 5. Enviar correo con archivo adjunto
-  const subject = `Cotización #${quote.id} - ${quote.client.business_name}`;
+  const subject = `Cotización ${quote.folio || "#" + quote.id} - ${quote.client.business_name}`;
   const emailBodyHtml = `
     <h3>Hola,</h3>
     <p>${message.replace(/\n/g, "<br>")}</p>
     <hr />
-    <p>Se adjunta la cotización <strong>#${quote.id}</strong> en formato PDF.</p>
+    <p>Se adjunta la cotización <strong>${quote.folio || "#" + quote.id}</strong> en formato PDF.</p>
     <p>Atentamente,<br>${quote.user.full_name}</p>
   `;
 
   await sendEmail(contact_email, subject, message, emailBodyHtml, [
     {
-      filename: `Cotizacion_${quote.id}.pdf`,
+      filename: `Cotizacion_${String(quote.folio || quote.id).replace(/[^a-zA-Z0-9-_]+/g, "_")}.pdf`,
       content: pdfBuffer,
     },
   ]);

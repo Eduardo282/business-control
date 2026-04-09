@@ -80,6 +80,7 @@ import {
   Lightbulb,
   SlidersHorizontal,
   Filter,
+  ArrowLeft,
 } from "@icons";
 
 const EXCEL_VIEW_STORAGE_KEY = "clients_excel_view_config";
@@ -339,6 +340,7 @@ const CATALOG = [
 
 const ManagePortalModal = ({ contact, onClose }) => {
   const [access, setAccess] = useState(contact.has_portal_access);
+  const [saving, setSaving] = useState(false);
   // Password state removed as it is auto-generated
 
   const generatePassword = () => {
@@ -349,6 +351,9 @@ const ManagePortalModal = ({ contact, onClose }) => {
   };
 
   const handleSaveAccess = async () => {
+    if (saving) return;
+    setSaving(true);
+
     try {
       const newAccess = !access;
       let generatedPass = undefined;
@@ -378,7 +383,9 @@ const ManagePortalModal = ({ contact, onClose }) => {
         });
       }
       setAccess(newAccess);
+      setSaving(false);
       onClose(true);
+      return;
     } catch (e) {
       Swal.fire({
         icon: "error",
@@ -386,6 +393,7 @@ const ManagePortalModal = ({ contact, onClose }) => {
         text: e.message,
         confirmButtonColor: "#2277B4",
       });
+      setSaving(false);
     }
   };
 
@@ -436,8 +444,11 @@ const ManagePortalModal = ({ contact, onClose }) => {
 
               <button
                 onClick={handleSaveAccess}
-                className={`w-full justify-center text-white shadow-lg py-3 rounded-xl font-bold mt-4 border-0 ${access ? "bg-red-600 hover:bg-red-700 shadow-red-200" : "bg-[#2277B4] hover:bg-[#125280] shadow-[#2277B450]"}`}>
-                {access ?
+                disabled={saving}
+                className={`w-full justify-center text-white shadow-lg py-3 rounded-xl font-bold mt-4 border-0 ${saving ? "opacity-70 cursor-not-allowed" : ""} ${access ? "bg-red-600 hover:bg-red-700 shadow-red-200" : "bg-[#2277B4] hover:bg-[#125280] shadow-[#2277B450]"}`}>
+                {saving ?
+                  "Procesando..."
+                : access ?
                   "Revocar acceso al portal"
                 : "Habilitar acceso al portal"}
               </button>
@@ -1075,6 +1086,7 @@ const ClientPoliciesTab = ({ clientId }) => {
   const [services, setServices] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState([]);
+  const [deletingServiceId, setDeletingServiceId] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     status: "",
@@ -1084,7 +1096,7 @@ const ClientPoliciesTab = ({ clientId }) => {
     useState(null);
   const [policyFilterPickerSearch, setPolicyFilterPickerSearch] = useState("");
 
-  useEffect(() => {
+  const loadServices = () => {
     listClientActiveServicesApi(clientId)
       .then((data) =>
         setServices(
@@ -1095,7 +1107,48 @@ const ClientPoliciesTab = ({ clientId }) => {
         ),
       )
       .catch(console.error);
+  };
+
+  useEffect(() => {
+    loadServices();
   }, [clientId]);
+
+  const handleDeleteService = async (service) => {
+    const result = await Swal.fire({
+      title: "¿Eliminar póliza o servicio?",
+      text: "Esta acción desasignará el registro del cliente.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#2277B4",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setDeletingServiceId(service.id);
+      await deleteContactProductApi(service.id);
+      await Swal.fire({
+        icon: "success",
+        title: "Eliminado",
+        text: "La póliza o servicio fue eliminado correctamente.",
+        timer: 1300,
+        showConfirmButton: false,
+      });
+      loadServices();
+    } catch (e) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: e.message || "No se pudo eliminar el registro.",
+        confirmButtonColor: "#2277B4",
+      });
+    } finally {
+      setDeletingServiceId(null);
+    }
+  };
 
   const activeFilterCount = Object.values(filters).filter(
     (v) => v.trim() !== "",
@@ -1214,15 +1267,38 @@ const ClientPoliciesTab = ({ clientId }) => {
     closePolicyFilterPicker();
   };
 
+  const policyColumns = [
+    ...POLICIES_COLUMNS,
+    {
+      id: "actions",
+      header: "Acciones",
+      enableSorting: false,
+      cell: ({ row }) => {
+        const service = row.original;
+        const isDeleting = deletingServiceId === service.id;
+
+        return (
+          <button
+            onClick={() => handleDeleteService(service)}
+            disabled={isDeleting}
+            className="inline-flex items-center justify-center w-8 h-8 text-red-700 transition-transform duration-150 hover:scale-75 disabled:opacity-60 disabled:cursor-not-allowed"
+            title={isDeleting ? "Eliminando..." : "Eliminar póliza o servicio"}>
+            <Trash2 size={13} className={isDeleting ? "animate-pulse" : ""} />
+          </button>
+        );
+      },
+    },
+  ];
+
   const table = useReactTable({
     data: filteredServices,
-    columns: POLICIES_COLUMNS,
+    columns: policyColumns,
     state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 15 } },
+    initialState: { pagination: { pageSize: 10 } },
   });
 
   const { pageIndex, pageSize } = table.getState().pagination;
@@ -1286,14 +1362,14 @@ const ClientPoliciesTab = ({ clientId }) => {
           <div className="relative">
             <Search
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
             />
             <input
               type="text"
               placeholder="Buscar..."
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-light-border bg-white focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-44 text-black"
+              className="pl-3 pr-8 py-1.5 text-sm rounded-lg border border-light-border bg-white focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-44 text-black"
             />
           </div>
           <button
@@ -1311,6 +1387,9 @@ const ClientPoliciesTab = ({ clientId }) => {
               </span>
             )}
           </button>
+          <span className="text-xs text-light-text-secondary whitespace-nowrap">
+            Pág. {pageIndex + 1} de {table.getPageCount() || 1}
+          </span>
         </div>
       </div>
 
@@ -1391,30 +1470,40 @@ const ClientPoliciesTab = ({ clientId }) => {
           <thead className="text-xs text-light-text-secondary uppercase bg-[#F2F5F9]">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
-                {hg.headers.map((header, i) => (
-                  <th
-                    key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                    className={`px-4 py-3 select-none whitespace-nowrap cursor-pointer hover:bg-[#e8edf3] transition-colors text-[#2277B4] ${
-                      i === 0 ? "rounded-l-lg" : ""
-                    } ${i === hg.headers.length - 1 ? "rounded-r-lg" : ""}`}>
-                    <span className="flex items-center gap-1">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                      {header.column.getIsSorted() === "asc" && (
-                        <ChevronUp size={12} />
-                      )}
-                      {header.column.getIsSorted() === "desc" && (
-                        <ChevronDown size={12} />
-                      )}
-                      {!header.column.getIsSorted() && (
-                        <span className="opacity-30 text-[10px]">⇅</span>
-                      )}
-                    </span>
-                  </th>
-                ))}
+                {hg.headers.map((header, i) => {
+                  const canSort = header.column.getCanSort();
+
+                  return (
+                    <th
+                      key={header.id}
+                      onClick={
+                        canSort ?
+                          header.column.getToggleSortingHandler()
+                        : undefined
+                      }
+                      className={`px-4 py-3 select-none whitespace-nowrap transition-colors text-[#2277B4] ${
+                        canSort ? "cursor-pointer hover:bg-[#e8edf3]" : ""
+                      } ${i === 0 ? "rounded-l-lg" : ""} ${
+                        i === hg.headers.length - 1 ? "rounded-r-lg" : ""
+                      }`}>
+                      <span className="flex items-center gap-1">
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                        {canSort && header.column.getIsSorted() === "asc" && (
+                          <ChevronUp size={12} />
+                        )}
+                        {canSort && header.column.getIsSorted() === "desc" && (
+                          <ChevronDown size={12} />
+                        )}
+                        {canSort && !header.column.getIsSorted() && (
+                          <span className="opacity-30 text-[10px]">⇅</span>
+                        )}
+                      </span>
+                    </th>
+                  );
+                })}
               </tr>
             ))}
           </thead>
@@ -1434,7 +1523,7 @@ const ClientPoliciesTab = ({ clientId }) => {
               ))
             : <tr>
                 <td
-                  colSpan={POLICIES_COLUMNS.length}
+                  colSpan={policyColumns.length}
                   className="text-center py-10 text-light-text-secondary text-sm">
                   {services.length === 0 ?
                     "No hay servicios activos."
@@ -1447,79 +1536,51 @@ const ClientPoliciesTab = ({ clientId }) => {
       </div>
 
       {/* Paginación */}
-      {table.getPageCount() > 1 && (
-        <div className="flex items-center justify-between pt-4 border-t border-light-border mt-4 flex-wrap gap-2">
-          <span className="text-xs text-light-text-secondary">
-            {from}–{to} de {totalRows} registros
-          </span>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-              className="px-2 py-1 rounded text-xs border border-light-border disabled:opacity-30 hover:bg-gray-100 text-black">
-              «
-            </button>
-            <button
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="px-2 py-1 rounded text-xs border border-light-border disabled:opacity-30 hover:bg-gray-100 text-black">
-              ‹
-            </button>
-            {Array.from({ length: table.getPageCount() }, (_, i) => i)
-              .filter(
-                (i) =>
-                  i === 0 ||
-                  i === table.getPageCount() - 1 ||
-                  Math.abs(i - pageIndex) <= 1,
-              )
-              .reduce((acc, i, idx, arr) => {
-                if (idx > 0 && i - arr[idx - 1] > 1)
-                  acc.push(
-                    <span
-                      key={`ellipsis-${i}`}
-                      className="px-1 text-xs text-black">
-                      …
-                    </span>,
-                  );
-                acc.push(
-                  <button
-                    key={i}
-                    onClick={() => table.setPageIndex(i)}
-                    className={`px-2.5 py-1 rounded text-xs border transition-colors ${
-                      i === pageIndex ?
-                        "bg-[#2277B4] text-white border-[#2277B4]"
-                      : "border-light-border hover:bg-gray-100 text-black"
-                    }`}>
-                    {i + 1}
-                  </button>,
-                );
-                return acc;
-              }, [])}
-            <button
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="px-2 py-1 rounded text-xs border border-light-border disabled:opacity-30 hover:bg-gray-100 text-black">
-              ›
-            </button>
-            <button
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-              className="px-2 py-1 rounded text-xs border border-light-border disabled:opacity-30 hover:bg-gray-100 text-black">
-              »
-            </button>
-          </div>
+      <div className="flex items-center justify-between pt-4 border-t border-light-border mt-4 flex-wrap gap-2">
+        <div className="flex items-center gap-2 text-xs text-light-text-secondary">
+          <span>Mostrar</span>
           <select
             value={pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
             className="text-xs border border-light-border rounded px-2 py-1 bg-white text-black">
-            {[10, 15, 25, 50, 100].map((n) => (
+            {[10, 25, 50, 100].map((n) => (
               <option key={n} value={n}>
-                {n} / pág
+                {n}
               </option>
             ))}
           </select>
+          <span className="hidden sm:inline">
+            {from}–{to} de {totalRows} registros
+          </span>
         </div>
-      )}
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+            className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            ««
+          </button>
+          <button
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            Anterior
+          </button>
+          <button
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            Siguiente
+          </button>
+          <button
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+            className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            »»
+          </button>
+        </div>
+      </div>
     </Card>
   );
 };
@@ -2546,6 +2607,149 @@ export default function ClientDetail() {
   const contactsPageSize = contactsTable.getState().pagination.pageSize;
   const shouldEnableContactTableScroll = contactsPageSize >= 25;
 
+  const getContactExportContext = () => {
+    const usedLabels = new Set();
+    const exportColumns = contactColumnsFromView.map((column) => {
+      const baseLabel = String(column.label || column.name || "").trim();
+      const fallbackLabel = String(column.name || "").trim();
+      const base = baseLabel || fallbackLabel || "Columna";
+      let label = base;
+      const normalized = base.toLowerCase();
+
+      if (usedLabels.has(normalized)) {
+        label = `${base} (${fallbackLabel || normalized})`;
+      }
+
+      usedLabels.add(normalized);
+
+      return {
+        name: column.name,
+        label,
+      };
+    });
+
+    const exportRows = contactsTable
+      .getSortedRowModel()
+      .rows.map((row) => row.original);
+
+    return {
+      exportColumns,
+      exportRows,
+    };
+  };
+
+  const resolveContactExportValue = (row, columnName) => {
+    if (columnName === "has_portal_access") {
+      return row?.has_portal_access ? "Sí" : "No";
+    }
+
+    if (columnName === "is_active") {
+      const isActive = row?.is_active !== false && row?.is_active !== 0;
+      return isActive ? "Sí" : "No";
+    }
+
+    const rawValue = row?.[columnName];
+    return hasValue(rawValue) ? rawValue : "";
+  };
+
+  const handleExportContactsPDF = async () => {
+    const { exportColumns, exportRows } = getContactExportContext();
+
+    if (!exportRows.length) {
+      Swal.fire({
+        title: "Sin datos",
+        text: "No hay contactos para exportar.",
+        icon: "info",
+        confirmButtonColor: "#2277B4",
+      });
+      return;
+    }
+
+    try {
+      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+
+      const autoTable = autoTableModule.default || autoTableModule.autoTable;
+      const doc = new jsPDF({ orientation: "landscape" });
+
+      doc.setFontSize(16);
+      doc.setTextColor(26, 43, 76);
+      doc.text("Contactos", 14, 16);
+      doc.setFontSize(10);
+      doc.setTextColor(90, 90, 90);
+      doc.text(`Exportado: ${new Date().toLocaleString("es-MX")}`, 14, 23);
+
+      autoTable(doc, {
+        startY: 28,
+        head: [exportColumns.map((column) => column.label.toUpperCase())],
+        body: exportRows.map((row) =>
+          exportColumns.map((column) => {
+            const value = resolveContactExportValue(row, column.name);
+            return hasValue(value) ? String(value) : "—";
+          }),
+        ),
+        theme: "grid",
+        headStyles: { fillColor: [34, 119, 180] },
+        styles: { fontSize: 8, cellPadding: 2.5 },
+      });
+
+      doc.save(`Contactos_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (e) {
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo generar el PDF.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
+  const handleExportContactsExcel = async () => {
+    const { exportColumns, exportRows } = getContactExportContext();
+
+    if (!exportRows.length) {
+      Swal.fire({
+        title: "Sin datos",
+        text: "No hay contactos para exportar.",
+        icon: "info",
+        confirmButtonColor: "#2277B4",
+      });
+      return;
+    }
+
+    try {
+      const XLSX = await import("xlsx");
+
+      const rows = exportRows.map((row) => {
+        const nextRow = {};
+
+        exportColumns.forEach((column) => {
+          const value = resolveContactExportValue(row, column.name);
+          nextRow[column.label] = hasValue(value) ? value : "";
+        });
+
+        return nextRow;
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Contactos");
+      XLSX.writeFile(
+        wb,
+        `Contactos_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    } catch (e) {
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo generar el Excel.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
   if (loading)
     return (
       <div className="flex h-64 items-center justify-center text-primary-400 font-medium">
@@ -2667,13 +2871,12 @@ export default function ClientDetail() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            to="/clientes"
-            className="text-sm font-medium text-black hover:text-light-text-primary px-3 py-2 rounded-lg transition-colors">
-            Volver
-          </Link>
-        </div>
+        <Link
+          to="/clientes"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-black hover:text-light-text-primary px-1 py-1 rounded-lg transition-colors">
+          <ArrowLeft size={16} />
+          Volver
+        </Link>
       </div>
 
       {error && (
@@ -2857,6 +3060,20 @@ export default function ClientDetail() {
                     <Search size={16} />
                   </div>
                 </div>
+
+                <button
+                  onClick={handleExportContactsPDF}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 bg-white text-red-700 hover:bg-red-50 transition-colors whitespace-nowrap"
+                  title="Exportar a PDF">
+                  <FileText size={14} /> Exportar a PDF
+                </button>
+
+                <button
+                  onClick={handleExportContactsExcel}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
+                  title="Exportar a Excel">
+                  <FileSpreadsheet size={14} /> Exportar a Excel
+                </button>
 
                 {/* Botón filtros */}
                 <button
@@ -3613,12 +3830,7 @@ export default function ClientDetail() {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-                <button
-                  onClick={() => setShowBulkContactModal(false)}
-                  className="px-5 py-2.5 text-gray-600 font-semibold rounded-xl hover:bg-gray-100 transition-colors">
-                  Cerrar
-                </button>
+              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
                 {bulkContactData.length > 0 && (
                   <button
                     onClick={executeBulkContactUpload}
@@ -3636,6 +3848,11 @@ export default function ClientDetail() {
                     }
                   </button>
                 )}
+                <button
+                  onClick={() => setShowBulkContactModal(false)}
+                  className="px-5 py-2.5 text-gray-600 font-semibold rounded-xl hover:bg-gray-100 transition-colors">
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>,

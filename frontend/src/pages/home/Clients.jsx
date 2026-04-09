@@ -32,6 +32,7 @@ import {
   SlidersHorizontal,
   Upload,
   FileSpreadsheet,
+  FileText,
   CheckCircle2,
   AlertCircle,
 } from "@icons";
@@ -903,6 +904,135 @@ export default function Clients() {
 
   const isTableScrollable = table.getState().pagination.pageSize >= 25;
 
+  const getExportContext = () => {
+    const usedLabels = new Set();
+    const exportColumns = tableColumnsFromView.map((column) => {
+      const baseLabel = String(column.label || column.name || "").trim();
+      const fallbackLabel = String(column.name || "").trim();
+      const base = baseLabel || fallbackLabel || "Columna";
+      let label = base;
+      const normalized = base.toLowerCase();
+
+      if (usedLabels.has(normalized)) {
+        label = `${base} (${fallbackLabel || normalized})`;
+      }
+
+      usedLabels.add(normalized);
+
+      return {
+        name: column.name,
+        label,
+      };
+    });
+
+    const exportRows = table
+      .getSortedRowModel()
+      .rows.map((row) => row.original);
+
+    return {
+      exportColumns,
+      exportRows,
+    };
+  };
+
+  const handleExportPDF = async () => {
+    const { exportColumns, exportRows } = getExportContext();
+
+    if (!exportRows.length) {
+      Swal.fire({
+        title: "Sin datos",
+        text: "No hay clientes para exportar.",
+        icon: "info",
+        confirmButtonColor: "#2277B4",
+      });
+      return;
+    }
+
+    try {
+      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+
+      const autoTable = autoTableModule.default || autoTableModule.autoTable;
+      const doc = new jsPDF({ orientation: "landscape" });
+
+      doc.setFontSize(16);
+      doc.setTextColor(26, 43, 76);
+      doc.text("Clientes", 14, 16);
+      doc.setFontSize(10);
+      doc.setTextColor(90, 90, 90);
+      doc.text(`Exportado: ${new Date().toLocaleString("es-MX")}`, 14, 23);
+
+      autoTable(doc, {
+        startY: 28,
+        head: [exportColumns.map((column) => column.label.toUpperCase())],
+        body: exportRows.map((row) =>
+          exportColumns.map((column) => {
+            const rawValue = row?.[column.name];
+            return isValuePresent(rawValue) ? String(rawValue) : "—";
+          }),
+        ),
+        theme: "grid",
+        headStyles: { fillColor: [34, 119, 180] },
+        styles: { fontSize: 8, cellPadding: 2.5 },
+      });
+
+      doc.save(`Clientes_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (e) {
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo generar el PDF.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
+  const handleExportExcel = async () => {
+    const { exportColumns, exportRows } = getExportContext();
+
+    if (!exportRows.length) {
+      Swal.fire({
+        title: "Sin datos",
+        text: "No hay clientes para exportar.",
+        icon: "info",
+        confirmButtonColor: "#2277B4",
+      });
+      return;
+    }
+
+    try {
+      const XLSX = await import("xlsx");
+
+      const rows = exportRows.map((row) => {
+        const nextRow = {};
+
+        exportColumns.forEach((column) => {
+          const rawValue = row?.[column.name];
+          nextRow[column.label] = isValuePresent(rawValue) ? rawValue : "";
+        });
+
+        return nextRow;
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Clientes");
+      XLSX.writeFile(
+        wb,
+        `Clientes_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      );
+    } catch (e) {
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo generar el Excel.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -933,7 +1063,7 @@ export default function Clients() {
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             {/* Búsqueda global */}
             <div className="flex gap-1 bg-white p-1 rounded-lg border border-gray-200">
               <input
@@ -947,6 +1077,20 @@ export default function Clients() {
                 <Search size={16} />
               </div>
             </div>
+
+            <button
+              onClick={handleExportPDF}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 bg-white text-red-700 hover:bg-red-50 transition-colors whitespace-nowrap"
+              title="Exportar a PDF">
+              <FileText size={14} /> Exportar a PDF
+            </button>
+
+            <button
+              onClick={handleExportExcel}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
+              title="Exportar a Excel">
+              <FileSpreadsheet size={14} /> Exportar a Excel
+            </button>
 
             {/* Botón filtros */}
             <button
@@ -992,7 +1136,7 @@ export default function Clients() {
             )}
 
             <span className="text-xs text-gray-400 hidden md:inline">
-              Página {table.getState().pagination.pageIndex + 1} de{" "}
+              Pág. {table.getState().pagination.pageIndex + 1} de{" "}
               {table.getPageCount() || 1}
             </span>
           </div>
@@ -1293,9 +1437,6 @@ export default function Clients() {
               {/* Header del modal */}
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-[#1a2b4c]">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-lg text-white text-sm">
-                    <Plus size={16} />
-                  </span>
                   Nuevo Cliente
                 </h3>
                 <button
@@ -1817,12 +1958,7 @@ export default function Clients() {
               </div>
 
               {/* Footer con botones */}
-              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-                <button
-                  onClick={() => setShowBulkModal(false)}
-                  className="px-5 py-2.5 text-gray-600 font-semibold rounded-xl hover:bg-gray-100 transition-colors">
-                  Cerrar
-                </button>
+              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
                 {bulkData.length > 0 && (
                   <button
                     onClick={executeBulkUpload}
@@ -1840,6 +1976,11 @@ export default function Clients() {
                     }
                   </button>
                 )}
+                <button
+                  onClick={() => setShowBulkModal(false)}
+                  className="px-5 py-2.5 text-gray-600 font-semibold rounded-xl hover:bg-gray-100 transition-colors">
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>,

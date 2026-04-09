@@ -234,7 +234,7 @@ export default function PortalDashboard() {
             {totalPages > 1 && (
               <div className="flex flex-col items-center mt-6 gap-3">
                 <p className="text-xs text-gray-400 font-medium tracking-wide">
-                  Página {page + 1} / {totalPages} — Total{" "}
+                  Pág. {page + 1} / {totalPages} — Total{" "}
                   {filteredServices.length} servicios
                 </p>
 

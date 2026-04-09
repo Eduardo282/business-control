@@ -41,6 +41,7 @@ import {
   ChevronDown,
   Minus,
   CheckCircle2,
+  ArrowLeft,
 } from "@icons";
 
 const IVA_RATE = 0.16;
@@ -107,6 +108,7 @@ function getQuoteStatusLabel(status) {
 export default function CreateQuote() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const fixedClientId = searchParams.get("client_id");
 
   // Seleccion de cliente
   const [clientSearch, setClientSearch] = useState("");
@@ -398,7 +400,7 @@ export default function CreateQuote() {
         `$${formatCurrency(totalIva)}`,
       ].some((value) => normalizeSearchText(value).includes(q));
     },
-    initialState: { pagination: { pageSize: 5 } },
+    initialState: { pagination: { pageSize: 10 } },
   });
 
   // Cargar cliente desde URL si existe
@@ -829,7 +831,7 @@ export default function CreateQuote() {
             discount,
           };
         }),
-        notes: "Cotización generada desde solicitud",
+        notes: "Ninguna por el momento",
         folio: folio || undefined,
       };
 
@@ -1158,7 +1160,7 @@ export default function CreateQuote() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Columna izquierda: Cliente y Totales */}
         <div className="lg:col-span-1 space-y-6">
-          {!searchParams.get("client_id") && (
+          {!fixedClientId && (
             <Card className="border-t-4 border-t-primary-500 shadow-xl shadow-black/20 !overflow-visible z-30">
               <div className="flex justify-between items-center gap-2">
                 <div className="flex justify-center items-center">
@@ -1169,18 +1171,9 @@ export default function CreateQuote() {
                     Datos del Cliente
                   </h3>
                 </div>
-                <button
-                  variant="ghost"
-                  onClick={() => navigate("/cotizaciones/historial")}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold text-black hover:text-slate-700 border border-transparent transition-all">
-                  Cancelar
-                </button>
               </div>
 
               <div className="relative z-20">
-                <label className="text-xs font-semibold text-light-text-secondary dark:text-slate-400 mb-1.5 block">
-                  Buscar y Seleccionar
-                </label>
                 <div
                   className={`w-full relative rounded-xl border ${
                     selectedClient ? " " : (
@@ -1197,17 +1190,24 @@ export default function CreateQuote() {
                       className="w-full px-3 py-2 text-left cursor-pointer text-[#1B4733] font-medium">
                       {selectedClient.business_name}
                     </div>
-                  : <Input
-                      value={clientSearch}
-                      onFocus={() => setShowClientModal(true)}
-                      onChange={(e) => {
-                        setClientSearch(e.target.value);
-                        setSelectedClient(null);
-                        setShowClientModal(true);
-                      }}
-                      placeholder="Escribe para buscar un cliente..."
-                      className="w-full border-none shadow-none focus:ring-0 text-gray-700 bg-transparent"
-                    />
+                  : <div className="relative">
+                      <Input
+                        value={clientSearch}
+                        onFocus={() => setShowClientModal(true)}
+                        onChange={(e) => {
+                          setClientSearch(e.target.value);
+                          setSelectedClient(null);
+                          setShowClientModal(true);
+                        }}
+                        placeholder="Escribe para buscar un cliente..."
+                        className="w-full border-none shadow-none focus:ring-0 text-gray-700 bg-transparent"
+                        style={{ paddingRight: "2.25rem" }}
+                      />
+                      <Search
+                        size={14}
+                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
+                      />
+                    </div>
                   }
                 </div>
               </div>
@@ -1249,6 +1249,62 @@ export default function CreateQuote() {
             </Card>
           )}
 
+          {fixedClientId && selectedClient && (
+            <Card className="border-t-4 border-t-primary-500 shadow-xl shadow-black/20 !overflow-visible z-30">
+              <div className="flex justify-between items-center gap-2">
+                <div className="flex justify-center items-center">
+                  <div className="p-2 rounded-lg text-black">
+                    <Building2 size={24} />
+                  </div>
+                  <h3 className="font-bold text-lg text-light-text-primary">
+                    Datos del Cliente
+                  </h3>
+                </div>
+                <button
+                  variant="ghost"
+                  onClick={() => navigate("/cotizaciones/historial")}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold text-black hover:text-slate-700 border border-transparent transition-all">
+                  Cancelar
+                </button>
+              </div>
+
+              <div className="mt-4 p-3 rounded-xl animate-fade-in">
+                <div className="text-xs text-emerald-600 font-bold uppercase mb-1">
+                  Cliente Vinculado
+                </div>
+                <div className="text-sm text-light-text-primary font-medium">
+                  {selectedClient.business_name}
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  {selectedClient.rfc || "Sin RFC"}
+                </div>
+              </div>
+
+              {selectedClient.contacts?.length > 0 ?
+                <div className="mt-4 relative animate-fade-in">
+                  <label className="text-xs font-semibold text-light-text-secondary dark:text-slate-400 mb-1.5 block">
+                    Contacto para cotización
+                  </label>
+                  <select
+                    value={selectedContactId}
+                    onChange={(e) => setSelectedContactId(e.target.value)}
+                    className="w-full p-3 rounded-xl bg-white border border-light-border  focus:border-[#1a2b4c] focus:ring-1 focus:ring-[#1a2b4c] text-light-text-primary  text-sm outline-none transition-all">
+                    <option value="">-- Sin asignar --</option>
+                    {selectedClient.contacts.map((contact) => (
+                      <option key={contact.id} value={contact.id}>
+                        {contact.full_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              : <div className="mt-4 p-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-sm">
+                  Este cliente no tiene contactos registrados. Agrégalo desde
+                  Gestionar cliente y vuelve a esta cotización.
+                </div>
+              }
+            </Card>
+          )}
+
           <Card
             className={`bg-light-card border-light-border dark:border-white/10 sticky top-24 ${!selectedClient || items.length === 0 ? "opacity-40 pointer-events-none select-none grayscale" : "transition-all duration-500"}`}>
             <button
@@ -1284,17 +1340,15 @@ export default function CreateQuote() {
                   <h3 className="font-bold text-lg text-light-text-primary">
                     Agregar Productos o Servicios
                   </h3>
-                  <p className="text-xs text-light-text-secondary dark:text-slate-400">
-                    Busca productos y añádelos a la lista.
-                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-4 text-right">
-                <div className="hidden sm:block">
-                  <p className="text-xs text-light-text-secondary dark:text-slate-400 mt-1">
-                    Genera un presupuesto para un cliente.
-                  </p>
-                </div>
+                <button
+                  variant="ghost"
+                  onClick={() => navigate("/cotizaciones/historial")}
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold text-black hover:text-slate-700 border border-transparent transition-all">
+                  <ArrowLeft size={16} /> Regresar a historial
+                </button>
               </div>
             </div>
 
@@ -1303,17 +1357,24 @@ export default function CreateQuote() {
                 <label className="text-xs font-semibold text-light-text-secondary dark:text-slate-400 mb-1.5 block">
                   Producto
                 </label>
-                <Input
-                  value={prodSearch}
-                  onFocus={() => setShowProductModal(true)}
-                  onChange={(e) => {
-                    setProdSearch(e.target.value);
-                    setSelectedProductToAdd(null);
-                    setShowProductModal(true);
-                  }}
-                  placeholder="Buscar producto o servicio..."
-                  className="glass-input bg-light-bg dark:!bg-black/30 text-light-text-primary dark:text-white border-light-border dark:border-white/10"
-                />
+                <div className="relative">
+                  <Input
+                    value={prodSearch}
+                    onFocus={() => setShowProductModal(true)}
+                    onChange={(e) => {
+                      setProdSearch(e.target.value);
+                      setSelectedProductToAdd(null);
+                      setShowProductModal(true);
+                    }}
+                    placeholder="Buscar producto o servicio..."
+                    className="glass-input bg-light-bg dark:!bg-black/30 text-light-text-primary dark:text-white border-light-border dark:border-white/10"
+                    style={{ paddingRight: "2.25rem" }}
+                  />
+                  <Search
+                    size={14}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
+                  />
+                </div>
               </div>
 
               <div className="flex-1 w-full relative">
@@ -1323,14 +1384,14 @@ export default function CreateQuote() {
                 <div className="relative">
                   <Search
                     size={13}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
                   />
                   <input
                     type="text"
                     placeholder="Filtrar productos agregados..."
                     value={tableFilter}
                     onChange={(e) => setTableFilter(e.target.value)}
-                    className="pl-8 pr-3 py-2.5 text-sm rounded-xl border border-light-border bg-white focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-full text-black"
+                    className="pl-3 pr-8 py-2.5 text-sm rounded-xl border border-light-border bg-white focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-full text-black"
                   />
                 </div>
               </div>
@@ -1481,8 +1542,8 @@ export default function CreateQuote() {
                 </div>
 
                 <span className="text-xs text-light-text-secondary">
-                  {itemsTable.getFilteredRowModel().rows.length} de{" "}
-                  {items.length} producto(s)
+                  Pág. {itemsTable.getState().pagination.pageIndex + 1} de{" "}
+                  {Math.max(1, itemsTable.getPageCount())}
                 </span>
               </div>
             )}
@@ -1580,54 +1641,52 @@ export default function CreateQuote() {
             </div>
 
             {/* Paginación */}
-            {itemsTable.getPageCount() > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-light-border flex-wrap gap-2">
-                <span className="text-xs text-light-text-secondary">
-                  {itemsTable.getState().pagination.pageIndex * 5 + 1}–
-                  {Math.min(
-                    (itemsTable.getState().pagination.pageIndex + 1) * 5,
-                    itemsTable.getFilteredRowModel().rows.length,
-                  )}{" "}
-                  de {itemsTable.getFilteredRowModel().rows.length}
-                </span>
+            {items.length > 0 && (
+              <div className="px-4 py-3 border-t border-light-border bg-white flex items-center justify-between gap-3 flex-wrap">
+                <label className="text-sm text-light-text-secondary flex items-center gap-2">
+                  Mostrar
+                  <select
+                    value={itemsTable.getState().pagination.pageSize}
+                    onChange={(e) => {
+                      itemsTable.setPageSize(Number(e.target.value));
+                      itemsTable.setPageIndex(0);
+                    }}
+                    className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-[#fff] border border-light-border">
+                    {[10, 25, 50, 100].map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                  por página
+                </label>
+
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => itemsTable.setPageIndex(0)}
                     disabled={!itemsTable.getCanPreviousPage()}
-                    className="px-2 py-1 rounded text-xs border border-light-border disabled:opacity-30 hover:bg-gray-100">
-                    «
+                    className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    ««
                   </button>
                   <button
                     onClick={() => itemsTable.previousPage()}
                     disabled={!itemsTable.getCanPreviousPage()}
-                    className="px-2 py-1 rounded text-xs border border-light-border disabled:opacity-30 hover:bg-gray-100">
-                    ‹
+                    className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Anterior
                   </button>
-                  {Array.from({ length: itemsTable.getPageCount() }, (_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => itemsTable.setPageIndex(i)}
-                      className={`px-2.5 py-1 rounded text-xs border transition-colors ${
-                        i === itemsTable.getState().pagination.pageIndex ?
-                          "bg-[#2277B4] text-white border-[#2277B4]"
-                        : "border-light-border hover:bg-gray-100"
-                      }`}>
-                      {i + 1}
-                    </button>
-                  ))}
                   <button
                     onClick={() => itemsTable.nextPage()}
                     disabled={!itemsTable.getCanNextPage()}
-                    className="px-2 py-1 rounded text-xs border border-light-border disabled:opacity-30 hover:bg-gray-100">
-                    ›
+                    className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Siguiente
                   </button>
                   <button
                     onClick={() =>
                       itemsTable.setPageIndex(itemsTable.getPageCount() - 1)
                     }
                     disabled={!itemsTable.getCanNextPage()}
-                    className="px-2 py-1 rounded text-xs border border-light-border disabled:opacity-30 hover:bg-gray-100">
-                    »
+                    className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    »»
                   </button>
                 </div>
               </div>
@@ -1779,10 +1838,10 @@ export default function CreateQuote() {
               <div className="px-6 py-4 border-b border-gray-100 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c]">
                 <div>
                   <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Building2 size={20} /> Buscar Cliente
+                    Buscar Cliente
                   </h2>
                   <p className="text-sm text-gray-300 mt-1">
-                    Encuentra y selecciona el cliente para la cotización
+                    Selecciona el cliente para la cotización
                   </p>
                 </div>
                 <button
@@ -1795,7 +1854,7 @@ export default function CreateQuote() {
               <div className="p-6 flex-1 overflow-y-auto">
                 <div className="mb-4 relative">
                   <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
                     size={18}
                   />
                   <input
@@ -1806,7 +1865,7 @@ export default function CreateQuote() {
                       setSelectedClient(null);
                     }}
                     placeholder="Escribe el nombre del cliente o RFC..."
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2277B4]/50 transition-all text-gray-700"
+                    className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2277B4]/50 transition-all text-gray-700"
                     autoFocus
                   />
                 </div>
@@ -1846,7 +1905,7 @@ export default function CreateQuote() {
 
                       {clientResults.length > visibleClientResults.length && (
                         <div className="mt-2 px-3 py-2 rounded-lg bg-blue-50 text-xs text-[#125280]">
-                          Mostrando {visibleClientResults.length} de{" "}
+                          {visibleClientResults.length} de{" "}
                           {clientResults.length} resultados. Sigue escribiendo
                           para acotar la búsqueda.
                         </div>
@@ -1881,11 +1940,10 @@ export default function CreateQuote() {
               <div className="px-6 py-4 border-b border-gray-100 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c]">
                 <div>
                   <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <ShoppingBag size={20} /> Buscar Productos
+                    Buscar Productos
                   </h2>
                   <p className="text-sm text-gray-300 mt-1">
-                    Encuentra y selecciona productos para agregar a la
-                    cotización
+                    Selecciona productos para agregar a la cotización
                   </p>
                 </div>
                 <button
@@ -1898,7 +1956,7 @@ export default function CreateQuote() {
               {/* Body del modal */}
               <div className="p-6 flex-1 overflow-y-auto">
                 {/* Buscador sincronizado */}
-                <div className="mb-4">
+                <div className="mb-4 relative">
                   <Input
                     value={prodSearch}
                     onChange={(e) => {
@@ -1907,7 +1965,12 @@ export default function CreateQuote() {
                     }}
                     placeholder="Buscar producto por nombre o categoría..."
                     className="w-full glass-input bg-light-bg dark:!bg-black/30 text-light-text-primary dark:text-white border-light-border dark:border-white/10"
+                    style={{ paddingRight: "2.5rem" }}
                     autoFocus
+                  />
+                  <Search
+                    size={18}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
                   />
                 </div>
 
@@ -1952,7 +2015,7 @@ export default function CreateQuote() {
                                 </div>
                               )}
                             </div>
-                            <div className="ml-4 flex items-center gap-4">
+                            <div className="ml-4 flex items-center gap-3">
                               <div className="text-right hidden sm:block">
                                 <div className="font-mono text-[#1B4733] font-bold text-lg">
                                   $
@@ -1967,37 +2030,44 @@ export default function CreateQuote() {
                                   + IVA
                                 </div>
                               </div>
-                              <div className="flex items-center gap-0.5 shadow-md shadow-[#2277B420] rounded-xl overflow-hidden font-bold">
+                              <div
+                                className={`flex items-center rounded-lg overflow-hidden font-semibold border shadow-sm ${
+                                  added ?
+                                    "border-emerald-400/60"
+                                  : "border-[#2277B4]/35"
+                                }`}>
                                 <button
                                   onClick={() => addItemDirectly(p)}
-                                  className={`flex items-center justify-center p-2.5 transition-all text-white ${
+                                  className={`h-8 w-8 flex items-center justify-center transition-colors text-white ${
                                     added ?
                                       "bg-emerald-500 hover:bg-emerald-600"
                                     : "bg-[#2277B4] hover:bg-[#125280]"
                                   }`}>
                                   {added ?
-                                    <CheckCircle2 size={16} />
-                                  : <Plus size={16} />}
+                                    <CheckCircle2 size={14} />
+                                  : <Plus size={14} />}
                                 </button>
                                 <div
-                                  className={`flex flex-col items-center justify-center px-4 py-2 min-w-[70px] leading-none text-white ${
-                                    added ? "bg-emerald-500" : "bg-[#2277B4]"
+                                  className={`h-8 min-w-[64px] px-2 flex items-center justify-center leading-none text-white border-x ${
+                                    added ?
+                                      "bg-emerald-500 border-emerald-400/70"
+                                    : "bg-[#2277B4] border-[#7fb8de]/70"
                                   }`}>
                                   {qty > 0 ?
-                                    <span className="text-sm font-medium">
+                                    <span className="text-xs font-medium">
                                       {qty} en lista
                                     </span>
-                                  : <span className="text-sm">Agregar</span>}
+                                  : <span className="text-xs">Agregar</span>}
                                 </div>
                                 <button
                                   onClick={() => removeItemDirectly(p)}
                                   disabled={qty === 0}
-                                  className={`flex items-center justify-center p-2.5 transition-all text-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                                  className={`h-8 w-8 flex items-center justify-center transition-colors text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 ${
                                     added ?
                                       "bg-emerald-500 hover:bg-emerald-600"
                                     : "bg-[#2277B4] hover:bg-[#125280]"
                                   }`}>
-                                  <Minus size={16} />
+                                  <Minus size={14} />
                                 </button>
                               </div>
                             </div>

@@ -45,6 +45,7 @@ export const getQuoteApi = async (id) => {
     query GetQuote($id: ID!) {
       quote(id: $id) {
         id
+        folio
         created_at
         total
         status
@@ -193,10 +194,11 @@ export const sendQuoteEmailApi = async ({
   quote_id,
   contact_email,
   message,
+  pdf_base64,
 }) => {
   const query = `
-    mutation SendEmail($quote_id: ID!, $contact_email: String!, $message: String!) {
-      sendQuoteEmail(quote_id: $quote_id, contact_email: $contact_email, message: $message) {
+    mutation SendEmail($quote_id: ID!, $contact_email: String!, $message: String!, $pdf_base64: String) {
+      sendQuoteEmail(quote_id: $quote_id, contact_email: $contact_email, message: $message, pdf_base64: $pdf_base64) {
         success
         message
       }
@@ -204,7 +206,7 @@ export const sendQuoteEmailApi = async ({
   `;
   const res = await axiosClient.post("/", {
     query,
-    variables: { quote_id, contact_email, message },
+    variables: { quote_id, contact_email, message, pdf_base64 },
   });
   if (res.data.errors) throw new Error(res.data.errors[0].message);
   return res.data.data.sendQuoteEmail;

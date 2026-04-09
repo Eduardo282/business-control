@@ -126,6 +126,7 @@ import {
 import {
   useReactTable,
   getCoreRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   flexRender,
 } from "@tanstack/react-table";
@@ -185,6 +186,10 @@ export default function Policies() {
     status: "",
   });
   const [sorting, setSorting] = useState([]);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE,
+  });
   const [expanded, setExpanded] = useState({});
 
   const clearFilters = () => {
@@ -486,6 +491,27 @@ export default function Policies() {
     }));
   }, [filteredGroups]);
 
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      pageIndex: 0,
+    }));
+  }, [q, filters]);
+
+  useEffect(() => {
+    const maxPageIndex = Math.max(
+      0,
+      Math.ceil(filteredGroups.length / pagination.pageSize) - 1,
+    );
+
+    if (pagination.pageIndex > maxPageIndex) {
+      setPagination((prev) => ({
+        ...prev,
+        pageIndex: maxPageIndex,
+      }));
+    }
+  }, [filteredGroups.length, pagination.pageIndex, pagination.pageSize]);
+
   const handleExportPDF = async () => {
     if (!exportableGroups.length) {
       Swal.fire({
@@ -776,10 +802,12 @@ export default function Policies() {
   const table = useReactTable({
     data: filteredGroups,
     columns,
-    state: { sorting },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (
@@ -791,7 +819,7 @@ export default function Policies() {
             Historial de servicios y pólizas
           </h1>
           <p className="text-sm text-gray-500 mt-1 max-w-lg">
-            Historial completo de servicios y pólizas asignadas a clientes.
+            Historial de servicios y pólizas.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -812,14 +840,14 @@ export default function Policies() {
             onClick={handleExportPDF}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 bg-white text-red-700 hover:bg-red-50 transition-colors whitespace-nowrap"
             title="Exportar a PDF">
-            <FileText size={14} /> Exportar PDF
+            <FileText size={14} /> Exportar a PDF
           </button>
 
           <button
             onClick={handleExportExcel}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
             title="Exportar a Excel">
-            <FileSpreadsheet size={14} /> Exportar Excel
+            <FileSpreadsheet size={14} /> Exportar a Excel
           </button>
 
           {/* Botón filtros */}
@@ -933,6 +961,10 @@ export default function Policies() {
           </div>
 
           <div className="flex items-center gap-2">
+            <span className="text-[11px] font-semibold text-gray-400 whitespace-nowrap">
+              Pág. {table.getState().pagination.pageIndex + 1} de{" "}
+              {Math.max(1, table.getPageCount())}
+            </span>
             {showFilters &&
               [
                 { id: "folio", label: "Folios" },
@@ -1047,6 +1079,58 @@ export default function Policies() {
             </tbody>
           </table>
         </div>
+
+        {!loading && filteredGroups.length > 0 && (
+          <div className="px-4 py-3 border-t border-gray-100 bg-white flex items-center justify-between gap-3">
+            <label className="text-sm text-gray-500 flex items-center gap-2">
+              Mostrar
+              <select
+                value={table.getState().pagination.pageSize}
+                onChange={(e) =>
+                  setPagination((prev) => ({
+                    ...prev,
+                    pageIndex: 0,
+                    pageSize: Number(e.target.value),
+                  }))
+                }
+                className="px-2 py-1 rounded-md border border-gray-200 text-sm text-gray-700 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                {[10, 25, 50, 100].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+              por página
+            </label>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+                className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                ««
+              </button>
+              <button
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                Anterior
+              </button>
+              <button
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                Siguiente
+              </button>
+              <button
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+                className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                »»
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

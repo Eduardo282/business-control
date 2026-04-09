@@ -811,10 +811,12 @@ export default function RegistrarProducts() {
 
       <form onSubmit={handleCreate} className="mb-6 animate-fade-in">
         <div className="p-6 rounded-xl glass-panel shadow-xl">
-          <h4 className="flex items-center gap-2 font-bold text-light-text-primary mb-4">
-            Nuevo Producto
-          </h4>
-
+          <button
+            type="button"
+            onClick={openServicePolicyModal}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#2277B4]/25 bg-[#2277B4]/5 text-[#2277B4] text-sm font-semibold hover:bg-[#2277B4]/10 transition-colors mb-4">
+            <Plus size={16} /> Nuevo servicio o póliza
+          </button>
           <div className="mb-6">
             <div className="relative">
               <div
@@ -824,14 +826,7 @@ export default function RegistrarProducts() {
                 <ChevronDown size={16} className="text-light-text-secondary" />
               </div>
             </div>
-            <div className="mt-3 flex justify-end">
-              <button
-                type="button"
-                onClick={openServicePolicyModal}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#2277B4]/25 bg-[#2277B4]/5 text-[#2277B4] text-sm font-semibold hover:bg-[#2277B4]/10 transition-colors">
-                <Plus size={16} /> Nuevo servicio o póliza
-              </button>
-            </div>
+            <div className="mt-3 flex justify-end"></div>
           </div>
 
           <div className="space-y-4">
@@ -960,13 +955,13 @@ export default function RegistrarProducts() {
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in relative">
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                <h2 className="font-bold text-gray-800 text-lg">
+              <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center justify-between">
+                <h2 className="font-bold text-white text-lg">
                   Seleccionar producto
                 </h2>
                 <button
                   onClick={() => setIsMainModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                  className="text-white/80 hover:text-white transition-colors p-1">
                   <X size={20} />
                 </button>
               </div>
@@ -1054,17 +1049,17 @@ export default function RegistrarProducts() {
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
             <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl animate-fade-in flex flex-col max-h-[85vh]">
-              <div className="p-4 border-b border-gray-100 flex items-center gap-3">
+              <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
                 <button
                   onClick={() => {
                     setIsContpaqiModalOpen(false);
                     setIsMainModalOpen(true);
                   }}
-                  className="text-gray-400 hover:text-gray-700 transition-colors p-2 bg-gray-50 hover:bg-gray-100 rounded-full">
+                  className="text-white/80 hover:text-white transition-colors p-2 bg-white/10 hover:bg-white/20 rounded-full">
                   <ArrowLeft size={20} />
                 </button>
-                <h2 className="font-bold text-[#1e293b] text-xl flex items-center gap-2">
-                  <Package className="text-blue-600" size={24} /> Productos de
+                <h2 className="font-bold text-white text-xl flex items-center gap-2">
+                  <Package className="text-blue-300" size={24} /> Productos de
                   CONTPAQi
                 </h2>
               </div>
@@ -1176,23 +1171,23 @@ export default function RegistrarProducts() {
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in">
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => {
                       setIsNewCategoryModalOpen(false);
                       setIsMainModalOpen(true);
                     }}
-                    className="text-gray-400 hover:text-gray-700 transition-colors p-1 bg-gray-50 hover:bg-gray-100 rounded-lg">
+                    className="text-white/80 hover:text-white transition-colors p-1 bg-white/10 hover:bg-white/20 rounded-lg">
                     <ArrowLeft size={20} />
                   </button>
-                  <h2 className="font-bold text-gray-800 text-lg">
+                  <h2 className="font-bold text-white text-lg">
                     Nuevo producto
                   </h2>
                 </div>
                 <button
                   onClick={() => setIsNewCategoryModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                  className="text-white/80 hover:text-white transition-colors p-1">
                   <X size={20} />
                 </button>
               </div>
@@ -1255,14 +1250,14 @@ export default function RegistrarProducts() {
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
-              <div className="p-4 flex items-center justify-between sticky top-0 bg-white z-10">
-                <h2 className="font-bold text-gray-800 text-lg">
+              <div className="p-4 flex items-center justify-between sticky top-0 z-10 bg-[#1a2b4c] border-b border-[#24395f]">
+                <h2 className="font-bold text-white text-lg">
                   Nuevo servicio o póliza
                 </h2>
                 <button
                   type="button"
                   onClick={() => setIsServicePolicyModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1">
+                  className="text-white/80 hover:text-white transition-colors p-1">
                   <X size={20} />
                 </button>
               </div>
@@ -1427,9 +1422,9 @@ export default function RegistrarProducts() {
                         </option>
                       ))}
                     </select>
-                    <p className="text-[11px] text-gray-500 mt-1">
-                      Pendiente se reflejará en historial como "Por vencer".
-                    </p>
+                    {/* <p className="text-[11px] text-gray-500 mt-1">
+                      Pendiente se reflejará "Por vencer".
+                    </p> */}
                   </div>
                 </div>
 

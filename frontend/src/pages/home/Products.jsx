@@ -9,6 +9,7 @@ import {
 import {
   PackageX,
   SlidersHorizontal,
+  Search,
   X,
   ChevronDown,
   ChevronUp,
@@ -449,22 +450,28 @@ export default function Products({ categoryFilter }) {
             <p className="text-sm text-gray-500 mt-1">
               {categoryFilter ?
                 `Administra el inventario de ${categoryFilter}s disponibles.`
-              : "Productos para tus clientes."}
+              : "Productos para clientes."}
             </p>
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-72">
+              {!q && (
+                <Search
+                  size={14}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+              )}
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Buscar por nombre, categoría…"
-                className="w-full pl-4 pr-8 py-2 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full pl-4 pr-9 py-2 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
               {q && (
                 <button
                   onClick={() => setQ("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                   <X size={14} />
                 </button>
               )}
@@ -475,14 +482,14 @@ export default function Products({ categoryFilter }) {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-semibold border border-red-200 bg-white text-red-600 hover:bg-red-50 transition-colors whitespace-nowrap"
               title="Exportar a PDF">
               <FileText size={14} />
-              Exportar PDF
+              Exportar a PDF
             </button>
             <button
               onClick={handleExportExcel}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-semibold border border-emerald-200 bg-white text-emerald-600 hover:bg-emerald-50 transition-colors whitespace-nowrap"
               title="Exportar a Excel">
               <FileSpreadsheet size={14} />
-              Exportar Excel
+              Exportar a Excel
             </button>
 
             <button
@@ -642,10 +649,6 @@ export default function Products({ categoryFilter }) {
             <h3 className="text-xl font-bold text-gray-800">
               No se encontraron coincidencias
             </h3>
-            <p className="text-gray-500 mt-2 text-sm max-w-sm mx-auto">
-              Intenta utilizar términos diferentes o ajusta los filtros activos
-              para expandir la búsqueda.
-            </p>
             {activeFilterCount > 0 && (
               <button
                 onClick={clearFilters}
@@ -656,38 +659,10 @@ export default function Products({ categoryFilter }) {
           </div>
         : <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden glass-panel">
             {/* Toolbar de tabla */}
-            <div className="px-5 py-3.5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/50">
-              <span className="text-[13px] text-gray-500 font-medium">
-                {(() => {
-                  const total = filteredProducts.length;
-                  const start = pagination.pageIndex * pagination.pageSize + 1;
-                  const end = Math.min(
-                    total,
-                    (pagination.pageIndex + 1) * pagination.pageSize,
-                  );
-                  return `Mostrando ${start} a ${end} de ${total} resultados`;
-                })()}
+            <div className="px-5 py-3.5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-end gap-3 bg-gray-50/50">
+              <span className="text-[12px] text-gray-500">
+                Pág. {pagination.pageIndex + 1} de {table.getPageCount()}
               </span>
-              <div className="flex items-center gap-3">
-                <label className="text-[12px] text-gray-500 flex items-center gap-2">
-                  Mostrar
-                  <select
-                    value={pagination.pageSize}
-                    onChange={(e) =>
-                      setPagination({
-                        pageIndex: 0,
-                        pageSize: Number(e.target.value),
-                      })
-                    }
-                    className="px-2 py-1 rounded-md border border-gray-200 text-[12px] text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                    {[10, 25, 50, 100].map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
             </div>
 
             {/* Tabla Tradicional */}
@@ -760,10 +735,31 @@ export default function Products({ categoryFilter }) {
 
             {/* Paginación final */}
             <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <span className="text-[12px] text-gray-500">
-                Página {pagination.pageIndex + 1} de {table.getPageCount()}
-              </span>
+              <label className="text-[12px] text-gray-500 flex items-center gap-2">
+                Mostrar
+                <select
+                  value={pagination.pageSize}
+                  onChange={(e) =>
+                    setPagination({
+                      pageIndex: 0,
+                      pageSize: Number(e.target.value),
+                    })
+                  }
+                  className="px-2 py-1 rounded-md border border-gray-200 text-[12px] text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                  {[10, 25, 50, 100].map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <div className="flex items-center gap-1">
+                <button
+                  onClick={() => table.setPageIndex(0)}
+                  disabled={!table.getCanPreviousPage()}
+                  className="px-2 py-1.5 rounded-md border border-gray-200 bg-white text-gray-600 text-[12px] font-medium hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-40 disabled:hover:bg-white shadow-sm">
+                  ««
+                </button>
                 <button
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
@@ -775,6 +771,12 @@ export default function Products({ categoryFilter }) {
                   disabled={!table.getCanNextPage()}
                   className="px-3 py-1.5 rounded-md border border-gray-200 bg-white text-gray-600 text-[12px] font-medium hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-40 disabled:hover:bg-white shadow-sm">
                   Siguiente
+                </button>
+                <button
+                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                  disabled={!table.getCanNextPage()}
+                  className="px-2 py-1.5 rounded-md border border-gray-200 bg-white text-gray-600 text-[12px] font-medium hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-40 disabled:hover:bg-white shadow-sm">
+                  »»
                 </button>
               </div>
             </div>

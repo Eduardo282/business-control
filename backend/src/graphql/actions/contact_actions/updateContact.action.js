@@ -78,11 +78,10 @@ export async function updateContactAction(
       </div>
     `;
 
-    try {
-      await sendEmail(contact.email, subject, text, html);
-    } catch (error) {
+    // No bloquea la respuesta de la mutación: el correo se envía en segundo plano.
+    void sendEmail(contact.email, subject, text, html).catch((error) => {
       console.error("Error enviando correo de bienvenida:", error);
-    }
+    });
   }
 
   return {

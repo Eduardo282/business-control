@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import Card from "../../components/ui/Card";
-import { listQuotesApi } from "../../actionsAPI/quotes.api";
+import Swal from "sweetalert2";
+import { deleteQuoteApi, listQuotesApi } from "../../actionsAPI/quotes.api";
+import { AuthContext } from "../../context/AuthContext";
 import {
   BadgeDollarSign,
   ChevronDown,
@@ -10,20 +12,27 @@ import {
   ExternalLink,
   Search,
   SlidersHorizontal,
+  Trash2,
   X,
 } from "@icons";
 import {
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 
 export default function QuoteHistory() {
+  const { user } = useContext(AuthContext);
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sorting, setSorting] = useState([]);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   const [q, setQ] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -56,6 +65,46 @@ export default function QuoteHistory() {
         setError(msg);
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  const handleDeleteQuote = useCallback(async (id) => {
+    const result = await Swal.fire({
+      title: "¿Eliminar cotización?",
+      text: "Esta acción borrará la cotización de forma permanente.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteQuoteApi(id);
+      setQuotes((prev) =>
+        prev.filter((quote) => String(quote.id) !== String(id)),
+      );
+      Swal.fire({
+        title: "¡Eliminada!",
+        text: "La cotización se eliminó correctamente de la base de datos.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (e) {
+      const message =
+        e?.response?.data?.errors?.[0]?.message ||
+        e?.message ||
+        "No se pudo eliminar la cotización.";
+
+      Swal.fire({
+        title: "Error",
+        text: message,
+        icon: "error",
+      });
+    }
   }, []);
 
   const filterFieldLabels = {
@@ -211,17 +260,25 @@ export default function QuoteHistory() {
         header: "Acciones",
         enableSorting: false,
         cell: ({ row }) => (
-          <div className="text-right">
+          <div className="flex items-center justify-end gap-2">
             <Link
               to={`/cotizaciones/${row.original.id}`}
               className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-[#2277B4] bg-gradient-to-b from-white to-[#E2E8F0] rounded-lg border border-[#CBD5E1]/80 hover:from-[#F8FAFC] hover:to-[#CBD5E1] transition-all">
-              <ExternalLink size={14} /> Ver cotización
+              <ExternalLink size={14} /> Ver
             </Link>
+            {user?.role?.name !== "SOPORTE" && (
+              <button
+                onClick={() => handleDeleteQuote(row.original.id)}
+                className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-red-700 hover:bg-red-50 transition-colors"
+                title="Eliminar cotización">
+                <Trash2 size={14} />
+              </button>
+            )}
           </div>
         ),
       },
     ],
-    [],
+    [handleDeleteQuote, user?.role?.name],
   );
 
   const filteredQuotes = useMemo(() => {
@@ -266,13 +323,36 @@ export default function QuoteHistory() {
     });
   }, [quotes, q, filters]);
 
+  useEffect(() => {
+    setPagination((prev) => ({
+      ...prev,
+      pageIndex: 0,
+    }));
+  }, [q, filters]);
+
+  useEffect(() => {
+    const maxPageIndex = Math.max(
+      0,
+      Math.ceil(filteredQuotes.length / pagination.pageSize) - 1,
+    );
+
+    if (pagination.pageIndex > maxPageIndex) {
+      setPagination((prev) => ({
+        ...prev,
+        pageIndex: maxPageIndex,
+      }));
+    }
+  }, [filteredQuotes.length, pagination.pageIndex, pagination.pageSize]);
+
   const table = useReactTable({
     data: filteredQuotes,
     columns,
-    state: { sorting },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (
@@ -294,14 +374,14 @@ export default function QuoteHistory() {
           <div className="relative flex-1 sm:flex-none">
             <Search
               size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
             />
             <input
               type="text"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Buscar por cliente, vendedor..."
-              className="w-full sm:w-80 pl-11 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] transition-all shadow-sm"
+              className="w-full sm:w-80 pl-4 pr-11 py-3 bg-white border border-gray-300 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] transition-all shadow-sm"
             />
           </div>
 
@@ -464,7 +544,8 @@ export default function QuoteHistory() {
             </div>
 
             <span className="text-xs text-light-text-secondary">
-              {filteredQuotes.length} de {quotes.length} cotización(es)
+              Pág. {table.getState().pagination.pageIndex + 1} de{" "}
+              {Math.max(1, table.getPageCount())}
             </span>
           </div>
 
@@ -541,6 +622,56 @@ export default function QuoteHistory() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div className="px-4 py-3 border-t border-light-border bg-white flex items-center justify-between gap-3 flex-wrap">
+            <label className="text-sm text-light-text-secondary flex items-center gap-2">
+              Mostrar
+              <select
+                value={table.getState().pagination.pageSize}
+                onChange={(e) => {
+                  setPagination((prev) => ({
+                    ...prev,
+                    pageIndex: 0,
+                    pageSize: Number(e.target.value),
+                  }));
+                }}
+                className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-[#fff] border border-light-border">
+                {[10, 25, 50, 100].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+              por página
+            </label>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+                className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                ««
+              </button>
+              <button
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                Anterior
+              </button>
+              <button
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                Siguiente
+              </button>
+              <button
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+                className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                »»
+              </button>
+            </div>
           </div>
         </Card>
       )}

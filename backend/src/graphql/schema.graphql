@@ -161,6 +161,7 @@ type Mutation {
     quote_id: ID!
     contact_email: String!
     message: String!
+    pdf_base64: String
   ): SendEmailResponse!
   toggleQuotePortal(id: ID!, access: Boolean!, contact_id: ID): Boolean!
   loginContact(email: String!, password: String!): LoginContactPayload!

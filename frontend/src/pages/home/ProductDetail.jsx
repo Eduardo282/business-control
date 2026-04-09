@@ -342,8 +342,8 @@ export default function ProductDetail() {
                 {product.description ||
                   "Sin descripción disponible para este producto."}
               </p>
-              <div className="flex justify-between items-center">
-                <div className="mt-8 flex items-end gap-4 p-4 rounded-xl w-fit">
+              <div className="mt-8 flex flex-wrap items-end gap-8 lg:gap-12">
+                <div className="flex items-end gap-4 p-4 rounded-xl w-fit">
                   <div>
                     <div className="text-xs text-light-text-secondary dark:text-slate-500 mb-1">
                       Precio Actual
@@ -368,13 +368,13 @@ export default function ProductDetail() {
                 </div>
 
                 {product.users_count > 0 && (
-                  <div className="mt-4 flex items-center gap-3 p-3 rounded-xl w-fit">
+                  <div className="flex items-center gap-3 px-4 py-3 w-fit">
                     <div className="p-2 rounded-lg">
                       <Users size={20} className="text-black" />
                     </div>
                     <div>
                       <div className="text-xs text-light-text-secondary dark:text-slate-500">
-                        Usuarios / Licencias
+                        Usuarios
                       </div>
                       <div className="text-lg font-bold text-light-text-primary">
                         {product.users_count}
@@ -522,7 +522,7 @@ export default function ProductDetail() {
           )}
 
           {/* Tarjeta de historial */}
-          <div className="rounded-md p-0 overflow-hidden flex flex-col mt-4 bg-white border border-gray-200 shadow-sm">
+          <div className="rounded-md p-0 overflow-visible flex flex-col mt-4 bg-white border border-gray-200 shadow-sm">
             <div className="p-4 bg-light-bg/50 dark:bg-white/5 flex flex-col gap-3 border-b border-light-border dark:border-white/10">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-light-text-primary text-sm flex items-center gap-2">
@@ -568,6 +568,30 @@ export default function ProductDetail() {
                     onChange={handleHistoryDateChange}
                     placeholderText="Filtrar fecha"
                     dateFormat="MM/dd/yyyy"
+                    popperPlacement="bottom-end"
+                    popperModifiers={[
+                      {
+                        name: "offset",
+                        options: { offset: [0, 8] },
+                      },
+                      {
+                        name: "preventOverflow",
+                        options: {
+                          rootBoundary: "viewport",
+                          padding: 8,
+                        },
+                      },
+                      {
+                        name: "flip",
+                        options: {
+                          fallbackPlacements: [
+                            "bottom-start",
+                            "top-end",
+                            "top-start",
+                          ],
+                        },
+                      },
+                    ]}
                     showPopperArrow={false}
                     popperClassName="price-history-datepicker-popper"
                     calendarClassName="price-history-datepicker-calendar"

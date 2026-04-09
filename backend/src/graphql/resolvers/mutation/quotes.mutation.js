@@ -26,11 +26,16 @@ export const deleteQuote = async (_parent, { id }, ctx) => {
 
 export const sendQuoteEmail = async (
   _parent,
-  { quote_id, contact_email, message },
+  { quote_id, contact_email, message, pdf_base64 },
   ctx,
 ) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
-  return sendQuoteEmailAction({ quote_id, contact_email, message });
+  return sendQuoteEmailAction({
+    quote_id,
+    contact_email,
+    message,
+    pdf_base64,
+  });
 };
 
 export const toggleQuotePortal = async (
