@@ -777,12 +777,16 @@ export default function RegistrarProducts() {
         description: "",
       });
       setPendingServicePolicy(null);
-      Swal.fire({
+      await Swal.fire({
         title: "¡Éxito!",
         text:
           isServicePolicy ? "Registro correcto." : "Registrado correctamente",
         icon: "success",
         confirmButtonColor: "#2277B4",
+        timer: 2200,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        allowOutsideClick: false,
       });
     } catch (e) {
       Swal.fire({
@@ -1048,7 +1052,7 @@ export default function RegistrarProducts() {
       {isContpaqiModalOpen &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl animate-fade-in flex flex-col max-h-[85vh]">
+            <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl animate-fade-in flex flex-col max-h-[85vh] overflow-hidden">
               <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
                 <button
                   onClick={() => {
@@ -1170,7 +1174,7 @@ export default function RegistrarProducts() {
       {isNewCategoryModalOpen &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in">
+            <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in overflow-hidden">
               <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <button

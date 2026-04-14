@@ -640,16 +640,15 @@ export default function Policies() {
         enableSorting: false,
         cell: ({ row }) => {
           const g = row.original;
-          if ((g.count || 0) <= 1) return null;
-
           const isOpen = !!expanded[g.id];
           return (
             <button
-              onClick={() =>
-                setExpanded((prev) => ({ ...prev, [g.id]: !prev[g.id] }))
-              }
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded((prev) => ({ ...prev, [g.id]: !prev[g.id] }));
+              }}
               className="w-7 h-7 inline-flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
-              title={isOpen ? "Ocultar pólizas" : "Ver pólizas"}>
+              title={isOpen ? "Ocultar detalles" : "Ver detalles"}>
               {isOpen ?
                 <ChevronDown size={16} />
               : <ChevronRight size={16} />}
@@ -778,11 +777,12 @@ export default function Policies() {
           return (
             <div className="text-right">
               <button
-                onClick={() =>
+                onClick={(e) => {
+                  e.stopPropagation();
                   g.count === 1 ?
                     handleDelete(g.policyIds?.[0])
-                  : handleDeleteGroup(g)
-                }
+                  : handleDeleteGroup(g);
+                }}
                 className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-red-800 transition-colors"
                 title={
                   g.count === 1 ?
@@ -957,7 +957,8 @@ export default function Policies() {
         <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 text-xs text-[#2277B4] flex items-center justify-between min-h-[44px]">
           <div className="flex items-center gap-1 shrink-0">
             <Lightbulb size={14} className="inline" /> Clic en{" "}
-            <ChevronRight size={12} className="inline" /> para más detalles
+            <ChevronRight size={12} className="inline" /> o en la fila para más
+            detalles
           </div>
 
           <div className="flex items-center gap-2">
@@ -1045,7 +1046,13 @@ export default function Policies() {
                   <Fragment key={row.id}>
                     <tr
                       key={row.id}
-                      className="hover:bg-gray-50 transition-colors">
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() =>
+                        setExpanded((prev) => ({
+                          ...prev,
+                          [row.original.id]: !prev[row.original.id],
+                        }))
+                      }>
                       {row.getVisibleCells().map((cell) => (
                         <td key={cell.id} className="p-4 align-top">
                           {flexRender(
@@ -1056,23 +1063,20 @@ export default function Policies() {
                       ))}
                     </tr>
 
-                    {!!expanded[row.original.id] &&
-                      (row.original.count || 0) > 1 && (
-                        <tr
-                          key={`${row.id}__expanded`}
-                          className="bg-gray-50/40">
-                          <td colSpan={columns.length} className="px-6 py-4">
-                            <div className="ml-8">
-                              <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mb-2">
-                                Folios ({row.original.count})
-                              </div>
-                              <LicenseTable
-                                licenseKeys={row.original.licenseKeys || []}
-                              />
+                    {!!expanded[row.original.id] && (
+                      <tr key={`${row.id}__expanded`} className="bg-gray-50/40">
+                        <td colSpan={columns.length} className="px-6 py-4">
+                          <div className="ml-8">
+                            <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mb-2">
+                              Folios ({row.original.count})
                             </div>
-                          </td>
-                        </tr>
-                      )}
+                            <LicenseTable
+                              licenseKeys={row.original.licenseKeys || []}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                   </Fragment>
                 ))
               }

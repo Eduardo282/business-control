@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useMemo, useRef } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../context/AuthContext";
@@ -255,6 +255,21 @@ export default function Clients() {
     e.target.value = "";
   };
 
+  const fireBulkModalAlert = (options) =>
+    Swal.fire({
+      ...options,
+      didOpen: () => {
+        const container = Swal.getContainer();
+        if (container) {
+          container.style.zIndex = "11000";
+        }
+
+        if (typeof options.didOpen === "function") {
+          options.didOpen();
+        }
+      },
+    });
+
   const executeBulkUpload = async () => {
     setBulkUploading(true);
     setBulkResult(null);
@@ -280,12 +295,31 @@ export default function Clients() {
       }
 
       setBulkResult({ success: true, count: totalCreated });
+      flushSync(() => {
+        setShowBulkModal(false);
+      });
+      await fireBulkModalAlert({
+        title: "Importacion completada",
+        text: `Se importaron ${totalCreated} clientes exitosamente.`,
+        icon: "success",
+        confirmButtonColor: "#2277B4",
+        timer: 2200,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+      });
       setBulkData([]);
       await load();
     } catch (err) {
       setBulkResult({
         success: false,
         message: err.message || "Error en la carga masiva.",
+      });
+      fireBulkModalAlert({
+        title: "Error",
+        text: err.message || "Error en la carga masiva.",
+        icon: "error",
+        confirmButtonColor: "#d33",
       });
     } finally {
       setBulkUploading(false);
@@ -298,6 +332,12 @@ export default function Clients() {
       setBulkResult({
         success: false,
         message: "Debes ingresar la URL del archivo en Google Drive.",
+      });
+      fireBulkModalAlert({
+        title: "Falta la URL",
+        text: "Debes ingresar la URL del archivo en Google Drive.",
+        icon: "warning",
+        confirmButtonColor: "#2277B4",
       });
       return;
     }
@@ -342,11 +382,33 @@ export default function Clients() {
         skippedCount: report.skippedCount,
         details: report,
       });
+      flushSync(() => {
+        setShowBulkModal(false);
+      });
+      await fireBulkModalAlert({
+        title: "Importacion completada",
+        text:
+          report.skippedCount > 0 ?
+            `Se importaron ${report.importedCount} clientes. Se omitieron ${report.skippedCount} filas.`
+          : `Se importaron ${report.importedCount} clientes exitosamente.`,
+        icon: "success",
+        confirmButtonColor: "#2277B4",
+        timer: 2200,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+      });
       await load();
     } catch (err) {
       setBulkResult({
         success: false,
         message: err.message || "Error importando archivo desde Drive.",
+      });
+      fireBulkModalAlert({
+        title: "Error",
+        text: err.message || "Error importando archivo desde Drive.",
+        icon: "error",
+        confirmButtonColor: "#d33",
       });
     } finally {
       setDriveImporting(false);
@@ -1158,7 +1220,7 @@ export default function Clients() {
                       {activeFilterPickerConfig?.buttonLabel || "campo"}
                     </h3>
                     <p className="text-[11px] text-gray-300 mt-1">
-                      Selecciona un valor de la columna{" "}
+                      Selecciona un valor de{" "}
                       {activeFilterPickerConfig?.modalLabel || ""}
                     </p>
                   </div>
@@ -1750,40 +1812,9 @@ export default function Clients() {
                   <FileSpreadsheet size={20} />
                   Carga de Clientes
                 </h3>
-                <button
-                  onClick={() => setShowBulkModal(false)}
-                  className="text-white hover:text-gray-300 transition-colors">
-                  <X size={18} />
-                </button>
               </div>
 
               <div className="p-6 overflow-y-auto flex-1 space-y-5">
-                {/* Resultado de la carga */}
-                {bulkResult && (
-                  <div
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium ${
-                      bulkResult.success ?
-                        "bg-green-50 border border-green-200 text-green-700"
-                      : "bg-red-50 border border-red-200 text-red-700"
-                    }`}>
-                    {bulkResult.success ?
-                      <>
-                        <CheckCircle2 size={18} />
-                        Se importaron {bulkResult.count} clientes exitosamente.
-                        {bulkResult.skippedCount > 0 && (
-                          <span>
-                            Se omitieron {bulkResult.skippedCount} filas.
-                          </span>
-                        )}
-                      </>
-                    : <>
-                        <AlertCircle size={18} />
-                        {bulkResult.message}
-                      </>
-                    }
-                  </div>
-                )}
-
                 {bulkResult?.success &&
                   bulkResult?.details?.ignoredHeaders?.length > 0 && (
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">

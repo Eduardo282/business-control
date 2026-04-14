@@ -111,12 +111,6 @@ export default function Login() {
 
       {/* Lado derecho - Formulario */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#F1F4F8] relative">
-        {/* <div
-          className="absolute inset-0 opacity-[0.4] mix-blend-multiply pointer-events-none"
-          style={{
-            backgroundImage:
-              "url('https://www.transparenttextures.com/patterns/cream-paper.png')",
-          }}></div> */}
         <div className="w-full max-w-md relative z-10">
           {/* Logo para móvil */}
           <div className="lg:hidden flex justify-center mb-8">

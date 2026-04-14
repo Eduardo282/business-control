@@ -6,7 +6,7 @@ import {
   useMemo,
   useRef,
 } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import Swal from "sweetalert2";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
@@ -1730,6 +1730,21 @@ export default function ClientDetail() {
     e.target.value = "";
   };
 
+  const fireBulkContactModalAlert = (options) =>
+    Swal.fire({
+      ...options,
+      didOpen: () => {
+        const container = Swal.getContainer();
+        if (container) {
+          container.style.zIndex = "11000";
+        }
+
+        if (typeof options.didOpen === "function") {
+          options.didOpen();
+        }
+      },
+    });
+
   const executeBulkContactUpload = async () => {
     setBulkContactUploading(true);
     setBulkContactResult(null);
@@ -1752,12 +1767,31 @@ export default function ClientDetail() {
       }
 
       setBulkContactResult({ success: true, count: totalCreated });
+      flushSync(() => {
+        setShowBulkContactModal(false);
+      });
+      await fireBulkContactModalAlert({
+        title: "Importacion completada",
+        text: `Se importaron ${totalCreated} contactos exitosamente.`,
+        icon: "success",
+        confirmButtonColor: "#2277B4",
+        timer: 2200,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+      });
       setBulkContactData([]);
       await load();
     } catch (err) {
       setBulkContactResult({
         success: false,
         message: err.message || "Error en la carga masiva.",
+      });
+      fireBulkContactModalAlert({
+        title: "Error",
+        text: err.message || "Error en la carga masiva.",
+        icon: "error",
+        confirmButtonColor: "#d33",
       });
     } finally {
       setBulkContactUploading(false);
@@ -1770,6 +1804,12 @@ export default function ClientDetail() {
       setBulkContactResult({
         success: false,
         message: "Debes ingresar la URL del archivo en Google Drive.",
+      });
+      fireBulkContactModalAlert({
+        title: "Falta la URL",
+        text: "Debes ingresar la URL del archivo en Google Drive.",
+        icon: "warning",
+        confirmButtonColor: "#2277B4",
       });
       return;
     }
@@ -1802,11 +1842,33 @@ export default function ClientDetail() {
         skippedCount: report.skippedCount,
         details: report,
       });
+      flushSync(() => {
+        setShowBulkContactModal(false);
+      });
+      await fireBulkContactModalAlert({
+        title: "Importacion completada",
+        text:
+          report.skippedCount > 0 ?
+            `Se importaron ${report.importedCount} contactos. Se omitieron ${report.skippedCount} filas.`
+          : `Se importaron ${report.importedCount} contactos exitosamente.`,
+        icon: "success",
+        confirmButtonColor: "#2277B4",
+        timer: 2200,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+      });
       await load();
     } catch (err) {
       setBulkContactResult({
         success: false,
         message: err.message || "Error importando archivo desde Drive.",
+      });
+      fireBulkContactModalAlert({
+        title: "Error",
+        text: err.message || "Error importando archivo desde Drive.",
+        icon: "error",
+        confirmButtonColor: "#d33",
       });
     } finally {
       setBulkContactDriveImporting(false);
@@ -3124,7 +3186,7 @@ export default function ClientDetail() {
                               "campo"}
                           </h3>
                           <p className="text-[11px] text-gray-300 mt-1">
-                            Selecciona un valor de la columna{" "}
+                            Selecciona un valor de{" "}
                             {activeContactFilterPickerConfig?.modalLabel || ""}
                           </p>
                         </div>
@@ -3647,36 +3709,9 @@ export default function ClientDetail() {
                   <FileSpreadsheet size={20} />
                   Carga de Contactos
                 </h3>
-                <button
-                  onClick={() => setShowBulkContactModal(false)}
-                  className="text-white hover:text-gray-300 transition-colors">
-                  <X size={18} />
-                </button>
               </div>
 
               <div className="p-6 overflow-y-auto flex-1 space-y-5">
-                {/* Resultado */}
-                {bulkContactResult && (
-                  <div
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium ${
-                      bulkContactResult.success ?
-                        "bg-green-50 border border-green-200 text-green-700"
-                      : "bg-red-50 border border-red-200 text-red-700"
-                    }`}>
-                    {bulkContactResult.success ?
-                      <>
-                        <CheckCircle2 size={18} />
-                        Se importaron {bulkContactResult.count} contactos
-                        exitosamente.
-                      </>
-                    : <>
-                        <AlertCircle size={18} />
-                        {bulkContactResult.message}
-                      </>
-                    }
-                  </div>
-                )}
-
                 {/* Instrucciones */}
                 <div className="bg-[#2277B412] border border-blue-200 rounded-xl p-4">
                   <p className="text-sm font-semibold text-[#2277B4] mb-2 flex items-center gap-1">
