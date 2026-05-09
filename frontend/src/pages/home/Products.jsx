@@ -45,7 +45,25 @@ function getAvatarColors(str = "") {
     h = (h * 31 + str.charCodeAt(i)) & 0xffff;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
+function getProductKeyword(name) {
+  const n = String(name)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  if (n.includes("taco")) return "tacos,mexican-food";
+  if (n.includes("comida") || n.includes("restaurante")) return "food,restaurant";
+  if (n.includes("nube") || n.includes("cloud")) return "cloud,technology";
+  if (n.includes("banco") || n.includes("finanza")) return "finance,business";
+  if (n.includes("factura") || n.includes("venta") || n.includes("comercial")) return "sales,business";
+  if (n.includes("nomina") || n.includes("rrhh")) return "office,team";
+  if (n.includes("contabilidad") || n.includes("conta")) return "accounting,business";
+  if (n.includes("seguro") || n.includes("poliza")) return "insurance,business";
+  return "business,product";
+}
+
 function ProductAvatar({ name = "", category = "" }) {
+  const [imgError, setImgError] = useState(false);
+
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -53,6 +71,27 @@ function ProductAvatar({ name = "", category = "" }) {
     .map((w) => w[0].toUpperCase())
     .join("");
   const [bg, fg] = getAvatarColors(category + name);
+
+  if (!imgError && name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) {
+      h = (h * 31 + name.charCodeAt(i)) & 0xffff;
+    }
+    const keyword = getProductKeyword(name + " " + category);
+    const imgUrl = `https://loremflickr.com/100/100/${keyword}?lock=${(h % 1000) + 1}`;
+    
+    return (
+      <div className="flex-shrink-0 w-9 h-9 rounded-lg overflow-hidden bg-white border border-gray-100 shadow-sm">
+        <img 
+          src={imgUrl} 
+          alt={name} 
+          onError={() => setImgError(true)} 
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-[11px] font-extrabold tracking-tight select-none"
@@ -70,11 +109,6 @@ function formatPrice(val) {
   });
 }
 
-const HIDDEN_PRODUCT_CATEGORIES = new Set([
-  "poliza personalizada",
-  "servicio personalizado",
-]);
-
 function normalizeCategory(category = "") {
   return String(category)
     .normalize("NFD")
@@ -83,8 +117,20 @@ function normalizeCategory(category = "") {
     .trim();
 }
 
-function isServicePolicyCategory(category = "") {
-  return HIDDEN_PRODUCT_CATEGORIES.has(normalizeCategory(category));
+function inferProductType(product) {
+  const source = `${product?.name || ""} ${product?.category || ""}`;
+  const normalized = normalizeCategory(source);
+
+  if (normalized.includes("poliza")) return "POLICY";
+  if (normalized.includes("servicio")) return "SERVICE";
+  return "PRODUCT";
+}
+
+function getTypeFilterLabel(type) {
+  if (type === "POLICY") return "Pólizas";
+  if (type === "SERVICE") return "Servicios";
+  if (type === "PRODUCT") return "Productos";
+  return "Todos";
 }
 
 // ── Componente principal ─────────────────────────────────────────────────────
@@ -100,6 +146,7 @@ export default function Products({ categoryFilter }) {
   // ── Filtros ────────────────────────────────────────────────────────────────
   const [q, setQ] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
+  const [filterType, setFilterType] = useState("");
   const [filterPriceMin, setFilterPriceMin] = useState("");
   const [filterPriceMax, setFilterPriceMax] = useState("");
   const [filterUsers, setFilterUsers] = useState("");
@@ -124,16 +171,14 @@ export default function Products({ categoryFilter }) {
   }, [
     q,
     filterCategory,
+    filterType,
     filterPriceMin,
     filterPriceMax,
     filterUsers,
     categoryFilter,
   ]);
 
-  const visibleProducts = useMemo(
-    () => allProducts.filter((p) => !isServicePolicyCategory(p.category)),
-    [allProducts],
-  );
+  const visibleProducts = useMemo(() => allProducts, [allProducts]);
 
   const categories = useMemo(
     () =>
@@ -144,7 +189,7 @@ export default function Products({ categoryFilter }) {
   );
 
   const filteredProducts = useMemo(() => {
-    return visibleProducts.filter((p) => {
+    const filtered = visibleProducts.filter((p) => {
       if (categoryFilter && p.category !== categoryFilter) return false;
       if (q.trim()) {
         const needle = q.trim().toLowerCase();
@@ -157,6 +202,7 @@ export default function Products({ categoryFilter }) {
           return false;
       }
       if (filterCategory && p.category !== filterCategory) return false;
+      if (filterType && inferProductType(p) !== filterType) return false;
       if (
         filterPriceMin !== "" &&
         parseFloat(p.current_price) < parseFloat(filterPriceMin)
@@ -171,10 +217,28 @@ export default function Products({ categoryFilter }) {
         return false;
       return true;
     });
+
+    // Agrupar productos idénticos
+    const map = new Map();
+    filtered.forEach((p) => {
+      const nName = String(p.name || "").trim().toLowerCase();
+      const nCat = String(p.category || "").trim().toLowerCase();
+      const key = `${nName}|${nCat}`;
+      if (!map.has(key)) {
+        map.set(key, { ...p, _groupCount: 1, _groupItems: [p] });
+      } else {
+        const existing = map.get(key);
+        existing._groupCount += 1;
+        existing._groupItems.push(p);
+      }
+    });
+
+    return Array.from(map.values());
   }, [
     visibleProducts,
     q,
     filterCategory,
+    filterType,
     filterPriceMin,
     filterPriceMax,
     filterUsers,
@@ -184,6 +248,7 @@ export default function Products({ categoryFilter }) {
   const activeFilterCount = [
     q.trim(),
     filterCategory,
+    filterType,
     filterPriceMin,
     filterPriceMax,
     filterUsers,
@@ -192,6 +257,7 @@ export default function Products({ categoryFilter }) {
   const clearFilters = () => {
     setQ("");
     setFilterCategory("");
+    setFilterType("");
     setFilterPriceMin("");
     setFilterPriceMax("");
     setFilterUsers("");
@@ -240,7 +306,14 @@ export default function Products({ categoryFilter }) {
         enableSorting: true,
         cell: ({ row: { original: p } }) => (
           <div className="flex items-center gap-3">
-            <ProductAvatar name={p.name} category={p.category} />
+            <div className="relative">
+              <ProductAvatar name={p.name} category={p.category} />
+              {p._groupCount > 1 && (
+                <span className="absolute -top-1 -right-2 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10 border-2 border-white shadow-sm">
+                  x{p._groupCount}
+                </span>
+              )}
+            </div>
             <div className="flex flex-col min-w-0">
               <span className="font-semibold text-gray-800 text-[13px] tracking-tight truncate max-w-[200px] sm:max-w-xs">
                 {p.name}
@@ -279,8 +352,11 @@ export default function Products({ categoryFilter }) {
         accessorKey: "users_count",
         header: "LÍMITE USUARIOS.",
         enableSorting: true,
-        cell: ({ getValue }) => {
-          const v = getValue();
+        cell: ({ row: { original: p }, getValue }) => {
+          const type = inferProductType(p);
+          const isServiceOrPolicy = type === "SERVICE" || type === "POLICY";
+          const v = isServiceOrPolicy ? 1 : getValue();
+          
           if (!v) return <span className="text-gray-300 text-xs">—</span>;
           return (
             <span className="inline-flex items-center gap-1.5 text-xs text-gray-600 font-medium">
@@ -297,11 +373,7 @@ export default function Products({ categoryFilter }) {
           <div className="flex items-center justify-end gap-2">
             <Link
               to={`/productos/${p.id}`}
-              className="px-4 py-1.5 text-sm font-extrabold text-[#2277B4] bg-gradient-to-b from-white to-[#E2E8F0] rounded-xl 
-                         border border-[#CBD5E1]/80 hover:from-[#F8FAFC] hover:to-[#CBD5E1] active:from-[#E2E8F0] active:to-[#F1F5F9]
-                         shadow-[0_4px_4px_rgba(0,0,0,0.1),_0_8px_16px_rgba(0,0,0,0.1),_inset_0_2px_4px_rgba(255,255,255,1),_inset_0_-3px_4px_rgba(0,0,0,0.1)] 
-                         active:shadow-[inset_0_3px_5px_rgba(0,0,0,0.2),_inset_0_-2px_2px_rgba(255,255,255,0.5)] 
-                         active:translate-y-1 transition-all duration-100 ease-out flex items-center gap-1">
+              className="px-4 py-1.5 text-sm font-semibold text-[#2277B4] bg-white rounded-xl border border-[#CBD5E1] hover:bg-[#F8FAFC] hover:border-[#B8C6D8] shadow-sm transition-colors duration-150 flex items-center gap-1">
               <ExternalLink size={16} /> Detalles
             </Link>
             {user?.role?.name !== "SOPORTE" && (
@@ -362,20 +434,20 @@ export default function Products({ categoryFilter }) {
       const doc = new jsPDF();
 
       // Page 1: Logo and Title
-      doc.addImage(LogoImg, "PNG", 15, 15, 60, 20);
+      doc.addImage(LogoImg, "PNG", 15, 12, 50, 38);
 
       doc.setFontSize(22);
       doc.setTextColor(26, 43, 76);
-      doc.text("Catálogo de Productos", 15, 50);
+      doc.text("Catálogo de Productos", 15, 62);
 
       doc.setFontSize(12);
       doc.setTextColor(100, 100, 100);
       doc.text(
         `Fecha de exportación: ${new Date().toLocaleDateString()}`,
         15,
-        60,
+        72,
       );
-      doc.text(`Total de registros: ${filteredProducts.length}`, 15, 68);
+      doc.text(`Total de registros: ${filteredProducts.length}`, 15, 80);
 
       // Page 2: Table
       doc.addPage();
@@ -391,7 +463,13 @@ export default function Products({ categoryFilter }) {
       autoTable(doc, {
         startY: 15,
         head: [
-          ["PRODUCTO", "CATEGORÍA", "PRECIO", "LÍMITE USR.", "DESCRIPCIÓN"],
+          [
+            "PRODUCTO",
+            "CATEGORÍA",
+            "PRECIO",
+            "LÍMITE DE USUARIOS",
+            "DESCRIPCIÓN",
+          ],
         ],
         body: tableData,
         theme: "grid",
@@ -530,6 +608,20 @@ export default function Products({ categoryFilter }) {
                   ))}
                 </select>
               </div>
+              <div className="flex flex-col gap-1 min-w-[160px]">
+                <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                  Tipo
+                </label>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="px-3 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">Todos</option>
+                  <option value="PRODUCT">Productos</option>
+                  <option value="SERVICE">Servicios</option>
+                  <option value="POLICY">Pólizas</option>
+                </select>
+              </div>
               <div className="flex flex-col gap-1 w-[120px]">
                 <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
                   Precio mín $
@@ -596,6 +688,14 @@ export default function Products({ categoryFilter }) {
                     </button>
                   </span>
                 )}
+                {filterType && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium border border-indigo-200">
+                    Tipo: {getTypeFilterLabel(filterType)}{" "}
+                    <button onClick={() => setFilterType("")}>
+                      <X size={10} />
+                    </button>
+                  </span>
+                )}
                 {filterPriceMin && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-xs font-medium border border-green-200">
                     Precio ≥ ${filterPriceMin}{" "}
@@ -649,13 +749,6 @@ export default function Products({ categoryFilter }) {
             <h3 className="text-xl font-bold text-gray-800">
               No se encontraron coincidencias
             </h3>
-            {activeFilterCount > 0 && (
-              <button
-                onClick={clearFilters}
-                className="mt-6 px-6 py-2.5 rounded-xl bg-[#1a2b4c] text-white text-sm font-bold shadow-md hover:bg-[#243660] hover:shadow-xl transition-all transform hover:-translate-y-0.5">
-                Restablecer todos los filtros
-              </button>
-            )}
           </div>
         : <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden glass-panel">
             {/* Toolbar de tabla */}

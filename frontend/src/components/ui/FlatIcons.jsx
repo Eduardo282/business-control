@@ -534,6 +534,41 @@ export const Book = BookOpen;
 
 export const DownloadCloud = Download;
 
+export const MessageCircle = createIcon(() => (
+  <>
+    <path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12z" />
+  </>
+));
+
+export const Send = createIcon(() => (
+  <>
+    <path d="M22 2 11 13" />
+    <path d="M22 2 15 22 11 13 2 9z" />
+  </>
+));
+
+export const Headphones = createIcon(() => (
+  <>
+    <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+    <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3v5z" />
+    <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3v5z" />
+  </>
+));
+
+export const Star = createIcon(() => (
+  <path d="M12 2l3.1 6.3L22 9.3l-5 4.8 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.8 6.9-1L12 2z" />
+));
+
+export const Smile = createIcon(() => (
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+    <circle cx="9" cy="10" r="0.8" fill="currentColor" stroke="none" />
+    <circle cx="15" cy="10" r="0.8" fill="currentColor" stroke="none" />
+  </>
+));
+
+
 export default {
   AlertCircle,
   AlertTriangle,
@@ -569,6 +604,7 @@ export default {
   Filter,
   FolderOpen,
   Globe,
+  Headphones,
   History,
   Inbox,
   Key,
@@ -578,6 +614,7 @@ export default {
   Lock,
   Mail,
   MapPin,
+  MessageCircle,
   Minus,
   Package,
   PackagePlus,
@@ -588,11 +625,14 @@ export default {
   Printer,
   ScrollText,
   Search,
+  Send,
   Shield,
   ShoppingBag,
   ShoppingCart,
   SlidersHorizontal,
+  Smile,
   Sparkles,
+  Star,
   Tag,
   Trash2,
   Upload,

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
@@ -59,6 +59,8 @@ function waitForStablePaint() {
 
 export default function QuoteDetail() {
   const { id } = useParams();
+  const location = useLocation();
+  const isPortal = location.pathname.startsWith("/portal");
   const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -164,17 +166,18 @@ export default function QuoteDetail() {
     const jspdfModule = await import("jspdf");
     const jsPDFCtor = jspdfModule.jsPDF || jspdfModule.default;
 
-    const doc = new jsPDFCtor({ unit: "pt", format: "a4" });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
+    // Obtener el ancho de un A4 estándar
+    const tempDoc = new jsPDFCtor({ unit: "pt", format: "a4" });
+    const pageWidth = tempDoc.internal.pageSize.getWidth();
+    
     const margin = 16;
     const printableWidth = pageWidth - margin * 2;
-    const printableHeight = pageHeight - margin * 2;
     const imageHeight = (canvas.height * printableWidth) / canvas.width;
+    const pageHeight = imageHeight + margin * 2;
     const imageData = canvas.toDataURL("image/png", 1.0);
 
-    let remainingHeight = imageHeight;
-    let currentOffset = 0;
+    // Crear el documento con un alto personalizado para que no haya cortes
+    const doc = new jsPDFCtor({ unit: "pt", format: [pageWidth, pageHeight] });
 
     doc.addImage(
       imageData,
@@ -186,23 +189,6 @@ export default function QuoteDetail() {
       undefined,
       "FAST",
     );
-    remainingHeight -= printableHeight;
-
-    while (remainingHeight > 0) {
-      doc.addPage();
-      currentOffset += printableHeight;
-      doc.addImage(
-        imageData,
-        "PNG",
-        margin,
-        margin - currentOffset,
-        printableWidth,
-        imageHeight,
-        undefined,
-        "FAST",
-      );
-      remainingHeight -= printableHeight;
-    }
 
     const dataUri = doc.output("datauristring");
     const pdfBase64 = dataUri.split(",")[1] || "";
@@ -222,10 +208,7 @@ export default function QuoteDetail() {
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
       showSmallToast("success", "PDF exportado con la vista actual.");
     } catch (e) {
-      showSmallToast(
-        "error",
-        e?.message || "No se pudo exportar el PDF.",
-      );
+      showSmallToast("error", e?.message || "No se pudo exportar el PDF.");
     }
   };
 
@@ -409,20 +392,6 @@ export default function QuoteDetail() {
     }
   };
 
-  const handleDownloadPdf = async () => {
-    const quoteFileToken = getQuoteFileToken(quote);
-    try {
-      const { doc } = await buildPdfFromSnapshot();
-      doc.save(`Cotizacion_${quoteFileToken}.pdf`);
-      showSmallToast("success", "PDF descargado correctamente.");
-    } catch (e) {
-      showSmallToast(
-        "error",
-        e?.message || "No se pudo descargar el PDF desde la vista actual.",
-      );
-    }
-  };
-
   const handleExportWord = async () => {
     const quoteFileToken = getQuoteFileToken(quote);
     try {
@@ -499,7 +468,7 @@ export default function QuoteDetail() {
                 .join(" | ");
 
               return `
-                <tr style="background:${lineBg};">
+                <tr style="background:${lineBg}; page-break-inside: avoid;">
                   <td style="padding:12px 12px; border-bottom:1px solid #e2e8f0; vertical-align:top;">
                     <div style="font-weight:700; color:#1e293b; font-size:14px;">${escapeHtml(item.product?.name || "Producto eliminado")}</div>
                     <div style="margin-top:4px; color:#64748b; font-size:11px; line-height:1.4;">${escapeHtml(productMeta)}</div>
@@ -556,6 +525,16 @@ export default function QuoteDetail() {
                 max-width: 980px;
                 margin: 0 auto;
                 border: 1px solid #e2e8f0;
+              }
+              table {
+                page-break-inside: auto;
+              }
+              tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+              }
+              .card, .conditions, .finance, .sign-card, .metric-card, .notes-card {
+                page-break-inside: avoid;
               }
               .top-strip {
                 background: #1d4f88;
@@ -884,7 +863,7 @@ export default function QuoteDetail() {
                   <tr>
                     <td style="width:66.6%; vertical-align:top;">
                       <div class="card">
-                        <p class="section-title">Cliente y Contacto</p>
+                        <p class="section-title">Cliente asignado</p>
                         <p class="client-name">${escapeHtml(quote.client?.business_name || "Cliente eliminado")}</p>
                         <div class="meta-text">${escapeHtml(quote.client?.address || "Domicilio no registrado")}</div>
                         <div class="small-muted">RFC: ${escapeHtml(quote.client?.rfc || "XAXX010101000")}</div>
@@ -987,20 +966,20 @@ export default function QuoteDetail() {
                 </table>
               </div>
 
-              <div class="footer">
-                <table class="footer-grid">
+              <div class="footer" style="background-color: #0f172a; background: #0f172a;">
+                <table class="footer-grid" style="background-color: #0f172a; width: 100%;">
                   <tr>
-                    <td style="width:60%; vertical-align:top; padding-right:10px;">
-                      <p class="footer-title">Informacion de Pago</p>
-                      <div class="footer-copy">
+                    <td style="width:60%; vertical-align:top; border: none; padding-right:10px; background-color: #0f172a;" bgcolor="#0f172a">
+                      <p class="footer-title" style="color: #34d399;">Informacion de Pago</p>
+                      <div class="footer-copy" style="color: #94a3b8;">
                         Banco: BBVA Bancomer<br />
                         Cuenta: 0123456789<br />
                         CLABE: 012000001234567890<br />
                         Beneficiario: Business Control S.A. de C.V.
                       </div>
                     </td>
-                    <td style="width:40%; vertical-align:top;">
-                      <div class="footer-note">
+                    <td style="width:40%; vertical-align:top; border: none; background-color: #0f172a;" bgcolor="#0f172a">
+                      <div class="footer-note" style="color: #94a3b8;">
                         * Precios sujetos a cambio sin previo aviso.<br />
                         * Tiempo de entrega sujeto a disponibilidad.
                       </div>
@@ -1268,7 +1247,7 @@ export default function QuoteDetail() {
       <div className="glass-panel p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden sticky top-6 z-40 backdrop-blur-xl shadow-xl">
         <div>
           <Link
-            to="/cotizaciones/historial"
+            to={isPortal ? "/portal/quotes" : "/cotizaciones/historial"}
             className="text-xs font-medium text-light-text-secondary hover:text-light-text-primary flex items-center gap-1 transition-colors group">
             <span className="group-hover:-translate-x-1 transition-transform">
               <ArrowLeft size={16} />
@@ -1291,41 +1270,16 @@ export default function QuoteDetail() {
         </div>
 
         <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:justify-end">
-          <Button
-            variant="ghost"
-            onClick={handleTogglePortal}
-            disabled={toggleLoading}
-            className={`flex-1 sm:flex-none transition-all border shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
-              quote.is_sent_to_client_portal ?
-                "!text-[#1B4733] hover:!text-[#1B4733] !bg-[#1B4733]/10 !border-[#1B4733]/30 hover:!bg-[#1B4733]/15"
-              : "!bg-white !border-[#1B4733]/30 !text-[#1B4733] hover:!bg-[#1B4733]/10"
-            }`}>
-            {toggleLoading ?
-              "..."
-            : quote.is_sent_to_client_portal ?
-              <span className="flex items-center gap-2">
-                <Check size={16} /> En Portal
-              </span>
-            : <span className="flex items-center gap-2">
-                <Globe size={16} /> Enviar a Portal
-              </span>
-            }
-          </Button>
-
-          <Button
-            variant="ghost"
-            onClick={handleSendToQuoteContact}
-            disabled={sendingToContact || !preferredContactEmail}
-            className="flex-1 sm:flex-none !px-3 !py-1.5 !rounded-md !text-[13px] !font-semibold !border !border-[#1B4733]/30 !text-light-text-secondary !transition-all !duration-150 disabled:!opacity-50 disabled:!cursor-not-allowed disabled:!bg-white disabled:!text-emerald-700 disabled:!border-emerald-200 !flex !items-center !gap-2 !justify-center hover:!bg-[#1B4733]/15">
-            <Mail size={16} />
-            {sendingToContact ? "Enviando..." : "Enviar al contacto"}
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={handleDownloadPdf}
-            className="flex-1 sm:flex-none !px-3 !py-1.5 !rounded-md !text-[13px] !font-semibold !bg-white !border !border-red-200 !text-red-600 hover:!bg-red-50 !shadow-none !transition-colors !duration-150 !flex !items-center !gap-1.5 !justify-center">
-            Descargar PDF
-          </Button>
+          {!isPortal && (
+            <Button
+              variant="ghost"
+              onClick={handleSendToQuoteContact}
+              disabled={sendingToContact || !preferredContactEmail}
+              className="flex-1 sm:flex-none !px-3 !py-1.5 !rounded-md !text-[13px] !font-semibold !border !border-[#1B4733]/30 !text-light-text-secondary !transition-all !duration-150 disabled:!opacity-50 disabled:!cursor-not-allowed disabled:!bg-white disabled:!text-emerald-700 disabled:!border-emerald-200 !flex !items-center !gap-2 !justify-center hover:!bg-[#1B4733]/15">
+              <Mail size={16} />
+              {sendingToContact ? "Enviando..." : "Enviar al contacto"}
+            </Button>
+          )}
           <Button
             variant="ghost"
             onClick={handlePrint}
@@ -1417,7 +1371,7 @@ export default function QuoteDetail() {
           <div className="grid lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5">
               <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-3">
-                Cliente y Contacto
+                Cliente asignado
               </h3>
               <div className="font-bold text-xl text-slate-900 leading-tight">
                 {quote.client?.business_name || "Cliente eliminado"}
@@ -1473,7 +1427,7 @@ export default function QuoteDetail() {
           <table className="w-full text-left text-sm border-separate border-spacing-0">
             <thead>
               <tr className="text-slate-900 text-xs font-bold uppercase tracking-wider">
-                <th className="py-3 pr-4 bg-slate-900 text-white rounded-l-lg">
+                <th className="py-3 px-6 bg-slate-900 text-white rounded-l-lg">
                   Descripción / Producto
                 </th>
                 <th className="py-3 px-4 text-center bg-slate-900 text-white">
@@ -1488,7 +1442,7 @@ export default function QuoteDetail() {
                 <th className="py-3 px-4 text-right bg-slate-900 text-white">
                   Precio Unit.
                 </th>
-                <th className="py-3 pl-4 text-right bg-slate-900 text-white rounded-r-lg">
+                <th className="py-3 px-6 text-right bg-slate-900 text-white rounded-r-lg">
                   Importe
                 </th>
               </tr>
@@ -1515,14 +1469,14 @@ export default function QuoteDetail() {
                     className={`${
                       index % 2 === 0 ? "bg-white" : "bg-slate-50/70"
                     } border-b border-slate-100`}>
-                    <td className="py-4 pr-4 align-top">
+                    <td className="py-4 pl-6 pr-4 align-top">
                       <div className="font-bold text-slate-800 text-base leading-tight">
                         {item.product?.name || "Producto eliminado"}
                       </div>
                       <div className="text-xs text-slate-500 mt-1 leading-relaxed">
                         {item.product?.description || item.product?.category}
                         {item.product?.users_count > 0 && (
-                          <span className="ml-2 text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 border border-slate-200">
+                          <span className="ml-2 inline-block text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 border border-slate-200">
                             {item.product?.users_count} Usuario(s)
                           </span>
                         )}
@@ -1552,7 +1506,7 @@ export default function QuoteDetail() {
                         minimumFractionDigits: 2,
                       })}
                     </td>
-                    <td className="py-4 pl-4 text-right font-bold text-slate-900 align-top font-mono">
+                    <td className="py-4 pl-4 pr-6 text-right font-bold text-slate-900 align-top font-mono">
                       $
                       {lineTotal.toLocaleString("es-MX", {
                         minimumFractionDigits: 2,

@@ -263,7 +263,7 @@ export default function QuoteHistory() {
           <div className="flex items-center justify-end gap-2">
             <Link
               to={`/cotizaciones/${row.original.id}`}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-[#2277B4] bg-gradient-to-b from-white to-[#E2E8F0] rounded-lg border border-[#CBD5E1]/80 hover:from-[#F8FAFC] hover:to-[#CBD5E1] transition-all">
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#2277B4] bg-white rounded-lg border border-[#CBD5E1] hover:bg-[#F8FAFC] hover:border-[#B8C6D8] shadow-sm transition-colors duration-150">
               <ExternalLink size={14} /> Ver
             </Link>
             {user?.role?.name !== "SOPORTE" && (
@@ -445,10 +445,10 @@ export default function QuoteHistory() {
                   <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
                     <div>
                       <h3 className="text-white font-bold text-base uppercase">
-                        Filtrar por {filterFieldLabels[activeFilterPickerField]}
+                        FILTRAR POR {filterFieldLabels[activeFilterPickerField]}
                       </h3>
                       <p className="text-[11px] text-gray-300 mt-1">
-                        Selecciona un valor para filtrar
+                        Selecciona o busca un valor
                       </p>
                     </div>
                     <button

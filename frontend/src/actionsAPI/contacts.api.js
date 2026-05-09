@@ -135,6 +135,25 @@ export async function deleteContactProductApi(id) {
   return data.data.deleteContactProduct;
 }
 
+export async function updateContactProductDatesApi(id, { start_date, expiration_date, status }) {
+  const query = `
+    mutation UpdateContactProductDates($id: ID!, $start_date: String, $expiration_date: String, $status: String) {
+      updateContactProductDates(id: $id, start_date: $start_date, expiration_date: $expiration_date, status: $status) {
+        id
+        start_date
+        expiration_date
+        status
+      }
+    }
+  `;
+  const { data } = await axiosClient.post("", {
+    query,
+    variables: { id, start_date, expiration_date, status },
+  });
+  if (data.errors?.length) throw new Error(data.errors[0].message);
+  return data.data.updateContactProductDates;
+}
+
 export async function bulkCreateContactsApi(inputs) {
   const query = `
     mutation BulkCreateContacts($inputs: [CreateContactInput!]!) {

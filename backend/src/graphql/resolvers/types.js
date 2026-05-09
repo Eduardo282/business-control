@@ -8,7 +8,10 @@ import { getQuoteItemsAction } from "../actions/quote_actions/getQuoteItems.acti
 
 export const Client = {
   contacts: async (parent, _args, ctx) => {
-    requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+    requireRoles(ctx.user, ["ADMIN", "VENTAS", "CONTACT_PORTAL"]);
+    if (ctx.user.role === "CONTACT_PORTAL" && String(parent.id) !== String(ctx.user.clientId)) {
+      throw new Error("No autorizado");
+    }
     return listContactsByClientAction(parent.id);
   },
   address: (parent) => {
@@ -37,15 +40,16 @@ export const ContactProduct = {
   product: (parent) => parent.product,
   contact: async (parent) => {
     if (parent.contact) return parent.contact;
+    if (!parent.contact_id) return null;
     return getContactAction(parent.contact_id);
   },
   client: async (parent) => {
     if (parent.client) return parent.client;
-    // Si tenemos client_id en el padre (lo agregamos a la DB), úsalo.
-    // Si no, busca a través del contacto (pero la tabla contact_products ahora tiene client_id).
     if (parent.client_id) return getClientAction(parent.client_id);
-    // Fallback si falta client_id pero está presente contact_id (no debería pasar con el nuevo esquema)
+    // Fallback: get client via contact
+    if (!parent.contact_id) return null;
     const c = await getContactAction(parent.contact_id);
+    if (!c) return null;
     return getClientAction(c.client_id);
   },
 };

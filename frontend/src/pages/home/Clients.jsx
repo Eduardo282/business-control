@@ -65,6 +65,27 @@ const QUICK_FILTER_FIELDS = [
   },
 ];
 
+const CLIENT_TEMPLATE_COLUMNS = [
+  "RAZÓN SOCIAL",
+  "RFC",
+  "CORREO PRINCIPAL",
+  "CELULAR",
+  "CIUDAD",
+  "TELÉFONO",
+  "CORREO SECUNDARIO",
+  "CÓDIGO POSTAL",
+];
+
+function normalizeExcelHeader(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function hasValue(value) {
   return value !== null && value !== undefined && String(value).trim() !== "";
 }
@@ -172,13 +193,15 @@ export default function Clients() {
   const [excelViewColumns, setExcelViewColumns] = useState(null);
   const [activeFilterPickerField, setActiveFilterPickerField] = useState(null);
   const [filterPickerSearch, setFilterPickerSearch] = useState("");
+  const [filterPickerPage, setFilterPickerPage] = useState(0);
+  const FILTER_PAGE_SIZE = 50;
   const bulkFileRef = useRef(null);
 
   // Mapeo de columnas Excel → campo DB
   const COLUMN_MAP = {
     "razon social": "business_name",
-    "razón social": "business_name",
     business_name: "business_name",
+    "business name": "business_name",
     empresa: "business_name",
     nombre: "business_name",
     rfc: "rfc",
@@ -187,15 +210,13 @@ export default function Clients() {
     correo: "email1",
     email: "email1",
     "correo secundario": "email2",
+    "email secundario": "email2",
     email2: "email2",
     celular: "celular",
     movil: "celular",
-    móvil: "celular",
     telefono: "telefono",
-    teléfono: "telefono",
     tel: "telefono",
     "codigo postal": "codigo_postal",
-    "código postal": "codigo_postal",
     codigo_postal: "codigo_postal",
     cp: "codigo_postal",
     ciudad: "ciudad",
@@ -214,27 +235,79 @@ export default function Clients() {
         const XLSX = await import("xlsx");
         const wb = XLSX.read(evt.target.result, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const raw = XLSX.utils.sheet_to_json(ws, { defval: "" });
+        const rows = XLSX.utils.sheet_to_json(ws, {
+          header: 1,
+          defval: "",
+          blankrows: false,
+        });
 
-        if (!raw.length) {
-          setBulkErrors(["El archivo está vacío o no tiene datos."]);
+        if (!rows.length) {
+          setBulkData([]);
+          setBulkErrors(["El archivo está vacío o no contiene encabezados."]);
           return;
         }
 
+        const [headerRow = [], ...sheetRows] = rows;
+        const normalizedHeaders = headerRow.map((header) =>
+          normalizeExcelHeader(header),
+        );
+        const mappedFields = normalizedHeaders.map(
+          (header) => COLUMN_MAP[header] || null,
+        );
+
+        if (!mappedFields.some(Boolean)) {
+          setBulkData([]);
+          setBulkErrors([
+            "No se reconocieron columnas válidas. Usa la plantilla 'Descargar plantilla'.",
+          ]);
+          return;
+        }
+
+        const missingTemplateHeaders = CLIENT_TEMPLATE_COLUMNS.filter(
+          (header) => !normalizedHeaders.includes(normalizeExcelHeader(header)),
+        );
+
         // Mapear columnas
-        const mapped = raw.map((row, idx) => {
+        const mapped = [];
+        sheetRows.forEach((row, idx) => {
+          const cells = Array.isArray(row) ? row : [];
+          const isEmptyRow = cells.every(
+            (cell) => String(cell ?? "").trim() === "",
+          );
+          if (isEmptyRow) return;
+
           const mapped_row = {};
-          Object.entries(row).forEach(([key, val]) => {
-            const normalised = key.trim().toLowerCase();
-            const field = COLUMN_MAP[normalised];
-            if (field) mapped_row[field] = String(val).trim();
+          cells.forEach((value, columnIndex) => {
+            const field = mappedFields[columnIndex];
+            if (!field) return;
+
+            const parsedValue = String(value ?? "").trim();
+            if (parsedValue !== "") {
+              mapped_row[field] = parsedValue;
+            }
           });
+
           mapped_row._row = idx + 2; // fila Excel (1=header)
-          return mapped_row;
+          mapped.push(mapped_row);
         });
+
+        if (!mapped.length) {
+          setBulkData([]);
+          setBulkErrors([
+            "El archivo no contiene filas con datos para importar.",
+          ]);
+          return;
+        }
 
         // Validar
         const errors = [];
+
+        if (missingTemplateHeaders.length) {
+          errors.push(
+            `Faltan columnas de la plantilla: ${missingTemplateHeaders.join(", ")}.`,
+          );
+        }
+
         mapped.forEach((r) => {
           if (!r.business_name) {
             errors.push(`Fila ${r._row}: Falta "Razón Social" (obligatorio).`);
@@ -242,9 +315,15 @@ export default function Clients() {
         });
 
         const valid = mapped.filter((r) => r.business_name);
+
+        if (!valid.length) {
+          errors.push("No hay filas válidas para importar.");
+        }
+
         setBulkData(valid);
         setBulkErrors(errors);
       } catch {
+        setBulkData([]);
         setBulkErrors([
           "No se pudo leer el archivo. Verifica que sea un Excel válido (.xlsx / .xls).",
         ]);
@@ -354,7 +433,7 @@ export default function Clients() {
           report.preferredViewColumns.length
         ) ?
           report.preferredViewColumns
-        : Object.keys(mappedHeadersByColumn);
+          : Object.keys(mappedHeadersByColumn);
 
       if (preferredViewColumns.length) {
         setExcelViewColumns(preferredViewColumns);
@@ -390,7 +469,7 @@ export default function Clients() {
         text:
           report.skippedCount > 0 ?
             `Se importaron ${report.importedCount} clientes. Se omitieron ${report.skippedCount} filas.`
-          : `Se importaron ${report.importedCount} clientes exitosamente.`,
+            : `Se importaron ${report.importedCount} clientes exitosamente.`,
         icon: "success",
         confirmButtonColor: "#2277B4",
         timer: 2200,
@@ -656,6 +735,7 @@ export default function Clients() {
   const openFilterPicker = (fieldName) => {
     setActiveFilterPickerField(fieldName);
     setFilterPickerSearch("");
+    setFilterPickerPage(0);
   };
 
   const closeFilterPicker = () => {
@@ -798,17 +878,17 @@ export default function Clients() {
         const value =
           rawValue === null || rawValue === undefined || rawValue === "" ?
             "—"
-          : String(rawValue);
+            : String(rawValue);
 
         if (column.name === "business_name") {
           const normalizedBusinessName =
             value !== "—" ?
               `${value.charAt(0).toUpperCase()}${value.slice(1)}`
-            : value;
+              : value;
           const firstChar =
             normalizedBusinessName !== "—" ?
               normalizedBusinessName.charAt(0)
-            : "•";
+              : "•";
 
           return (
             <div className="flex items-start gap-3 min-w-0">
@@ -874,7 +954,7 @@ export default function Clients() {
               title={isOpen ? "Ocultar más detalles" : "Ver más detalles"}>
               {isOpen ?
                 <ChevronDown size={16} />
-              : <ChevronRight size={16} />}
+                : <ChevronRight size={16} />}
             </button>
           );
         },
@@ -890,31 +970,29 @@ export default function Clients() {
           <div className="flex items-center gap-3">
             <Link to={`/clientes/${row.original.id}`}>
               <button
-                className="px-4 py-1.5 text-sm font-extrabold text-[#2277B4] bg-gradient-to-b from-white to-[#E2E8F0] rounded-xl 
-                           border border-[#CBD5E1]/80 hover:from-[#F8FAFC] hover:to-[#CBD5E1] active:from-[#E2E8F0] active:to-[#F1F5F9]
-                           shadow-[0_4px_4px_rgba(0,0,0,0.1),_0_8px_16px_rgba(0,0,0,0.1),_inset_0_2px_4px_rgba(255,255,255,1),_inset_0_-3px_4px_rgba(0,0,0,0.1)] 
-                           active:shadow-[inset_0_3px_5px_rgba(0,0,0,0.2),_inset_0_-2px_2px_rgba(255,255,255,0.5)] 
-                           active:translate-y-1 transition-all duration-100 ease-out">
+                className="px-4 py-1.5 text-sm font-semibold text-[#2277B4] bg-white rounded-xl
+                           border border-[#CBD5E1] hover:bg-[#F8FAFC] hover:border-[#B8C6D8]
+                           shadow-sm transition-colors duration-150">
                 Gestionar
               </button>
             </Link>
             {(user?.role?.name === "ADMIN" ||
               user?.role?.name === "VENTAS") && (
-              <>
-                <button
-                  onClick={() => openEditModal(row.original)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-amber-800 hover:scale-75 transition-colors"
-                  title="Editar">
-                  <Edit2 size={16} />
-                </button>
-                <button
-                  onClick={() => remove(row.original.id)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-red-700 hover:scale-75 transition-colors"
-                  title="Eliminar">
-                  <Trash2 size={16} />
-                </button>
-              </>
-            )}
+                <>
+                  <button
+                    onClick={() => openEditModal(row.original)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-amber-800 hover:scale-75 transition-colors"
+                    title="Editar">
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => remove(row.original.id)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-red-700 hover:scale-75 transition-colors"
+                    title="Eliminar">
+                    <Trash2 size={16} />
+                  </button>
+                </>
+              )}
           </div>
         ),
       },
@@ -1095,6 +1173,35 @@ export default function Clients() {
     }
   };
 
+  const handleDownloadTemplate = async () => {
+    try {
+      const XLSX = await import("xlsx");
+
+      const ws = XLSX.utils.aoa_to_sheet([CLIENT_TEMPLATE_COLUMNS]);
+      ws["!cols"] = [
+        { wch: 34 },
+        { wch: 18 },
+        { wch: 30 },
+        { wch: 18 },
+        { wch: 20 },
+        { wch: 30 },
+        { wch: 18 },
+        { wch: 18 },
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Plantilla Clientes");
+      XLSX.writeFile(wb, "Plantilla_Clientes.xlsx");
+    } catch (e) {
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo generar la plantilla de Excel.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -1140,28 +1247,29 @@ export default function Clients() {
               </div>
             </div>
 
-            <button
-              onClick={handleExportPDF}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 bg-white text-red-700 hover:bg-red-50 transition-colors whitespace-nowrap"
-              title="Exportar a PDF">
-              <FileText size={14} /> Exportar a PDF
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExportPDF}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 bg-white text-red-700 hover:bg-red-50 transition-colors whitespace-nowrap"
+                title="Exportar a PDF">
+                <FileText size={14} /> Exportar a PDF
+              </button>
 
-            <button
-              onClick={handleExportExcel}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
-              title="Exportar a Excel">
-              <FileSpreadsheet size={14} /> Exportar a Excel
-            </button>
+              <button
+                onClick={handleExportExcel}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
+                title="Exportar a Excel">
+                <FileSpreadsheet size={14} /> Exportar a Excel
+              </button>
+            </div>
 
             {/* Botón filtros */}
             <button
               onClick={() => setShowFilters((v) => !v)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
-                showFilters || activeFilterCount > 0 ?
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${showFilters || activeFilterCount > 0 ?
                   "bg-[#2277B4] text-white border-[#2277B4]"
-                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-              }`}>
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                }`}>
               <SlidersHorizontal size={15} />
               Filtros
               {activeFilterCount > 0 && (
@@ -1174,19 +1282,19 @@ export default function Clients() {
             {/* Botón carga masiva */}
             {(user?.role?.name === "ADMIN" ||
               user?.role?.name === "VENTAS") && (
-              <button
-                onClick={() => {
-                  setShowBulkModal(true);
-                  setBulkData([]);
-                  setBulkErrors([]);
-                  setBulkResult(null);
-                  setDriveUrl("");
-                }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#1a2b4c] transition-colors">
-                <Upload size={15} />
-                Cargar clientes
-              </button>
-            )}
+                <button
+                  onClick={() => {
+                    setShowBulkModal(true);
+                    setBulkData([]);
+                    setBulkErrors([]);
+                    setBulkResult(null);
+                    setDriveUrl("");
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#1a2b4c] transition-colors">
+                  <Upload size={15} />
+                  Cargar clientes
+                </button>
+              )}
 
             {/* Limpiar filtros */}
             {activeFilterCount > 0 && (
@@ -1220,8 +1328,7 @@ export default function Clients() {
                       {activeFilterPickerConfig?.buttonLabel || "campo"}
                     </h3>
                     <p className="text-[11px] text-gray-300 mt-1">
-                      Selecciona un valor de{" "}
-                      {activeFilterPickerConfig?.modalLabel || ""}
+                      Selecciona o busca un valor
                     </p>
                   </div>
                   <button
@@ -1236,7 +1343,10 @@ export default function Clients() {
                     <Search size={15} className="text-gray-500" />
                     <input
                       value={filterPickerSearch}
-                      onChange={(e) => setFilterPickerSearch(e.target.value)}
+                      onChange={(e) => {
+                        setFilterPickerSearch(e.target.value);
+                        setFilterPickerPage(0);
+                      }}
                       placeholder="Buscar valor..."
                       className="w-full bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
                     />
@@ -1244,30 +1354,52 @@ export default function Clients() {
 
                   <div className="h-72 overflow-y-auto rounded-lg border border-gray-100 divide-y divide-gray-100">
                     {visibleFilterPickerOptions.length > 0 ?
-                      visibleFilterPickerOptions.map((value) => {
-                        const isSelected =
-                          normalizeSearchText(
-                            filters[activeFilterPickerField],
-                          ) === normalizeSearchText(value);
+                      visibleFilterPickerOptions
+                        .slice(filterPickerPage * FILTER_PAGE_SIZE, (filterPickerPage + 1) * FILTER_PAGE_SIZE)
+                        .map((value) => {
+                          const isSelected =
+                            normalizeSearchText(
+                              filters[activeFilterPickerField],
+                            ) === normalizeSearchText(value);
 
-                        return (
-                          <button
-                            key={`${activeFilterPickerField}_${value}`}
-                            onClick={() => applyFilterValue(value)}
-                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                              isSelected ?
-                                "bg-[#2277B4]/10 text-[#125280] font-semibold"
-                              : "text-gray-700 hover:bg-gray-50"
-                            }`}>
-                            {value}
-                          </button>
-                        );
-                      })
-                    : <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                          return (
+                            <button
+                              key={`${activeFilterPickerField}_${value}`}
+                              onClick={() => applyFilterValue(value)}
+                              className={`w-full px-3 py-2 text-left text-sm transition-colors ${isSelected ?
+                                  "bg-[#2277B4]/10 text-[#125280] font-semibold"
+                                  : "text-gray-700 hover:bg-gray-50"
+                                }`}>
+                              {value}
+                            </button>
+                          );
+                        })
+                      : <div className="px-3 py-4 text-sm text-gray-500 text-center">
                         No hay valores para mostrar.
                       </div>
                     }
                   </div>
+                  {visibleFilterPickerOptions.length > FILTER_PAGE_SIZE && (
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                      <span className="text-xs text-gray-500">
+                        {filterPickerPage * FILTER_PAGE_SIZE + 1} - {Math.min((filterPickerPage + 1) * FILTER_PAGE_SIZE, visibleFilterPickerOptions.length)} de {visibleFilterPickerOptions.length}
+                      </span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setFilterPickerPage(p => Math.max(0, p - 1))}
+                          disabled={filterPickerPage === 0}
+                          className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          Anterior
+                        </button>
+                        <button
+                          onClick={() => setFilterPickerPage(p => p + 1)}
+                          disabled={(filterPickerPage + 1) * FILTER_PAGE_SIZE >= visibleFilterPickerOptions.length}
+                          className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          Siguiente
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>,
@@ -1281,27 +1413,34 @@ export default function Clients() {
               <ChevronRight size={12} className="inline" /> para más detalles
             </div>
 
-            <div
-              className={`flex items-center gap-2 transition-opacity duration-150 ${
-                showFilters ? "opacity-100" : "opacity-0 pointer-events-none"
-              }`}>
-              {quickFilterButtons.map((button) => {
-                const selectedValue = String(filters[button.fieldName] || "");
-                return (
-                  <button
-                    key={button.id}
-                    onClick={() => openFilterPicker(button.fieldName)}
-                    className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${
-                      selectedValue ?
-                        "bg-[#2277B4] text-white border-[#2277B4]"
-                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-                    }`}>
-                    <span className="uppercase font-bold tracking-wide">
-                      {button.buttonLabel}
-                    </span>
-                  </button>
-                );
-              })}
+            <div className="flex items-center gap-3">
+              <div
+                className={`flex items-center gap-2 transition-opacity duration-150 ${showFilters ? "opacity-100" : "opacity-0 pointer-events-none"
+                  }`}>
+                {quickFilterButtons.map((button) => {
+                  const selectedValue = String(filters[button.fieldName] || "");
+                  return (
+                    <button
+                      key={button.id}
+                      onClick={() => openFilterPicker(button.fieldName)}
+                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${selectedValue ?
+                          "bg-[#2277B4] text-white border-[#2277B4]"
+                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                        }`}>
+                      <span className="uppercase font-bold tracking-wide">
+                        {button.buttonLabel}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={handleDownloadTemplate}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-700 bg-white transition-colors whitespace-nowrap"
+                title="Descargar plantilla de carga masiva">
+                <FileSpreadsheet size={13} /> Descargar plantilla excel
+              </button>
             </div>
           </div>
         )}
@@ -1322,7 +1461,7 @@ export default function Clients() {
                       onClick={
                         header.column.getCanSort() ?
                           header.column.getToggleSortingHandler()
-                        : undefined
+                          : undefined
                       }>
                       <div className="flex items-center gap-1">
                         {flexRender(
@@ -1399,7 +1538,7 @@ export default function Clients() {
                                       const value =
                                         isValuePresent(rawValue) ?
                                           String(rawValue)
-                                        : "—";
+                                          : "—";
 
                                       return (
                                         <div
@@ -1424,7 +1563,7 @@ export default function Clients() {
                     </React.Fragment>
                   );
                 })
-              : <tr>
+                : <tr>
                   <td
                     colSpan={columns.length}
                     className="px-4 py-12 text-center">
@@ -1434,7 +1573,7 @@ export default function Clients() {
                     <p className="text-gray-500">
                       {loading ?
                         "Cargando clientes..."
-                      : "No se encontraron clientes"}
+                        : "No se encontraron clientes"}
                     </p>
                   </td>
                 </tr>
@@ -1809,7 +1948,6 @@ export default function Clients() {
               {/* Header */}
               <div className="px-6 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
                 <h3 className="text-white text-lg font-bold flex items-center gap-2">
-                  <FileSpreadsheet size={20} />
                   Carga de Clientes
                 </h3>
               </div>
@@ -1890,7 +2028,7 @@ export default function Clients() {
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         Importando...
                       </>
-                    : "Importar"}
+                      : "Importar"}
                   </button>
                 </div>
 
@@ -1909,6 +2047,9 @@ export default function Clients() {
                     <Upload size={28} />
                     <span className="text-sm font-semibold">
                       Haz clic para seleccionar el archivo Excel
+                    </span>
+                    <span className="text-[11px] text-gray-400">
+                      O usa la plantilla descargada
                     </span>
                   </button>
                 </div>
@@ -2000,7 +2141,7 @@ export default function Clients() {
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         Importando...
                       </>
-                    : <>
+                      : <>
                         <CheckCircle2 size={16} />
                         Importar {bulkData.length} Clientes
                       </>

@@ -52,7 +52,42 @@ function getAvatarColors(str = "") {
     h = (h * 31 + str.charCodeAt(i)) & 0xffff;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
+function getProductKeyword(name) {
+  const n = String(name)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  if (n.includes("taco")) return "tacos,mexican-food";
+  if (n.includes("comida") || n.includes("restaurante")) return "food,restaurant";
+  if (n.includes("nube") || n.includes("cloud")) return "cloud,technology";
+  if (n.includes("banco") || n.includes("finanza")) return "finance,business";
+  if (n.includes("factura") || n.includes("venta") || n.includes("comercial")) return "sales,business";
+  if (n.includes("nomina") || n.includes("rrhh")) return "office,team";
+  if (n.includes("contabilidad") || n.includes("conta")) return "accounting,business";
+  if (n.includes("seguro") || n.includes("poliza")) return "insurance,business";
+  return "business,product";
+}
+
+function normalizeCategory(category = "") {
+  return String(category)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function inferProductType(product) {
+  const source = `${product?.name || ""} ${product?.category || ""}`;
+  const normalized = normalizeCategory(source);
+
+  if (normalized.includes("poliza")) return "POLICY";
+  if (normalized.includes("servicio")) return "SERVICE";
+  return "PRODUCT";
+}
+
 function ProductAvatar({ name = "", category = "", size = "md" }) {
+  const [imgError, setImgError] = useState(false);
+
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -66,6 +101,26 @@ function ProductAvatar({ name = "", category = "", size = "md" }) {
     md: "w-14 h-14 text-[20px] rounded-2xl",
     lg: "w-20 h-20 text-[28px] rounded-3xl",
   };
+
+  if (!imgError && name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) {
+      h = (h * 31 + name.charCodeAt(i)) & 0xffff;
+    }
+    const keyword = getProductKeyword(name + " " + category);
+    const imgUrl = `https://loremflickr.com/100/100/${keyword}?lock=${(h % 1000) + 1}`;
+    
+    return (
+      <div className={`flex-shrink-0 overflow-hidden bg-white border border-gray-100 shadow-sm ${sizeClasses[size] || sizeClasses.md}`}>
+        <img 
+          src={imgUrl} 
+          alt={name} 
+          onError={() => setImgError(true)} 
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -367,7 +422,7 @@ export default function ProductDetail() {
                   </div>
                 </div>
 
-                {product.users_count > 0 && (
+                {inferProductType(product) === "PRODUCT" && product.users_count > 0 && (
                   <div className="flex items-center gap-3 px-4 py-3 w-fit">
                     <div className="p-2 rounded-lg">
                       <Users size={20} className="text-black" />
@@ -419,11 +474,20 @@ export default function ProductDetail() {
                   className="text-light-text-primary dark:text-white bg-light-bg dark:!bg-black/30 border-light-border dark:border-white/10"
                 />
                 <Input
-                  label={`USUARIOS (MÁXIMA CAPACIDAD. ${currentMaxUsers})`}
+                  label={
+                    inferProductType(editForm) === "SERVICE" || inferProductType(editForm) === "POLICY"
+                      ? "USUARIOS"
+                      : `USUARIOS (MÁXIMA CAPACIDAD. ${currentMaxUsers})`
+                  }
                   type="number"
                   min="1"
                   max={currentMaxUsers.toString()}
-                  value={editForm.users_count}
+                  value={
+                    inferProductType(editForm) === "SERVICE" || inferProductType(editForm) === "POLICY" 
+                      ? 1 
+                      : editForm.users_count
+                  }
+                  disabled={inferProductType(editForm) === "SERVICE" || inferProductType(editForm) === "POLICY"}
                   onChange={(e) => {
                     let val = e.target.value;
                     if (val === "") {

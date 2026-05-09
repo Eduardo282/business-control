@@ -92,7 +92,7 @@ export default function PortalDashboard() {
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
               <Package className="text-black" size={24} /> Mis Servicios y
-              Licencias
+              Polizas
             </h2>
 
             {/* Filtros */}

@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState, useContext, Fragment } from "react";
 import { createPortal } from "react-dom";
 import { axiosClient } from "../../actionsAPI/axiosClient";
-import { deleteContactProductApi } from "../../actionsAPI/contacts.api";
+import { deleteContactProductApi, updateContactProductDatesApi } from "../../actionsAPI/contacts.api";
 import { AuthContext } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 
 const PAGE_SIZE = 10;
 
 function inferPolicyType(product) {
+  if (product?.product_type === "POLICY") return "POLICY";
+  if (product?.product_type === "SERVICE") return "SERVICE";
+
   const source = `${product?.name || ""} ${product?.category || ""}`
     .toLowerCase()
     .normalize("NFD")
@@ -180,8 +183,6 @@ export default function Policies() {
   const [filters, setFilters] = useState({
     product: "",
     client: "",
-    contact: "",
-    folio: "",
     vigencia: "",
     status: "",
   });
@@ -191,14 +192,14 @@ export default function Policies() {
     pageSize: PAGE_SIZE,
   });
   const [expanded, setExpanded] = useState({});
+  const [editingRow, setEditingRow] = useState(null); // { id, start_date, expiration_date, status }
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const clearFilters = () => {
     setQ("");
     setFilters({
       product: "",
       client: "",
-      contact: "",
-      folio: "",
       vigencia: "",
       status: "",
     });
@@ -360,6 +361,61 @@ export default function Policies() {
     }
   };
 
+  const startEditRow = (group) => {
+    const sd = group.start_date ? new Date(group.start_date).toISOString().slice(0,10) : "";
+    const ed = group.expiration_date ? new Date(group.expiration_date).toISOString().slice(0,10) : "";
+    setEditingRow({
+      id: group.id,
+      policyIds: group.policyIds || [],
+      start_date: sd,
+      expiration_date: ed,
+      status: group.status || "ACTIVE",
+    });
+  };
+
+  const cancelEditRow = () => setEditingRow(null);
+
+  const saveEditRow = async () => {
+    if (!editingRow) return;
+    setSavingEdit(true);
+    try {
+      const isStandalone = String(editingRow.id).startsWith("product-");
+      if (isStandalone) {
+        Swal.fire({
+          title: "No editable",
+          text: "Este servicio/póliza aún no ha sido asignado a un contacto. Asígnelo primero.",
+          icon: "info",
+          confirmButtonColor: "#2277B4",
+        });
+        setSavingEdit(false);
+        return;
+      }
+
+      // Update each contact_product in the group
+      for (const cpId of editingRow.policyIds) {
+        await updateContactProductDatesApi(cpId, {
+          start_date: editingRow.start_date || null,
+          expiration_date: editingRow.expiration_date || null,
+          status: editingRow.status,
+        });
+      }
+
+      await load();
+      setEditingRow(null);
+      Swal.fire({
+        title: "¡Actualizado!",
+        text: "Vigencia y estado actualizados.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (e) {
+      Swal.fire("Error", e.message || "Error al actualizar", "error");
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const groupedPolicies = useMemo(() => {
     const makeKey = (p) => {
       const productName = p.product?.name || "";
@@ -410,9 +466,6 @@ export default function Policies() {
       const productName = g.product?.name || "";
       const productCategory = g.product?.category || "";
       const clientName = g.client?.business_name || "";
-      const contactName = g.contact?.full_name || "";
-      const contactEmail = g.contact?.email || "";
-      const licenses = (g.licenseKeys || []).join(" ");
       const policyType =
         inferPolicyType(g.product) === "POLICY" ? "poliza" : "servicio";
 
@@ -427,7 +480,6 @@ export default function Policies() {
           new Date(g.expiration_date).toLocaleDateString(locale)
         : "";
 
-      // Búsqueda global
       const matchQ =
         !s ||
         normalizeSearchText(
@@ -435,9 +487,6 @@ export default function Policies() {
             productName,
             productCategory,
             clientName,
-            contactName,
-            contactEmail,
-            licenses,
             policyType,
             statusLabel,
             startDate,
@@ -445,7 +494,6 @@ export default function Policies() {
           ].join(" "),
         ).includes(s);
 
-      // Filtros por campo individuales
       const matchFilters =
         !hasFieldFilters ||
         ((!filters.product ||
@@ -455,14 +503,6 @@ export default function Policies() {
           (!filters.client ||
             normalizeSearchText(clientName).includes(
               normalizeSearchText(filters.client),
-            )) &&
-          (!filters.contact ||
-            normalizeSearchText(contactName + " " + contactEmail).includes(
-              normalizeSearchText(filters.contact),
-            )) &&
-          (!filters.folio ||
-            normalizeSearchText(licenses).includes(
-              normalizeSearchText(filters.folio),
             )) &&
           (!filters.vigencia ||
             normalizeSearchText(startDate + " " + expDate).includes(
@@ -481,13 +521,9 @@ export default function Policies() {
       servicioPoliza: group.product?.name || "—",
       tipo: inferPolicyType(group.product) === "POLICY" ? "Póliza" : "Servicio",
       cliente: group.client?.business_name || "Sin cliente",
-      contacto: group.contact?.full_name || "—",
-      email: group.contact?.email || "",
-      folios: (group.licenseKeys || []).join(", ") || "—",
       inicio: formatPolicyDate(group.start_date),
       vence: formatPolicyDate(group.expiration_date),
       estado: getPolicyStatusLabel(group.status),
-      totalFolios: group.count || 0,
     }));
   }, [filteredGroups]);
 
@@ -545,34 +581,26 @@ export default function Policies() {
             "SERVICIO/PÓLIZA",
             "TIPO",
             "CLIENTE",
-            "CONTACTO",
-            "FOLIO(S)",
             "INICIO",
             "VENCE",
             "ESTADO",
-            "TOTAL",
           ],
         ],
         body: exportableGroups.map((row) => [
           row.servicioPoliza,
           row.tipo,
           row.cliente,
-          `${row.contacto}${row.email ? `\n${row.email}` : ""}`,
-          row.folios,
           row.inicio,
           row.vence,
           row.estado,
-          row.totalFolios,
         ]),
         theme: "grid",
         headStyles: { fillColor: [34, 119, 180] },
         styles: { fontSize: 8, cellPadding: 2.5 },
         columnStyles: {
-          0: { cellWidth: 33 },
-          1: { cellWidth: 16 },
-          2: { cellWidth: 35 },
-          3: { cellWidth: 34 },
-          4: { cellWidth: 30 },
+          0: { cellWidth: 45 },
+          1: { cellWidth: 20 },
+          2: { cellWidth: 45 },
         },
       });
 
@@ -606,13 +634,9 @@ export default function Policies() {
         "Servicio/Póliza": row.servicioPoliza,
         Tipo: row.tipo,
         Cliente: row.cliente,
-        Contacto: row.contacto,
-        Email: row.email,
-        "Folio(s)": row.folios,
         Inicio: row.inicio,
         Vence: row.vence,
         Estado: row.estado,
-        "Total folios": row.totalFolios,
       }));
 
       const ws = XLSX.utils.json_to_sheet(rows);
@@ -700,67 +724,72 @@ export default function Policies() {
         ),
       },
       {
-        id: "contact",
-        header: "Contacto Asignado",
-        accessorFn: (row) => row.contact?.full_name,
-        cell: ({ row }) => (
-          <div className="text-gray-700">
-            {row.original.contact?.full_name || "—"}
-            <div className="text-[10px] text-gray-500">
-              {row.original.contact?.email || ""}
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: "license",
-        header: "Folio",
-        accessorFn: (row) => row.count,
-        enableSorting: false,
-        cell: ({ row }) => {
-          const g = row.original;
-          return (
-            <div className="font-mono text-xs text-gray-500">
-              {g.count === 1 ?
-                g.licenseKeys?.[0] || "—"
-              : `Múltiples (${g.count})`}
-            </div>
-          );
-        },
-      },
-      {
         id: "validity",
         header: "Vigencia",
         accessorFn: (row) => row.expiration_date,
-        cell: ({ row }) => (
-          <div className="text-gray-700">
-            <div>
-              Inicia:{" "}
-              {row.original.start_date ?
-                new Date(row.original.start_date).toLocaleDateString()
-              : "—"}
+        cell: ({ row }) => {
+          const g = row.original;
+          const isEditing = editingRow?.id === g.id;
+          if (isEditing) {
+            return (
+              <div className="flex flex-col gap-1" onClick={e => e.stopPropagation()}>
+                <label className="text-[10px] text-gray-400 uppercase">Inicio</label>
+                <input
+                  type="date"
+                  value={editingRow.start_date}
+                  onChange={(e) => setEditingRow(prev => ({ ...prev, start_date: e.target.value }))}
+                  className="px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-36"
+                />
+                <label className="text-[10px] text-gray-400 uppercase">Vence</label>
+                <input
+                  type="date"
+                  value={editingRow.expiration_date}
+                  onChange={(e) => setEditingRow(prev => ({ ...prev, expiration_date: e.target.value }))}
+                  className="px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-36"
+                />
+              </div>
+            );
+          }
+          return (
+            <div className="text-gray-700">
+              <div>
+                Inicia:{" "}
+                {g.start_date ? new Date(g.start_date).toLocaleDateString() : "—"}
+              </div>
+              <div className="text-xs text-gray-500">
+                Vence:{" "}
+                {g.expiration_date ? new Date(g.expiration_date).toLocaleDateString() : "—"}
+              </div>
             </div>
-            <div className="text-xs text-gray-500">
-              Vence:{" "}
-              {row.original.expiration_date ?
-                new Date(row.original.expiration_date).toLocaleDateString()
-              : "—"}
-            </div>
-          </div>
-        ),
+          );
+        },
       },
       {
         id: "status",
         header: "Estado",
         accessorFn: (row) => row.status,
         cell: ({ row }) => {
-          const status = row.original.status;
+          const g = row.original;
+          const isEditing = editingRow?.id === g.id;
+          if (isEditing) {
+            return (
+              <div onClick={e => e.stopPropagation()}>
+                <select
+                  value={editingRow.status}
+                  onChange={(e) => setEditingRow(prev => ({ ...prev, status: e.target.value }))}
+                  className="px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
+                >
+                  <option value="ACTIVE">Activo</option>
+                  <option value="CANCELLED">Inactivo</option>
+                </select>
+              </div>
+            );
+          }
+          const status = g.status;
           const label = getPolicyStatusLabel(status);
           const cls = getPolicyStatusClass(status);
-
           return (
-            <span
-              className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${cls}`}>
+            <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${cls}`}>
               {label}
             </span>
           );
@@ -773,30 +802,60 @@ export default function Policies() {
         cell: ({ row }) => {
           const g = row.original;
           if (user?.role?.name !== "ADMIN") return null;
+          const isEditing = editingRow?.id === g.id;
+          const isStandalone = String(g.id).startsWith("product-");
 
           return (
-            <div className="text-right">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  g.count === 1 ?
-                    handleDelete(g.policyIds?.[0])
-                  : handleDeleteGroup(g);
-                }}
-                className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-red-800 transition-colors"
-                title={
-                  g.count === 1 ?
-                    "Eliminar Póliza"
-                  : `Eliminar ${g.count} pólizas`
-                }>
-                <Trash2 size={18} />
-              </button>
+            <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={saveEditRow}
+                    disabled={savingEdit}
+                    className="px-2 py-1 text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {savingEdit ? "..." : "Guardar"}
+                  </button>
+                  <button
+                    onClick={cancelEditRow}
+                    className="px-2 py-1 text-[11px] font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </>
+              ) : (
+                <>
+                  {!isStandalone && (
+                    <button
+                      onClick={() => startEditRow(g)}
+                      className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-[#2277B4] hover:bg-blue-50 transition-colors"
+                      title="Editar vigencia/estado"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      g.count === 1 ?
+                        handleDelete(g.policyIds?.[0])
+                      : handleDeleteGroup(g);
+                    }}
+                    className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-red-800 hover:bg-red-50 transition-colors"
+                    title={
+                      g.count === 1 ?
+                        "Eliminar Póliza"
+                      : `Eliminar ${g.count} pólizas`
+                    }>
+                    <Trash2 size={16} />
+                  </button>
+                </>
+              )}
             </div>
           );
         },
       },
     ],
-    [user?.role?.name, expanded],
+    [user?.role?.name, expanded, editingRow, savingEdit],
   );
 
   const table = useReactTable({
@@ -897,10 +956,10 @@ export default function Policies() {
                 <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
                   <div>
                     <h3 className="text-white font-bold text-base uppercase">
-                      Filtrar por {activeFilterPickerField}
+                      FILTRAR POR{activeFilterPickerField}
                     </h3>
                     <p className="text-[11px] text-gray-300 mt-1">
-                      Selecciona un valor para filtrar
+                      Selecciona o busca un valor
                     </p>
                   </div>
                   <button
@@ -968,7 +1027,6 @@ export default function Policies() {
             </span>
             {showFilters &&
               [
-                { id: "folio", label: "Folios" },
                 { id: "status", label: "Estado" },
               ].map((button) => {
                 const selectedValue = String(filters[button.id] || "");

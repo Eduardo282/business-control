@@ -5,6 +5,7 @@ import { updateContactAction } from "../../actions/contact_actions/updateContact
 import { deleteContactAction } from "../../actions/contact_actions/deleteContact.action.js";
 import { createContactProductAction } from "../../actions/contact_actions/createContactProduct.action.js";
 import { deleteContactProductAction } from "../../actions/contact_actions/deleteContactProduct.action.js";
+import { updateContactProductDatesAction } from "../../actions/policy_actions/updatePolicyDates.action.js";
 
 export const createContact = async (_parent, { input }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
@@ -34,4 +35,9 @@ export const createContactProduct = async (_parent, { input }, ctx) => {
 export const deleteContactProduct = async (_parent, { id }, ctx) => {
   requireRoles(ctx.user, ["ADMIN"]);
   return deleteContactProductAction(id);
+};
+
+export const updateContactProductDates = async (_parent, { id, start_date, expiration_date, status }, ctx) => {
+  requireRoles(ctx.user, ["ADMIN"]);
+  return updateContactProductDatesAction(id, { start_date, expiration_date, status });
 };

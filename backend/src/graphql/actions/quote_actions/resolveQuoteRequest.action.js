@@ -11,14 +11,23 @@ function normalizeCategory(category = "") {
     .trim();
 }
 
-function resolveServicePolicyTable(productCategory) {
+function resolveServicePolicyTable(productCategory, productName = "") {
   const normalizedCategory = normalizeCategory(productCategory);
+  const normalizedName = normalizeCategory(productName);
 
-  if (normalizedCategory === "servicio personalizado") {
+  if (normalizedName.includes("poliza")) {
+    return "policies";
+  }
+
+  if (normalizedName.includes("servicio")) {
     return "services";
   }
 
-  if (normalizedCategory === "poliza personalizada") {
+  if (normalizedCategory.includes("servicio")) {
+    return "services";
+  }
+
+  if (normalizedCategory.includes("poliza")) {
     return "policies";
   }
 
@@ -134,6 +143,7 @@ export const resolveQuoteRequestAction = async (requestId, input, user) => {
       quoteTotal += lineTotal;
       finalItems.push({
         product_id: product.id,
+        product_name: product.name,
         product_category: product.category,
         quantity,
         base_unit_price,
@@ -230,7 +240,10 @@ export const resolveQuoteRequestAction = async (requestId, input, user) => {
             ],
           );
 
-          const targetTable = resolveServicePolicyTable(item.product_category);
+          const targetTable = resolveServicePolicyTable(
+            item.product_category,
+            item.product_name,
+          );
           if (targetTable) {
             await connection.query(
               `INSERT INTO ${targetTable} (

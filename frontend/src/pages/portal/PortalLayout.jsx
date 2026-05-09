@@ -7,7 +7,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import Swal from "sweetalert2";
-import { Clock, History, LayoutDashboard, BookOpen } from "@icons";
+import { Clock, History, LayoutDashboard, BookOpen, Headphones } from "@icons";
 import logo from "../../components/layout/assets/logo.png";
 
 function PortalItem({ to, children, icon: Icon, matchFilter }) {
@@ -103,7 +103,10 @@ export default function PortalLayout() {
             Cotizaciones
           </PortalItem>
           <PortalItem to="/portal/catalog" icon={BookOpen}>
-            Catálogo
+            Productos
+          </PortalItem>
+          <PortalItem to="/portal/support" icon={Headphones}>
+            Soporte
           </PortalItem>
         </nav>
 
@@ -124,11 +127,13 @@ export default function PortalLayout() {
             <div>
               <h1 className="text-xl font-bold">Portal del Cliente</h1>
             </div>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-black rounded-xl bg-white transition-all duration-150 backdrop-blur-sm active:scale-95 active:translate-y-px shadow-slate-400 ">
-              Cerrar Sesión
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-semibold text-gray-900 rounded-xl bg-white border border-[#CBD5E1] hover:bg-[#F8FAFC] hover:border-[#B8C6D8] shadow-sm transition-colors duration-150">
+                Cerrar Sesión
+              </button>
+            </div>
           </div>
         </header>
 

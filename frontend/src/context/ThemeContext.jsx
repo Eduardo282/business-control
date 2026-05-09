@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useCallback } from "react";
 
 export const ThemeContext = createContext();
 
@@ -22,9 +22,20 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
+  const toggleTheme = useCallback(() => {
+    const switchTheme = () => {
+      setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    };
+
+    // Si el navegador no soporta View Transitions, cambiar sin animación
+    if (!document.startViewTransition) {
+      switchTheme();
+      return;
+    }
+
+    // Usar la View Transition API para la animación circular
+    document.startViewTransition(switchTheme);
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>

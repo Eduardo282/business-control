@@ -12,30 +12,32 @@ export async function loginContactAction({ email, password }) {
     throw new Error("Credenciales inválidas o acceso al portal no habilitado.");
   }
 
-  const contact = rows[0];
-
-  if (!contact.portal_password_hash) {
-    throw new Error(
-      "El contacto no tiene contraseña configurada para el portal."
-    );
+  // Try each matching contact (handles duplicate emails)
+  let matchedContact = null;
+  for (const contact of rows) {
+    if (!contact.portal_password_hash) continue;
+    const isValid = await comparePassword(password, contact.portal_password_hash);
+    if (isValid) {
+      matchedContact = contact;
+      break;
+    }
   }
 
-  const isValid = await comparePassword(password, contact.portal_password_hash);
-  if (!isValid) {
+  if (!matchedContact) {
     throw new Error("Credenciales inválidas.");
   }
 
   const token = signToken({
-    contactId: contact.id,
-    clientId: contact.client_id, // Mantener el contexto del negocio
+    contactId: matchedContact.id,
+    clientId: matchedContact.client_id,
     role: "CONTACT_PORTAL",
   });
 
   return {
     token,
     contact: {
-      ...contact,
-      has_portal_access: !!contact.has_portal_access,
+      ...matchedContact,
+      has_portal_access: !!matchedContact.has_portal_access,
     },
   };
 }

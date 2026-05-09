@@ -6,6 +6,8 @@ import { toggleQuotePortalAction } from "../../actions/quote_actions/toggleQuote
 import { requestQuoteAction } from "../../actions/quote_actions/requestQuote.action.js";
 import { markQuoteNotificationReadAction } from "../../actions/quote_actions/markQuoteNotificationRead.action.js";
 import { resolveQuoteRequestAction } from "../../actions/quote_actions/resolveQuoteRequest.action.js";
+import { deletePortalQuoteAction } from "../../actions/quote_actions/deletePortalQuote.action.js";
+import { updatePortalQuoteRequestAction } from "../../actions/quote_actions/updatePortalQuoteRequest.action.js";
 
 export const createQuote = async (_parent, { input }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
@@ -59,4 +61,18 @@ export const resolveQuoteRequest = async (
 ) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
   return resolveQuoteRequestAction(requestId, input, ctx.user);
+};
+
+export const deletePortalQuote = async (_parent, { id }, ctx) => {
+  if (ctx.user?.role !== "CONTACT_PORTAL") {
+    throw new Error("Access denied");
+  }
+  return deletePortalQuoteAction(id, ctx.user);
+};
+
+export const updatePortalQuoteRequest = async (_parent, { id, input }, ctx) => {
+  if (ctx.user?.role !== "CONTACT_PORTAL") {
+    throw new Error("Access denied");
+  }
+  return updatePortalQuoteRequestAction(id, input, ctx.user);
 };

@@ -26,6 +26,7 @@ const CreateQuote = lazy(() => import("./pages/home/CreateQuote"));
 const QuoteDetail = lazy(() => import("./pages/home/QuoteDetail"));
 const QuoteHistory = lazy(() => import("./pages/home/QuoteHistory"));
 const Policies = lazy(() => import("./pages/home/Policies"));
+const AgentSupport = lazy(() => import("./pages/home/AgentSupport"));
 const Layout = lazy(() => import("./pages/home/Layout"));
 
 const PortalLogin = lazy(() => import("./pages/portal/PortalLogin"));
@@ -33,6 +34,7 @@ const PortalLayout = lazy(() => import("./pages/portal/PortalLayout"));
 const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
 const PortalQuotes = lazy(() => import("./pages/portal/PortalQuotes"));
 const PortalCatalog = lazy(() => import("./pages/portal/PortalCatalog"));
+const PortalSupport = lazy(() => import("./pages/portal/PortalSupport"));
 
 // Guarda la última ruta visitada (excepto /register y /roles) para que MasterPasswordGate
 // pueda renderizar el fondo correcto al pedir la contraseña maestra.
@@ -82,7 +84,9 @@ export default function AppRoutes() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<PortalDashboard />} />
             <Route path="quotes" element={<PortalQuotes />} />
+            <Route path="quotes/:id" element={<QuoteDetail />} />
             <Route path="catalog" element={<PortalCatalog />} />
+            <Route path="support" element={<PortalSupport />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>
@@ -103,13 +107,13 @@ export default function AppRoutes() {
                 />
                 <Route path="/polizas" element={<Policies />} />
                 <Route path="/productos/:id" element={<ProductDetail />} />
-
                 <Route
                   path="/cotizaciones/historial"
                   element={<QuoteHistory />}
                 />
                 <Route path="/cotizaciones/nueva" element={<CreateQuote />} />
                 <Route path="/cotizaciones/:id" element={<QuoteDetail />} />
+                <Route path="/soporte" element={<AgentSupport />} />
               </Route>
             </Route>
           </Route>

@@ -25,6 +25,7 @@ import {
   createQuoteApi,
   getQuoteApi,
   resolveQuoteRequestApi,
+  toggleQuotePortalApi,
 } from "../../actionsAPI/quotes.api";
 import {
   Building2,
@@ -104,6 +105,44 @@ function getQuoteStatusLabel(status) {
   if (safeStatus === "REJECTED") return "Rechazada";
   return status || "Pendiente";
 }
+
+const DiscountInputCell = ({ item, setItems }) => {
+  const [localDiscount, setLocalDiscount] = useState(item.discount ?? 0);
+
+  useEffect(() => {
+    setLocalDiscount(item.discount ?? 0);
+  }, [item.discount]);
+
+  const commitChange = (value) => {
+    const nextDiscount = clampDiscount(value);
+    setLocalDiscount(nextDiscount);
+    setItems((prev) =>
+      prev.map((i) =>
+        i.tempId === item.tempId ?
+          {
+            ...i,
+            discount: nextDiscount,
+            total: calculateItemTotal(i.price, i.quantity, nextDiscount),
+          }
+        : i,
+      ),
+    );
+  };
+
+  return (
+    <input
+      type="number"
+      min="0"
+      max="100"
+      step="0.01"
+      value={localDiscount}
+      onChange={(e) => setLocalDiscount(e.target.value)}
+      onBlur={(e) => commitChange(e.target.value)}
+      className="w-20 px-2 py-1 rounded-md border border-light-border bg-white text-xs font-mono text-right text-[#125280] focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
+      style={{ colorScheme: "light" }}
+    />
+  );
+};
 
 export default function CreateQuote() {
   const navigate = useNavigate();
@@ -292,33 +331,7 @@ export default function CreateQuote() {
         accessorKey: "discount",
         header: "Desc. %",
         cell: ({ row }) => (
-          <input
-            type="number"
-            min="0"
-            max="100"
-            step="0.01"
-            value={Number(row.original.discount || 0)}
-            onChange={(e) => {
-              const nextDiscount = clampDiscount(e.target.value);
-              setItems((prev) =>
-                prev.map((item) =>
-                  item.tempId === row.original.tempId ?
-                    {
-                      ...item,
-                      discount: nextDiscount,
-                      total: calculateItemTotal(
-                        item.price,
-                        item.quantity,
-                        nextDiscount,
-                      ),
-                    }
-                  : item,
-                ),
-              );
-            }}
-            className="w-20 px-2 py-1 rounded-md border border-light-border bg-white text-xs font-mono text-right text-[#125280] focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
-            style={{ colorScheme: "light" }}
-          />
+          <DiscountInputCell item={row.original} setItems={setItems} />
         ),
       },
       {
@@ -355,7 +368,7 @@ export default function CreateQuote() {
             <button
               onClick={() => openEditItem(row.original)}
               className="w-7 h-7 flex items-center justify-center rounded-lg text-[#2277B4] hover:bg-blue-50 transition-all"
-              title="Editar item">
+              title="Editar producto">
               <Edit2 size={13} />
             </button>
             <button
@@ -419,8 +432,8 @@ export default function CreateQuote() {
     try {
       const quote = await getQuoteApi(id);
       if (quote) {
-        // Cargar Cliente
-        await loadClient(quote.client.id);
+        // Cargar Cliente y preseleccionar el contacto de la solicitud
+        await loadClient(quote.client.id, quote.contact?.id);
 
         if (quote.items && quote.items.length > 0) {
           const loadedItems = quote.items.map((item) => {
@@ -462,14 +475,19 @@ export default function CreateQuote() {
     }
   };
 
-  const loadClient = async (id) => {
+  const loadClient = async (id, contactIdToSelect = null) => {
     try {
       const client = await getClientApi(id);
       if (client) {
         setSelectedClient(client);
         setClientSearch(client.business_name);
-        if (client.contacts?.length > 0) {
+        
+        if (contactIdToSelect) {
+          setSelectedContactId(contactIdToSelect);
+        } else if (client.contacts?.length > 0) {
           setSelectedContactId(client.contacts[0].id);
+        } else {
+          setSelectedContactId("");
         }
       }
     } catch (e) {
@@ -800,15 +818,153 @@ export default function CreateQuote() {
     );
   }, [selectedClient, selectedContactId]);
 
+  const portalAutoContactId = useMemo(() => {
+    const clientContacts = selectedClient?.contacts || [];
+    if (!clientContacts.length) return null;
+
+    const explicitlySelectedContact = clientContacts.find(
+      (contact) => String(contact.id) === String(selectedContactId),
+    );
+
+    if (explicitlySelectedContact?.has_portal_access) {
+      return explicitlySelectedContact.id;
+    }
+
+    const firstPortalEnabledContact = clientContacts.find((contact) =>
+      Boolean(contact?.has_portal_access),
+    );
+
+    return firstPortalEnabledContact?.id || null;
+  }, [selectedClient, selectedContactId]);
+
   const visibleClientResults = useMemo(
     () => clientResults.slice(0, MAX_CLIENT_RESULTS_IN_MODAL),
     [clientResults],
   );
 
-  const visibleProductResults = useMemo(
-    () => prodResults.slice(0, MAX_PRODUCT_RESULTS_IN_MODAL),
-    [prodResults],
+  const productSearchColumns = useMemo(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Producto",
+        cell: ({ row: { original: p } }) => (
+          <div>
+            <div className="font-bold text-light-text-primary text-base flex items-center gap-2">
+              {p.name}
+              {p._groupCount > 1 && (
+                <span className="bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">
+                  x{p._groupCount}
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-light-text-secondary dark:text-slate-500 mt-0.5">
+              {p.category}
+            </div>
+            {p.description && (
+              <div className="text-xs text-light-text-secondary dark:text-slate-400 mt-1 line-clamp-1">
+                {p.description}
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "current_price",
+        header: "Precio",
+        cell: ({ row: { original: p } }) => (
+          <div className="text-right">
+            <div className="font-mono text-[#1B4733] font-bold text-base">
+              $
+              {Number(p.current_price).toLocaleString("es-MX", {
+                minimumFractionDigits: 2,
+              })}
+            </div>
+            <div className="text-[10px] text-light-text-secondary dark:text-slate-500 text-right mt-0.5">
+              + IVA
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Acciones",
+        cell: ({ row: { original: p } }) => {
+          const added = justAdded === p.id;
+          const currentItem = items.find((i) => i.product_id === p.id);
+          const qty = currentItem ? currentItem.quantity : 0;
+
+          return (
+            <div className="flex justify-end">
+              <div
+                className={`flex items-center rounded-lg overflow-hidden font-semibold border shadow-sm ${
+                  added ?
+                    "border-emerald-400/60"
+                  : "border-[#2277B4]/35"
+                }`}>
+                <button
+                  onClick={() => addItemDirectly(p)}
+                  className={`h-8 w-8 flex items-center justify-center transition-colors text-white ${
+                    added ?
+                      "bg-emerald-500 hover:bg-emerald-600"
+                    : "bg-[#2277B4] hover:bg-[#125280]"
+                  }`}>
+                  {added ?
+                    <CheckCircle2 size={14} />
+                  : <Plus size={14} />}
+                </button>
+                <div
+                  className={`h-8 min-w-[72px] px-2 flex items-center justify-center leading-none text-white border-x whitespace-nowrap ${
+                    added ?
+                      "bg-emerald-500 border-emerald-400/70"
+                    : "bg-[#2277B4] border-[#7fb8de]/70"
+                  }`}>
+                  {qty > 0 ?
+                    <span className="text-xs font-medium">
+                      {qty} en lista
+                    </span>
+                  : <span className="text-xs">Agregar</span>}
+                </div>
+                <button
+                  onClick={() => removeItemDirectly(p)}
+                  disabled={qty === 0}
+                  className={`h-8 w-8 flex items-center justify-center transition-colors text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 ${
+                    added ?
+                      "bg-emerald-500 hover:bg-emerald-600"
+                    : "bg-[#2277B4] hover:bg-[#125280]"
+                  }`}>
+                  <Minus size={14} />
+                </button>
+              </div>
+            </div>
+          );
+        },
+      },
+    ],
+    [items, justAdded],
   );
+
+  const groupedProdResults = useMemo(() => {
+    const map = new Map();
+    prodResults.forEach((p) => {
+      const nName = String(p.name || "").trim().toLowerCase();
+      const nCat = String(p.category || "").trim().toLowerCase();
+      const key = `${nName}|${nCat}`;
+      if (!map.has(key)) {
+        map.set(key, { ...p, _groupCount: 1 });
+      } else {
+        map.get(key)._groupCount += 1;
+      }
+    });
+    return Array.from(map.values());
+  }, [prodResults]);
+
+  const productSearchTable = useReactTable({
+    data: groupedProdResults,
+    columns: productSearchColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 10 } },
+  });
 
   const save = async () => {
     if (!selectedClient) return setError("Selecciona un cliente");
@@ -844,6 +1000,21 @@ export default function CreateQuote() {
       setShowPreviewModal(false);
 
       if (savedQuote?.id) {
+        if (portalAutoContactId) {
+          try {
+            await toggleQuotePortalApi(
+              savedQuote.id,
+              true,
+              portalAutoContactId,
+            );
+          } catch (portalError) {
+            console.error(
+              "No se pudo enviar automaticamente al portal:",
+              portalError,
+            );
+          }
+        }
+
         navigate(`/cotizaciones/${savedQuote.id}`);
         return;
       }
@@ -1161,7 +1332,7 @@ export default function CreateQuote() {
         {/* Columna izquierda: Cliente y Totales */}
         <div className="lg:col-span-1 space-y-6">
           {!fixedClientId && (
-            <Card className="border-t-4 border-t-primary-500 shadow-xl shadow-black/20 !overflow-visible z-30">
+            <Card className="border-2 border-gray-200 shadow-sm !overflow-visible z-30">
               <div className="flex justify-between items-center gap-2">
                 <div className="flex justify-center items-center">
                   <div className="p-2 rounded-lg text-black">
@@ -1250,9 +1421,9 @@ export default function CreateQuote() {
           )}
 
           {fixedClientId && selectedClient && (
-            <Card className="border-t-4 border-t-primary-500 shadow-xl shadow-black/20 !overflow-visible z-30">
+            <Card className="border-2 border-gray-200 shadow-sm !overflow-visible z-30">
               <div className="flex justify-between items-center gap-2">
-                <div className="flex justify-center items-center">
+                <div className="flex justify-center items-center"> 
                   <div className="p-2 rounded-lg text-black">
                     <Building2 size={24} />
                   </div>
@@ -1260,12 +1431,6 @@ export default function CreateQuote() {
                     Datos del Cliente
                   </h3>
                 </div>
-                <button
-                  variant="ghost"
-                  onClick={() => navigate("/cotizaciones/historial")}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold text-black hover:text-slate-700 border border-transparent transition-all">
-                  Cancelar
-                </button>
               </div>
 
               <div className="mt-4 p-3 rounded-xl animate-fade-in">
@@ -1306,7 +1471,7 @@ export default function CreateQuote() {
           )}
 
           <Card
-            className={`bg-light-card border-light-border dark:border-white/10 sticky top-24 ${!selectedClient || items.length === 0 ? "opacity-40 pointer-events-none select-none grayscale" : "transition-all duration-500"}`}>
+            className={`sticky top-24${!selectedClient || items.length === 0 ? "opacity-40 pointer-events-none select-none grayscale" : "transition-all duration-500"}`}>
             <button
               onClick={() => {
                 const homoclave =
@@ -1352,8 +1517,8 @@ export default function CreateQuote() {
               </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-3 items-end bg-light-bg/50 dark:bg-white/5 p-4 rounded-xl border border-light-border dark:border-white/5">
-              <div className="flex-1 w-full relative z-10">
+            <div className="flex flex-col md:flex-row gap-3 items-end p-4 rounded-xl dark:border-white/5">
+              <div className="flex-1 w-full relative z-10"> 
                 <label className="text-xs font-semibold text-light-text-secondary dark:text-slate-400 mb-1.5 block">
                   Producto
                 </label>
@@ -1413,7 +1578,7 @@ export default function CreateQuote() {
                         {tableFilterFieldLabels[activeTableFilterPickerField]}
                       </h3>
                       <p className="text-[11px] text-gray-300 mt-1">
-                        Selecciona un valor para filtrar
+                        Selecciona o busca un valor
                       </p>
                     </div>
                     <button
@@ -1699,18 +1864,18 @@ export default function CreateQuote() {
         createPortal(
           <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
             <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-[#1a2b4c]">
-                    Editar item
+                  <h3 className="text-white font-bold text-base uppercase">
+                    Editar producto
                   </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-[11px] text-gray-300 mt-1">
                     Ajusta cantidad, precio unitario o descuento.
                   </p>
                 </div>
                 <button
                   onClick={() => setEditingItemDraft(null)}
-                  className="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center transition-colors">
+                  className="w-8 h-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center transition-colors">
                   <X size={16} />
                 </button>
               </div>
@@ -1954,9 +2119,9 @@ export default function CreateQuote() {
               </div>
 
               {/* Body del modal */}
-              <div className="p-6 flex-1 overflow-y-auto">
+              <div className="p-6 flex-1 flex flex-col overflow-hidden">
                 {/* Buscador sincronizado */}
-                <div className="mb-4 relative">
+                <div className="mb-4 relative shrink-0">
                   <Input
                     value={prodSearch}
                     onChange={(e) => {
@@ -1974,133 +2139,128 @@ export default function CreateQuote() {
                   />
                 </div>
 
-                {/* Lista de resultados */}
-                <div className="space-y-2">
-                  {isProductSearching ?
-                    <div className="text-center py-12">
-                      <Search
-                        size={48}
-                        className="mx-auto mb-3 opacity-20 animate-spin"
-                      />
-                      <p className="text-light-text-secondary dark:text-slate-500 font-medium">
-                        Buscando productos...
-                      </p>
-                    </div>
-                  : visibleProductResults.length > 0 ?
-                    <>
-                      {visibleProductResults.map((p) => {
-                        const added = justAdded === p.id;
-                        const currentItem = items.find(
-                          (i) => i.product_id === p.id,
-                        );
-                        const qty = currentItem ? currentItem.quantity : 0;
-                        return (
-                          <div
-                            key={p.id}
-                            className={`p-4 rounded-xl border flex justify-between items-center transition-all ${
-                              added ?
-                                "bg-emerald-50 border-emerald-300"
-                              : "bg-light-bg/50 dark:bg-white/5 border-light-border dark:border-white/10 hover:border-[#2277B4]"
-                            }`}>
-                            <div className="flex-1">
-                              <div className="font-bold text-light-text-primary text-base">
-                                {p.name}
-                              </div>
-                              <div className="text-xs text-light-text-secondary dark:text-slate-500 mt-0.5">
-                                {p.category}
-                              </div>
-                              {p.description && (
-                                <div className="text-xs text-light-text-secondary dark:text-slate-400 mt-1 line-clamp-1">
-                                  {p.description}
-                                </div>
-                              )}
-                            </div>
-                            <div className="ml-4 flex items-center gap-3">
-                              <div className="text-right hidden sm:block">
-                                <div className="font-mono text-[#1B4733] font-bold text-lg">
-                                  $
-                                  {Number(p.current_price).toLocaleString(
-                                    "es-MX",
-                                    {
-                                      minimumFractionDigits: 2,
-                                    },
-                                  )}
-                                </div>
-                                <div className="text-[10px] text-light-text-secondary dark:text-slate-500 text-right">
-                                  + IVA
-                                </div>
-                              </div>
-                              <div
-                                className={`flex items-center rounded-lg overflow-hidden font-semibold border shadow-sm ${
-                                  added ?
-                                    "border-emerald-400/60"
-                                  : "border-[#2277B4]/35"
+                {/* Lista de resultados (Tabla paginada) */}
+                <div className="bg-white rounded-xl dark:border-white/10 flex-1 flex flex-col min-h-0 overflow-hidden">
+                  <div className="flex-1 overflow-auto relative">
+                    <table className="w-full text-left text-sm table-fixed">
+                      <thead className="sticky top-0 z-10">
+                        {productSearchTable.getHeaderGroups().map((hg) => (
+                          <tr key={hg.id} className="bg-gray-50/95 backdrop-blur-sm border-b border-light-border shadow-sm">
+                            {hg.headers.map((header) => (
+                              <th
+                                key={header.id}
+                                className={`px-4 py-3 text-[11px] font-bold text-light-text-secondary uppercase tracking-wider ${
+                                  header.id === "current_price" ? "text-right w-28 sm:w-32" :
+                                  header.id === "actions" ? "text-right w-36 sm:w-40" : "w-full"
                                 }`}>
-                                <button
-                                  onClick={() => addItemDirectly(p)}
-                                  className={`h-8 w-8 flex items-center justify-center transition-colors text-white ${
-                                    added ?
-                                      "bg-emerald-500 hover:bg-emerald-600"
-                                    : "bg-[#2277B4] hover:bg-[#125280]"
+                                {flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext(),
+                                )}
+                              </th>
+                            ))}
+                          </tr>
+                        ))}
+                      </thead>
+                      <tbody className="divide-y divide-light-border">
+                        {isProductSearching ? (
+                          <tr>
+                            <td colSpan="3" className="py-12 text-center">
+                              <Search size={48} className="mx-auto mb-3 opacity-20 animate-spin" />
+                              <p className="text-light-text-secondary dark:text-slate-500 font-medium">
+                                Buscando productos...
+                              </p>
+                            </td>
+                          </tr>
+                        ) : productSearchTable.getRowModel().rows.length > 0 ? (
+                          productSearchTable.getRowModel().rows.map((row) => (
+                            <tr key={row.id} className="hover:bg-light-bg/50 transition-colors">
+                              {row.getVisibleCells().map((cell) => (
+                                <td
+                                  key={cell.id}
+                                  className={`p-4 ${
+                                    cell.column.id === "current_price" ? "text-right" : ""
                                   }`}>
-                                  {added ?
-                                    <CheckCircle2 size={14} />
-                                  : <Plus size={14} />}
-                                </button>
-                                <div
-                                  className={`h-8 min-w-[64px] px-2 flex items-center justify-center leading-none text-white border-x ${
-                                    added ?
-                                      "bg-emerald-500 border-emerald-400/70"
-                                    : "bg-[#2277B4] border-[#7fb8de]/70"
-                                  }`}>
-                                  {qty > 0 ?
-                                    <span className="text-xs font-medium">
-                                      {qty} en lista
-                                    </span>
-                                  : <span className="text-xs">Agregar</span>}
-                                </div>
-                                <button
-                                  onClick={() => removeItemDirectly(p)}
-                                  disabled={qty === 0}
-                                  className={`h-8 w-8 flex items-center justify-center transition-colors text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 ${
-                                    added ?
-                                      "bg-emerald-500 hover:bg-emerald-600"
-                                    : "bg-[#2277B4] hover:bg-[#125280]"
-                                  }`}>
-                                  <Minus size={14} />
-                                </button>
+                                  {flexRender(
+                                    cell.column.columnDef.cell,
+                                    cell.getContext(),
+                                  )}
+                                </td>
+                              ))}
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="3" className="py-12 text-center">
+                              <div className="flex justify-center mb-3 opacity-20">
+                                <ShoppingBag size={48} />
                               </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                              <p className="text-light-text-secondary dark:text-slate-500 font-medium">
+                                {prodSearch.trim().length > 0
+                                  ? `No se encontraron productos con "${prodSearch}"`
+                                  : "No hay productos disponibles."}
+                              </p>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
 
-                      {prodResults.length > visibleProductResults.length && (
-                        <div className="mt-2 px-3 py-2 rounded-lg bg-blue-50 text-xs text-[#125280]">
-                          Mostrando {visibleProductResults.length} de{" "}
-                          {prodResults.length} resultados. Sigue escribiendo
-                          para acotar la búsqueda.
-                        </div>
-                      )}
-                    </>
-                  : prodSearch.trim().length > 0 ?
-                    <div className="text-center py-12">
-                      <div className="flex justify-center mb-3 opacity-20">
-                        <ShoppingBag size={48} />
+                  {/* Controles de Paginación */}
+                  {!isProductSearching && prodResults.length > 0 && (
+                    <div className="px-4 py-3 border-t border-light-border bg-white flex items-center justify-between gap-3 flex-wrap shrink-0">
+                      <label className="text-sm text-light-text-secondary flex items-center gap-2">
+                        Mostrar
+                        <select
+                          value={productSearchTable.getState().pagination.pageSize}
+                          onChange={(e) => {
+                            productSearchTable.setPageSize(Number(e.target.value));
+                            productSearchTable.setPageIndex(0);
+                          }}
+                          className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-[#fff] border border-light-border">
+                          {[5, 10, 25, 50].map((size) => (
+                            <option key={size} value={size}>
+                              {size}
+                            </option>
+                          ))}
+                        </select>
+                        por página
+                      </label>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => productSearchTable.setPageIndex(0)}
+                          disabled={!productSearchTable.getCanPreviousPage()}
+                          className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          ««
+                        </button>
+                        <button
+                          onClick={() => productSearchTable.previousPage()}
+                          disabled={!productSearchTable.getCanPreviousPage()}
+                          className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          Anterior
+                        </button>
+                        <span className="text-xs text-gray-500 mx-2">
+                          Pág. {productSearchTable.getState().pagination.pageIndex + 1} de {productSearchTable.getPageCount()}
+                        </span>
+                        <button
+                          onClick={() => productSearchTable.nextPage()}
+                          disabled={!productSearchTable.getCanNextPage()}
+                          className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          Siguiente
+                        </button>
+                        <button
+                          onClick={() =>
+                            productSearchTable.setPageIndex(productSearchTable.getPageCount() - 1)
+                          }
+                          disabled={!productSearchTable.getCanNextPage()}
+                          className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          »»
+                        </button>
                       </div>
-                      <p className="text-light-text-secondary dark:text-slate-500 font-medium">
-                        No se encontraron productos con "{prodSearch}"
-                      </p>
                     </div>
-                  : <div className="text-center py-12">
-                      <div className="flex justify-center mb-3 opacity-20">
-                        <ShoppingBag size={48} />
-                      </div>
-                      <p className="text-light-text-secondary dark:text-slate-500 font-medium">
-                        No hay productos disponibles.
-                      </p>
-                    </div>
-                  }
+                  )}
                 </div>
               </div>
 
@@ -2234,9 +2394,6 @@ export default function CreateQuote() {
                     <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
                       <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
                         <span>Productos Cotizados</span>
-                        <span className="font-mono">
-                          {items.length} partida(s)
-                        </span>
                       </div>
                       <div className="max-h-[42vh] overflow-y-auto divide-y divide-slate-100">
                         {items.map((i, index) => (

@@ -47,13 +47,13 @@ type Contact {
 
 type ContactProduct {
   id: ID!
-  contact_id: ID!
-  contact: Contact!
+  contact_id: ID
+  contact: Contact
   client: Client
   product: Product!
   license_key: String
-  start_date: String!
-  expiration_date: String!
+  start_date: String
+  expiration_date: String
   status: String!
 }
 
@@ -156,6 +156,7 @@ input CreateContactProductInput {
 type Mutation {
   createContactProduct(input: CreateContactProductInput!): ContactProduct!
   deleteContactProduct(id: ID!): Boolean!
+  updateContactProductDates(id: ID!, start_date: String, expiration_date: String, status: String): ContactProduct!
 
   sendQuoteEmail(
     quote_id: ID!
@@ -193,6 +194,8 @@ type Mutation {
   deleteRole(id: ID!): Boolean!
 
   requestQuote(input: RequestQuoteInput!): Quote!
+  deletePortalQuote(id: ID!): Boolean!
+  updatePortalQuoteRequest(id: ID!, input: RequestQuoteInput!): Quote!
 }
 
 type PortalProduct {
@@ -212,6 +215,7 @@ type Product {
   client: Client
   name: String!
   category: String!
+  product_type: String
   current_price: Float!
   users_count: Int
   description: String
@@ -231,6 +235,7 @@ input CreateProductInput {
   users_count: Int
   description: String
   client_id: ID
+  product_type: String
 }
 
 input UpdateProductInput {

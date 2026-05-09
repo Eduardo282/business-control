@@ -87,12 +87,6 @@ const EXCEL_VIEW_STORAGE_KEY = "clients_excel_view_config";
 const CONTACTS_EXCEL_VIEW_STORAGE_KEY = "contacts_excel_view_config";
 const CONTACT_QUICK_FILTER_FIELDS = [
   {
-    id: "full_name",
-    aliases: ["full_name", "nombre", "nombre_completo"],
-    buttonLabel: "NOMBRE",
-    modalLabel: "Nombre",
-  },
-  {
     id: "position_title",
     aliases: ["position_title", "puesto", "cargo", "posicion"],
     buttonLabel: "PUESTO",
@@ -124,6 +118,12 @@ const CONTACT_FALLBACK_COLUMNS = [
   { name: "position_title", label: "Puesto", type: "varchar" },
   { name: "has_portal_access", label: "Acceso Portal", type: "tinyint" },
   { name: "is_active", label: "Activo", type: "tinyint" },
+];
+const CONTACT_TEMPLATE_COLUMNS = [
+  "NOMBRE COMPLETO",
+  "CORREO ELECTRONICO",
+  "PUESTO",
+  "TELEFONO",
 ];
 const CLIENT_DETAIL_HIDDEN_FIELDS = new Set([
   "id",
@@ -167,6 +167,16 @@ function normalizeSearchText(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function normalizeExcelHeader(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -372,14 +382,16 @@ const ManagePortalModal = ({ contact, onClose }) => {
           icon: "success",
           title: "Acceso habilitado",
           text: `${contact.email || "su dirección"} ya tiene acceso al portal.`,
-          confirmButtonColor: "#2277B4",
+          timer: 1500,
+          showConfirmButton: false,
         });
       } else {
         Swal.fire({
           icon: "success",
           title: "Acceso revocado",
           text: "El acceso al portal fue revocado correctamente.",
-          confirmButtonColor: "#2277B4",
+          timer: 1500,
+          showConfirmButton: false,
         });
       }
       setAccess(newAccess);
@@ -417,7 +429,7 @@ const ManagePortalModal = ({ contact, onClose }) => {
           </div>
           <button
             onClick={() => onClose(false)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-whitetransition-colors">
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -1405,11 +1417,11 @@ const ClientPoliciesTab = ({ clientId }) => {
               <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
                 <div>
                   <h3 className="text-white font-bold text-base uppercase">
-                    Filtrar por{" "}
+                    FILTRAR POR{" "}
                     {policyFilterFieldLabels[activePolicyFilterPickerField]}
                   </h3>
                   <p className="text-[11px] text-gray-300 mt-1">
-                    Selecciona un valor para filtrar
+                    Selecciona o busca un valor para filtrar 
                   </p>
                 </div>
                 <button
@@ -1626,7 +1638,6 @@ export default function ClientDetail() {
   const [showSearch, setShowSearch] = useState(false);
   const [showContactFilters, setShowContactFilters] = useState(false);
   const [contactFilters, setContactFilters] = useState({
-    full_name: "",
     position_title: "",
   });
   const [activeContactFilterPickerField, setActiveContactFilterPickerField] =
@@ -1663,20 +1674,19 @@ export default function ClientDetail() {
     nombre: "full_name",
     "nombre completo": "full_name",
     full_name: "full_name",
+    "full name": "full_name",
     contacto: "full_name",
     correo: "email",
     email: "email",
-    "correo electrónico": "email",
     "correo electronico": "email",
+    "correo principal": "email",
     telefono: "phone",
-    teléfono: "phone",
     tel: "phone",
     phone: "phone",
     celular: "phone",
     puesto: "position_title",
     position_title: "position_title",
     cargo: "position_title",
-    posición: "position_title",
     posicion: "position_title",
   };
 
@@ -1692,25 +1702,79 @@ export default function ClientDetail() {
         const XLSX = await import("xlsx");
         const wb = XLSX.read(evt.target.result, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const raw = XLSX.utils.sheet_to_json(ws, { defval: "" });
+        const rows = XLSX.utils.sheet_to_json(ws, {
+          header: 1,
+          defval: "",
+          blankrows: false,
+        });
 
-        if (!raw.length) {
-          setBulkContactErrors(["El archivo está vacío o no tiene datos."]);
+        if (!rows.length) {
+          setBulkContactData([]);
+          setBulkContactErrors([
+            "El archivo está vacío o no contiene encabezados.",
+          ]);
           return;
         }
 
-        const mapped = raw.map((row, idx) => {
+        const [headerRow = [], ...sheetRows] = rows;
+        const normalizedHeaders = headerRow.map((header) =>
+          normalizeExcelHeader(header),
+        );
+        const mappedFields = normalizedHeaders.map(
+          (header) => CONTACT_COLUMN_MAP[header] || null,
+        );
+
+        if (!mappedFields.some(Boolean)) {
+          setBulkContactData([]);
+          setBulkContactErrors([
+            "No se reconocieron columnas válidas. Usa la plantilla 'Descargar plantilla'.",
+          ]);
+          return;
+        }
+
+        const missingTemplateHeaders = CONTACT_TEMPLATE_COLUMNS.filter(
+          (header) => !normalizedHeaders.includes(normalizeExcelHeader(header)),
+        );
+
+        const mapped = [];
+        sheetRows.forEach((row, idx) => {
+          const cells = Array.isArray(row) ? row : [];
+          const isEmptyRow = cells.every(
+            (cell) => String(cell ?? "").trim() === "",
+          );
+          if (isEmptyRow) return;
+
           const mapped_row = {};
-          Object.entries(row).forEach(([key, val]) => {
-            const normalised = key.trim().toLowerCase();
-            const field = CONTACT_COLUMN_MAP[normalised];
-            if (field) mapped_row[field] = String(val).trim();
+          cells.forEach((value, columnIndex) => {
+            const field = mappedFields[columnIndex];
+            if (!field) return;
+
+            const parsedValue = String(value ?? "").trim();
+            if (parsedValue === "") return;
+
+            mapped_row[field] = parsedValue;
           });
+
           mapped_row._row = idx + 2;
-          return mapped_row;
+          mapped.push(mapped_row);
         });
 
+        if (!mapped.length) {
+          setBulkContactData([]);
+          setBulkContactErrors([
+            "El archivo no contiene filas con datos para importar.",
+          ]);
+          return;
+        }
+
         const errors = [];
+
+        if (missingTemplateHeaders.length) {
+          errors.push(
+            `Faltan columnas de la plantilla: ${missingTemplateHeaders.join(", ")}.`,
+          );
+        }
+
         mapped.forEach((r) => {
           if (!r.full_name) {
             errors.push(`Fila ${r._row}: Falta "Nombre" (obligatorio).`);
@@ -1718,9 +1782,15 @@ export default function ClientDetail() {
         });
 
         const valid = mapped.filter((r) => r.full_name);
+
+        if (!valid.length) {
+          errors.push("No hay filas válidas para importar.");
+        }
+
         setBulkContactData(valid);
         setBulkContactErrors(errors);
       } catch {
+        setBulkContactData([]);
         setBulkContactErrors([
           "No se pudo leer el archivo. Verifica que sea un Excel válido (.xlsx / .xls).",
         ]);
@@ -2243,10 +2313,11 @@ export default function ClientDetail() {
     try {
       await deleteClientApi(id);
       Swal.fire({
-        title: "Eliminado!",
+        title: "¡Eliminado!",
         text: "El cliente ha sido eliminado.",
         icon: "success",
-        confirmButtonColor: "#3085d6",
+        timer: 1500,
+        showConfirmButton: false,
       });
       navigate("/clientes");
     } catch (e) {
@@ -2357,7 +2428,7 @@ export default function ClientDetail() {
                   <span className="ml-2 text-[8px] uppercase font-bold text-emerald-700 px-1.5 py-0.5 rounded">
                     CON PORTAL
                   </span>
-                : <span className="ml-2 text-[8px] uppercase font-bold text-black px-1.5 py-0.5 rounded">
+                : <span className="ml-2 text-[8px] uppercase font-bold text-orange-500 px-1.5 py-0.5 rounded">
                     SIN PORTAL
                   </span>
                 }
@@ -2411,7 +2482,7 @@ export default function ClientDetail() {
           if (isDisabled) {
             return (
               <div className="flex items-center gap-2 opacity-30 pointer-events-none select-none">
-                <button className="px-4 py-1.5 text-sm font-extrabold text-gray-400 bg-gradient-to-b from-white to-[#E2E8F0] rounded-xl border border-[#CBD5E1]/80 flex items-center gap-1.5">
+                <button className="px-4 py-1.5 text-sm font-semibold text-gray-400 bg-gray-100 rounded-xl border border-gray-200 shadow-sm flex items-center gap-1.5">
                   <Key size={14} /> Acceso
                 </button>
                 <button className="w-8 h-8 flex items-center justify-center rounded-lg text-[#92400E]">
@@ -2427,14 +2498,12 @@ export default function ClientDetail() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setManagingPortalContact(row.original)}
-                className={`px-4 py-1.5 text-sm font-medium bg-gradient-to-b rounded-xl
-                           shadow-[0_4px_4px_rgba(0,0,0,0.1),_0_8px_16px_rgba(0,0,0,0.1),_inset_0_2px_4px_rgba(255,255,255,0.6),_inset_0_-3px_4px_rgba(0,0,0,0.15)]
-                           active:shadow-[inset_0_3px_5px_rgba(0,0,0,0.2),_inset_0_-2px_2px_rgba(255,255,255,0.5)]
-                           active:translate-y-1 transition-all duration-100 ease-out flex items-center gap-1.5
+                className={`px-4 py-1.5 text-sm font-semibold rounded-xl border shadow-sm
+                           transition-colors duration-150 flex items-center gap-1.5
                            ${
                              row.original.has_portal_access ?
-                               "from-green-100 to-green-100 text-black"
-                             : "from-red-100 to-red-100 text-black"
+                               "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+                             : "bg-red-50 text-red-800 border-red-200 hover:bg-red-100"
                            }`}>
                 <Key size={14} className="opacity-90" /> Acceso
               </button>
@@ -2608,7 +2677,9 @@ export default function ClientDetail() {
 
   const clearContactFilters = () => {
     setContactSearch("");
-    setContactFilters({});
+    setContactFilters({
+      position_title: "",
+    });
     setActiveContactFilterPickerField(null);
     setContactFilterPickerSearch("");
   };
@@ -2671,10 +2742,17 @@ export default function ClientDetail() {
 
   const getContactExportContext = () => {
     const usedLabels = new Set();
-    const exportColumns = contactColumnsFromView.map((column) => {
+    const exportColumns = contactColumnsFromView
+      .filter((column) => column.name !== "is_active")
+      .map((column) => {
       const baseLabel = String(column.label || column.name || "").trim();
       const fallbackLabel = String(column.name || "").trim();
-      const base = baseLabel || fallbackLabel || "Columna";
+      let base = baseLabel || fallbackLabel || "Columna";
+
+      if (column.name === "has_portal_access") {
+        base = "Acceso al Portal";
+      }
+
       let label = base;
       const normalized = base.toLowerCase();
 
@@ -2806,6 +2884,26 @@ export default function ClientDetail() {
       Swal.fire({
         title: "Error",
         text: e.message || "No se pudo generar el Excel.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+      });
+    }
+  };
+
+  const handleDownloadContactsTemplate = async () => {
+    try {
+      const XLSX = await import("xlsx");
+
+      const ws = XLSX.utils.aoa_to_sheet([CONTACT_TEMPLATE_COLUMNS]);
+      ws["!cols"] = [{ wch: 34 }, { wch: 34 }, { wch: 26 }, { wch: 20 }];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Plantilla Contactos");
+      XLSX.writeFile(wb, "Plantilla_Contactos.xlsx");
+    } catch (e) {
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo generar la plantilla de Excel.",
         icon: "error",
         confirmButtonColor: "#d33",
       });
@@ -2951,19 +3049,14 @@ export default function ClientDetail() {
       <div className="flex gap-2 pb-1 mb-6 overflow-x-auto custom-scrollbar">
         {[
           { id: "general", label: "General", icon: <Building2 size={18} /> },
-          {
-            id: "policies",
-            label: "Pólizas y servicios generadas a " + client.business_name,
-            icon: <FileText size={18} />,
-          },
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors whitespace-nowrap ${
               activeTab === tab.id ?
-                "bg-white text-black shadow-lg shadow-slate-400"
-              : "text-gray-400 hover:text-black"
+                "bg-white text-black border-[#CBD5E1] shadow-sm"
+              : "text-gray-400 border-transparent hover:text-black hover:border-gray-200 hover:bg-white/70"
             }`}>
             {tab.icon}
             {tab.label}
@@ -3123,19 +3216,23 @@ export default function ClientDetail() {
                   </div>
                 </div>
 
-                <button
-                  onClick={handleExportContactsPDF}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 bg-white text-red-700 hover:bg-red-50 transition-colors whitespace-nowrap"
-                  title="Exportar a PDF">
-                  <FileText size={14} /> Exportar a PDF
-                </button>
+                <div className="flex flex-col items-center gap-1">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleExportContactsPDF}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 bg-white text-red-700 hover:bg-red-50 transition-colors whitespace-nowrap"
+                      title="Exportar a PDF">
+                      <FileText size={14} /> Exportar a PDF
+                    </button>
 
-                <button
-                  onClick={handleExportContactsExcel}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
-                  title="Exportar a Excel">
-                  <FileSpreadsheet size={14} /> Exportar a Excel
-                </button>
+                    <button
+                      onClick={handleExportContactsExcel}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
+                      title="Exportar a Excel">
+                      <FileSpreadsheet size={14} /> Exportar a Excel
+                    </button>
+                  </div>
+                </div>
 
                 {/* Botón filtros */}
                 <button
@@ -3182,12 +3279,13 @@ export default function ClientDetail() {
                         <div>
                           <h3 className="text-white font-bold text-base">
                             Filtrar por{" "}
-                            {activeContactFilterPickerConfig?.buttonLabel ||
-                              "campo"}
+                            {(
+                              activeContactFilterPickerConfig?.buttonLabel ||
+                              "campo"
+                            ).toLowerCase()}
                           </h3>
                           <p className="text-[11px] text-gray-300 mt-1">
-                            Selecciona un valor de{" "}
-                            {activeContactFilterPickerConfig?.modalLabel || ""}
+                            Selecciona o busca un valor
                           </p>
                         </div>
                         <button
@@ -3244,41 +3342,50 @@ export default function ClientDetail() {
                   document.body,
                 )}
 
-              <div className="px-4 py-2 min-h-10 bg-blue-50 rounded-lg text-xs text-[#2277B4] flex items-center justify-between gap-3">
+              <div className="px-4 py-2 min-h-10 bg-blue-50 border border-gray-200 border-b-0 rounded-t-md text-xs text-[#2277B4] flex items-center justify-between gap-3">
                 <div className="flex items-center gap-1 shrink-0">
                   <Lightbulb size={14} className="inline" /> Clic en
                   <ChevronRight size={12} className="inline" /> para más
                   detalles
                 </div>
 
-                <div
-                  className={`flex items-center gap-2 transition-opacity duration-150 ${
-                    showContactFilters ? "opacity-100" : (
-                      "opacity-0 pointer-events-none"
-                    )
-                  }`}>
-                  {contactQuickFilterButtons.map((button) => {
-                    const selectedValue = String(
-                      contactFilters[button.fieldName] || "",
-                    );
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex items-center gap-2 transition-opacity duration-150 ${
+                      showContactFilters ? "opacity-100" : (
+                        "opacity-0 pointer-events-none"
+                      )
+                    }`}>
+                    {contactQuickFilterButtons.map((button) => {
+                      const selectedValue = String(
+                        contactFilters[button.fieldName] || "",
+                      );
 
-                    return (
-                      <button
-                        key={button.id}
-                        onClick={() =>
-                          openContactFilterPicker(button.fieldName)
-                        }
-                        className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${
-                          selectedValue ?
-                            "bg-[#2277B4] text-white border-[#2277B4]"
-                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
-                        }`}>
-                        <span className="font-semibold tracking-wide">
-                          {button.buttonLabel}
-                        </span>
-                      </button>
-                    );
-                  })}
+                      return (
+                        <button
+                          key={button.id}
+                          onClick={() =>
+                            openContactFilterPicker(button.fieldName)
+                          }
+                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${
+                            selectedValue ?
+                              "bg-[#2277B4] text-white border-[#2277B4]"
+                            : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                          }`}>
+                          <span className="font-semibold tracking-wide">
+                            {button.buttonLabel}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={handleDownloadContactsTemplate}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-700 bg-white transition-colors whitespace-nowrap"
+                    title="Descargar plantilla de carga masiva de contactos"> 
+                    <FileSpreadsheet size={13} /> Descargar plantilla excel
+                  </button>
                 </div>
               </div>
 
@@ -3286,7 +3393,7 @@ export default function ClientDetail() {
 
               {/* Tabla TanStack */}
               <div
-                className={`glass-panel overflow-x-auto rounded-md ${
+                className={`bg-white overflow-x-auto border border-gray-200 border-t-0 rounded-b-md ${
                   shouldEnableContactTableScroll ?
                     "h-[65vh] overflow-y-scroll"
                   : ""
@@ -3637,9 +3744,6 @@ export default function ClientDetail() {
           productsList={productsList}
         />
       )}
-      {activeTab === "policies" && client && (
-        <ClientPoliciesTab clientId={client.id} />
-      )}
 
       {/* Modal de edición de contacto */}
       {editingContactId &&
@@ -3791,6 +3895,9 @@ export default function ClientDetail() {
                     <Upload size={28} />
                     <span className="text-sm font-semibold">
                       Haz clic para seleccionar el archivo Excel
+                    </span>
+                    <span className="text-[11px] text-gray-400">
+                      O usa la plantilla descargada
                     </span>
                   </button>
                 </div>

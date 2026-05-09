@@ -63,6 +63,7 @@ export async function listPortalQuotesApi() {
     query {
       quotes {
         id
+        folio
         created_at
         total
         status
@@ -115,4 +116,36 @@ export async function requestQuoteApi(items) {
   });
   if (data.errors?.length) throw new Error(data.errors[0].message);
   return data.data.requestQuote;
+}
+
+export async function deletePortalQuoteApi(id) {
+  const query = `
+    mutation DeletePortalQuote($id: ID!) {
+      deletePortalQuote(id: $id)
+    }
+  `;
+  const { data } = await portalAxiosClient.post("", {
+    query,
+    variables: { id },
+  });
+  if (data.errors?.length) throw new Error(data.errors[0].message);
+  return data.data.deletePortalQuote;
+}
+
+export async function updatePortalQuoteRequestApi(id, items) {
+  const query = `
+    mutation UpdatePortalQuoteRequest($id: ID!, $input: RequestQuoteInput!) {
+      updatePortalQuoteRequest(id: $id, input: $input) {
+        id
+        status
+        total
+      }
+    }
+  `;
+  const { data } = await portalAxiosClient.post("", {
+    query,
+    variables: { id, input: { items } },
+  });
+  if (data.errors?.length) throw new Error(data.errors[0].message);
+  return data.data.updatePortalQuoteRequest;
 }

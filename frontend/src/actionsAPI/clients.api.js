@@ -5,7 +5,7 @@ const graphQlBaseUrl =
 const restBaseUrl = graphQlBaseUrl.replace(/\/graphql\/?$/i, "");
 
 function restUrl(path) {
-  return `${restBaseUrl}${path}`;
+  return `${restBaseUrl}${path}`; // Construye la URL completa para las rutas REST eliminando "/graphql" si es necesario //api/clients/dynamic -> http://localhost:4000/api/clients/dynamic
 }
 
 export async function listClientsApi() {

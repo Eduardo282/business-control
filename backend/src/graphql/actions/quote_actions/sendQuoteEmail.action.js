@@ -103,19 +103,6 @@ export const sendQuoteEmailAction = async ({
   }
 
   // 2. Validar correo
-  // Verificar si es un contacto con acceso al portal
-  const [contactRows] = await pool.query(
-    "SELECT * FROM client_contacts WHERE email = ? AND has_portal_access = 1",
-    [contact_email],
-  );
-
-  if (contactRows.length > 0) {
-    // Es un usuario del portal, ¡marcar la cotización!
-    await pool.query(
-      "UPDATE quotes SET is_sent_to_client_portal = 1 WHERE id = ?",
-      [quote_id],
-    );
-  }
 
   const validation = await verifyEmailWithZeroBounce(contact_email);
   if (validation.status === "invalid" || validation.status === "do_not_mail") {
@@ -401,12 +388,52 @@ export const sendQuoteEmailAction = async ({
 
   // 5. Enviar correo con archivo adjunto
   const subject = `Cotización ${quote.folio || "#" + quote.id} - ${quote.client.business_name}`;
+  
+  // Limpiamos o estructuramos el mensaje del frontend para que se integre bien en la plantilla
+  const htmlMessage = message.replace(/\n/g, "<br>");
+
   const emailBodyHtml = `
-    <h3>Hola,</h3>
-    <p>${message.replace(/\n/g, "<br>")}</p>
-    <hr />
-    <p>Se adjunta la cotización <strong>${quote.folio || "#" + quote.id}</strong> en formato PDF.</p>
-    <p>Atentamente,<br>${quote.user.full_name}</p>
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 30px 20px; text-align: center; border-bottom: 4px solid #34d399;">
+        <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 0.5px;">Business Control</h1>
+        <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.5px;">Documento Comercial</p>
+      </div>
+      
+      <!-- Body -->
+      <div style="padding: 40px 30px;">
+        <div style="display: flex; align-items: center; margin-bottom: 25px;">
+          <h2 style="color: #0f172a; font-size: 22px; margin: 0; font-weight: 700;">Detalle de Cotización</h2>
+          <span style="margin-left: auto; background-color: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; font-family: monospace;">
+            ${quote.folio || "#" + quote.id}
+          </span>
+        </div>
+        
+        <div style="background-color: #f8fafc; border-left: 4px solid #3b82f6; padding: 20px; margin: 0 0 30px 0; border-radius: 0 8px 8px 0;">
+          <p style="margin: 0; color: #334155; font-size: 15px; line-height: 1.7;">
+            ${htmlMessage}
+          </p>
+        </div>
+        
+        <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
+          <p style="color: #065f46; font-size: 14px; margin: 0; line-height: 1.5;">
+            <strong>¡Archivo adjunto seguro!</strong><br>
+            Se ha adjuntado la cotización formal en formato PDF para su evaluación y resguardo.
+          </p>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div style="background-color: #f8fafc; padding: 25px 30px; border-top: 1px solid #e2e8f0; text-align: center;">
+        <p style="color: #1e293b; font-weight: 700; margin: 0 0 5px 0; font-size: 14px;">Business Control S.A. de C.V.</p>
+        <p style="color: #64748b; margin: 0 0 15px 0; font-size: 13px;">Av. Vallarta #1234, Col. Americana, Guadalajara, Jalisco, CP 44100</p>
+        
+        <p style="color: #94a3b8; margin: 0; font-size: 11px; line-height: 1.5; padding-top: 15px; border-top: 1px dashed #cbd5e1;">
+          Este documento confidencial es de uso exclusivo para las personas a las que va dirigido.<br>
+          Si usted recibió este correo por error, por favor elimínelo.
+        </p>
+      </div>
+    </div>
   `;
 
   await sendEmail(contact_email, subject, message, emailBodyHtml, [

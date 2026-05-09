@@ -64,6 +64,7 @@ async function getStoredColumnMeta(columnNames) {
     return `:${token}`;
   });
 
+
   const [rows] = await pool.query(
     `
       SELECT column_name, label, display_order
@@ -83,6 +84,7 @@ async function getStoredColumnMeta(columnNames) {
       },
     ];
   });
+
 
   return new Map(mapped);
 }

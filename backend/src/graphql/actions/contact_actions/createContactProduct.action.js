@@ -18,14 +18,23 @@ function normalizeCategory(category = "") {
     .trim();
 }
 
-function resolveServicePolicyTable(productCategory) {
+function resolveServicePolicyTable(productCategory, productName = "") {
   const normalizedCategory = normalizeCategory(productCategory);
+  const normalizedName = normalizeCategory(productName);
 
-  if (normalizedCategory === "servicio personalizado") {
+  if (normalizedName.includes("poliza")) {
+    return "policies";
+  }
+
+  if (normalizedName.includes("servicio")) {
     return "services";
   }
 
-  if (normalizedCategory === "poliza personalizada") {
+  if (normalizedCategory.includes("servicio")) {
+    return "services";
+  }
+
+  if (normalizedCategory.includes("poliza")) {
     return "policies";
   }
 
@@ -106,7 +115,7 @@ export async function createContactProductAction({
     const normalizedStatus = normalizeStoredStatus(status);
 
     const [products] = await connection.query(
-      "SELECT category FROM products WHERE id = :product_id",
+      "SELECT name, category FROM products WHERE id = :product_id",
       { product_id },
     );
 
@@ -114,7 +123,10 @@ export async function createContactProductAction({
       throw new Error("Product not found");
     }
 
-    const targetTable = resolveServicePolicyTable(products[0].category);
+    const targetTable = resolveServicePolicyTable(
+      products[0].category,
+      products[0].name,
+    );
 
     const [result] = await connection.query(
       `INSERT INTO contact_products (client_id, contact_id, product_id, license_key, start_date, expiration_date, status)

@@ -67,7 +67,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="min-h-screen flex bg-white dark:bg-dark-900">
       {/* Lado izquierdo - Imagen corporativa */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#4A6B8A] to-[#162A42] relative overflow-hidden z-20 shadow-[15px_0_30px_-5px_rgba(0,0,0,0.5)]">
         {/* Logo grande centrado */}
@@ -110,7 +110,7 @@ export default function Login() {
       </div>
 
       {/* Lado derecho - Formulario */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#F1F4F8] relative">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#F1F4F8] dark:bg-dark-800 relative">
         <div className="w-full max-w-md relative z-10">
           {/* Logo para móvil */}
           <div className="lg:hidden flex justify-center mb-8">
@@ -123,10 +123,10 @@ export default function Login() {
 
           {/* Encabezado */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-extrabold text-[#1a2b4c] mb-2 tracking-tight">
+            <h1 className="text-3xl font-extrabold text-[#1a2b4c] dark:text-slate-100 mb-2 tracking-tight">
               Iniciar Sesión
             </h1>
-            <p className="text-[#3b4b6b]/70">
+            <p className="text-[#3b4b6b]/70 dark:text-slate-400">
               Ingresa tus credenciales para acceder
             </p>
           </div>
@@ -135,7 +135,7 @@ export default function Login() {
           <form onSubmit={submit} className="space-y-6">
             {/* Campo de correo electrónico */}
             <div>
-              <label className="block text-sm font-bold text-[#1a2b4c] mb-2">
+              <label className="block text-sm font-bold text-[#1a2b4c] dark:text-slate-200 mb-2">
                 Correo Electrónico
               </label>
               <div className="relative">
@@ -147,7 +147,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="correo@empresa.com"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] dark:border-white/10 bg-white dark:bg-white/5 shadow-sm text-[#1a2b4c] dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -155,7 +155,7 @@ export default function Login() {
 
             {/* Campo de contraseña */}
             <div>
-              <label className="block text-sm font-bold text-[#1a2b4c] mb-2">
+              <label className="block text-sm font-bold text-[#1a2b4c] dark:text-slate-200 mb-2">
                 Contraseña
               </label>
               <div className="relative">
@@ -167,7 +167,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="EJ: &q/N,sKz"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] dark:border-white/10 bg-white dark:bg-white/5 shadow-sm text-[#1a2b4c] dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -199,12 +199,12 @@ export default function Login() {
 
               <Link
                 to="/register"
-                className="group flex min-h-[92px] justify-center items-center rounded-[18px] border border-[#d8dde7] bg-white px-3 py-3 text-left shadow-[0_14px_24px_-22px_rgba(26,43,76,0.65)] transition-all hover:-translate-y-0.5 hover:border-[#2277B4]/35 hover:shadow-[0_18px_30px_-22px_rgba(34,119,180,0.35)] focus:outline-none focus:ring-2 focus:ring-[#2277B4] focus:ring-offset-2">
+                className="group flex min-h-[92px] justify-center items-center rounded-[18px] border border-[#d8dde7] dark:border-white/10 bg-white dark:bg-white/5 px-3 py-3 text-left shadow-[0_14px_24px_-22px_rgba(26,43,76,0.65)] transition-all hover:-translate-y-0.5 hover:border-[#2277B4]/35 hover:shadow-[0_18px_30px_-22px_rgba(34,119,180,0.35)] focus:outline-none focus:ring-2 focus:ring-[#2277B4] focus:ring-offset-2">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2277B4]/12 text-[#2277B4] transition-colors group-hover:bg-[#2277B4]/18">
                   <UserPlus className="h-4 w-4" />
                 </span>
 
-                <span className="block text-[13px] font-semibold leading-tight text-[#1a2b4c]">
+                <span className="block text-[13px] font-semibold leading-tight text-[#1a2b4c] dark:text-slate-200">
                   Crear Nueva Cuenta
                 </span>
               </Link>
