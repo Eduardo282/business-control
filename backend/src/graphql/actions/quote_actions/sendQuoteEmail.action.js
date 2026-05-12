@@ -188,8 +188,7 @@ export const sendQuoteEmailAction = async ({
     }, 0),
   );
   const subtotal = roundMoney(
-    Number(quote.total) ||
-      quote.items.reduce((sum, item) => sum + (Number(item.total) || 0), 0),
+    quote.items.reduce((sum, item) => sum + (Number(item.total) || 0), 0),
   );
   const totalDiscountAmount = roundMoney(Math.max(0, grossSubtotal - subtotal));
   const iva = roundMoney(subtotal * 0.16);

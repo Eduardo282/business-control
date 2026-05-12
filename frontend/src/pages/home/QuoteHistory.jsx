@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useReducer, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import Card from "../../components/ui/Card";
@@ -23,25 +23,64 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
+function dataReducer(state, action) {
+  switch (action.type) {
+    case "FETCH_START":
+      return { ...state, loading: true, error: "" };
+    case "FETCH_SUCCESS":
+      return { ...state, loading: false, quotes: action.payload };
+    case "FETCH_ERROR":
+      return { ...state, loading: false, error: action.payload };
+    case "DELETE_QUOTE":
+      return { ...state, quotes: state.quotes.filter((q) => String(q.id) !== String(action.payload)) };
+    default:
+      return state;
+  }
+}
+
+function filterReducer(state, action) {
+  switch (action.type) {
+    case "SET_Q":
+      return { ...state, q: action.payload };
+    case "TOGGLE_FILTERS":
+      return { ...state, showFilters: !state.showFilters };
+    case "OPEN_FILTER_PICKER":
+      return { ...state, activeFilterPickerField: action.payload, filterPickerSearch: "" };
+    case "CLOSE_FILTER_PICKER":
+      return { ...state, activeFilterPickerField: null, filterPickerSearch: "" };
+    case "SET_FILTER_PICKER_SEARCH":
+      return { ...state, filterPickerSearch: action.payload };
+    case "APPLY_FILTER":
+      return {
+        ...state,
+        filters: { ...state.filters, [state.activeFilterPickerField]: action.payload },
+        activeFilterPickerField: null,
+        filterPickerSearch: "",
+      };
+    case "CLEAR_FILTERS":
+      return { ...state, filters: { client: "", status: "", folio: "" }, activeFilterPickerField: null, filterPickerSearch: "" };
+    default:
+      return state;
+  }
+}
+
 export default function QuoteHistory() {
   const { user } = useContext(AuthContext);
-  const [quotes, setQuotes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [data, dispatchData] = useReducer(dataReducer, { quotes: [], loading: true, error: "" });
+  const { quotes, loading, error } = data;
+  const [fState, dispatchFilter] = useReducer(filterReducer, {
+    q: "",
+    showFilters: false,
+    filters: { client: "", status: "", folio: "" },
+    activeFilterPickerField: null,
+    filterPickerSearch: "",
+  });
+  const { q, showFilters, filters, activeFilterPickerField, filterPickerSearch } = fState;
   const [sorting, setSorting] = useState([]);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   });
-  const [q, setQ] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    client: "",
-    status: "",
-    folio: "",
-  });
-  const [activeFilterPickerField, setActiveFilterPickerField] = useState(null);
-  const [filterPickerSearch, setFilterPickerSearch] = useState("");
 
   const normalizeSearchText = (value) => {
     return (value || "")
@@ -53,18 +92,16 @@ export default function QuoteHistory() {
   };
 
   useEffect(() => {
-    setLoading(true);
-    setError("");
+    dispatchData({ type: "FETCH_START" });
     listQuotesApi()
-      .then((data) => setQuotes(data))
+      .then((res) => dispatchData({ type: "FETCH_SUCCESS", payload: res }))
       .catch((e) => {
         const msg =
           e.response?.data?.errors?.[0]?.message ||
           e.message ||
           "Error al cargar cotizaciones";
-        setError(msg);
-      })
-      .finally(() => setLoading(false));
+        dispatchData({ type: "FETCH_ERROR", payload: msg });
+      });
   }, []);
 
   const handleDeleteQuote = useCallback(async (id) => {
@@ -83,9 +120,7 @@ export default function QuoteHistory() {
 
     try {
       await deleteQuoteApi(id);
-      setQuotes((prev) =>
-        prev.filter((quote) => String(quote.id) !== String(id)),
-      );
+      dispatchData({ type: "DELETE_QUOTE", payload: id });
       Swal.fire({
         title: "¡Eliminada!",
         text: "La cotización se eliminó correctamente de la base de datos.",
@@ -118,33 +153,25 @@ export default function QuoteHistory() {
   ).length;
 
   const openFilterPicker = (fieldName) => {
-    setActiveFilterPickerField(fieldName);
-    setFilterPickerSearch("");
+    dispatchFilter({ type: "OPEN_FILTER_PICKER", payload: fieldName });
   };
 
   const closeFilterPicker = () => {
-    setActiveFilterPickerField(null);
-    setFilterPickerSearch("");
+    dispatchFilter({ type: "CLOSE_FILTER_PICKER" });
   };
 
   const applyFilterValue = (value) => {
     if (!activeFilterPickerField) return;
-
-    setFilters((prev) => ({
-      ...prev,
-      [activeFilterPickerField]: value,
-    }));
-    closeFilterPicker();
+    dispatchFilter({ type: "APPLY_FILTER", payload: value });
   };
 
   const clearFilters = () => {
-    setFilters({ client: "", status: "", folio: "" });
-    closeFilterPicker();
+    dispatchFilter({ type: "CLEAR_FILTERS" });
   };
 
   useEffect(() => {
     if (!showFilters) {
-      closeFilterPicker();
+      dispatchFilter({ type: "CLOSE_FILTER_PICKER" });
     }
   }, [showFilters]);
 
@@ -225,7 +252,7 @@ export default function QuoteHistory() {
         accessorKey: "created_at",
         header: "Fecha",
         cell: ({ row }) => (
-          <div className="text-sm text-light-text-secondary">
+          <div className="text-sm text-light-text-secondary" suppressHydrationWarning>
             {row.original.created_at ?
               new Date(row.original.created_at).toLocaleDateString()
             : "—"}
@@ -238,7 +265,7 @@ export default function QuoteHistory() {
         cell: ({ row }) => (
           <div className="font-bold text-stone-600 text-right">
             $
-            {(Number(row.original.total || 0) * 1.16).toLocaleString("es-MX", {
+            {Number(row.original.total || 0).toLocaleString("es-MX", {
               minimumFractionDigits: 2,
             })}
           </div>
@@ -269,7 +296,7 @@ export default function QuoteHistory() {
             {user?.role?.name !== "SOPORTE" && (
               <button
                 onClick={() => handleDeleteQuote(row.original.id)}
-                className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-red-700 hover:bg-red-50 transition-colors"
+                className="size-8 inline-flex items-center justify-center rounded-lg text-red-700 hover:bg-red-50 transition-colors"
                 title="Eliminar cotización">
                 <Trash2 size={14} />
               </button>
@@ -294,7 +321,7 @@ export default function QuoteHistory() {
       const status = quote?.status || "";
       const total =
         quote?.total != null ?
-          String((Number(quote.total) * 1.16).toFixed(2))
+          String(Number(quote.total).toFixed(2))
         : "";
       const createdAt =
         quote?.created_at ?
@@ -361,10 +388,10 @@ export default function QuoteHistory() {
         <div className="flex items-center gap-3">
           <BadgeDollarSign size={28} />
           <div>
-            <h1 className="text-3xl font-bold text-light-text-primary">
+            <h1 className="text-3xl font-semibold text-light-text-primary">
               Historial de Cotizaciones
             </h1>
-            <p className="text-sm text-light-text-secondary dark:text-slate-400">
+            <p className="text-sm text-light-text-secondary dark:text-zinc-400">
               Consulta rápida de las cotizaciones generadas.
             </p>
           </div>
@@ -374,27 +401,27 @@ export default function QuoteHistory() {
           <div className="relative flex-1 sm:flex-none">
             <Search
               size={18}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
             />
             <input
               type="text"
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => dispatchFilter({ type: "SET_Q", payload: e.target.value })}
               placeholder="Buscar por cliente, vendedor..."
-              className="w-full sm:w-80 pl-4 pr-11 py-3 bg-white border border-gray-300 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] transition-all shadow-sm"
+              className="w-full sm:w-80 pl-4 pr-11 py-3 bg-white border border-zinc-300 rounded-xl text-sm text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] transition-all shadow-sm"
             />
           </div>
 
           <button
-            onClick={() => setShowFilters((prev) => !prev)}
+            onClick={() => dispatchFilter({ type: "TOGGLE_FILTERS" })}
             className={`inline-flex items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold border transition-colors whitespace-nowrap ${
               showFilters || activeFilterCount > 0 ?
                 "bg-[#2277B4] text-white border-[#2277B4]"
-              : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+              : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
             }`}>
             <SlidersHorizontal size={14} /> Filtros
             {activeFilterCount > 0 && (
-              <span className="ml-0.5 bg-white text-[#1a2b4c] text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+              <span className="ml-0.5 bg-white text-[#1a2b4c] text-[10px] font-bold rounded-full size-4 flex items-center justify-center leading-none">
                 {activeFilterCount}
               </span>
             )}
@@ -409,13 +436,13 @@ export default function QuoteHistory() {
       )}
 
       {loading && (
-        <div className="text-center text-light-text-secondary dark:text-slate-500 py-10 animate-pulse">
+        <div className="text-center text-light-text-secondary dark:text-zinc-500 py-10 animate-pulse">
           Cargando historial...
         </div>
       )}
 
       {!loading && !error && quotes.length === 0 && (
-        <div className="text-center text-light-text-secondary dark:text-slate-500 py-14">
+        <div className="text-center text-light-text-secondary dark:text-zinc-500 py-14">
           No hay cotizaciones registradas.
         </div>
       )}
@@ -425,7 +452,7 @@ export default function QuoteHistory() {
         quotes.length > 0 &&
         filteredQuotes.length === 0 && (
           <Card className="overflow-hidden">
-            <div className="text-center text-light-text-secondary dark:text-slate-500 py-14">
+            <div className="text-center text-light-text-secondary dark:text-zinc-500 py-14">
               No se encontraron cotizaciones.
             </div>
           </Card>
@@ -437,39 +464,44 @@ export default function QuoteHistory() {
             showFilters &&
             createPortal(
               <div
+                role="button"
+                tabIndex={0}
                 className="fixed inset-0 z-[9999] bg-black/45 flex items-center justify-center p-4"
-                onClick={closeFilterPicker}>
+                onClick={closeFilterPicker}
+                onKeyDown={(e) => { if (e.key === "Escape" || e.key === "Enter") closeFilterPicker(); }}>
                 <div
+                  role="dialog"
                   className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-                  onClick={(e) => e.stopPropagation()}>
-                  <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}>
+                  <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
                     <div>
                       <h3 className="text-white font-bold text-base uppercase">
                         FILTRAR POR {filterFieldLabels[activeFilterPickerField]}
                       </h3>
-                      <p className="text-[11px] text-gray-300 mt-1">
+                      <p className="text-[11px] text-zinc-300 mt-1">
                         Selecciona o busca un valor
                       </p>
                     </div>
                     <button
                       onClick={closeFilterPicker}
-                      className="w-8 h-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
+                      className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
                       <X size={16} />
                     </button>
                   </div>
 
                   <div className="p-4 space-y-3">
-                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                      <Search size={15} className="text-gray-500" />
+                    <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+                      <Search size={15} className="text-zinc-500" />
                       <input
                         value={filterPickerSearch}
-                        onChange={(e) => setFilterPickerSearch(e.target.value)}
+                        onChange={(e) => dispatchFilter({ type: "SET_FILTER_PICKER_SEARCH", payload: e.target.value })}
                         placeholder="Buscar valor..."
-                        className="w-full bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                        className="w-full bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
                       />
                     </div>
 
-                    <div className="h-72 overflow-y-auto rounded-lg border border-gray-100 divide-y divide-gray-100">
+                    <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 divide-y divide-zinc-100">
                       {visibleFilterPickerOptions.length > 0 ?
                         visibleFilterPickerOptions.map((value) => {
                           const isSelected =
@@ -484,13 +516,13 @@ export default function QuoteHistory() {
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                 isSelected ?
                                   "bg-[#2277B4]/10 text-[#125280] font-semibold"
-                                : "text-gray-700 hover:bg-gray-50"
+                                : "text-zinc-700 hover:bg-zinc-50"
                               }`}>
                               {value}
                             </button>
                           );
                         })
-                      : <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                      : <div className="px-3 py-4 text-sm text-zinc-500 text-center">
                           No hay valores para mostrar.
                         </div>
                       }
@@ -518,7 +550,7 @@ export default function QuoteHistory() {
                     className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] border transition-all whitespace-nowrap ${
                       selectedValue ?
                         "bg-[#2277B4] text-white border-[#2277B4]"
-                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                      : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
                     } ${
                       showFilters ?
                         "opacity-100 translate-y-0"
@@ -551,7 +583,7 @@ export default function QuoteHistory() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="uppercase text-xs font-bold tracking-wider text-[#2277B4] border-b border-light-border dark:border-slate-700">
+              <thead className="uppercase text-xs font-bold tracking-wider text-[#2277B4] border-b border-light-border dark:border-zinc-700">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
@@ -597,9 +629,9 @@ export default function QuoteHistory() {
                 ))}
               </thead>
 
-              <tbody className="divide-y divide-light-border dark:divide-slate-800">
+              <tbody className="divide-y divide-light-border dark:divide-zinc-800">
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50 transition">
+                  <tr key={row.id} className="hover:bg-zinc-50 transition">
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
@@ -650,25 +682,25 @@ export default function QuoteHistory() {
               <button
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
-                className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 ««
               </button>
               <button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Anterior
               </button>
               <button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Siguiente
               </button>
               <button
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
-                className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 »»
               </button>
             </div>

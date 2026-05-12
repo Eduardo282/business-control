@@ -1,6 +1,8 @@
 import { pool } from "../../../config/db.js";
 import { ensureQuoteItemDiscountColumnsAction } from "./ensureQuoteItemDiscountColumns.action.js";
 
+const IVA_RATE = 0.16;
+
 export const updatePortalQuoteRequestAction = async (quoteId, input, user) => {
   const { items } = input;
   let supportsDiscountColumns = false;
@@ -61,6 +63,8 @@ export const updatePortalQuoteRequestAction = async (quoteId, input, user) => {
     }
 
     quoteTotal = Number(quoteTotal.toFixed(2));
+    const quoteIva = Number((quoteTotal * IVA_RATE).toFixed(2));
+    const quoteTotalWithIva = Number((quoteTotal + quoteIva).toFixed(2));
 
     // 3. Delete old items
     await connection.query("DELETE FROM quote_items WHERE quote_id = ?", [quoteId]);
@@ -81,13 +85,15 @@ export const updatePortalQuoteRequestAction = async (quoteId, input, user) => {
     }
 
     // 5. Update quote total
-    await connection.query("UPDATE quotes SET total = ? WHERE id = ?", [quoteTotal, quoteId]);
+    await connection.query("UPDATE quotes SET total = ? WHERE id = ?", [quoteTotalWithIva, quoteId]);
 
     await connection.commit();
 
     return {
       id: quoteId,
-      total: quoteTotal,
+      total: quoteTotalWithIva,
+      subtotal: quoteTotal,
+      iva: quoteIva,
       status: quote.status,
     };
   } catch (error) {

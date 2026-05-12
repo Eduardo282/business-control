@@ -1,1 +1,0 @@
-ALTER TABLE quotes ADD COLUMN is_deleted_admin TINYINT(1) DEFAULT 0;

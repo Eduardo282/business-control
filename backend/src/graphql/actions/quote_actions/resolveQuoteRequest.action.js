@@ -1,6 +1,7 @@
 import { pool } from "../../../config/db.js";
 import { ensureQuoteItemDiscountColumnsAction } from "./ensureQuoteItemDiscountColumns.action.js";
 
+const IVA_RATE = 0.16;
 let servicePolicyTablesEnsured = false;
 
 function normalizeCategory(category = "") {
@@ -154,6 +155,8 @@ export const resolveQuoteRequestAction = async (requestId, input, user) => {
     }
 
     quoteTotal = Number(quoteTotal.toFixed(2));
+    const quoteIva = Number((quoteTotal * IVA_RATE).toFixed(2));
+    const quoteTotalWithIva = Number((quoteTotal + quoteIva).toFixed(2));
 
     // 3. Actualizar la cotización existente (REQUESTED -> PENDING) y asignar usuario admin
     const userId = user.id || user.userId;
@@ -169,7 +172,7 @@ export const resolveQuoteRequestAction = async (requestId, input, user) => {
         client_id,
         contact_id || null,
         userId,
-        quoteTotal,
+        quoteTotalWithIva,
         notes,
         requestId,
       ],
@@ -278,7 +281,9 @@ export const resolveQuoteRequestAction = async (requestId, input, user) => {
       folio,
       client_id,
       user_id: userId,
-      total: quoteTotal,
+      total: quoteTotalWithIva,
+      subtotal: quoteTotal,
+      iva: quoteIva,
       status: "PENDING",
       notes,
       created_at: new Date(),

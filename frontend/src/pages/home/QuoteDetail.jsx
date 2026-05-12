@@ -140,10 +140,7 @@ export default function QuoteDetail() {
         );
 
         if (clonedRoot) {
-          clonedRoot.style.opacity = "1";
-          clonedRoot.style.filter = "none";
-          clonedRoot.style.transform = "none";
-          clonedRoot.style.animation = "none";
+          clonedRoot.style.cssText += "opacity:1;filter:none;transform:none;animation:none;";
         }
 
         const animatedElements = clonedDocument.querySelectorAll(
@@ -151,19 +148,17 @@ export default function QuoteDetail() {
         );
 
         animatedElements.forEach((element) => {
-          element.style.opacity = "1";
-          element.style.filter = "none";
-          element.style.transform = "none";
-          element.style.animation = "none";
-          element.style.transition = "none";
+          element.style.cssText += "opacity:1;filter:none;transform:none;animation:none;transition:none;";
         });
       },
     });
   };
 
   const buildPdfFromSnapshot = async () => {
-    const canvas = await getQuoteSnapshotCanvas();
-    const jspdfModule = await import("jspdf");
+    const [canvas, jspdfModule] = await Promise.all([
+      getQuoteSnapshotCanvas(),
+      import("jspdf"),
+    ]);
     const jsPDFCtor = jspdfModule.jsPDF || jspdfModule.default;
 
     // Obtener el ancho de un A4 estándar
@@ -223,7 +218,7 @@ export default function QuoteDetail() {
     setEmailMessage(
       `Estimado cliente,\n\nAdjunto encontrará la cotización ${
         quoteFolio
-      } por un total de $${(Number(quote.total) * 1.16).toLocaleString(
+      } por un total de $${Number(quote.total).toLocaleString(
         "es-MX",
         { minimumFractionDigits: 2 },
       )}.\n\nQuedo a la espera de sus comentarios.\n\nSaludos,\n${
@@ -274,7 +269,7 @@ export default function QuoteDetail() {
 
     if (selectedContact.email) {
       try {
-        const totalWithTax = (Number(quote.total) || 0) * 1.16;
+        const totalWithTax = Number(quote.total) || 0;
         const { pdfBase64 } = await buildPdfFromSnapshot();
         await sendQuoteEmailApi({
           quote_id: quote.id,
@@ -306,7 +301,7 @@ export default function QuoteDetail() {
     setToggleLoading(true);
     try {
       await toggleQuotePortalApi(quote.id, status, contactId);
-      setQuote({ ...quote, is_sent_to_client_portal: status });
+      setQuote((prev) => ({ ...prev, is_sent_to_client_portal: status }));
     } catch (e) {
       alert("Error actualizando portal: " + e.message);
     } finally {
@@ -367,7 +362,7 @@ export default function QuoteDetail() {
     setSendingToContact(true);
     setQuickNotice(null);
     try {
-      const totalWithTax = (Number(quote.total) || 0) * 1.16;
+      const totalWithTax = Number(quote.total) || 0;
       const { pdfBase64 } = await buildPdfFromSnapshot();
       await sendQuoteEmailApi({
         quote_id: quote.id,
@@ -1011,7 +1006,7 @@ export default function QuoteDetail() {
 
   if (loading)
     return (
-      <div className="flex h-screen items-center justify-center text-light-text-secondary dark:text-slate-400">
+      <div className="flex h-screen items-center justify-center text-light-text-secondary dark:text-zinc-400">
         Cargando cotización...
       </div>
     );
@@ -1023,7 +1018,7 @@ export default function QuoteDetail() {
     );
   if (!quote)
     return (
-      <div className="p-8 text-center text-light-text-secondary dark:text-slate-400">
+      <div className="p-8 text-center text-light-text-secondary dark:text-zinc-400">
         Cotización no encontrada
       </div>
     );
@@ -1039,8 +1034,7 @@ export default function QuoteDetail() {
     }, 0),
   );
   const netSubtotal = roundMoney(
-    Number(quote.total) ||
-      quoteItems.reduce((sum, item) => sum + (Number(item.total) || 0), 0),
+    quoteItems.reduce((sum, item) => sum + (Number(item.total) || 0), 0),
   );
   const totalDiscount = roundMoney(Math.max(0, grossSubtotal - netSubtotal));
   const ivaAmount = roundMoney(netSubtotal * 0.16);
@@ -1069,7 +1063,7 @@ export default function QuoteDetail() {
       {/* Modal de correo */}
       {showEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in">
-          <Card className="w-full max-w-lg shadow-2xl shadow-primary-500/10 border-light-border dark:border-white/10 !bg-light-card dark:!bg-slate-900/95">
+          <Card className="w-full max-w-lg shadow-2xl shadow-primary-500/10 border-light-border dark:border-white/10 !bg-light-card dark:!bg-zinc-900/95">
             <h3 className="text-xl font-bold text-light-text-primary dark:text-white mb-4 flex items-center gap-2">
               <span className="text-primary-600 dark:text-primary-400">
                 <Mail size={24} />
@@ -1079,11 +1073,12 @@ export default function QuoteDetail() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-light-text-secondary dark:text-slate-400 mb-1">
+                <label htmlFor="quote-contact-select" className="block text-xs font-medium text-light-text-secondary dark:text-zinc-400 mb-1">
                   Seleccionar contacto
                 </label>
                 <select
-                  className="w-full rounded-xl border border-light-border dark:border-white/10 bg-light-bg dark:bg-black/30 p-2 text-light-text-primary dark:text-slate-200 outline-none focus:ring-1 focus:ring-primary-500 text-sm"
+                  id="quote-contact-select"
+                  className="w-full rounded-xl border border-light-border dark:border-white/10 bg-light-bg dark:bg-black/30 p-2 text-light-text-primary dark:text-zinc-200 outline-none focus:ring-1 focus:ring-primary-500 text-sm"
                   onChange={(e) => setEmailTo(e.target.value)}
                   value={emailTo}>
                   <option value="">-- Seleccionar o Escribir abajo --</option>
@@ -1100,15 +1095,16 @@ export default function QuoteDetail() {
                 value={emailTo}
                 onChange={(e) => setEmailTo(e.target.value)}
                 placeholder="ej: cliente@empresa.com"
-                className="bg-light-bg dark:bg-black/30 border-light-border dark:border-white/10 text-light-text-primary dark:text-slate-200"
+                className="bg-light-bg dark:bg-black/30 border-light-border dark:border-white/10 text-light-text-primary dark:text-zinc-200"
               />
 
               <div className="space-y-1">
-                <label className="block text-xs font-medium text-light-text-secondary dark:text-slate-400">
+                <label htmlFor="quote-email-message" className="block text-xs font-medium text-light-text-secondary dark:text-zinc-400">
                   Mensaje
                 </label>
                 <textarea
-                  className="w-full rounded-xl border border-light-border dark:border-white/10 bg-light-bg dark:bg-black/30 p-3 text-sm text-light-text-primary dark:text-slate-200 h-32 focus:ring-1 focus:ring-primary-500 outline-none resize-none"
+                  id="quote-email-message"
+                  className="w-full rounded-xl border border-light-border dark:border-white/10 bg-light-bg dark:bg-black/30 p-3 text-sm text-light-text-primary dark:text-zinc-200 h-32 focus:ring-1 focus:ring-primary-500 outline-none resize-none"
                   value={emailMessage}
                   onChange={(e) => setEmailMessage(e.target.value)}
                 />
@@ -1126,7 +1122,7 @@ export default function QuoteDetail() {
                 </div>
               )}
 
-              <p className="text-[10px] text-light-text-secondary dark:text-slate-500 text-center">
+              <p className="text-[10px] text-light-text-secondary dark:text-zinc-500 text-center">
                 * Verificación activa con ZeroBounce antes de envío.
               </p>
 
@@ -1157,20 +1153,20 @@ export default function QuoteDetail() {
               type="button"
               aria-label="Cerrar modal"
               onClick={() => !toggleLoading && setShowPortalModal(false)}
-              className="absolute inset-0 bg-slate-900/45 backdrop-blur-[2px]"
+              className="absolute inset-0 bg-zinc-900/45 backdrop-blur-[2px]"
             />
 
-            <Card className="relative w-full max-w-lg overflow-hidden !bg-white border border-slate-200 shadow-2xl shadow-slate-900/20">
-              <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between gap-4">
+            <Card className="relative w-full max-w-lg overflow-hidden !bg-white border border-zinc-200 shadow-2xl shadow-slate-900/20">
+              <div className="px-6 py-5 border-b border-zinc-100 flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#1B4733]/10 text-[#1B4733] inline-flex items-center justify-center shrink-0">
+                  <div className="size-10 rounded-xl bg-[#1B4733]/10 text-[#1B4733] inline-flex items-center justify-center shrink-0">
                     <Globe size={20} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-slate-900 leading-none">
+                    <h3 className="text-2xl font-bold text-zinc-900 leading-none">
                       Enviar a Portal
                     </h3>
-                    <p className="text-sm text-slate-600 mt-2 max-w-sm leading-relaxed">
+                    <p className="text-sm text-zinc-600 mt-2 max-w-sm leading-relaxed">
                       Selecciona el contacto que recibira acceso a esta
                       cotizacion en su portal.
                     </p>
@@ -1181,18 +1177,19 @@ export default function QuoteDetail() {
                   type="button"
                   onClick={() => setShowPortalModal(false)}
                   disabled={toggleLoading}
-                  className="w-8 h-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center transition-colors">
+                  className="size-8 rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center transition-colors">
                   <X size={16} />
                 </button>
               </div>
 
               <div className="px-6 py-5 space-y-4 bg-white">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5">
+                  <label htmlFor="portal-contact-select" className="block text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-1.5">
                     Seleccionar contacto
                   </label>
                   <select
-                    className="w-full rounded-xl border border-slate-300 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#1B4733]/20 focus:border-[#1B4733] transition-colors"
+                    id="portal-contact-select"
+                    className="w-full rounded-xl border border-zinc-300 bg-zinc-50/80 px-3 py-2.5 text-sm text-zinc-800 outline-none focus:ring-2 focus:ring-[#1B4733]/20 focus:border-[#1B4733] transition-colors"
                     onChange={(e) => {
                       setSelectedContactId(e.target.value);
                       setPortalError("");
@@ -1211,7 +1208,7 @@ export default function QuoteDetail() {
                       </option>
                     ))}
                   </select>
-                  <p className="text-[11px] text-slate-500 mt-1.5">
+                  <p className="text-[11px] text-zinc-500 mt-1.5">
                     Solo se puede enviar a contactos con portal habilitado.
                   </p>
                 </div>
@@ -1223,12 +1220,12 @@ export default function QuoteDetail() {
                 )}
               </div>
 
-              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex justify-end gap-2">
+              <div className="px-6 py-4 border-t border-zinc-100 bg-zinc-50/80 flex justify-end gap-2">
                 <Button
                   variant="ghost"
                   onClick={() => setShowPortalModal(false)}
                   disabled={toggleLoading}
-                  className="!bg-white !border !border-slate-200 !text-slate-700 hover:!bg-slate-100 disabled:!opacity-50">
+                  className="!bg-white !border !border-zinc-200 !text-zinc-700 hover:!bg-zinc-100 disabled:!opacity-50">
                   Cancelar
                 </Button>
                 <button
@@ -1262,7 +1259,7 @@ export default function QuoteDetail() {
               className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide border ${
                 quote.status === "PENDING" ? "text-yellow-500"
                 : quote.status === "ACCEPTED" ? "text-emerald-400"
-                : "text-slate-500"
+                : "text-zinc-500"
               }`}>
               {quote.status}
             </span>
@@ -1310,26 +1307,26 @@ export default function QuoteDetail() {
       <div
         data-export-preview="quote"
         ref={quotePreviewRef}
-        className="mx-auto max-w-5xl bg-white text-slate-900 shadow-2xl print:shadow-none print:w-full print:m-0 animate-slide-up origin-top border border-slate-200 rounded-2xl overflow-hidden">
-        <div className="bg-gradient-to-r from-[#0f274d] via-[#154982] to-[#1d6fb3] text-white px-8 md:px-12 py-3 flex items-center justify-between text-xs tracking-wide uppercase font-semibold print:bg-white print:text-slate-900 print:border-b print:border-slate-200">
+        className="mx-auto max-w-5xl bg-white text-zinc-900 shadow-2xl print:shadow-none print:w-full print:m-0 animate-slide-up origin-top border border-zinc-200 rounded-2xl overflow-hidden">
+        <div className="bg-gradient-to-r from-[#0f274d] via-[#154982] to-[#1d6fb3] text-white px-8 md:px-12 py-3 flex items-center justify-between text-xs tracking-wide uppercase font-semibold print:bg-white print:text-zinc-900 print:border-b print:border-zinc-200">
           <span>Business Control | Documento Comercial</span>
         </div>
 
-        <div className="p-8 md:p-12 border-b border-slate-100">
+        <div className="p-8 md:p-12 border-b border-zinc-100">
           <div className="flex flex-col md:flex-row justify-between gap-8">
             <div>
-              <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+              <h1 className="text-4xl font-semibold text-zinc-900 tracking-tight">
                 COTIZACIÓN
               </h1>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-zinc-500">
                 Propuesta comercial formal para revisión y aprobación.
               </p>
             </div>
             <div className="text-left md:text-right">
-              <div className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              <div className="text-3xl font-extrabold text-zinc-900 tracking-tight">
                 Business Control
               </div>
-              <div className="text-sm text-slate-500 mt-2 leading-relaxed">
+              <div className="text-sm text-zinc-500 mt-2 leading-relaxed">
                 Av. Vallarta #1234, Col. Americana
                 <br />
                 Guadalajara, Jalisco, CP 44100
@@ -1340,81 +1337,81 @@ export default function QuoteDetail() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">
                 Folio
               </p>
-              <p className="text-sm font-mono font-bold text-slate-900 mt-1">
+              <p className="text-sm font-mono font-bold text-zinc-900 mt-1">
                 {quoteFolio}
               </p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">
                 Fecha de Emisión
               </p>
-              <p className="text-sm font-semibold text-slate-900 mt-1">
+              <p className="text-sm font-semibold text-zinc-900 mt-1">
                 {quoteDateLabel}
               </p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+            <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">
                 Vigencia
               </p>
-              <p className="text-sm font-semibold text-slate-900 mt-1">
+              <p className="text-sm font-semibold text-zinc-900 mt-1">
                 {quoteValidityLabel}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="px-8 md:px-12 py-8 bg-slate-50/60 border-b border-slate-100">
+        <div className="px-8 md:px-12 py-8 bg-zinc-50/60 border-b border-zinc-100">
           <div className="grid lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-3">
+            <div className="lg:col-span-2 rounded-2xl border border-zinc-200 bg-white p-5">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-3">
                 Cliente asignado
               </h3>
-              <div className="font-bold text-xl text-slate-900 leading-tight">
+              <div className="font-bold text-xl text-zinc-900 leading-tight">
                 {quote.client?.business_name || "Cliente eliminado"}
               </div>
-              <div className="text-slate-600 text-sm mt-2 space-y-1">
+              <div className="text-zinc-600 text-sm mt-2 space-y-1">
                 <div>{quote.client?.address || "Domicilio no registrado"}</div>
-                <div className="font-mono text-xs text-slate-500">
+                <div className="font-mono text-xs text-zinc-500">
                   RFC: {quote.client?.rfc || "XAXX010101000"}
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-slate-200">
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
+              <div className="mt-4 pt-4 border-t border-zinc-200">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-2">
                   Contacto asignado
                 </h4>
                 {quote.contact ?
-                  <div className="text-slate-600 text-sm space-y-1">
-                    <div className="font-semibold text-slate-900">
+                  <div className="text-zinc-600 text-sm space-y-1">
+                    <div className="font-semibold text-zinc-900">
                       {quote.contact.full_name}
                     </div>
                     <div>{quote.contact.position_title || "Sin puesto"}</div>
                     <div>{quote.contact.email || "Sin correo"}</div>
                     <div>{quote.contact.phone || "Sin teléfono"}</div>
                   </div>
-                : <div className="text-slate-500 text-sm">
+                : <div className="text-zinc-500 text-sm">
                     Sin contacto asignado
                   </div>
                 }
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-3">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-5">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-3">
                 Ejecutivo de Ventas
               </h3>
-              <div className="font-bold text-slate-900 text-lg">
+              <div className="font-bold text-zinc-900 text-lg">
                 {quote.user?.full_name || "Usuario eliminado"}
               </div>
-              <div className="text-slate-600 text-sm mt-1">
+              <div className="text-zinc-600 text-sm mt-1">
                 {quote.user?.email || "Sin correo"}
               </div>
 
-              <div className="mt-5 pt-4 border-t border-slate-200 text-xs text-slate-500 space-y-1">
+              <div className="mt-5 pt-4 border-t border-zinc-200 text-xs text-zinc-500 space-y-1">
                 <div>Canal: Atención comercial directa</div>
                 <div>Moneda: MXN</div>
                 <div>Impuesto aplicado: IVA 16%</div>
@@ -1426,23 +1423,23 @@ export default function QuoteDetail() {
         <div className="px-8 md:px-12 py-8 min-h-[280px]">
           <table className="w-full text-left text-sm border-separate border-spacing-0">
             <thead>
-              <tr className="text-slate-900 text-xs font-bold uppercase tracking-wider">
-                <th className="py-3 px-6 bg-slate-900 text-white rounded-l-lg">
+              <tr className="text-zinc-900 text-xs font-bold uppercase tracking-wider">
+                <th className="py-3 px-6 bg-zinc-900 text-white rounded-l-lg">
                   Descripción / Producto
                 </th>
-                <th className="py-3 px-4 text-center bg-slate-900 text-white">
+                <th className="py-3 px-4 text-center bg-zinc-900 text-white">
                   Cant
                 </th>
-                <th className="py-3 px-4 text-right bg-slate-900 text-white">
+                <th className="py-3 px-4 text-right bg-zinc-900 text-white">
                   Precio Lista
                 </th>
-                <th className="py-3 px-4 text-right bg-slate-900 text-white">
+                <th className="py-3 px-4 text-right bg-zinc-900 text-white">
                   Desc.
                 </th>
-                <th className="py-3 px-4 text-right bg-slate-900 text-white">
+                <th className="py-3 px-4 text-right bg-zinc-900 text-white">
                   Precio Unit.
                 </th>
-                <th className="py-3 px-6 text-right bg-slate-900 text-white rounded-r-lg">
+                <th className="py-3 px-6 text-right bg-zinc-900 text-white rounded-r-lg">
                   Importe
                 </th>
               </tr>
@@ -1467,25 +1464,25 @@ export default function QuoteDetail() {
                   <tr
                     key={item.id}
                     className={`${
-                      index % 2 === 0 ? "bg-white" : "bg-slate-50/70"
-                    } border-b border-slate-100`}>
+                      index % 2 === 0 ? "bg-white" : "bg-zinc-50/70"
+                    } border-b border-zinc-100`}>
                     <td className="py-4 pl-6 pr-4 align-top">
-                      <div className="font-bold text-slate-800 text-base leading-tight">
+                      <div className="font-bold text-zinc-800 text-base leading-tight">
                         {item.product?.name || "Producto eliminado"}
                       </div>
-                      <div className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      <div className="text-xs text-zinc-500 mt-1 leading-relaxed">
                         {item.product?.description || item.product?.category}
                         {item.product?.users_count > 0 && (
-                          <span className="ml-2 inline-block text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 border border-slate-200">
+                          <span className="ml-2 inline-block text-[10px] bg-zinc-100 px-1.5 py-0.5 rounded text-zinc-500 border border-zinc-200">
                             {item.product?.users_count} Usuario(s)
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-center text-slate-600 align-top font-mono">
+                    <td className="py-4 px-4 text-center text-zinc-600 align-top font-mono">
                       {quantity}
                     </td>
-                    <td className="py-4 px-4 text-right text-slate-600 align-top font-mono">
+                    <td className="py-4 px-4 text-right text-zinc-600 align-top font-mono">
                       $
                       {baseUnitPrice.toLocaleString("es-MX", {
                         minimumFractionDigits: 2,
@@ -1493,20 +1490,20 @@ export default function QuoteDetail() {
                     </td>
                     <td
                       className={`py-4 px-4 text-right align-top font-mono ${
-                        discount > 0 ? "text-rose-600" : "text-slate-600"
+                        discount > 0 ? "text-rose-600" : "text-zinc-600"
                       }`}>
                       {discount.toLocaleString("es-MX", {
                         maximumFractionDigits: 2,
                       })}
                       %
                     </td>
-                    <td className="py-4 px-4 text-right text-slate-600 align-top font-mono">
+                    <td className="py-4 px-4 text-right text-zinc-600 align-top font-mono">
                       $
                       {discountedUnitPrice.toLocaleString("es-MX", {
                         minimumFractionDigits: 2,
                       })}
                     </td>
-                    <td className="py-4 pl-4 pr-6 text-right font-bold text-slate-900 align-top font-mono">
+                    <td className="py-4 pl-4 pr-6 text-right font-bold text-zinc-900 align-top font-mono">
                       $
                       {lineTotal.toLocaleString("es-MX", {
                         minimumFractionDigits: 2,
@@ -1520,11 +1517,11 @@ export default function QuoteDetail() {
         </div>
 
         <div className="px-8 md:px-12 pb-8 grid lg:grid-cols-[1fr_360px] gap-6">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">
               Condiciones Comerciales
             </h4>
-            <ul className="space-y-2 text-sm text-slate-600">
+            <ul className="space-y-2 text-sm text-zinc-600">
               <li>
                 1. Esta propuesta tiene una vigencia de {quoteValidityLabel}.
               </li>
@@ -1543,21 +1540,21 @@ export default function QuoteDetail() {
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-4">
               Resumen Financiero
             </h4>
             <div className="space-y-2">
-              <div className="flex justify-between text-slate-500 text-sm">
+              <div className="flex justify-between text-zinc-500 text-sm">
                 <span>Subtotal bruto</span>
-                <span className="font-mono text-slate-900">
+                <span className="font-mono text-zinc-900">
                   $
                   {grossSubtotal.toLocaleString("es-MX", {
                     minimumFractionDigits: 2,
                   })}
                 </span>
               </div>
-              <div className="flex justify-between text-slate-500 text-sm">
+              <div className="flex justify-between text-zinc-500 text-sm">
                 <span>Descuento</span>
                 <span className="font-mono text-rose-600">
                   -$
@@ -1566,29 +1563,29 @@ export default function QuoteDetail() {
                   })}
                 </span>
               </div>
-              <div className="flex justify-between text-slate-500 text-sm">
+              <div className="flex justify-between text-zinc-500 text-sm">
                 <span>Subtotal neto</span>
-                <span className="font-mono text-slate-900">
+                <span className="font-mono text-zinc-900">
                   $
                   {netSubtotal.toLocaleString("es-MX", {
                     minimumFractionDigits: 2,
                   })}
                 </span>
               </div>
-              <div className="flex justify-between text-slate-500 text-sm">
+              <div className="flex justify-between text-zinc-500 text-sm">
                 <span>IVA (16%)</span>
-                <span className="font-mono text-slate-900">
+                <span className="font-mono text-zinc-900">
                   $
                   {ivaAmount.toLocaleString("es-MX", {
                     minimumFractionDigits: 2,
                   })}
                 </span>
               </div>
-              <div className="flex justify-between items-end border-t border-slate-900 pt-3 mt-3">
-                <span className="font-bold text-slate-900 text-lg">
+              <div className="flex justify-between items-end border-t border-zinc-900 pt-3 mt-3">
+                <span className="font-bold text-zinc-900 text-lg">
                   Total Neto
                 </span>
-                <span className="font-bold font-mono text-slate-900 text-2xl">
+                <span className="font-bold font-mono text-zinc-900 text-2xl">
                   $
                   {totalNeto.toLocaleString("es-MX", {
                     minimumFractionDigits: 2,
@@ -1601,41 +1598,41 @@ export default function QuoteDetail() {
 
         {quote.notes && (
           <div className="px-8 md:px-12 pb-8">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">
               Notas Adicionales
             </h4>
-            <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-600 italic border border-slate-200">
+            <div className="bg-zinc-50 p-4 rounded-xl text-sm text-zinc-600 italic border border-zinc-200">
               {quote.notes}
             </div>
           </div>
         )}
 
-        <div className="px-8 md:px-12 pb-8 grid md:grid-cols-2 gap-6 text-sm text-slate-600">
-          <div className="rounded-xl border border-slate-200 p-4">
-            <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-8">
+        <div className="px-8 md:px-12 pb-8 grid md:grid-cols-2 gap-6 text-sm text-zinc-600">
+          <div className="rounded-xl border border-zinc-200 p-4">
+            <p className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-8">
               Aceptación del Cliente
             </p>
-            <div className="border-t border-slate-400 pt-2 text-xs text-slate-500">
+            <div className="border-t border-zinc-400 pt-2 text-xs text-zinc-500">
               Nombre y firma
             </div>
           </div>
-          <div className="rounded-xl border border-slate-200 p-4">
-            <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-8">
+          <div className="rounded-xl border border-zinc-200 p-4">
+            <p className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-8">
               Ejecutivo Responsable
             </p>
-            <div className="border-t border-slate-400 pt-2 text-xs text-slate-500">
+            <div className="border-t border-zinc-400 pt-2 text-xs text-zinc-500">
               {quote.user?.full_name || "Sin asignar"}
             </div>
           </div>
         </div>
 
-        <div className="bg-slate-900 text-white p-8 md:p-12 text-xs border-t border-slate-100 print:bg-white print:text-black print:border-t-2 print:border-black">
+        <div className="bg-zinc-900 text-white p-8 md:p-12 text-xs border-t border-zinc-100 print:bg-white print:text-black print:border-t-2 print:border-black">
           <div className="flex flex-col md:flex-row justify-between items-end gap-4">
             <div>
               <h4 className="font-bold mb-1 uppercase text-emerald-400 print:text-black">
                 Información de Pago
               </h4>
-              <p className="leading-relaxed text-slate-400 print:text-slate-600">
+              <p className="leading-relaxed text-zinc-400 print:text-zinc-600">
                 Banco: BBVA Bancomer
                 <br />
                 Cuenta: 0123456789
@@ -1646,14 +1643,14 @@ export default function QuoteDetail() {
               </p>
             </div>
             <div className="text-right">
-              <p className="max-w-xs leading-relaxed text-slate-500 print:text-slate-600">
+              <p className="max-w-xs leading-relaxed text-zinc-500 print:text-zinc-600">
                 * Precios sujetos a cambio sin previo aviso.
                 <br />* Tiempo de entrega sujeto a disponibilidad.
               </p>
             </div>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-slate-800 flex justify-between items-center text-slate-600 print:border-slate-200">
+          <div className="mt-8 pt-8 border-t border-zinc-800 flex justify-between items-center text-zinc-600 print:border-zinc-200">
             <div>Business Control System</div>
           </div>
         </div>

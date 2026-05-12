@@ -1,6 +1,8 @@
 import { pool } from "../../../config/db.js";
 import { ensureQuoteItemDiscountColumnsAction } from "./ensureQuoteItemDiscountColumns.action.js";
 
+const IVA_RATE = 0.16;
+
 export const createQuoteAction = async (input, user) => {
   const { client_id, contact_id, items, notes, folio: inputFolio } = input;
   let supportsDiscountColumns = false;
@@ -59,6 +61,8 @@ export const createQuoteAction = async (input, user) => {
     }
 
     quoteTotal = Number(quoteTotal.toFixed(2));
+    const quoteIva = Number((quoteTotal * IVA_RATE).toFixed(2));
+    const quoteTotalWithIva = Number((quoteTotal + quoteIva).toFixed(2));
 
     // 2. Insertar cotización
     const userId = user.id || user.userId;
@@ -68,7 +72,7 @@ export const createQuoteAction = async (input, user) => {
       `COT-GEN-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const [resQuote] = await connection.query(
       `INSERT INTO quotes (folio, client_id, contact_id, user_id, total, notes, status) VALUES (?, ?, ?, ?, ?, ?, 'PENDING')`,
-      [folio, client_id, contact_id || null, userId, quoteTotal, notes],
+      [folio, client_id, contact_id || null, userId, quoteTotalWithIva, notes],
     );
     const quoteId = resQuote.insertId;
 
@@ -109,7 +113,9 @@ export const createQuoteAction = async (input, user) => {
       folio,
       client_id,
       user_id: userId,
-      total: quoteTotal,
+      total: quoteTotalWithIva,
+      subtotal: quoteTotal,
+      iva: quoteIva,
       status: "PENDING",
       notes,
       created_at: new Date(),
