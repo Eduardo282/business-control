@@ -367,13 +367,13 @@ export default function CreateQuote() {
           <div className="flex items-center justify-end gap-1.5">
             <button
               onClick={() => openEditItem(row.original)}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-[#2277B4] hover:bg-blue-50 transition-all"
+              className="size-7 flex items-center justify-center rounded-lg text-[#2277B4] hover:bg-blue-50 transition-all"
               title="Editar producto">
               <Edit2 size={13} />
             </button>
             <button
               onClick={() => removeItem(row.original.tempId)}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-red-600 hover:bg-red-50 transition-all"
+              className="size-7 flex items-center justify-center rounded-lg text-red-600 hover:bg-red-50 transition-all"
               title="Eliminar item">
               <Trash2 size={13} />
             </button>
@@ -857,11 +857,11 @@ export default function CreateQuote() {
                 </span>
               )}
             </div>
-            <div className="text-xs text-light-text-secondary dark:text-slate-500 mt-0.5">
+            <div className="text-xs text-light-text-secondary dark:text-zinc-500 mt-0.5">
               {p.category}
             </div>
             {p.description && (
-              <div className="text-xs text-light-text-secondary dark:text-slate-400 mt-1 line-clamp-1">
+              <div className="text-xs text-light-text-secondary dark:text-zinc-400 mt-1 line-clamp-1">
                 {p.description}
               </div>
             )}
@@ -879,7 +879,7 @@ export default function CreateQuote() {
                 minimumFractionDigits: 2,
               })}
             </div>
-            <div className="text-[10px] text-light-text-secondary dark:text-slate-500 text-right mt-0.5">
+            <div className="text-[10px] text-light-text-secondary dark:text-zinc-500 text-right mt-0.5">
               + IVA
             </div>
           </div>
@@ -927,7 +927,7 @@ export default function CreateQuote() {
                 <button
                   onClick={() => removeItemDirectly(p)}
                   disabled={qty === 0}
-                  className={`h-8 w-8 flex items-center justify-center transition-colors text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 ${
+                  className={`h-8 w-8 flex items-center justify-center transition-colors text-white disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 ${
                     added ?
                       "bg-emerald-500 hover:bg-emerald-600"
                     : "bg-[#2277B4] hover:bg-[#125280]"
@@ -1075,8 +1075,8 @@ export default function CreateQuote() {
     return (
       <div className="space-y-6 animate-fade-in pb-16">
         <section className="relative overflow-hidden rounded-[28px] border border-[#1A4577]/20 bg-gradient-to-r from-[#0E2B56] via-[#154782] to-[#123A72] px-6 md:px-8 py-7 md:py-8 text-white shadow-[0_28px_90px_rgba(8,28,64,0.35)]">
-          <div className="absolute -top-16 -right-10 w-56 h-56 rounded-full bg-white/10 blur-2xl" />
-          <div className="absolute -bottom-20 left-8 w-72 h-72 rounded-full bg-cyan-300/10 blur-3xl" />
+          <div className="absolute -top-16 -right-10 size-56 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -bottom-20 left-8 size-72 rounded-full bg-cyan-300/10 blur-3xl" />
 
           <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
@@ -1087,7 +1087,7 @@ export default function CreateQuote() {
                 <p className="text-sm font-semibold text-blue-100/95 tracking-wide uppercase">
                   Cotización confirmada
                 </p>
-                <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mt-1">
+                <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mt-1">
                   Cotización generada exitosamente
                 </h1>
                 <p className="text-sm text-blue-100/90 mt-2 max-w-2xl">
@@ -1129,41 +1129,41 @@ export default function CreateQuote() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm p-5">
+                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Building2 size={15} /> Cliente
                 </h3>
-                <p className="text-2xl font-bold text-slate-800 leading-tight">
+                <p className="text-2xl font-bold text-zinc-800 leading-tight">
                   {generatedQuote.client.business_name}
                 </p>
-                <p className="text-sm text-slate-500 font-mono mt-1">
+                <p className="text-sm text-zinc-500 font-mono mt-1">
                   {generatedQuote.client.rfc}
                 </p>
               </div>
 
-              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+              <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm p-5">
+                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">
                   Contacto
                 </h3>
                 {generatedQuote.contact ?
                   <>
-                    <p className="text-xl font-bold text-slate-800 leading-tight">
+                    <p className="text-xl font-bold text-zinc-800 leading-tight">
                       {generatedQuote.contact.full_name}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-zinc-500 mt-1">
                       {generatedQuote.contact.position_title}
                     </p>
-                    <div className="mt-3 pt-3 border-t border-slate-100 space-y-1">
-                      <p className="text-sm text-slate-700 break-all">
+                    <div className="mt-3 pt-3 border-t border-zinc-100 space-y-1">
+                      <p className="text-sm text-zinc-700 break-all">
                         {generatedQuote.contact.email}
                       </p>
-                      <p className="text-sm text-slate-700">
+                      <p className="text-sm text-zinc-700">
                         {generatedQuote.contact.phone}
                       </p>
                     </div>
                   </>
                 : <div className="min-h-[110px] flex items-center">
-                    <p className="text-sm text-slate-500 font-medium">
+                    <p className="text-sm text-zinc-500 font-medium">
                       Sin contacto asignado.
                     </p>
                   </div>
@@ -1171,13 +1171,13 @@ export default function CreateQuote() {
               </div>
             </div>
 
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
+            <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+                  <p className="text-sm font-bold text-zinc-700 uppercase tracking-wider">
                     Partidas cotizadas
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-zinc-500 mt-0.5">
                     {generatedQuote.items.reduce(
                       (acc, item) => acc + item.quantity,
                       0,
@@ -1185,14 +1185,14 @@ export default function CreateQuote() {
                     productos en total
                   </p>
                 </div>
-                <div className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-600">
+                <div className="px-3 py-1.5 rounded-lg bg-white border border-zinc-200 text-xs font-semibold text-zinc-600">
                   {generatedQuote.items.length} partida(s)
                 </div>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-sm min-w-[760px]">
-                  <thead className="bg-white border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500">
+                  <thead className="bg-white border-b border-zinc-100 text-xs uppercase tracking-wider text-zinc-500">
                     <tr>
                       <th className="px-5 py-3 text-left">Producto</th>
                       <th className="px-4 py-3 text-right">Cantidad</th>
@@ -1202,21 +1202,21 @@ export default function CreateQuote() {
                       <th className="px-5 py-3 text-right">Importe</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-zinc-100">
                     {generatedQuote.items.map((item, index) => (
                       <tr key={item.tempId || `${item.name}-${index}`}>
                         <td className="px-5 py-3.5">
-                          <p className="font-semibold text-slate-800">
+                          <p className="font-semibold text-zinc-800">
                             {item.name}
                           </p>
                         </td>
-                        <td className="px-4 py-3.5 text-right font-mono text-slate-700">
+                        <td className="px-4 py-3.5 text-right font-mono text-zinc-700">
                           {item.quantity}
                         </td>
-                        <td className="px-4 py-3.5 text-right font-mono text-slate-700">
+                        <td className="px-4 py-3.5 text-right font-mono text-zinc-700">
                           ${formatCurrency(item.unit_price)}
                         </td>
-                        <td className="px-4 py-3.5 text-right font-mono text-slate-700">
+                        <td className="px-4 py-3.5 text-right font-mono text-zinc-700">
                           {clampDiscount(item.discount).toLocaleString(
                             "es-MX",
                             {
@@ -1228,7 +1228,7 @@ export default function CreateQuote() {
                         <td className="px-4 py-3.5 text-right font-mono text-[#2277B4] font-semibold">
                           ${formatCurrency(item.discounted_unit_price)}
                         </td>
-                        <td className="px-5 py-3.5 text-right font-mono font-bold text-slate-800">
+                        <td className="px-5 py-3.5 text-right font-mono font-bold text-zinc-800">
                           ${formatCurrency(item.total)}
                         </td>
                       </tr>
@@ -1240,37 +1240,37 @@ export default function CreateQuote() {
           </div>
 
           <div className="xl:col-span-1">
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 xl:sticky xl:top-24">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm p-5 xl:sticky xl:top-24">
+              <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <BadgeDollarSign size={16} /> Resumen financiero
               </h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm text-slate-500 font-medium">
+                <div className="flex items-center justify-between text-sm text-zinc-500 font-medium">
                   <span>Subtotal bruto</span>
-                  <span className="font-mono text-slate-800">
+                  <span className="font-mono text-zinc-800">
                     ${formatCurrency(generatedQuote.grossSubtotal)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-sm text-slate-500 font-medium">
+                <div className="flex items-center justify-between text-sm text-zinc-500 font-medium">
                   <span>Descuento</span>
                   <span className="font-mono text-rose-600">
                     -${formatCurrency(generatedQuote.totalDiscount)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-sm text-slate-500 font-medium">
+                <div className="flex items-center justify-between text-sm text-zinc-500 font-medium">
                   <span>Subtotal neto</span>
-                  <span className="font-mono text-slate-800">
+                  <span className="font-mono text-zinc-800">
                     ${formatCurrency(generatedQuote.grandTotal)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-sm text-slate-500 font-medium">
+                <div className="flex items-center justify-between text-sm text-zinc-500 font-medium">
                   <span>IVA (16%)</span>
-                  <span className="font-mono text-slate-800">
+                  <span className="font-mono text-zinc-800">
                     ${formatCurrency(generatedQuote.ivaTotal)}
                   </span>
                 </div>
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-base font-bold text-slate-800">
+                <div className="pt-3 border-t border-zinc-100 flex items-center justify-between">
+                  <span className="text-base font-bold text-zinc-800">
                     Total Neto
                   </span>
                   <span className="text-2xl font-bold text-[#1a2b4c] font-mono tracking-tight">
@@ -1279,7 +1279,7 @@ export default function CreateQuote() {
                 </div>
               </div>
 
-              <div className="mt-4 p-3 rounded-2xl bg-[#F6FAFF] border border-[#D9E9FA] text-xs text-slate-600 leading-relaxed">
+              <div className="mt-4 p-3 rounded-2xl bg-[#F6FAFF] border border-[#D9E9FA] text-xs text-zinc-600 leading-relaxed">
                 Este documento ya fue registrado y se encuentra listo para
                 seguimiento comercial.
               </div>
@@ -1287,10 +1287,10 @@ export default function CreateQuote() {
           </div>
         </div>
 
-        <section className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <p className="text-sm text-slate-600">
+        <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-4 md:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <p className="text-sm text-zinc-600">
             Cotización generada por un total de
-            <span className="font-bold text-slate-800">
+            <span className="font-bold text-zinc-800">
               {" "}
               ${formatCurrency(generatedQuote.totalWithIva)}
             </span>
@@ -1300,13 +1300,13 @@ export default function CreateQuote() {
             {generatedQuote.id && (
               <button
                 onClick={() => navigate(`/cotizaciones/${generatedQuote.id}`)}
-                className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold transition-colors">
+                className="px-4 py-2 rounded-xl border border-zinc-300 text-zinc-700 hover:bg-zinc-100 font-semibold transition-colors">
                 Ver detalle
               </button>
             )}
             <button
               onClick={() => navigate("/cotizaciones/historial")}
-              className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-semibold transition-colors">
+              className="px-4 py-2 rounded-xl border border-zinc-300 text-zinc-700 hover:bg-zinc-100 font-semibold transition-colors">
               Ir al historial
             </button>
             <button
@@ -1332,13 +1332,13 @@ export default function CreateQuote() {
         {/* Columna izquierda: Cliente y Totales */}
         <div className="lg:col-span-1 space-y-6">
           {!fixedClientId && (
-            <Card className="border-2 border-gray-200 shadow-sm !overflow-visible z-30">
+            <Card className="border-2 border-zinc-200 shadow-sm !overflow-visible z-30">
               <div className="flex justify-between items-center gap-2">
                 <div className="flex justify-center items-center">
                   <div className="p-2 rounded-lg text-black">
                     <Building2 size={24} />
                   </div>
-                  <h3 className="font-bold text-lg text-light-text-primary">
+                  <h3 className="font-semibold text-lg text-light-text-primary">
                     Datos del Cliente
                   </h3>
                 </div>
@@ -1348,7 +1348,7 @@ export default function CreateQuote() {
                 <div
                   className={`w-full relative rounded-xl border ${
                     selectedClient ? " " : (
-                      "bg-white border-gray-200 hover:border-[#2277B4]"
+                      "bg-white border-zinc-200 hover:border-[#2277B4]"
                     )
                   }`}>
                   {selectedClient ?
@@ -1370,8 +1370,8 @@ export default function CreateQuote() {
                           setSelectedClient(null);
                           setShowClientModal(true);
                         }}
-                        placeholder="Escribe para buscar un cliente..."
-                        className="w-full border-none shadow-none focus:ring-0 text-gray-700 bg-transparent"
+                        placeholder="Escribe para buscar un cliente…"
+                        className="w-full border-none shadow-none focus:ring-0 text-zinc-700 bg-transparent"
                         style={{ paddingRight: "2.25rem" }}
                       />
                       <Search
@@ -1392,14 +1392,14 @@ export default function CreateQuote() {
                     <div className="text-sm text-light-text-primary font-medium">
                       {selectedClient.business_name}
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
+                    <div className="text-xs text-zinc-500 mt-0.5">
                       {selectedClient.rfc}
                     </div>
                   </div>
 
                   {selectedClient.contacts?.length > 0 && (
                     <div className="mt-4 relative animate-fade-in">
-                      <label className="text-xs font-semibold text-light-text-secondary dark:text-slate-400 mb-1.5 block">
+                      <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 mb-1.5 block">
                         Contacto para cotización
                       </label>
                       <select
@@ -1421,13 +1421,13 @@ export default function CreateQuote() {
           )}
 
           {fixedClientId && selectedClient && (
-            <Card className="border-2 border-gray-200 shadow-sm !overflow-visible z-30">
+            <Card className="border-2 border-zinc-200 shadow-sm !overflow-visible z-30">
               <div className="flex justify-between items-center gap-2">
                 <div className="flex justify-center items-center"> 
                   <div className="p-2 rounded-lg text-black">
                     <Building2 size={24} />
                   </div>
-                  <h3 className="font-bold text-lg text-light-text-primary">
+                  <h3 className="font-semibold text-lg text-light-text-primary">
                     Datos del Cliente
                   </h3>
                 </div>
@@ -1440,14 +1440,14 @@ export default function CreateQuote() {
                 <div className="text-sm text-light-text-primary font-medium">
                   {selectedClient.business_name}
                 </div>
-                <div className="text-xs text-gray-500 mt-0.5">
+                <div className="text-xs text-zinc-500 mt-0.5">
                   {selectedClient.rfc || "Sin RFC"}
                 </div>
               </div>
 
               {selectedClient.contacts?.length > 0 ?
                 <div className="mt-4 relative animate-fade-in">
-                  <label className="text-xs font-semibold text-light-text-secondary dark:text-slate-400 mb-1.5 block">
+                  <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 mb-1.5 block">
                     Contacto para cotización
                   </label>
                   <select
@@ -1488,7 +1488,7 @@ export default function CreateQuote() {
               }}
               disabled={loading || !selectedClient || items.length === 0}
               className="w-full justify-center py-4 bg-[#2277B4] hover:bg-[#125280] shadow-lg shadow-[#12528050] text-white rounded-xl font-bold text-lg">
-              {loading ? "Procesando..." : "Ver Vista Previa"}
+              {loading ? "Procesando…" : "Ver Vista Previa"}
             </button>
           </Card>
         </div>
@@ -1502,7 +1502,7 @@ export default function CreateQuote() {
                   <ShoppingBag size={24} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-light-text-primary">
+                  <h3 className="font-semibold text-lg text-light-text-primary">
                     Agregar Productos o Servicios
                   </h3>
                 </div>
@@ -1511,7 +1511,7 @@ export default function CreateQuote() {
                 <button
                   variant="ghost"
                   onClick={() => navigate("/cotizaciones/historial")}
-                  className="inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold text-black hover:text-slate-700 border border-transparent transition-all">
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold text-black hover:text-zinc-700 border border-transparent transition-all">
                   <ArrowLeft size={16} /> Regresar a historial
                 </button>
               </div>
@@ -1519,7 +1519,7 @@ export default function CreateQuote() {
 
             <div className="flex flex-col md:flex-row gap-3 items-end p-4 rounded-xl dark:border-white/5">
               <div className="flex-1 w-full relative z-10"> 
-                <label className="text-xs font-semibold text-light-text-secondary dark:text-slate-400 mb-1.5 block">
+                <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 mb-1.5 block">
                   Producto
                 </label>
                 <div className="relative">
@@ -1531,7 +1531,7 @@ export default function CreateQuote() {
                       setSelectedProductToAdd(null);
                       setShowProductModal(true);
                     }}
-                    placeholder="Buscar producto o servicio..."
+                    placeholder="Buscar producto o servicio…"
                     className="glass-input bg-light-bg dark:!bg-black/30 text-light-text-primary dark:text-white border-light-border dark:border-white/10"
                     style={{ paddingRight: "2.25rem" }}
                   />
@@ -1543,7 +1543,7 @@ export default function CreateQuote() {
               </div>
 
               <div className="flex-1 w-full relative">
-                <label className="text-xs font-semibold text-light-text-secondary dark:text-slate-400 mb-1.5 block">
+                <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 mb-1.5 block">
                   Filtrar en la tabla
                 </label>
                 <div className="relative">
@@ -1553,7 +1553,7 @@ export default function CreateQuote() {
                   />
                   <input
                     type="text"
-                    placeholder="Filtrar productos agregados..."
+                    placeholder="Filtrar productos agregados…"
                     value={tableFilter}
                     onChange={(e) => setTableFilter(e.target.value)}
                     className="pl-3 pr-8 py-2.5 text-sm rounded-xl border border-light-border bg-white focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-full text-black"
@@ -1571,37 +1571,37 @@ export default function CreateQuote() {
                 <div
                   className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
                   onClick={(e) => e.stopPropagation()}>
-                  <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
+                  <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
                     <div>
-                      <h3 className="text-white font-bold text-base uppercase">
+                      <h3 className="text-white font-semibold text-base uppercase">
                         Filtrar por{" "}
                         {tableFilterFieldLabels[activeTableFilterPickerField]}
                       </h3>
-                      <p className="text-[11px] text-gray-300 mt-1">
+                      <p className="text-[11px] text-zinc-300 mt-1">
                         Selecciona o busca un valor
                       </p>
                     </div>
                     <button
                       onClick={closeTableFilterPicker}
-                      className="w-8 h-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
+                      className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
                       <X size={16} />
                     </button>
                   </div>
 
                   <div className="p-4 space-y-3">
-                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                      <Search size={15} className="text-gray-500" />
+                    <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+                      <Search size={15} className="text-zinc-500" />
                       <input
                         value={tableFilterPickerSearch}
                         onChange={(e) =>
                           setTableFilterPickerSearch(e.target.value)
                         }
-                        placeholder="Buscar valor..."
-                        className="w-full bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                        placeholder="Buscar valor…"
+                        className="w-full bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
                       />
                     </div>
 
-                    <div className="h-72 overflow-y-auto rounded-lg border border-gray-100 divide-y divide-gray-100">
+                    <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 divide-y divide-zinc-100">
                       {visibleTableFilterPickerOptions.length > 0 ?
                         visibleTableFilterPickerOptions.map((value) => {
                           const isSelected =
@@ -1616,13 +1616,13 @@ export default function CreateQuote() {
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                 isSelected ?
                                   "bg-[#2277B4]/10 text-[#125280] font-semibold"
-                                : "text-gray-700 hover:bg-gray-50"
+                                : "text-zinc-700 hover:bg-zinc-50"
                               }`}>
                               {value}
                             </button>
                           );
                         })
-                      : <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                      : <div className="px-3 py-4 text-sm text-zinc-500 text-center">
                           No hay valores para mostrar.
                         </div>
                       }
@@ -1637,11 +1637,11 @@ export default function CreateQuote() {
           <div
             className={`glass-panel overflow-hidden rounded-xl border border-light-border dark:border-white/10 ${!selectedClient || items.length === 0 ? "opacity-40 pointer-events-none select-none grayscale relative" : "transition-all duration-500"}`}>
             {(!selectedClient || items.length === 0) && (
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-50/50 dark:bg-slate-900/50 backdrop-blur-[2px]">
-                <div className="p-3 bg-white dark:bg-slate-800 rounded-full shadow-lg mb-3">
-                  <BadgeDollarSign size={32} className="text-gray-400" />
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-50/50 dark:bg-zinc-900/50 backdrop-blur-[2px]">
+                <div className="p-3 bg-white dark:bg-zinc-800 rounded-full shadow-lg mb-3">
+                  <BadgeDollarSign size={32} className="text-zinc-400" />
                 </div>
-                <p className="text-gray-600 dark:text-gray-300 font-semibold max-w-sm text-center px-4">
+                <p className="text-zinc-600 dark:text-zinc-300 font-semibold max-w-sm text-center px-4">
                   Agrega "Datos del Cliente y Agrega Productos" para habilitar.
                 </p>
               </div>
@@ -1661,11 +1661,11 @@ export default function CreateQuote() {
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold border transition-colors whitespace-nowrap ${
                       showTableFilters || activeTableFilterCount > 0 ?
                         "bg-[#2277B4] text-white border-[#2277B4]"
-                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                      : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
                     }`}>
                     <SlidersHorizontal size={12} /> Filtros
                     {activeTableFilterCount > 0 && (
-                      <span className="ml-0.5 bg-white text-[#1a2b4c] text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                      <span className="ml-0.5 bg-white text-[#1a2b4c] text-[10px] font-bold rounded-full size-4 flex items-center justify-center leading-none">
                         {activeTableFilterCount}
                       </span>
                     )}
@@ -1688,7 +1688,7 @@ export default function CreateQuote() {
                           className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] border transition-colors whitespace-nowrap ${
                             selectedValue ?
                               "bg-[#2277B4] text-white border-[#2277B4]"
-                            : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                            : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
                           }`}>
                           <span className="uppercase font-bold tracking-wide">
                             {button.label}
@@ -1734,7 +1734,7 @@ export default function CreateQuote() {
                             : ""
                           } ${
                             header.column.getCanSort() ?
-                              "cursor-pointer hover:bg-gray-100 transition-colors"
+                              "cursor-pointer hover:bg-zinc-100 transition-colors"
                             : ""
                           }`}>
                           <span className="inline-flex items-center gap-1">
@@ -1830,19 +1830,19 @@ export default function CreateQuote() {
                   <button
                     onClick={() => itemsTable.setPageIndex(0)}
                     disabled={!itemsTable.getCanPreviousPage()}
-                    className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                     ««
                   </button>
                   <button
                     onClick={() => itemsTable.previousPage()}
                     disabled={!itemsTable.getCanPreviousPage()}
-                    className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                     Anterior
                   </button>
                   <button
                     onClick={() => itemsTable.nextPage()}
                     disabled={!itemsTable.getCanNextPage()}
-                    className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                     Siguiente
                   </button>
                   <button
@@ -1850,7 +1850,7 @@ export default function CreateQuote() {
                       itemsTable.setPageIndex(itemsTable.getPageCount() - 1)
                     }
                     disabled={!itemsTable.getCanNextPage()}
-                    className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                     »»
                   </button>
                 </div>
@@ -1864,35 +1864,35 @@ export default function CreateQuote() {
         createPortal(
           <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
             <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
+              <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
                 <div>
-                  <h3 className="text-white font-bold text-base uppercase">
+                  <h3 className="text-white font-semibold text-base uppercase">
                     Editar producto
                   </h3>
-                  <p className="text-[11px] text-gray-300 mt-1">
+                  <p className="text-[11px] text-zinc-300 mt-1">
                     Ajusta cantidad, precio unitario o descuento.
                   </p>
                 </div>
                 <button
                   onClick={() => setEditingItemDraft(null)}
-                  className="w-8 h-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center transition-colors">
+                  className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center transition-colors">
                   <X size={16} />
                 </button>
               </div>
 
               <div className="p-5 space-y-4">
                 <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 block mb-1.5">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block mb-1.5">
                     Producto
                   </label>
-                  <div className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700">
+                  <div className="w-full px-3 py-2.5 rounded-xl border border-zinc-200 bg-zinc-50 text-sm text-zinc-700">
                     {editingItemDraft.name}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 block mb-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block mb-1.5">
                       Cant.
                     </label>
                     <input
@@ -1903,12 +1903,12 @@ export default function CreateQuote() {
                       onChange={(e) =>
                         updateEditingItemField("quantity", e.target.value)
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
+                      className="w-full px-3 py-2 rounded-xl border border-zinc-200 bg-white text-sm text-zinc-800 focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 block mb-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block mb-1.5">
                       Precio
                     </label>
                     <input
@@ -1919,12 +1919,12 @@ export default function CreateQuote() {
                       onChange={(e) =>
                         updateEditingItemField("price", e.target.value)
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
+                      className="w-full px-3 py-2 rounded-xl border border-zinc-200 bg-white text-sm text-zinc-800 focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 block mb-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 block mb-1.5">
                       Desc. %
                     </label>
                     <input
@@ -1936,15 +1936,15 @@ export default function CreateQuote() {
                       onChange={(e) =>
                         updateEditingItemField("discount", e.target.value)
                       }
-                      className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
+                      className="w-full px-3 py-2 rounded-xl border border-zinc-200 bg-white text-sm text-zinc-800 focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
                     />
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 space-y-1">
-                  <div className="flex items-center justify-between text-xs text-gray-600">
+                <div className="rounded-xl border border-zinc-100 bg-zinc-50 p-3 space-y-1">
+                  <div className="flex items-center justify-between text-xs text-zinc-600">
                     <span>Importe</span>
-                    <span className="font-mono font-semibold text-gray-800">
+                    <span className="font-mono font-semibold text-zinc-800">
                       $
                       {formatCurrency(
                         calculateItemTotal(
@@ -1955,7 +1955,7 @@ export default function CreateQuote() {
                       )}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-gray-600">
+                  <div className="flex items-center justify-between text-xs text-zinc-600">
                     <span>Total + IVA</span>
                     <span className="font-mono font-bold text-[#1B4733]">
                       $
@@ -1978,10 +1978,10 @@ export default function CreateQuote() {
                 </div>
               </div>
 
-              <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2">
+              <div className="px-5 py-4 border-t border-zinc-100 flex items-center justify-end gap-2">
                 <button
                   onClick={() => setEditingItemDraft(null)}
-                  className="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors">
+                  className="px-4 py-2 rounded-xl text-zinc-600 hover:bg-zinc-100 transition-colors">
                   Cancelar
                 </button>
                 <button
@@ -2000,18 +2000,18 @@ export default function CreateQuote() {
         createPortal(
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl h-[85vh] overflow-hidden flex flex-col">
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c]">
+              <div className="px-6 py-4 border-b border-zinc-100 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c]">
                 <div>
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                     Buscar Cliente
                   </h2>
-                  <p className="text-sm text-gray-300 mt-1">
+                  <p className="text-sm text-zinc-300 mt-1">
                     Selecciona el cliente para la cotización
                   </p>
                 </div>
                 <button
                   onClick={() => setShowClientModal(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-white hover:bg-white/20 transition-colors">
+                  className="size-8 flex items-center justify-center rounded-lg text-white hover:bg-white/20 transition-colors">
                   <X size={18} />
                 </button>
               </div>
@@ -2019,7 +2019,7 @@ export default function CreateQuote() {
               <div className="p-6 flex-1 overflow-y-auto">
                 <div className="mb-4 relative">
                   <Search
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400"
                     size={18}
                   />
                   <input
@@ -2029,15 +2029,15 @@ export default function CreateQuote() {
                       setClientSearch(e.target.value);
                       setSelectedClient(null);
                     }}
-                    placeholder="Escribe el nombre del cliente o RFC..."
-                    className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2277B4]/50 transition-all text-gray-700"
+                    placeholder="Escribe el nombre del cliente o RFC…"
+                    className="w-full pl-4 pr-10 py-3 rounded-xl border border-zinc-200 bg-zinc-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2277B4]/50 transition-all text-zinc-700"
                     autoFocus
                   />
                 </div>
 
                 <div className="space-y-2 mt-4">
                   {isClientSearching ?
-                    <div className="text-center py-10 text-gray-400">
+                    <div className="text-center py-10 text-zinc-400">
                       <Search
                         size={40}
                         className="mx-auto mb-3 opacity-20 animate-spin"
@@ -2050,19 +2050,19 @@ export default function CreateQuote() {
                         <div
                           key={c.id}
                           onClick={() => selectClient(c)}
-                          className="p-4 rounded-xl border border-gray-100 hover:border-[#2277B4]/50 hover:bg-blue-50/30 cursor-pointer transition-all flex justify-between items-center group">
+                          className="p-4 rounded-xl border border-zinc-100 hover:border-[#2277B4]/50 hover:bg-blue-50/30 cursor-pointer transition-all flex justify-between items-center group">
                           <div>
-                            <div className="font-bold text-gray-800 group-hover:text-[#2277B4] transition-colors">
+                            <div className="font-bold text-zinc-800 group-hover:text-[#2277B4] transition-colors">
                               {c.business_name}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1 flex items-center gap-3">
-                              <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600 font-mono">
+                            <div className="text-xs text-zinc-500 mt-1 flex items-center gap-3">
+                              <span className="bg-zinc-100 px-2 py-0.5 rounded text-zinc-600 font-mono">
                                 RFC: {c.rfc || "N/A"}
                               </span>
                               <span>ID: {String(c.id).substring(0, 8)}</span>
                             </div>
                           </div>
-                          <button className="px-4 py-1.5 text-sm font-semibold rounded-lg bg-gray-100 text-gray-600 group-hover:bg-[#2277B4] group-hover:text-white transition-all">
+                          <button className="px-4 py-1.5 text-sm font-semibold rounded-lg bg-zinc-100 text-zinc-600 group-hover:bg-[#2277B4] group-hover:text-white transition-all">
                             Seleccionar
                           </button>
                         </div>
@@ -2077,14 +2077,14 @@ export default function CreateQuote() {
                       )}
                     </>
                   : clientSearch.trim().length > 0 ?
-                    <div className="text-center py-10 text-gray-400">
+                    <div className="text-center py-10 text-zinc-400">
                       <Building2
                         size={40}
                         className="mx-auto mb-3 opacity-20"
                       />
                       No se encontraron clientes con "{clientSearch}"
                     </div>
-                  : <div className="text-center py-10 text-gray-400">
+                  : <div className="text-center py-10 text-zinc-400">
                       <Search size={40} className="mx-auto mb-3 opacity-20" />
                       No hay clientes disponibles
                     </div>
@@ -2102,18 +2102,18 @@ export default function CreateQuote() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col">
               {/* Header del modal */}
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c]">
+              <div className="px-6 py-4 border-b border-zinc-100 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c]">
                 <div>
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                     Buscar Productos
                   </h2>
-                  <p className="text-sm text-gray-300 mt-1">
+                  <p className="text-sm text-zinc-300 mt-1">
                     Selecciona productos para agregar a la cotización
                   </p>
                 </div>
                 <button
                   onClick={closeProductModal}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-white hover:bg-white/20 transition-colors">
+                  className="size-8 flex items-center justify-center rounded-lg text-white hover:bg-white/20 transition-colors">
                   <X size={18} />
                 </button>
               </div>
@@ -2128,7 +2128,7 @@ export default function CreateQuote() {
                       setProdSearch(e.target.value);
                       setSelectedProductToAdd(null);
                     }}
-                    placeholder="Buscar producto por nombre o categoría..."
+                    placeholder="Buscar producto por nombre o categoría…"
                     className="w-full glass-input bg-light-bg dark:!bg-black/30 text-light-text-primary dark:text-white border-light-border dark:border-white/10"
                     style={{ paddingRight: "2.5rem" }}
                     autoFocus
@@ -2145,7 +2145,7 @@ export default function CreateQuote() {
                     <table className="w-full text-left text-sm table-fixed">
                       <thead className="sticky top-0 z-10">
                         {productSearchTable.getHeaderGroups().map((hg) => (
-                          <tr key={hg.id} className="bg-gray-50/95 backdrop-blur-sm border-b border-light-border shadow-sm">
+                          <tr key={hg.id} className="bg-zinc-50/95 backdrop-blur-sm border-b border-light-border shadow-sm">
                             {hg.headers.map((header) => (
                               <th
                                 key={header.id}
@@ -2167,7 +2167,7 @@ export default function CreateQuote() {
                           <tr>
                             <td colSpan="3" className="py-12 text-center">
                               <Search size={48} className="mx-auto mb-3 opacity-20 animate-spin" />
-                              <p className="text-light-text-secondary dark:text-slate-500 font-medium">
+                              <p className="text-light-text-secondary dark:text-zinc-500 font-medium">
                                 Buscando productos...
                               </p>
                             </td>
@@ -2195,7 +2195,7 @@ export default function CreateQuote() {
                               <div className="flex justify-center mb-3 opacity-20">
                                 <ShoppingBag size={48} />
                               </div>
-                              <p className="text-light-text-secondary dark:text-slate-500 font-medium">
+                              <p className="text-light-text-secondary dark:text-zinc-500 font-medium">
                                 {prodSearch.trim().length > 0
                                   ? `No se encontraron productos con "${prodSearch}"`
                                   : "No hay productos disponibles."}
@@ -2232,22 +2232,22 @@ export default function CreateQuote() {
                         <button
                           onClick={() => productSearchTable.setPageIndex(0)}
                           disabled={!productSearchTable.getCanPreviousPage()}
-                          className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                           ««
                         </button>
                         <button
                           onClick={() => productSearchTable.previousPage()}
                           disabled={!productSearchTable.getCanPreviousPage()}
-                          className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                           Anterior
                         </button>
-                        <span className="text-xs text-gray-500 mx-2">
+                        <span className="text-xs text-zinc-500 mx-2">
                           Pág. {productSearchTable.getState().pagination.pageIndex + 1} de {productSearchTable.getPageCount()}
                         </span>
                         <button
                           onClick={() => productSearchTable.nextPage()}
                           disabled={!productSearchTable.getCanNextPage()}
-                          className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                           Siguiente
                         </button>
                         <button
@@ -2255,7 +2255,7 @@ export default function CreateQuote() {
                             productSearchTable.setPageIndex(productSearchTable.getPageCount() - 1)
                           }
                           disabled={!productSearchTable.getCanNextPage()}
-                          className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                           »»
                         </button>
                       </div>
@@ -2265,8 +2265,8 @@ export default function CreateQuote() {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center bg-gray-50">
-                <p className="text-xs text-light-text-secondary dark:text-slate-400">
+              <div className="px-6 py-4 border-t border-zinc-100 flex justify-between items-center bg-zinc-50">
+                <p className="text-xs text-light-text-secondary dark:text-zinc-400">
                   {prodResults.length > 0 && (
                     <span>{prodResults.length} producto(s) encontrado(s)</span>
                   )}
@@ -2274,7 +2274,7 @@ export default function CreateQuote() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={closeProductModal}
-                    className="px-4 py-2 rounded-xl bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-800 dark:text-white font-semibold transition-colors">
+                    className="px-4 py-2 rounded-xl bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-800 dark:text-white font-semibold transition-colors">
                     Cerrar
                   </button>
                 </div>
@@ -2286,7 +2286,7 @@ export default function CreateQuote() {
 
       {showPreviewModal &&
         createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 backdrop-blur-md p-4 animate-fade-in">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/65 backdrop-blur-md p-4 animate-fade-in">
             <div className="w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-3xl bg-white shadow-[0_30px_120px_rgba(8,20,45,0.45)] flex flex-col">
               {/* Header Modal */}
               <div className="px-6 md:px-7 py-4 border-b border-white/20 flex items-center justify-between bg-gradient-to-r from-[#102445] via-[#0F2B5A] to-[#0A1F43] text-white">
@@ -2295,7 +2295,7 @@ export default function CreateQuote() {
                     <BadgeDollarSign size={24} className="text-white" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight">
+                    <h2 className="text-xl font-semibold tracking-tight">
                       Vista Previa de Cotización
                     </h2>
                     <p className="text-xs text-blue-100/90 font-medium mt-0.5">
@@ -2305,31 +2305,31 @@ export default function CreateQuote() {
                 </div>
                 <button
                   onClick={() => setShowPreviewModal(false)}
-                  className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/20 ring-1 ring-white/20 transition-all">
+                  className="size-9 flex items-center justify-center rounded-xl hover:bg-white/20 ring-1 ring-white/20 transition-all">
                   <X size={20} />
                 </button>
               </div>
 
               {/* Content ModaL */}
-              <div className="flex-1 overflow-y-auto px-6 md:px-7 py-6 bg-gradient-to-b from-slate-100/70 via-white to-slate-50">
+              <div className="flex-1 overflow-y-auto px-6 md:px-7 py-6 bg-gradient-to-b from-zinc-100/70 via-white to-zinc-50">
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                   <div className="xl:col-span-2 space-y-6">
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Info Cliente */}
-                      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-sm">
+                        <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                           <Building2 size={16} /> Cliente
                         </h3>
                         <div className="space-y-1">
-                          <p className="text-2xl xl:text-3xl leading-tight font-bold text-slate-800">
+                          <p className="text-2xl xl:text-3xl leading-tight font-bold text-zinc-800">
                             {selectedClient?.business_name}
                           </p>
-                          <p className="text-sm text-slate-500 font-mono">
+                          <p className="text-sm text-zinc-500 font-mono">
                             {selectedClient?.rfc || "Sin RFC"}
                           </p>
                           {folio && (
-                            <div className="mt-3 pt-3 border-t border-slate-100">
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                            <div className="mt-3 pt-3 border-t border-zinc-100">
+                              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">
                                 Folio
                               </p>
                               <p className="text-sm font-mono font-bold text-[#2277B4] tracking-widest">
@@ -2341,29 +2341,29 @@ export default function CreateQuote() {
                       </div>
 
                       {/* Info Contacto */}
-                      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">
+                      <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-sm">
+                        <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">
                           Contacto
                         </h3>
                         {selectedContact ?
                           <div className="space-y-1">
-                            <p className="text-xl leading-tight font-bold text-slate-800">
+                            <p className="text-xl leading-tight font-bold text-zinc-800">
                               {selectedContact.full_name}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-zinc-500">
                               {selectedContact.position_title || "Sin puesto"}
                             </p>
-                            <div className="mt-3 pt-3 border-t border-slate-100 space-y-1">
-                              <p className="text-sm text-slate-700 break-all">
+                            <div className="mt-3 pt-3 border-t border-zinc-100 space-y-1">
+                              <p className="text-sm text-zinc-700 break-all">
                                 {selectedContact.email || "Sin correo"}
                               </p>
-                              <p className="text-sm text-slate-700">
+                              <p className="text-sm text-zinc-700">
                                 {selectedContact.phone || "Sin telefono"}
                               </p>
                             </div>
                           </div>
                         : <div className="h-full min-h-[112px] flex items-center">
-                            <p className="text-sm text-slate-500 font-medium">
+                            <p className="text-sm text-zinc-500 font-medium">
                               Sin contacto asignado para esta cotizacion.
                             </p>
                           </div>
@@ -2371,14 +2371,14 @@ export default function CreateQuote() {
                       </div>
 
                       {/* Desglose */}
-                      <div className="md:col-span-2 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-center">
-                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <div className="md:col-span-2 bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-sm flex flex-col justify-center">
+                        <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                           Productos
                         </h3>
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm text-slate-500 font-medium gap-3">
+                          <div className="flex items-center justify-between text-sm text-zinc-500 font-medium gap-3">
                             <span>Productos en total:</span>
-                            <span className="text-slate-800 font-bold whitespace-nowrap">
+                            <span className="text-zinc-800 font-bold whitespace-nowrap">
                               {items.reduce(
                                 (acc, item) => acc + item.quantity,
                                 0,
@@ -2391,24 +2391,24 @@ export default function CreateQuote() {
                     </div>
 
                     {/* Lista compacta de items */}
-                    <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
-                      <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                    <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-sm overflow-hidden">
+                      <div className="px-5 py-3 bg-zinc-50 border-b border-zinc-100 text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
                         <span>Productos Cotizados</span>
                       </div>
-                      <div className="max-h-[42vh] overflow-y-auto divide-y divide-slate-100">
+                      <div className="max-h-[42vh] overflow-y-auto divide-y divide-zinc-100">
                         {items.map((i, index) => (
                           <div
                             key={i.tempId}
-                            className="flex justify-between items-start gap-4 px-5 py-3.5 hover:bg-slate-50/80 transition-colors">
+                            className="flex justify-between items-start gap-4 px-5 py-3.5 hover:bg-zinc-50/80 transition-colors">
                             <div className="flex items-start gap-3 min-w-0">
-                              <span className="w-6 h-6 mt-0.5 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-500 font-mono text-xs shrink-0">
+                              <span className="size-6 mt-0.5 inline-flex items-center justify-center rounded-full bg-zinc-100 text-zinc-500 font-mono text-xs shrink-0">
                                 {index + 1}
                               </span>
                               <div className="min-w-0">
-                                <p className="text-sm font-bold text-slate-800 truncate">
+                                <p className="text-sm font-bold text-zinc-800 truncate">
                                   {i.name}
                                 </p>
-                                <p className="text-xs text-slate-500 mt-0.5">
+                                <p className="text-xs text-zinc-500 mt-0.5">
                                   {i.quantity} uds x $
                                   {i.price.toLocaleString("es-MX", {
                                     minimumFractionDigits: 2,
@@ -2434,10 +2434,10 @@ export default function CreateQuote() {
                               </div>
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="text-[10px] uppercase tracking-wider text-slate-400 mb-0.5">
+                              <p className="text-[10px] uppercase tracking-wider text-zinc-400 mb-0.5">
                                 Importe
                               </p>
-                              <p className="text-sm font-bold text-slate-800 font-mono">
+                              <p className="text-sm font-bold text-zinc-800 font-mono">
                                 $
                                 {i.total.toLocaleString("es-MX", {
                                   minimumFractionDigits: 2,
@@ -2452,21 +2452,21 @@ export default function CreateQuote() {
 
                   {/* Final Total */}
                   <div className="xl:col-span-1">
-                    <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm xl:sticky xl:top-1">
-                      <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">
+                    <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-sm xl:sticky xl:top-1">
+                      <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">
                         Resumen financiero
                       </h3>
                       <div className="space-y-3">
-                        <div className="flex justify-between text-sm text-slate-500 font-medium">
+                        <div className="flex justify-between text-sm text-zinc-500 font-medium">
                           <span>Subtotal bruto</span>
-                          <span className="font-mono text-slate-800">
+                          <span className="font-mono text-zinc-800">
                             $
                             {(grossSubtotal || 0).toLocaleString("es-MX", {
                               minimumFractionDigits: 2,
                             })}
                           </span>
                         </div>
-                        <div className="flex justify-between text-sm text-slate-500 font-medium">
+                        <div className="flex justify-between text-sm text-zinc-500 font-medium">
                           <span>Descuento</span>
                           <span className="font-mono text-rose-600">
                             -$
@@ -2475,26 +2475,26 @@ export default function CreateQuote() {
                             })}
                           </span>
                         </div>
-                        <div className="flex justify-between text-sm text-slate-500 font-medium">
+                        <div className="flex justify-between text-sm text-zinc-500 font-medium">
                           <span>Subtotal neto</span>
-                          <span className="font-mono text-slate-800">
+                          <span className="font-mono text-zinc-800">
                             $
                             {(grandTotal || 0).toLocaleString("es-MX", {
                               minimumFractionDigits: 2,
                             })}
                           </span>
                         </div>
-                        <div className="flex justify-between text-sm text-slate-500 font-medium">
+                        <div className="flex justify-between text-sm text-zinc-500 font-medium">
                           <span>IVA (16%)</span>
-                          <span className="font-mono text-slate-800">
+                          <span className="font-mono text-zinc-800">
                             $
                             {(ivaTotal || 0).toLocaleString("es-MX", {
                               minimumFractionDigits: 2,
                             })}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center pt-3 border-t border-slate-100">
-                          <span className="font-bold text-slate-800 text-base">
+                        <div className="flex justify-between items-center pt-3 border-t border-zinc-100">
+                          <span className="font-bold text-zinc-800 text-base">
                             Total Neto
                           </span>
                           <span className="font-bold text-2xl text-[#1a2b4c] font-mono tracking-tight">
@@ -2511,17 +2511,17 @@ export default function CreateQuote() {
               </div>
 
               {/* Footer con acciones */}
-              <div className="px-6 md:px-7 py-4 bg-white/95 border-t border-slate-200 flex justify-between items-center gap-3">
+              <div className="px-6 md:px-7 py-4 bg-white/95 border-t border-zinc-200 flex justify-between items-center gap-3">
                 <button
                   onClick={() => setShowPreviewModal(false)}
-                  className="px-6 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-bold transition-all">
+                  className="px-6 py-2.5 rounded-xl text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 font-bold transition-all">
                   Volver a editar
                 </button>
                 <button
                   onClick={save}
                   disabled={loading}
                   className="px-8 py-3 bg-[#2277B4] hover:bg-[#125280] shadow-lg shadow-[#2277B430] text-white rounded-xl font-bold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                  {loading ? "Procesando..." : "Confirmar y Generar Cotización"}
+                  {loading ? "Procesando…" : "Confirmar y Generar Cotización"}
                 </button>
               </div>
             </div>

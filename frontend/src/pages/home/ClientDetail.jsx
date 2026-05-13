@@ -415,12 +415,12 @@ const ManagePortalModal = ({ contact, onClose }) => {
       className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
         {/* Header del modal */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-[#1a2b4c]">
+        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-[#1a2b4c]">
           <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               Portal del Contacto
             </h2>
-            <div className="text-sm text-gray-300 mt-1">
+            <div className="text-sm text-zinc-300 mt-1">
               {" "}
               <span className="text-white font-medium">
                 {contact.full_name}
@@ -429,16 +429,16 @@ const ManagePortalModal = ({ contact, onClose }) => {
           </div>
           <button
             onClick={() => onClose(false)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+            className="size-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors">
             <X size={18} />
           </button>
         </div>
 
         {/* Body del modal */}
-        <div className="p-6 space-y-6 bg-gray-50/50">
-          <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm relative overflow-hidden">
+        <div className="p-6 space-y-6 bg-zinc-50/50">
+          <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-sm relative overflow-hidden">
             {/* Decoration */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#2277B4]/10 blur-2xl -translate-y-1/2 translate-x-1/2 rounded-full"></div>
+            <div className="absolute top-0 right-0 size-32 bg-[#2277B4]/10 blur-2xl -translate-y-1/2 translate-x-1/2 rounded-full"></div>
 
             <h3 className="font-semibold text-[#1a2b4c] mb-6 flex items-center gap-2 relative z-10">
               <span className="text-lg text-[#2277B4]">
@@ -448,7 +448,7 @@ const ManagePortalModal = ({ contact, onClose }) => {
             </h3>
 
             <div className="space-y-6 relative z-10">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-zinc-600">
                 Al habilitar el acceso, se generará una{" "}
                 <strong>nueva contraseña automática</strong> y se enviará por
                 correo electrónico al contacto.
@@ -459,7 +459,7 @@ const ManagePortalModal = ({ contact, onClose }) => {
                 disabled={saving}
                 className={`w-full justify-center text-white shadow-lg py-3 rounded-xl font-bold mt-4 border-0 ${saving ? "opacity-70 cursor-not-allowed" : ""} ${access ? "bg-red-600 hover:bg-red-700 shadow-red-200" : "bg-[#2277B4] hover:bg-[#125280] shadow-[#2277B450]"}`}>
                 {saving ?
-                  "Procesando..."
+                  "Procesando…"
                 : access ?
                   "Revocar acceso al portal"
                 : "Habilitar acceso al portal"}
@@ -467,14 +467,14 @@ const ManagePortalModal = ({ contact, onClose }) => {
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white border border-gray-200 shadow-sm relative overflow-hidden">
+          <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-sm relative overflow-hidden">
             <h3 className="font-semibold text-[#1a2b4c] mb-2 flex items-center gap-2 text-sm">
               <span className="text-lg text-[#2277B4]">
                 <Tag size={20} />
               </span>{" "}
               Enviar Oferta Rápida a: {contact.full_name}
             </h3>
-            <p className="text-xs text-gray-500 mb-4">
+            <p className="text-xs text-zinc-500 mb-4">
               Notificar al contacto sobre una promoción especial.
             </p>
 
@@ -482,9 +482,9 @@ const ManagePortalModal = ({ contact, onClose }) => {
               <input
                 type="text"
                 placeholder="Ej. Descuento del 10% en renovación"
-                className="flex-1 px-3 py-2 rounded-lg text-sm border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] transition-all placeholder:text-gray-400 text-gray-800"
+                className="flex-1 px-3 py-2 rounded-lg text-sm border border-zinc-300 bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] transition-all placeholder:text-zinc-400 text-zinc-800"
               />
-              <button className="px-4 py-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold transition-colors shadow-sm">
+              <button className="px-4 py-2 rounded-lg bg-white border border-zinc-300 hover:bg-zinc-50 text-zinc-700 text-xs font-bold transition-colors shadow-sm">
                 Enviar
               </button>
             </div>
@@ -566,7 +566,7 @@ const ServicesSection = ({ clientId, contacts = [], productsList = [] }) => {
 
   return (
     <Card>
-      <h3 className="font-bold text-light-text-primary dark:text-white mb-6 flex items-center gap-2">
+      <h3 className="font-semibold text-light-text-primary dark:text-white mb-6 flex items-center gap-2">
         <span className="text-accent-400">
           <Tag size={20} />
         </span>{" "}
@@ -576,17 +576,17 @@ const ServicesSection = ({ clientId, contacts = [], productsList = [] }) => {
       {/* Formulario para agregar servicio */}
       <form
         onSubmit={handleAddService}
-        className="mb-6 p-4 rounded-xl bg-gray-50 border border-gray-200">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+        className="mb-6 p-4 rounded-xl bg-zinc-50 border border-zinc-200">
+        <h4 className="text-sm font-semibold text-zinc-700 mb-3 flex items-center gap-2">
           <UserPlus size={16} /> Asignar Nuevo Servicio
         </h4>
         <div className="grid grid-cols-12 gap-3">
           <div className="col-span-3">
-            <label className="text-xs text-gray-500 mb-1 block">
+            <label className="text-xs text-zinc-500 mb-1 block">
               Contacto *
             </label>
             <select
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               value={serviceForm.contact_id}
               onChange={(e) =>
                 setServiceForm({ ...serviceForm, contact_id: e.target.value })
@@ -601,11 +601,11 @@ const ServicesSection = ({ clientId, contacts = [], productsList = [] }) => {
             </select>
           </div>
           <div className="col-span-3">
-            <label className="text-xs text-gray-500 mb-1 block">
+            <label className="text-xs text-zinc-500 mb-1 block">
               Producto *
             </label>
             <select
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               value={serviceForm.product_id}
               onChange={(e) =>
                 setServiceForm({ ...serviceForm, product_id: e.target.value })
@@ -620,12 +620,12 @@ const ServicesSection = ({ clientId, contacts = [], productsList = [] }) => {
             </select>
           </div>
           <div className="col-span-2">
-            <label className="text-xs text-gray-500 mb-1 block">
+            <label className="text-xs text-zinc-500 mb-1 block">
               Licencia / Serial
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               placeholder="Opcional"
               value={serviceForm.license_key}
               onChange={(e) =>
@@ -634,12 +634,12 @@ const ServicesSection = ({ clientId, contacts = [], productsList = [] }) => {
             />
           </div>
           <div className="col-span-2">
-            <label className="text-xs text-gray-500 mb-1 block">
+            <label className="text-xs text-zinc-500 mb-1 block">
               Vencimiento *
             </label>
             <input
               type="date"
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               value={serviceForm.expiration_date}
               onChange={(e) =>
                 setServiceForm({
@@ -661,46 +661,46 @@ const ServicesSection = ({ clientId, contacts = [], productsList = [] }) => {
       </form>
 
       {loading ?
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-zinc-500">
           Cargando servicios...
         </div>
-      : <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      : <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+              <tr className="bg-zinc-50 border-b border-zinc-200">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
                   Producto
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
                   Contacto
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
                   Licencia
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
                   Vence
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
                   Estado
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-zinc-100">
               {services.map((s) => (
                 <tr
                   key={s.id}
                   className="hover:bg-blue-50/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-800">
+                  <td className="px-4 py-3 font-medium text-zinc-800">
                     {s.product.name}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{s.contact_name}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500">
+                  <td className="px-4 py-3 text-zinc-600">{s.contact_name}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-zinc-500">
                     {s.license_key || "—"}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-zinc-600">
                     {new Date(s.expiration_date).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
@@ -709,7 +709,7 @@ const ServicesSection = ({ clientId, contacts = [], productsList = [] }) => {
                         s.status === "ACTIVE" ?
                           "bg-emerald-100 text-emerald-600"
                         : s.status === "CANCELLED" ?
-                          "bg-slate-100 text-slate-600"
+                          "bg-zinc-100 text-zinc-600"
                         : s.status === "EXPIRING_SOON" ?
                           "bg-amber-100 text-amber-600"
                         : "bg-red-100 text-red-500"
@@ -741,7 +741,7 @@ const ServicesSection = ({ clientId, contacts = [], productsList = [] }) => {
               <div className="flex justify-center mb-2 opacity-20">
                 <Tag size={36} />
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-zinc-500">
                 No hay servicios asignados a este cliente.
               </p>
             </div>
@@ -833,7 +833,7 @@ const ClientProductsTab = ({ clientId, contacts, productsList }) => {
     <div className="space-y-6 animate-fade-in">
       <Card>
         <div className="flex justify-between items-center mb-6">
-          <h3 className="font-bold text-light-text-primary dark:text-white flex items-center gap-2">
+          <h3 className="font-semibold text-light-text-primary dark:text-white flex items-center gap-2">
             <span className="text-light-accent dark:text-primary-400">
               <Package size={20} />
             </span>{" "}
@@ -852,7 +852,7 @@ const ClientProductsTab = ({ clientId, contacts, productsList }) => {
                   <Sparkles size={20} />
                 </span>{" "}
                 Nuevo Producto
-                <span className="text-xs font-normal text-light-text-secondary dark:text-slate-400 ml-2">
+                <span className="text-xs font-normal text-light-text-secondary dark:text-zinc-400 ml-2">
                   Registra un nuevo item en el inventario/catálogo.
                 </span>
               </h4>
@@ -867,7 +867,7 @@ const ClientProductsTab = ({ clientId, contacts, productsList }) => {
                 </label>
                 <div className="relative">
                   <select
-                    className="w-full pl-4 pr-10 py-3 rounded-xl bg-light-bg dark:bg-slate-950/50 border border-light-border dark:border-white/10 text-light-text-primary dark:text-slate-300 focus:ring-1 focus:ring-light-accent dark:focus:ring-primary-500 outline-none appearance-none transition-all cursor-pointer hover:bg-light-bg/80 dark:hover:bg-slate-900"
+                    className="w-full pl-4 pr-10 py-3 rounded-xl bg-light-bg dark:bg-zinc-950/50 border border-light-border dark:border-white/10 text-light-text-primary dark:text-zinc-300 focus:ring-1 focus:ring-light-accent dark:focus:ring-primary-500 outline-none appearance-none transition-all cursor-pointer hover:bg-light-bg/80 dark:hover:bg-zinc-900"
                     onChange={handleTemplateSelect}
                     defaultValue="">
                     <option value="">-- Seleccionar plantilla --</option>
@@ -875,19 +875,19 @@ const ClientProductsTab = ({ clientId, contacts, productsList }) => {
                       <optgroup
                         key={cat.category}
                         label={cat.category}
-                        className="bg-light-card dark:bg-slate-900 text-light-text-primary dark:text-slate-300 font-semibold">
+                        className="bg-light-card dark:bg-zinc-900 text-light-text-primary dark:text-zinc-300 font-semibold">
                         {cat.items.map((item, itemIdx) => (
                           <option
                             key={item.name}
                             value={`${catIdx}-${itemIdx}`}
-                            className="bg-light-bg dark:bg-slate-800 text-light-text-secondary dark:text-slate-400 font-normal">
+                            className="bg-light-bg dark:bg-zinc-800 text-light-text-secondary dark:text-zinc-400 font-normal">
                             {item.name}
                           </option>
                         ))}
                       </optgroup>
                     ))}
                   </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-light-text-secondary dark:text-slate-500">
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-light-text-secondary dark:text-zinc-500">
                     <ChevronDown size={16} />
                   </div>
                 </div>
@@ -947,12 +947,12 @@ const ClientProductsTab = ({ clientId, contacts, productsList }) => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-light-text-secondary dark:text-slate-400">
+                  <label className="text-xs font-medium text-light-text-secondary dark:text-zinc-400">
                     Descripción
                   </label>
                   <textarea
-                    className="w-full bg-light-bg/50 dark:bg-slate-950/30 border border-light-border dark:border-white/10 rounded-lg p-3 text-sm text-light-text-primary dark:text-slate-200 outline-none focus:ring-1 focus:ring-light-accent dark:focus:ring-primary-500 min-h-[100px]"
-                    placeholder="Detalles técnicos..."
+                    className="w-full bg-light-bg/50 dark:bg-zinc-950/30 border border-light-border dark:border-white/10 rounded-lg p-3 text-sm text-light-text-primary dark:text-zinc-200 outline-none focus:ring-1 focus:ring-light-accent dark:focus:ring-primary-500 min-h-[100px]"
+                    placeholder="Detalles técnicos…"
                     value={newProduct.description}
                     onChange={(e) =>
                       setNewProduct({
@@ -981,10 +981,10 @@ const ClientProductsTab = ({ clientId, contacts, productsList }) => {
               key={p.id}
               className="flex justify-between items-center p-3 rounded-lg glass-panel hover:border-light-accent/30 dark:hover:border-white/20 transition-all">
               <div>
-                <div className="font-bold text-light-text-primary dark:text-slate-200">
+                <div className="font-bold text-light-text-primary dark:text-zinc-200">
                   {p.name}
                 </div>
-                <div className="text-xs text-light-text-secondary dark:text-slate-400">
+                <div className="text-xs text-light-text-secondary dark:text-zinc-400">
                   {p.category} • $
                   {(parseFloat(p.current_price) || 0).toLocaleString("es-MX", {
                     minimumFractionDigits: 2,
@@ -995,7 +995,7 @@ const ClientProductsTab = ({ clientId, contacts, productsList }) => {
               <div className="flex items-center gap-3">
                 <Link
                   to={`/productos/${p.id}`}
-                  className="text-xs bg-light-bg dark:bg-slate-800 hover:bg-light-bg/80 dark:hover:bg-slate-700 text-light-accent dark:text-primary-400 px-3 py-1.5 rounded-lg transition-colors border border-light-border dark:border-white/5">
+                  className="text-xs bg-light-bg dark:bg-zinc-800 hover:bg-light-bg/80 dark:hover:bg-zinc-700 text-light-accent dark:text-primary-400 px-3 py-1.5 rounded-lg transition-colors border border-light-border dark:border-white/5">
                   Ver detalles
                 </Link>
                 <button
@@ -1008,7 +1008,7 @@ const ClientProductsTab = ({ clientId, contacts, productsList }) => {
             </div>
           ))}
           {products.length === 0 && !loading && (
-            <p className="text-light-text-secondary dark:text-slate-500 text-sm text-center py-4">
+            <p className="text-light-text-secondary dark:text-zinc-500 text-sm text-center py-4">
               No hay productos exclusivos registrados.
             </p>
           )}
@@ -1034,7 +1034,7 @@ const STATUS_LABELS = {
 
 const STATUS_STYLES = {
   ACTIVE: "text-[#1B4733]",
-  CANCELLED: "text-slate-600",
+  CANCELLED: "text-zinc-600",
   EXPIRING_SOON: "text-amber-700",
   EXPIRED: "text-red-700",
 };
@@ -1082,7 +1082,7 @@ const POLICIES_COLUMNS = [
       return (
         <span
           className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-            STATUS_STYLES[v] || "bg-gray-100 text-gray-600"
+            STATUS_STYLES[v] || "bg-zinc-100 text-zinc-600"
           }`}>
           {STATUS_LABELS[v] || v}
         </span>
@@ -1293,8 +1293,8 @@ const ClientPoliciesTab = ({ clientId }) => {
           <button
             onClick={() => handleDeleteService(service)}
             disabled={isDeleting}
-            className="inline-flex items-center justify-center w-8 h-8 text-red-700 transition-transform duration-150 hover:scale-75 disabled:opacity-60 disabled:cursor-not-allowed"
-            title={isDeleting ? "Eliminando..." : "Eliminar póliza o servicio"}>
+            className="inline-flex items-center justify-center size-8 text-red-700 transition-transform duration-150 hover:scale-75 disabled:opacity-60 disabled:cursor-not-allowed"
+            title={isDeleting ? "Eliminando…" : "Eliminar póliza o servicio"}>
             <Trash2 size={13} className={isDeleting ? "animate-pulse" : ""} />
           </button>
         );
@@ -1322,7 +1322,7 @@ const ClientPoliciesTab = ({ clientId }) => {
     <Card className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-        <h3 className="font-bold text-light-text-primary flex items-center gap-2 flex-1">
+        <h3 className="font-semibold text-light-text-primary flex items-center gap-2 flex-1">
           <FileText size={18} /> Pólizas y Servicios
           {totalRows !== services.length && (
             <span className="ml-2 text-xs font-normal text-light-text-secondary">
@@ -1355,7 +1355,7 @@ const ClientPoliciesTab = ({ clientId }) => {
                 className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] border transition-all whitespace-nowrap ${
                   selectedValue ?
                     "bg-[#2277B4] text-white border-[#2277B4]"
-                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                  : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
                 } ${
                   showFilters ?
                     "opacity-100 translate-y-0"
@@ -1378,7 +1378,7 @@ const ClientPoliciesTab = ({ clientId }) => {
             />
             <input
               type="text"
-              placeholder="Buscar..."
+              placeholder="Buscar…"
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               className="pl-3 pr-8 py-1.5 text-sm rounded-lg border border-light-border bg-white focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-44 text-black"
@@ -1389,7 +1389,7 @@ const ClientPoliciesTab = ({ clientId }) => {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
               showFilters || activeFilterCount > 0 ?
                 "bg-[#2277B4] text-white border-[#2277B4]"
-              : "bg-white text-light-text-secondary border-light-border hover:bg-gray-50"
+              : "bg-white text-light-text-secondary border-light-border hover:bg-zinc-50"
             }`}>
             <Filter size={13} />
             Filtros
@@ -1414,37 +1414,37 @@ const ClientPoliciesTab = ({ clientId }) => {
             <div
               className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
               onClick={(e) => e.stopPropagation()}>
-              <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
+              <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
                 <div>
-                  <h3 className="text-white font-bold text-base uppercase">
+                  <h3 className="text-white font-semibold text-base uppercase">
                     FILTRAR POR{" "}
                     {policyFilterFieldLabels[activePolicyFilterPickerField]}
                   </h3>
-                  <p className="text-[11px] text-gray-300 mt-1">
+                  <p className="text-[11px] text-zinc-300 mt-1">
                     Selecciona o busca un valor para filtrar 
                   </p>
                 </div>
                 <button
                   onClick={closePolicyFilterPicker}
-                  className="w-8 h-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
+                  className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
                   <X size={16} />
                 </button>
               </div>
 
               <div className="p-4 space-y-3">
-                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                  <Search size={15} className="text-gray-500" />
+                <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+                  <Search size={15} className="text-zinc-500" />
                   <input
                     value={policyFilterPickerSearch}
                     onChange={(e) =>
                       setPolicyFilterPickerSearch(e.target.value)
                     }
-                    placeholder="Buscar valor..."
-                    className="w-full bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                    placeholder="Buscar valor…"
+                    className="w-full bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
                   />
                 </div>
 
-                <div className="h-72 overflow-y-auto rounded-lg border border-gray-100 divide-y divide-gray-100">
+                <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 divide-y divide-zinc-100">
                   {visiblePolicyFilterPickerOptions.length > 0 ?
                     visiblePolicyFilterPickerOptions.map((value) => {
                       const isSelected =
@@ -1459,13 +1459,13 @@ const ClientPoliciesTab = ({ clientId }) => {
                           className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                             isSelected ?
                               "bg-[#2277B4]/10 text-[#125280] font-semibold"
-                            : "text-gray-700 hover:bg-gray-50"
+                            : "text-zinc-700 hover:bg-zinc-50"
                           }`}>
                           {value}
                         </button>
                       );
                     })
-                  : <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                  : <div className="px-3 py-4 text-sm text-zinc-500 text-center">
                       No hay valores para mostrar.
                     </div>
                   }
@@ -1522,7 +1522,7 @@ const ClientPoliciesTab = ({ clientId }) => {
           <tbody className="divide-y divide-light-border">
             {table.getRowModel().rows.length > 0 ?
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={row.id} className="hover:bg-zinc-50 transition-colors">
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3">
                       {flexRender(
@@ -1570,25 +1570,25 @@ const ClientPoliciesTab = ({ clientId }) => {
           <button
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
-            className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
             ««
           </button>
           <button
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
             Anterior
           </button>
           <button
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
             Siguiente
           </button>
           <button
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
-            className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
             »»
           </button>
         </div>
@@ -2414,14 +2414,14 @@ export default function ClientDetail() {
             <div className="flex items-center gap-3">
               <div>
                 <span
-                  className={`font-medium ${row.original.is_active === false || row.original.is_active === 0 ? "text-gray-400 line-through" : "text-gray-800"}`}>
+                  className={`font-medium ${row.original.is_active === false || row.original.is_active === 0 ? "text-zinc-400 line-through" : "text-zinc-800"}`}>
                   {value}
                 </span>
                 {(
                   row.original.is_active === false ||
                   row.original.is_active === 0
                 ) ?
-                  <span className="ml-2 text-[10px] uppercase font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-300">
+                  <span className="ml-2 text-[10px] uppercase font-bold text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-300">
                     Deshabilitado
                   </span>
                 : row.original.has_portal_access ?
@@ -2437,7 +2437,7 @@ export default function ClientDetail() {
           );
         }
 
-        return <span className="text-gray-600 break-words">{value}</span>;
+        return <span className="text-zinc-600 break-words">{value}</span>;
       },
     }));
 
@@ -2462,7 +2462,7 @@ export default function ClientDetail() {
                   [contactId]: !prev[contactId],
                 }))
               }
-              className="w-7 h-7 inline-flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+              className="size-7 inline-flex items-center justify-center rounded-lg hover:bg-zinc-100 transition-colors text-zinc-500"
               title={isOpen ? "Ocultar más detalles" : "Ver más detalles"}>
               {isOpen ?
                 <ChevronDown size={16} />
@@ -2482,13 +2482,13 @@ export default function ClientDetail() {
           if (isDisabled) {
             return (
               <div className="flex items-center gap-2 opacity-30 pointer-events-none select-none">
-                <button className="px-4 py-1.5 text-sm font-semibold text-gray-400 bg-gray-100 rounded-xl border border-gray-200 shadow-sm flex items-center gap-1.5">
+                <button className="px-4 py-1.5 text-sm font-semibold text-zinc-400 bg-zinc-100 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-1.5">
                   <Key size={14} /> Acceso
                 </button>
-                <button className="w-8 h-8 flex items-center justify-center rounded-lg text-[#92400E]">
+                <button className="size-8 flex items-center justify-center rounded-lg text-[#92400E]">
                   <Edit2 size={16} />
                 </button>
-                <button className="w-8 h-8 flex items-center justify-center rounded-lg text-red-800">
+                <button className="size-8 flex items-center justify-center rounded-lg text-red-800">
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -2509,13 +2509,13 @@ export default function ClientDetail() {
               </button>
               <button
                 onClick={() => startEditContact(row.original)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#92400E] transition-colors hover:scale-75"
+                className="size-8 flex items-center justify-center rounded-lg text-[#92400E] transition-colors hover:scale-75"
                 title="Editar">
                 <Edit2 size={16} />
               </button>
               <button
                 onClick={() => handleDeleteContact(row.original.id)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-red-800 transition-colors hover:scale-75"
+                className="size-8 flex items-center justify-center rounded-lg text-red-800 transition-colors hover:scale-75"
                 title="Deshabilitar">
                 <Trash2 size={16} />
               </button>
@@ -2541,7 +2541,7 @@ export default function ClientDetail() {
         cell: ({ getValue }) => {
           const value = getValue();
           return (
-            <span className="text-gray-400 line-through text-xs">
+            <span className="text-zinc-400 line-through text-xs">
               {hasValue(value) ? String(value) : "—"}
             </span>
           );
@@ -2554,7 +2554,7 @@ export default function ClientDetail() {
         cell: ({ getValue }) => {
           const value = getValue();
           return (
-            <span className="text-gray-400 text-xs">
+            <span className="text-zinc-400 text-xs">
               {hasValue(value) ? String(value) : "—"}
             </span>
           );
@@ -2567,7 +2567,7 @@ export default function ClientDetail() {
         cell: ({ getValue }) => {
           const value = getValue();
           return (
-            <span className="text-gray-400 text-xs">
+            <span className="text-zinc-400 text-xs">
               {hasValue(value) ? String(value) : "—"}
             </span>
           );
@@ -2580,7 +2580,7 @@ export default function ClientDetail() {
         cell: ({ getValue }) => {
           const value = getValue();
           return (
-            <span className="text-gray-400 text-xs">
+            <span className="text-zinc-400 text-xs">
               {hasValue(value) ? String(value) : "—"}
             </span>
           );
@@ -2935,12 +2935,12 @@ export default function ClientDetail() {
             style={{ zIndex: 9999 }}
             className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-[#1a2b4c]">
+              <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-[#1a2b4c]">
                 <div className="flex justify-center items-center gap-2">
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                     Editar cliente
                   </h2>
-                  <span className="text-sm text-gray-300">
+                  <span className="text-sm text-zinc-300">
                     {clientBusinessName}
                   </span>
                 </div>
@@ -2981,7 +2981,7 @@ export default function ClientDetail() {
                   <button
                     type="button"
                     onClick={() => setIsEditingClient(false)}
-                    className="flex-1 py-3 text-gray-600 font-semibold rounded-xl hover:bg-slate-100 transition-colors">
+                    className="flex-1 py-3 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors">
                     Cancelar
                   </button>
                   <button
@@ -3011,14 +3011,14 @@ export default function ClientDetail() {
       <div className="bg-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-baseline gap-3">
-            <h1 className="text-3xl font-bold text-[#1a2b4c] tracking-tight">
+            <h1 className="text-3xl font-semibold text-[#1a2b4c] tracking-tight">
               {clientBusinessName.toUpperCase()}
             </h1>
-            <span className="px-2 py-0.5 rounded text-xs font-mono bg-white/10 text-slate-400 border border-white/5">
+            <span className="px-2 py-0.5 rounded text-xs font-mono bg-white/10 text-zinc-400 border border-white/5">
               ID: {clientIdShort || "N/A"}
             </span>
           </div>
-          <div className="flex flex-wrap gap-4 mt-2 text-sm text-light-text-secondary dark:text-slate-400">
+          <div className="flex flex-wrap gap-4 mt-2 text-sm text-light-text-secondary dark:text-zinc-400">
             <span className="flex items-center gap-1">
               <ClipboardList size={16} className="text-black" />{" "}
               {client.rfc || "Sin RFC"}
@@ -3056,7 +3056,7 @@ export default function ClientDetail() {
             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors whitespace-nowrap ${
               activeTab === tab.id ?
                 "bg-white text-black border-[#CBD5E1] shadow-sm"
-              : "text-gray-400 border-transparent hover:text-black hover:border-gray-200 hover:bg-white/70"
+              : "text-zinc-400 border-transparent hover:text-black hover:border-zinc-200 hover:bg-white/70"
             }`}>
             {tab.icon}
             {tab.label}
@@ -3070,7 +3070,7 @@ export default function ClientDetail() {
           <div className="space-y-6">
             <Card>
               <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold text-[#1a2b4c] flex items-center gap-2">
+                <h3 className="font-semibold text-[#1a2b4c] flex items-center gap-2">
                   <Building2 size={20} className="text-black" /> Datos generales
                   de {client.business_name}
                 </h3>
@@ -3099,7 +3099,7 @@ export default function ClientDetail() {
                   return (
                     <div
                       key={field.name}
-                      className={`${isFullWidthField ? "md:col-span-2" : ""} h-full p-3.5 rounded-xl border border-gray-200/80 shadow-sm`}>
+                      className={`${isFullWidthField ? "md:col-span-2" : ""} h-full p-3.5 rounded-xl border border-zinc-200/80 shadow-sm`}>
                       <span className="text-xs font-semibold text-[#2277B4] uppercase block mb-1.5 tracking-wide">
                         {field.label}
                       </span>
@@ -3113,7 +3113,7 @@ export default function ClientDetail() {
             </Card>
 
             <Card>
-              <h3 className="font-bold text-light-text-primary mb-4 flex items-center gap-2">
+              <h3 className="font-semibold text-light-text-primary mb-4 flex items-center gap-2">
                 <UserPlus size={20} className="text-black" /> Asignar Contacto
                 a: {client.business_name}
               </h3>
@@ -3169,10 +3169,10 @@ export default function ClientDetail() {
             <Card className="h-full">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="font-bold text-lg text-light-text-primary">
+                  <h3 className="font-semibold text-lg text-light-text-primary">
                     Contactos registrados de: {client.business_name}
                   </h3>
-                  <p className="text-xs text-light-text-secondary dark:text-slate-400">
+                  <p className="text-xs text-light-text-secondary dark:text-zinc-400">
                     {filteredContacts.length} de{" "}
                     {
                       contactRows.filter(
@@ -3204,12 +3204,12 @@ export default function ClientDetail() {
               {/* Toolbar de búsqueda y filtros */}
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 {/* Búsqueda global */}
-                <div className="flex gap-1 bg-white p-1 rounded-lg border border-gray-200 flex-1 min-w-[200px]">
+                <div className="flex gap-1 bg-white p-1 rounded-lg border border-zinc-200 flex-1 min-w-[200px]">
                   <input
                     value={contactSearch}
                     onChange={(e) => setContactSearch(e.target.value)}
-                    placeholder="Buscar contacto..."
-                    className="bg-transparent border-none text-sm text-gray-800 placeholder:text-gray-400 px-3 w-full focus:outline-none"
+                    placeholder="Buscar contacto…"
+                    className="bg-transparent border-none text-sm text-zinc-800 placeholder:text-zinc-400 px-3 w-full focus:outline-none"
                   />
                   <div className="px-3 py-1.5 text-black">
                     <Search size={16} />
@@ -3240,12 +3240,12 @@ export default function ClientDetail() {
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
                     showContactFilters || activeContactFilterCount > 0 ?
                       "bg-[#2277B4] text-white border-[#2277B4]"
-                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                    : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50"
                   }`}>
                   <SlidersHorizontal size={15} />
                   Filtros
                   {activeContactFilterCount > 0 && (
-                    <span className="ml-1 bg-white text-[#2277B4] rounded-full text-xs font-bold w-5 h-5 flex items-center justify-center">
+                    <span className="ml-1 bg-white text-[#2277B4] rounded-full text-xs font-bold size-5 flex items-center justify-center">
                       {activeContactFilterCount}
                     </span>
                   )}
@@ -3260,7 +3260,7 @@ export default function ClientDetail() {
                   </button>
                 )}
 
-                <span className="text-xs text-gray-400 ml-auto">
+                <span className="text-xs text-zinc-400 ml-auto">
                   Pág. {contactsTable.getState().pagination.pageIndex + 1} de{" "}
                   {contactsTable.getPageCount() || 1}
                 </span>
@@ -3275,40 +3275,40 @@ export default function ClientDetail() {
                     <div
                       className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
                       onClick={(e) => e.stopPropagation()}>
-                      <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
+                      <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
                         <div>
-                          <h3 className="text-white font-bold text-base">
+                          <h3 className="text-white font-semibold text-base">
                             Filtrar por{" "}
                             {(
                               activeContactFilterPickerConfig?.buttonLabel ||
                               "campo"
                             ).toLowerCase()}
                           </h3>
-                          <p className="text-[11px] text-gray-300 mt-1">
+                          <p className="text-[11px] text-zinc-300 mt-1">
                             Selecciona o busca un valor
                           </p>
                         </div>
                         <button
                           onClick={closeContactFilterPicker}
-                          className="w-8 h-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
+                          className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
                           <X size={16} />
                         </button>
                       </div>
 
                       <div className="p-4 space-y-3">
-                        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                          <Search size={15} className="text-gray-500" />
+                        <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+                          <Search size={15} className="text-zinc-500" />
                           <input
                             value={contactFilterPickerSearch}
                             onChange={(e) =>
                               setContactFilterPickerSearch(e.target.value)
                             }
-                            placeholder="Buscar valor..."
-                            className="w-full bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                            placeholder="Buscar valor…"
+                            className="w-full bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
                           />
                         </div>
 
-                        <div className="h-72 overflow-y-auto rounded-lg border border-gray-100 divide-y divide-gray-100">
+                        <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 divide-y divide-zinc-100">
                           {visibleContactFilterPickerOptions.length > 0 ?
                             visibleContactFilterPickerOptions.map((value) => {
                               const isSelected =
@@ -3325,13 +3325,13 @@ export default function ClientDetail() {
                                   className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                     isSelected ?
                                       "bg-[#2277B4]/10 text-[#125280] font-semibold"
-                                    : "text-gray-700 hover:bg-gray-50"
+                                    : "text-zinc-700 hover:bg-zinc-50"
                                   }`}>
                                   {value}
                                 </button>
                               );
                             })
-                          : <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                          : <div className="px-3 py-4 text-sm text-zinc-500 text-center">
                               No hay valores para mostrar.
                             </div>
                           }
@@ -3342,7 +3342,7 @@ export default function ClientDetail() {
                   document.body,
                 )}
 
-              <div className="px-4 py-2 min-h-10 bg-blue-50 border border-gray-200 border-b-0 rounded-t-md text-xs text-[#2277B4] flex items-center justify-between gap-3">
+              <div className="px-4 py-2 min-h-10 bg-blue-50 border border-zinc-200 border-b-0 rounded-t-md text-xs text-[#2277B4] flex items-center justify-between gap-3">
                 <div className="flex items-center gap-1 shrink-0">
                   <Lightbulb size={14} className="inline" /> Clic en
                   <ChevronRight size={12} className="inline" /> para más
@@ -3370,7 +3370,7 @@ export default function ClientDetail() {
                           className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${
                             selectedValue ?
                               "bg-[#2277B4] text-white border-[#2277B4]"
-                            : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                            : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
                           }`}>
                           <span className="font-semibold tracking-wide">
                             {button.buttonLabel}
@@ -3382,7 +3382,7 @@ export default function ClientDetail() {
                   
                   <button
                     onClick={handleDownloadContactsTemplate}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-700 bg-white transition-colors whitespace-nowrap"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 bg-white transition-colors whitespace-nowrap"
                     title="Descargar plantilla de carga masiva de contactos"> 
                     <FileSpreadsheet size={13} /> Descargar plantilla excel
                   </button>
@@ -3393,7 +3393,7 @@ export default function ClientDetail() {
 
               {/* Tabla TanStack */}
               <div
-                className={`bg-white overflow-x-auto border border-gray-200 border-t-0 rounded-b-md ${
+                className={`bg-white overflow-x-auto border border-zinc-200 border-t-0 rounded-b-md ${
                   shouldEnableContactTableScroll ?
                     "h-[65vh] overflow-y-scroll"
                   : ""
@@ -3403,7 +3403,7 @@ export default function ClientDetail() {
                     {contactsTable.getHeaderGroups().map((hg) => (
                       <tr
                         key={hg.id}
-                        className="bg-gray-50 border-b border-gray-200">
+                        className="bg-zinc-50 border-b border-zinc-200">
                         {hg.headers.map((header) => (
                           <th
                             key={header.id}
@@ -3414,11 +3414,11 @@ export default function ClientDetail() {
                             }
                             className={`px-4 py-3 text-left text-xs font-semibold text-[#2277B4] uppercase tracking-wider transition-colors ${
                               shouldEnableContactTableScroll ?
-                                "sticky top-0 z-20 bg-gray-50"
+                                "sticky top-0 z-20 bg-zinc-50"
                               : ""
                             } ${
                               header.column.getCanSort() ?
-                                "cursor-pointer hover:bg-gray-100"
+                                "cursor-pointer hover:bg-zinc-100"
                               : "cursor-default"
                             } ${header.column.id === "expander" ? "w-12" : ""}`}>
                             <div className="flex items-center gap-2">
@@ -3438,7 +3438,7 @@ export default function ClientDetail() {
                       </tr>
                     ))}
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-zinc-100">
                     {visibleContactRows.map((row) => {
                       const isExpanded = !!expandedContactRows[row.original.id];
                       const rowDetailColumns = contactDetailColumns.filter(
@@ -3465,7 +3465,7 @@ export default function ClientDetail() {
 
                       return (
                         <Fragment key={row.id}>
-                          <tr className="hover:bg-gray-50 transition-colors">
+                          <tr className="hover:bg-zinc-50 transition-colors">
                             {row.getVisibleCells().map((cell) => (
                               <td key={cell.id} className="px-4 py-3 align-top">
                                 {flexRender(
@@ -3477,7 +3477,7 @@ export default function ClientDetail() {
                           </tr>
 
                           {isExpanded && rowDetailColumns.length > 0 && (
-                            <tr className="bg-gray-50/80">
+                            <tr className="bg-zinc-50/80">
                               {row.getVisibleCells().map((cell) => {
                                 const columnId = cell.column.id;
                                 const alignedDetails =
@@ -3504,7 +3504,7 @@ export default function ClientDetail() {
                                               <p className="text-[10px] font-semibold uppercase text-[#2277B4] tracking-wider">
                                                 {column.label}
                                               </p>
-                                              <p className="text-sm text-gray-700 break-words">
+                                              <p className="text-sm text-zinc-700 break-words">
                                                 {value}
                                               </p>
                                             </div>
@@ -3525,10 +3525,10 @@ export default function ClientDetail() {
 
                 {visibleContactRows.length === 0 && (
                   <div className="py-12 text-center">
-                    <div className="flex justify-center mb-2 text-gray-300">
+                    <div className="flex justify-center mb-2 text-zinc-300">
                       <Users size={48} />
                     </div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-zinc-500">
                       {(
                         filteredContacts.length === 0 &&
                         activeContactFilterCount > 0
@@ -3544,38 +3544,38 @@ export default function ClientDetail() {
               {filteredContacts.length > 0 && (
                 <div className="mt-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">Mostrar</span>
+                    <span className="text-sm text-zinc-500">Mostrar</span>
                     <select
                       value={contactsTable.getState().pagination.pageSize}
                       onChange={(e) =>
                         contactsTable.setPageSize(Number(e.target.value))
                       }
-                      className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-white border border-gray-200">
+                      className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-white border border-zinc-200">
                       {[10, 25, 50, 100].map((size) => (
                         <option key={size} value={size}>
                           {size}
                         </option>
                       ))}
                     </select>
-                    <span className="text-sm text-gray-500">por página</span>
+                    <span className="text-sm text-zinc-500">por página</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => contactsTable.setPageIndex(0)}
                       disabled={!contactsTable.getCanPreviousPage()}
-                      className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                       ««
                     </button>
                     <button
                       onClick={() => contactsTable.previousPage()}
                       disabled={!contactsTable.getCanPreviousPage()}
-                      className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                       Anterior
                     </button>
                     <button
                       onClick={() => contactsTable.nextPage()}
                       disabled={!contactsTable.getCanNextPage()}
-                      className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                       Siguiente
                     </button>
                     <button
@@ -3585,7 +3585,7 @@ export default function ClientDetail() {
                         )
                       }
                       disabled={!contactsTable.getCanNextPage()}
-                      className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                       »»
                     </button>
                   </div>
@@ -3597,7 +3597,7 @@ export default function ClientDetail() {
                 <div className="mt-3">
                   <button
                     onClick={() => setShowDisabled((v) => !v)}
-                    className="flex items-center gap-2 text-xs text-gray-400 hover:text-gray-600 transition-colors select-none group px-1 py-1">
+                    className="flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-600 transition-colors select-none group px-1 py-1">
                     <ChevronRight
                       size={14}
                       className={`transition-transform duration-200 ${
@@ -3615,7 +3615,7 @@ export default function ClientDetail() {
                   {showDisabled && (
                     <>
                       <div
-                        className={`mt-2 overflow-x-auto rounded-md border border-gray-200 animate-fade-in ${
+                        className={`mt-2 overflow-x-auto rounded-md border border-zinc-200 animate-fade-in ${
                           shouldEnableDisabledContactsTableScroll ?
                             "max-h-[12rem] overflow-y-auto"
                           : ""
@@ -3627,15 +3627,15 @@ export default function ClientDetail() {
                               .map((hg) => (
                                 <tr
                                   key={hg.id}
-                                  className="bg-gray-100 border-b border-gray-200">
+                                  className="bg-zinc-100 border-b border-zinc-200">
                                   {hg.headers.map((header) => (
                                     <th
                                       key={header.id}
-                                      className={`px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider ${
+                                      className={`px-4 py-2 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider ${
                                         (
                                           shouldEnableDisabledContactsTableScroll
                                         ) ?
-                                          "sticky top-0 z-20 bg-gray-100"
+                                          "sticky top-0 z-20 bg-zinc-100"
                                         : ""
                                       }`}>
                                       {flexRender(
@@ -3647,11 +3647,11 @@ export default function ClientDetail() {
                                 </tr>
                               ))}
                           </thead>
-                          <tbody className="divide-y divide-gray-100">
+                          <tbody className="divide-y divide-zinc-100">
                             {visibleDisabledContactRows.map((row) => (
                               <tr
                                 key={row.id}
-                                className="bg-gray-50 opacity-50">
+                                className="bg-zinc-50 opacity-50">
                                 {row.getVisibleCells().map((cell) => (
                                   <td key={cell.id} className="px-4 py-2.5">
                                     {flexRender(
@@ -3668,7 +3668,7 @@ export default function ClientDetail() {
 
                       <div className="mt-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">Mostrar</span>
+                          <span className="text-sm text-zinc-500">Mostrar</span>
                           <select
                             value={
                               disabledContactsTable.getState().pagination
@@ -3679,14 +3679,14 @@ export default function ClientDetail() {
                                 Number(e.target.value),
                               )
                             }
-                            className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-white border border-gray-200">
+                            className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-white border border-zinc-200">
                             {[3, 10, 25, 50, 100].map((size) => (
                               <option key={size} value={size}>
                                 {size}
                               </option>
                             ))}
                           </select>
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-zinc-500">
                             por página
                           </span>
                         </div>
@@ -3699,7 +3699,7 @@ export default function ClientDetail() {
                             disabled={
                               !disabledContactsTable.getCanPreviousPage()
                             }
-                            className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                             ««
                           </button>
                           <button
@@ -3707,13 +3707,13 @@ export default function ClientDetail() {
                             disabled={
                               !disabledContactsTable.getCanPreviousPage()
                             }
-                            className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                             Anterior
                           </button>
                           <button
                             onClick={() => disabledContactsTable.nextPage()}
                             disabled={!disabledContactsTable.getCanNextPage()}
-                            className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                             Siguiente
                           </button>
                           <button
@@ -3723,7 +3723,7 @@ export default function ClientDetail() {
                               )
                             }
                             disabled={!disabledContactsTable.getCanNextPage()}
-                            className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                             »»
                           </button>
                         </div>
@@ -3755,8 +3755,8 @@ export default function ClientDetail() {
             <div
               className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}>
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-[#1a2b4c]">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-[#1a2b4c]">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                   Editar Contacto
                 </h2>
                 <button
@@ -3785,9 +3785,9 @@ export default function ClientDetail() {
                   ))}
                 </div>
               </div>
-              <div className="px-6 py-4 border-t border-gray-100 flex gap-2">
+              <div className="px-6 py-4 border-t border-zinc-100 flex gap-2">
                 <button
-                  className="flex-1 py-3 text-gray-600 font-semibold rounded-xl hover:bg-slate-100 transition-colors"
+                  className="flex-1 py-3 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors"
                   onClick={() => setEditingContactId(null)}>
                   Cancelar
                 </button>
@@ -3808,8 +3808,8 @@ export default function ClientDetail() {
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
               {/* Header */}
-              <div className="px-6 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
-                <h3 className="text-white text-lg font-bold flex items-center gap-2">
+              <div className="px-6 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
+                <h3 className="text-white text-lg font-semibold flex items-center gap-2">
                   <FileSpreadsheet size={20} />
                   Carga de Contactos
                 </h3>
@@ -3833,8 +3833,8 @@ export default function ClientDetail() {
                 </div>
 
                 {/* Importar desde Drive */}
-                <div className="space-y-2 rounded-xl border border-gray-200 p-4 bg-white">
-                  <p className="text-xs font-semibold text-gray-600 tracking-wide">
+                <div className="space-y-2 rounded-xl border border-zinc-200 p-4 bg-white">
+                  <p className="text-xs font-semibold text-zinc-600 tracking-wide">
                     Importar desde Google Drive
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2">
@@ -3842,14 +3842,14 @@ export default function ClientDetail() {
                       type="url"
                       value={bulkContactDriveUrl}
                       onChange={(e) => setBulkContactDriveUrl(e.target.value)}
-                      placeholder="Pega la URL del archivo de Drive..."
-                      className="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] bg-white"
+                      placeholder="Pega la URL del archivo de Drive…"
+                      className="flex-1 px-3 py-2 rounded-lg border border-zinc-300 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] bg-white"
                     />
                     <button
                       onClick={executeBulkContactDriveImport}
                       disabled={bulkContactDriveImporting}
                       className="px-4 py-2 rounded-lg bg-[#2277B4] text-white text-sm font-semibold hover:bg-[#125280] transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap">
-                      {bulkContactDriveImporting ? "Importando..." : "Importar"}
+                      {bulkContactDriveImporting ? "Importando…" : "Importar"}
                     </button>
                   </div>
                 </div>
@@ -3891,12 +3891,12 @@ export default function ClientDetail() {
                   />
                   <button
                     onClick={() => bulkContactFileRef.current?.click()}
-                    className="w-full py-8 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center gap-2 text-gray-500 hover:border-[#2277B4] hover:text-[#2277B4] transition-colors cursor-pointer">
+                    className="w-full py-8 border-2 border-dashed border-zinc-300 rounded-xl flex flex-col items-center gap-2 text-zinc-500 hover:border-[#2277B4] hover:text-[#2277B4] transition-colors cursor-pointer">
                     <Upload size={28} />
                     <span className="text-sm font-semibold">
                       Haz clic para seleccionar el archivo Excel
                     </span>
-                    <span className="text-[11px] text-gray-400">
+                    <span className="text-[11px] text-zinc-400">
                       O usa la plantilla descargada
                     </span>
                   </button>
@@ -3919,47 +3919,47 @@ export default function ClientDetail() {
                 {/* Vista previa */}
                 {bulkContactData.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-2">
+                    <p className="text-sm font-semibold text-zinc-700 mb-2">
                       Vista previa ({bulkContactData.length} contactos listos
                       para importar)
                     </p>
-                    <div className="border border-gray-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
+                    <div className="border border-zinc-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
                       <table className="w-full text-xs">
-                        <thead className="bg-gray-50 sticky top-0">
+                        <thead className="bg-zinc-50 sticky top-0">
                           <tr>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
                               #
                             </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
                               Nombre
                             </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
                               Correo
                             </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
                               Teléfono
                             </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
                               Puesto
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-zinc-100">
                           {bulkContactData.map((r, i) => (
-                            <tr key={i} className="hover:bg-gray-50">
-                              <td className="px-3 py-2 text-gray-400">
+                            <tr key={i} className="hover:bg-zinc-50">
+                              <td className="px-3 py-2 text-zinc-400">
                                 {i + 1}
                               </td>
-                              <td className="px-3 py-2 font-medium text-gray-800">
+                              <td className="px-3 py-2 font-medium text-zinc-800">
                                 {r.full_name}
                               </td>
-                              <td className="px-3 py-2 text-gray-600">
+                              <td className="px-3 py-2 text-zinc-600">
                                 {r.email || "—"}
                               </td>
-                              <td className="px-3 py-2 text-gray-600">
+                              <td className="px-3 py-2 text-zinc-600">
                                 {r.phone || "—"}
                               </td>
-                              <td className="px-3 py-2 text-gray-600">
+                              <td className="px-3 py-2 text-zinc-600">
                                 {r.position_title || "—"}
                               </td>
                             </tr>
@@ -3972,7 +3972,7 @@ export default function ClientDetail() {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
+              <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-3">
                 {bulkContactData.length > 0 && (
                   <button
                     onClick={executeBulkContactUpload}
@@ -3980,8 +3980,8 @@ export default function ClientDetail() {
                     className="px-6 py-2.5 bg-[#2277B4] text-white font-bold rounded-xl hover:bg-[#125280] transition-colors shadow-lg shadow-[#2277B450] disabled:opacity-50 flex items-center gap-2">
                     {bulkContactUploading ?
                       <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Importando...
+                        <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Importando…
                       </>
                     : <>
                         <CheckCircle2 size={16} />
@@ -3992,7 +3992,7 @@ export default function ClientDetail() {
                 )}
                 <button
                   onClick={() => setShowBulkContactModal(false)}
-                  className="px-5 py-2.5 text-gray-600 font-semibold rounded-xl hover:bg-gray-100 transition-colors">
+                  className="px-5 py-2.5 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors">
                   Cerrar
                 </button>
               </div>

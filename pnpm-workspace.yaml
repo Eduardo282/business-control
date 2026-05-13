@@ -1,3 +1,8 @@
 packages:
   - "frontend"
   - "backend"
+allowBuilds:
+  '@apollo/protobufjs': false
+  core-js: false
+  esbuild: false
+  puppeteer: false

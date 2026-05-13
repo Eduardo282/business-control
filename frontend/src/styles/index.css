@@ -104,7 +104,7 @@ body {
 
 @layer components {
   .glass-panel {
-    @apply backdrop-blur-xl transition-all duration-300 text-light-text-body dark:text-slate-100;
+    @apply backdrop-blur-xl transition-all duration-300 text-light-text-body dark:text-zinc-100;
 
     /* Modo claro: efecto de vidrio intensificado */
     background: linear-gradient(
@@ -131,7 +131,7 @@ body {
   }
 
   .glass-input {
-    @apply text-light-text-body dark:text-slate-100 placeholder:text-light-text-muted dark:placeholder:text-slate-500 outline-none transition-all duration-300;
+    @apply text-light-text-body dark:text-zinc-100 placeholder:text-light-text-muted dark:placeholder:text-zinc-500 outline-none transition-all duration-300;
 
     /* Entrada de luz */
     background: rgba(255, 255, 255, 0.5);
@@ -155,7 +155,7 @@ body {
   }
 
   .glass-button {
-    @apply backdrop-blur-md transition-all duration-300 shadow-sm dark:shadow-lg hover:shadow-md hover:-translate-y-0.5 text-light-text-primary dark:text-slate-200;
+    @apply backdrop-blur-md transition-all duration-300 shadow-sm dark:shadow-lg hover:shadow-md hover:-translate-y-0.5 text-light-text-primary dark:text-zinc-200;
 
     /* Botón de luz */
     background: linear-gradient(
@@ -196,11 +196,11 @@ body {
   }
 
   .nav-item {
-    @apply flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-light-text-secondary dark:text-slate-400 font-medium;
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-light-text-secondary dark:text-zinc-400 font-medium;
   }
 
   .nav-item:hover {
-    @apply bg-white/20 dark:bg-white/5 text-light-text-primary dark:text-slate-100 translate-x-1;
+    @apply bg-white/20 dark:bg-white/5 text-light-text-primary dark:text-zinc-100 translate-x-1;
   }
 
   .nav-item.active {
@@ -389,10 +389,8 @@ body {
   background-color: #1a1d2d !important;
 }
 
-.dark .bg-gray-50,
-.dark .bg-slate-50,
-.dark .bg-gray-100,
-.dark .bg-slate-100 {
+.dark .bg-zinc-50,
+.dark .bg-zinc-100 {
   background-color: #151725 !important;
 }
 
@@ -400,13 +398,13 @@ body {
   background-color: #0f111a !important;
 }
 
-.dark .bg-gray-200 {
+.dark .bg-zinc-200 {
   background-color: #252840 !important;
 }
 
 /* ── Text Colors ── */
-.dark .text-gray-900,
-.dark .text-gray-800,
+.dark .text-zinc-900,
+.dark .text-zinc-800,
 .dark [class~="text-[#1a2b4c]"],
 .dark [class~="text-[#181818]"],
 .dark [class~="text-[#000]"],
@@ -414,39 +412,36 @@ body {
   color: #e2e8f0 !important;
 }
 
-.dark .text-gray-700,
-.dark .text-gray-600,
+.dark .text-zinc-700,
+.dark .text-zinc-600,
 .dark [class~="text-[#3b4b6b]/70"] {
   color: #cbd5e1 !important;
 }
 
-.dark .text-gray-500,
-.dark [class~="text-[#5e6b82]"],
-.dark .text-slate-500 {
+.dark .text-zinc-500,
+.dark [class~="text-[#5e6b82]"] {
   color: #94a3b8 !important;
 }
 
-.dark .text-gray-400,
-.dark .text-slate-400 {
+.dark .text-zinc-400 {
   color: #64748b !important;
 }
 
 /* ── Borders ── */
-.dark .border-gray-100,
-.dark .border-gray-200,
-.dark .border-slate-200,
+.dark .border-zinc-100,
+.dark .border-zinc-200,
 .dark [class~="border-[#CBD5E1]"],
 .dark [class~="border-[#d6d4c9]"],
 .dark [class~="border-[#d8dde7]"] {
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-.dark .border-gray-300 {
+.dark .border-zinc-300 {
   border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
-.dark .divide-gray-100 > * + *,
-.dark .divide-gray-200 > * + * {
+.dark .divide-zinc-100 > * + *,
+.dark .divide-zinc-200 > * + * {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -502,8 +497,7 @@ body {
   border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-.dark [class~="even:bg-gray-50"]:nth-child(even),
-.dark [class~="even:bg-slate-50"]:nth-child(even) {
+.dark [class~="even:bg-zinc-50"]:nth-child(even) {
   background-color: rgba(255, 255, 255, 0.02) !important;
 }
 
@@ -525,9 +519,8 @@ body {
 }
 
 /* ── Buttons common patterns ── */
-.dark [class~="hover:bg-gray-100"]:hover,
-.dark [class~="hover:bg-slate-100"]:hover,
-.dark [class~="hover:bg-gray-50"]:hover {
+.dark [class~="hover:bg-zinc-100"]:hover,
+.dark [class~="hover:bg-zinc-50"]:hover {
   background-color: rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -605,18 +598,18 @@ body {
 }
 
 /* ── Background Gradients ── */
-.dark [class~="from-slate-50"] {
+.dark [class~="from-zinc-50"] {
   --tw-gradient-from: #0f111a !important;
   --tw-gradient-to: rgba(15, 17, 26, 0) !important;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
 }
 
-.dark [class~="via-slate-50"] {
+.dark [class~="via-zinc-50"] {
   --tw-gradient-via: #131525 !important;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to) !important;
 }
 
-.dark [class~="to-slate-50"] {
+.dark [class~="to-zinc-50"] {
   --tw-gradient-to: #0f111a !important;
 }
 
@@ -625,7 +618,7 @@ body {
   /* Keep brand color in dark mode */
 }
 
-.dark [class~="hover:bg-gray-200"]:hover {
+.dark [class~="hover:bg-zinc-200"]:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
@@ -685,7 +678,7 @@ body {
 }
 
 /* ── Placeholder text in search bars ── */
-.dark [class~="placeholder:text-gray-400"]::placeholder {
+.dark [class~="placeholder:text-zinc-400"]::placeholder {
   color: #64748b !important;
 }
 

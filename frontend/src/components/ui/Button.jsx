@@ -12,11 +12,11 @@ export default function Button({
   const variants = {
     primary:
       "bg-gradient-to-r from-light-accent to-light-accent dark:from-primary-600 dark:to-primary-500 hover:to-light-accent dark:hover:to-primary-400 text-white shadow-lg shadow-light-accent/25 dark:shadow-primary-500/25 border border-white/20 dark:border-primary-400/20",
-    secondary: "glass-button text-light-text-body dark:text-slate-200",
+    secondary: "glass-button text-light-text-body dark:text-zinc-200",
     danger:
       "bg-light-error/10 dark:bg-red-500/10 text-light-error dark:text-red-400 border border-light-error/20 dark:border-red-500/20 hover:bg-light-error/20 dark:hover:bg-red-500/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)]",
     ghost:
-      "hover:bg-light-highlight/20 dark:hover:bg-white/5 text-light-text-secondary dark:text-slate-400 hover:text-light-text-primary dark:hover:text-white border border-transparent",
+      "hover:bg-light-highlight/20 dark:hover:bg-white/5 text-light-text-secondary dark:text-zinc-400 hover:text-light-text-primary dark:hover:text-white border border-transparent",
   };
 
   const sizes = {

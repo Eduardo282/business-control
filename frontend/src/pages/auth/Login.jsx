@@ -77,7 +77,7 @@ export default function Login() {
             alt="Business Control"
             className="w-80 mb-8 drop-shadow-[0_20px_25px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-500"
           />
-          <h2 className="text-white text-3xl font-bold text-center mb-4">
+          <h2 className="text-white text-3xl font-semibold text-center mb-4">
             Sistema Empresarial
           </h2>
           <p className="text-blue-100 text-center text-lg max-w-md leading-relaxed">
@@ -123,10 +123,10 @@ export default function Login() {
 
           {/* Encabezado */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-extrabold text-[#1a2b4c] dark:text-slate-100 mb-2 tracking-tight">
+            <h1 className="text-3xl font-semibold text-[#1a2b4c] dark:text-zinc-100 mb-2 tracking-tight">
               Iniciar Sesión
             </h1>
-            <p className="text-[#3b4b6b]/70 dark:text-slate-400">
+            <p className="text-[#3b4b6b]/70 dark:text-zinc-400">
               Ingresa tus credenciales para acceder
             </p>
           </div>
@@ -135,19 +135,19 @@ export default function Login() {
           <form onSubmit={submit} className="space-y-6">
             {/* Campo de correo electrónico */}
             <div>
-              <label className="block text-sm font-bold text-[#1a2b4c] dark:text-slate-200 mb-2">
+              <label className="block text-sm font-bold text-[#1a2b4c] dark:text-zinc-200 mb-2">
                 Correo Electrónico
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-zinc-400" />
                 </div>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="correo@empresa.com"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] dark:border-white/10 bg-white dark:bg-white/5 shadow-sm text-[#1a2b4c] dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] dark:border-white/10 bg-white dark:bg-white/5 shadow-sm text-[#1a2b4c] dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -155,19 +155,19 @@ export default function Login() {
 
             {/* Campo de contraseña */}
             <div>
-              <label className="block text-sm font-bold text-[#1a2b4c] dark:text-slate-200 mb-2">
+              <label className="block text-sm font-bold text-[#1a2b4c] dark:text-zinc-200 mb-2">
                 Contraseña
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-zinc-400" />
                 </div>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="EJ: &q/N,sKz"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] dark:border-white/10 bg-white dark:bg-white/5 shadow-sm text-[#1a2b4c] dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] dark:border-white/10 bg-white dark:bg-white/5 shadow-sm text-[#1a2b4c] dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -204,7 +204,7 @@ export default function Login() {
                   <UserPlus className="h-4 w-4" />
                 </span>
 
-                <span className="block text-[13px] font-semibold leading-tight text-[#1a2b4c] dark:text-slate-200">
+                <span className="block text-[13px] font-semibold leading-tight text-[#1a2b4c] dark:text-zinc-200">
                   Crear Nueva Cuenta
                 </span>
               </Link>

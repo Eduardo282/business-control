@@ -26,8 +26,8 @@ function PortalItem({ to, children, icon: Icon, matchFilter }) {
       className={() =>
         `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all relative ${
           isActive ?
-            "bg-white text-gray-900 shadow-[0_5px_5px_0px_#00000050] ring-1 ring-white/50"
-          : "text-gray-500 hover:bg-white/40 hover:text-gray-900"
+            "bg-white text-zinc-900 shadow-[0_5px_5px_0px_#00000050] ring-1 ring-white/50"
+          : "text-zinc-500 hover:bg-white/40 hover:text-zinc-900"
         }`
       }>
       <Icon size={20} strokeWidth={1.5} />
@@ -72,15 +72,15 @@ export default function PortalLayout() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50 text-gray-800 font-sans">
+    <div className="min-h-screen flex bg-zinc-50 text-zinc-800 font-sans">
       {/* ── Sidebar ── */}
-      <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-300 z-40 border-r border-white/30 bg-white/35 backdrop-blur-2xl shadow-xl shadow-slate-900/5 ring-1 ring-white/20">
+      <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-300 z-40 border-r border-white/30 bg-white/35 backdrop-blur-2xl shadow-xl shadow-zinc-900/5 ring-1 ring-white/20">
         {/* Nombre del contacto */}
         <div className="mb-6 mx-2 px-4 py-3 rounded-xl bg-white/40 border border-white/30 backdrop-blur-xl">
-          <div className="text-xs text-gray-500 uppercase tracking-widest mb-0.5">
+          <div className="text-xs text-zinc-500 uppercase tracking-widest mb-0.5">
             Cliente
           </div>
-          <div className="text-sm font-bold text-gray-800 truncate">
+          <div className="text-sm font-bold text-zinc-800 truncate">
             {contact.full_name}
           </div>
         </div>
@@ -125,19 +125,19 @@ export default function PortalLayout() {
         <header className="bg-[#1B4733] text-white shadow-md">
           <div className="px-6 py-4 flex justify-between items-center">
             <div>
-              <h1 className="text-xl font-bold">Portal del Cliente</h1>
+              <h1 className="text-xl font-semibold">Portal del Cliente</h1>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm font-semibold text-gray-900 rounded-xl bg-white border border-[#CBD5E1] hover:bg-[#F8FAFC] hover:border-[#B8C6D8] shadow-sm transition-colors duration-150">
+                className="px-4 py-2 text-sm font-semibold text-zinc-900 rounded-xl bg-white border border-[#CBD5E1] hover:bg-[#F8FAFC] hover:border-[#B8C6D8] shadow-sm transition-colors duration-150">
                 Cerrar Sesión
               </button>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-gradient-to-br from-slate-50 via-slate-200 to-slate-400">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-gradient-to-br from-zinc-50 via-zinc-200 to-zinc-400">
           <Outlet context={{ contact }} />
         </main>
       </div>

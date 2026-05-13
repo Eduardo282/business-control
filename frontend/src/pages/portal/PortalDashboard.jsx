@@ -90,7 +90,7 @@ export default function PortalDashboard() {
         <div className="flex flex-col gap-3 mb-6">
           {/* Fila superior: título */}
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <h2 className="text-2xl font-semibold text-zinc-800 flex items-center gap-2">
               <Package className="text-black" size={24} /> Mis Servicios y
               Polizas
             </h2>
@@ -100,27 +100,27 @@ export default function PortalDashboard() {
               {/* Búsqueda de texto */}
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search size={16} className="text-gray-400" />
+                  <Search size={16} className="text-zinc-400" />
                 </div>
                 <input
                   type="text"
-                  placeholder="Nombre, licencia, fecha..."
+                  placeholder="Nombre, licencia, fecha…"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors bg-white w-56"
+                  className="pl-9 pr-8 py-2 border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors bg-white w-56"
                 />
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm("")}
-                    className="absolute inset-y-0 right-2 flex items-center text-gray-400 hover:text-gray-600">
+                    className="absolute inset-y-0 right-2 flex items-center text-zinc-400 hover:text-zinc-600">
                     <X size={14} />
                   </button>
                 )}
               </div>
 
               {/* Filtro por estado */}
-              <div className="flex items-center gap-1 border border-gray-200 rounded-xl bg-white px-1 py-1">
-                <Filter size={14} className="text-gray-400 ml-1" />
+              <div className="flex items-center gap-1 border border-zinc-200 rounded-xl bg-white px-1 py-1">
+                <Filter size={14} className="text-zinc-400 ml-1" />
                 {[
                   { value: "ALL", label: "Todos" },
                   { value: "ACTIVE", label: "Activo" },
@@ -134,9 +134,9 @@ export default function PortalDashboard() {
                       statusFilter === value ?
                         value === "ACTIVE" ? "bg-emerald-500 text-white"
                         : value === "EXPIRING_SOON" ? "bg-orange-400 text-white"
-                        : value === "EXPIRED" ? "bg-gray-400 text-white"
+                        : value === "EXPIRED" ? "bg-zinc-400 text-white"
                         : "bg-blue-900 text-white"
-                      : "text-gray-500 hover:bg-gray-100"
+                      : "text-zinc-500 hover:bg-zinc-100"
                     }`}>
                     {label}
                   </button>
@@ -145,7 +145,7 @@ export default function PortalDashboard() {
 
               {/* Badge de resultados */}
               {(searchTerm || statusFilter !== "ALL") && (
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-zinc-400">
                   {filteredServices.length} resultado
                   {filteredServices.length !== 1 ? "s" : ""}
                 </span>
@@ -155,11 +155,11 @@ export default function PortalDashboard() {
         </div>
 
         {filteredServices.length === 0 ?
-          <div className="bg-gray-50 p-12 text-center rounded-2xl border-2 border-dashed border-gray-200">
+          <div className="bg-zinc-50 p-12 text-center rounded-2xl border-2 border-dashed border-zinc-200">
             <div className="flex justify-center mb-4">
-              <Inbox size={48} className="text-gray-300" />
+              <Inbox size={48} className="text-zinc-300" />
             </div>
-            <p className="text-gray-500">
+            <p className="text-zinc-500">
               {searchTerm || statusFilter !== "ALL" ?
                 "No se encontraron servicios que coincidan con los filtros."
               : "No tienes servicios activos actualmente."}
@@ -233,7 +233,7 @@ export default function PortalDashboard() {
             {/* Controles de paginación */}
             {totalPages > 1 && (
               <div className="flex flex-col items-center mt-6 gap-3">
-                <p className="text-xs text-gray-400 font-medium tracking-wide">
+                <p className="text-xs text-zinc-400 font-medium tracking-wide">
                   Pág. {page + 1} / {totalPages} — Total{" "}
                   {filteredServices.length} servicios
                 </p>
@@ -253,7 +253,7 @@ export default function PortalDashboard() {
                       setTimeout(() => setPulling(false), 1000);
                     }}
                     title="Primera página"
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-black hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                    className="size-8 flex items-center justify-center rounded-lg text-black hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                     <ChevronsLeft size={16} />
                   </button>
 
@@ -270,7 +270,7 @@ export default function PortalDashboard() {
                       setTimeout(() => setPulling(false), 1000);
                     }}
                     title="Página anterior"
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-black hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                    className="size-8 flex items-center justify-center rounded-lg text-black hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                     <ChevronLeft size={16} />
                   </button>
 
@@ -303,7 +303,7 @@ export default function PortalDashboard() {
                         }
                       }}
                       placeholder={page + 1}
-                      className="w-14 text-center text-sm font-medium border border-gray-300 rounded-lg py-1 px-1 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white"
+                      className="w-14 text-center text-sm font-medium border border-zinc-300 rounded-lg py-1 px-1 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white"
                     />
                     <span className="text-xs text-black">/ {totalPages}</span>
                   </div>
@@ -321,7 +321,7 @@ export default function PortalDashboard() {
                       setTimeout(() => setPulling(false), 1000);
                     }}
                     title="Página siguiente"
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-black hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                    className="size-8 flex items-center justify-center rounded-lg text-black hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                     <ChevronRight size={16} />
                   </button>
 
@@ -338,14 +338,14 @@ export default function PortalDashboard() {
                       setTimeout(() => setPulling(false), 1000);
                     }}
                     title="Última página"
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-black hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                    className="size-8 flex items-center justify-center rounded-lg text-black hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                     <ChevronsRight size={16} />
                   </button>
                 </div>
 
                 {pulling && (
-                  <p className="text-xs text-gray-400 animate-pulse">
-                    Cargando...
+                  <p className="text-xs text-zinc-400 animate-pulse">
+                    Cargando…
                   </p>
                 )}
               </div>
@@ -372,7 +372,7 @@ function QuoteStatusBadge({ status }) {
   };
   return (
     <span
-      className={`px-2 py-1 rounded-md text-xs font-bold border ${styles[status] || "bg-gray-100 text-gray-500"}`}>
+      className={`px-2 py-1 rounded-md text-xs font-bold border ${styles[status] || "bg-zinc-100 text-zinc-500"}`}>
       {labels[status] || status}
     </span>
   );
@@ -410,23 +410,23 @@ function ValidityGraph({ startDate, expirationDate }) {
 
   let colorClass = "bg-emerald-500";
   if (isExpiringSoon && !isExpired) colorClass = "bg-red-500";
-  if (isExpired) colorClass = "bg-gray-300";
+  if (isExpired) colorClass = "bg-zinc-300";
 
   let textColor = "text-emerald-600";
   if (isExpiringSoon && !isExpired) textColor = "text-red-600";
-  if (isExpired) textColor = "text-gray-500";
+  if (isExpired) textColor = "text-zinc-500";
 
   return (
-    <div className="mt-4 mb-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+    <div className="mt-4 mb-2 bg-zinc-50 p-3 rounded-xl border border-zinc-100">
       <div className="flex justify-between items-end mb-2">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
+        <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide flex items-center gap-1">
           <Clock size={12} /> Vigencia
         </span>
         <span className={`text-xs font-bold ${textColor}`}>
           {isExpired ? "Vencido" : `${daysRemaining} días restantes`}
         </span>
       </div>
-      <div className="h-2.5 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
+      <div className="h-2.5 w-full bg-zinc-200 rounded-full overflow-hidden shadow-inner">
         <div
           className={`h-full ${colorClass} transition-all duration-1000 ease-out`}
           style={{ width: `${remainingPercentage}%` }}
@@ -440,7 +440,7 @@ function StatusBadge({ status }) {
   const styles = {
     ACTIVE: "bg-emerald-50 text-emerald-600 border-emerald-200",
     EXPIRING_SOON: "bg-red-50 text-red-600 border-red-200", // Changed to red per instructions "red if expiring"
-    EXPIRED: "bg-gray-100 text-gray-500 border-gray-200",
+    EXPIRED: "bg-zinc-100 text-zinc-500 border-zinc-200",
   };
 
   const labels = {
@@ -452,7 +452,7 @@ function StatusBadge({ status }) {
   return (
     <span
       className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide border ${
-        styles[status] || "bg-gray-50 text-gray-500 border-gray-200"
+        styles[status] || "bg-zinc-50 text-zinc-500 border-zinc-200"
       }`}>
       {labels[status] || status}
     </span>
@@ -460,7 +460,7 @@ function StatusBadge({ status }) {
 }
 
 function getTimeColor(status) {
-  if (status === "EXPIRED") return "text-gray-400 line-through";
+  if (status === "EXPIRED") return "text-zinc-400 line-through";
   if (status === "EXPIRING_SOON") return "text-red-600";
   return "text-emerald-600";
 }
@@ -506,7 +506,7 @@ function ServiceReel({ service, spinCount, index }) {
               <div className="p-5 flex flex-col h-[280px] bg-white border-l-4 border-[#1a2b4c] overflow-hidden shadow-sm mx-2 my-2.5 rounded-xl">
                 <div className="flex justify-between items-start mb-1 gap-2">
                   <h3
-                    className="font-bold text-gray-800 line-clamp-2 md:text-sm lg:text-base leading-tight"
+                    className="font-semibold text-zinc-800 line-clamp-2 md:text-sm lg:text-base leading-tight"
                     title={item.product?.name}>
                     {item.product?.name || "Servicio"}
                   </h3>
@@ -518,31 +518,31 @@ function ServiceReel({ service, spinCount, index }) {
                   expirationDate={item.expiration_date}
                 />
 
-                <p className="text-xs text-gray-500 my-2 leading-relaxed line-clamp-2 flex-1">
+                <p className="text-xs text-zinc-500 my-2 leading-relaxed line-clamp-2 flex-1">
                   {item.product?.description}
                 </p>
 
                 <div className="space-y-2 mt-auto">
                   {item.license_key && (
-                    <div className="bg-gray-50 p-2 rounded border border-gray-200">
+                    <div className="bg-zinc-50 p-2 rounded border border-zinc-200">
                       <span className="block text-[8px] text-emerald-600 font-bold uppercase tracking-wider mb-0.5">
                         Licencia
                       </span>
-                      <code className="text-gray-800 font-mono select-all text-[10px] break-all block">
+                      <code className="text-zinc-800 font-mono select-all text-[10px] break-all block">
                         {item.license_key}
                       </code>
                     </div>
                   )}
 
-                  <div className="border-t border-gray-100 pt-2 space-y-0.5">
+                  <div className="border-t border-zinc-100 pt-2 space-y-0.5">
                     <div className="flex justify-between text-[11px]">
-                      <span className="text-gray-400">Inicio:</span>
-                      <span className="text-gray-600">
+                      <span className="text-zinc-400">Inicio:</span>
+                      <span className="text-zinc-600">
                         {new Date(item.start_date).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex justify-between text-[11px] items-center">
-                      <span className="text-gray-400">Vence:</span>
+                      <span className="text-zinc-400">Vence:</span>
                       <span
                         className={`font-mono font-semibold z-10 ${getTimeColor(
                           item.status,
@@ -553,7 +553,7 @@ function ServiceReel({ service, spinCount, index }) {
                   </div>
                 </div>
               </div>
-            : <div className="flex flex-col items-center justify-center bg-white border-2 border-dashed border-gray-200 h-[280px] mx-2 my-2.5 rounded-xl">
+            : <div className="flex flex-col items-center justify-center bg-white border-2 border-dashed border-zinc-200 h-[280px] mx-2 my-2.5 rounded-xl">
               </div>
             }
           </div>

@@ -41,7 +41,7 @@ function getPolicyStatusClass(status) {
     return "text-amber-600";
   }
   if (normalized === "CANCELLED") {
-    return "text-slate-600";
+    return "text-zinc-600";
   }
   return "text-red-600";
 }
@@ -57,20 +57,20 @@ function LicenseTable({ licenseKeys = [] }) {
   return (
     <div className="mt-2">
       {/* Mini tabla */}
-      <table className="w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
+      <table className="w-full text-xs border border-zinc-200 rounded-lg overflow-hidden">
         <thead>
-          <tr className="bg-gray-100 text-gray-500 uppercase tracking-wider">
+          <tr className="bg-zinc-100 text-zinc-500 uppercase tracking-wider">
             <th className="px-3 py-2 text-left w-12">#</th>
             <th className="px-3 py-2 text-left">Folio</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
+        <tbody className="divide-y divide-zinc-100 bg-white">
           {slice.map((lk, i) => (
-            <tr key={i} className="hover:bg-gray-50">
-              <td className="px-3 py-1.5 text-gray-400 font-mono">
+            <tr key={i} className="hover:bg-zinc-50">
+              <td className="px-3 py-1.5 text-zinc-400 font-mono">
                 {page * PAGE_SIZE + i + 1}
               </td>
-              <td className="px-3 py-1.5 font-mono text-gray-700">{lk}</td>
+              <td className="px-3 py-1.5 font-mono text-zinc-700">{lk}</td>
             </tr>
           ))}
         </tbody>
@@ -79,7 +79,7 @@ function LicenseTable({ licenseKeys = [] }) {
       {/* Paginación */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-2">
-          <span className="text-[11px] text-gray-400">
+          <span className="text-[11px] text-zinc-400">
             Página {page + 1} de {totalPages} &middot; {licenseKeys.length}{" "}
             folios
           </span>
@@ -87,25 +87,25 @@ function LicenseTable({ licenseKeys = [] }) {
             <button
               onClick={() => setPage(0)}
               disabled={page === 0}
-              className="px-2 py-1 text-[11px] rounded border text-black border-gray-200 disabled:opacity-40 hover:bg-gray-100">
+              className="px-2 py-1 text-[11px] rounded border text-black border-zinc-200 disabled:opacity-40 hover:bg-zinc-100">
               &laquo;
             </button>
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="px-2 py-1 text-[11px] rounded border text-black border-gray-200 disabled:opacity-40 hover:bg-gray-100">
+              className="px-2 py-1 text-[11px] rounded border text-black border-zinc-200 disabled:opacity-40 hover:bg-zinc-100">
               Anterior
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page === totalPages - 1}
-              className="px-2 py-1 text-[11px] rounded border text-black border-gray-200 disabled:opacity-40 hover:bg-gray-100">
+              className="px-2 py-1 text-[11px] rounded border text-black border-zinc-200 disabled:opacity-40 hover:bg-zinc-100">
               Siguiente
             </button>
             <button
               onClick={() => setPage(totalPages - 1)}
               disabled={page === totalPages - 1}
-              className="px-2 py-1 text-[11px] rounded border text-black border-gray-200 disabled:opacity-40 hover:bg-gray-100">
+              className="px-2 py-1 text-[11px] rounded border text-black border-zinc-200 disabled:opacity-40 hover:bg-zinc-100">
               &raquo;
             </button>
           </div>
@@ -671,7 +671,7 @@ export default function Policies() {
                 e.stopPropagation();
                 setExpanded((prev) => ({ ...prev, [g.id]: !prev[g.id] }));
               }}
-              className="w-7 h-7 inline-flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+              className="size-7 inline-flex items-center justify-center rounded-lg hover:bg-zinc-100 transition-colors text-zinc-500"
               title={isOpen ? "Ocultar detalles" : "Ver detalles"}>
               {isOpen ?
                 <ChevronDown size={16} />
@@ -693,7 +693,7 @@ export default function Policies() {
           return (
             <div>
               <div className="flex items-center gap-2">
-                <div className="font-bold text-gray-800 hover:text-[#2277B4]">
+                <div className="font-bold text-zinc-800 hover:text-[#2277B4]">
                   {g.product?.name || "—"}
                 </div>
                 <span
@@ -701,11 +701,11 @@ export default function Policies() {
                   {typeLabel}
                 </span>
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-zinc-500">
                 {g.product?.category || ""}
               </div>
               {g.count > 1 && (
-                <div className="text-[10px] text-gray-400 mt-1">
+                <div className="text-[10px] text-zinc-400 mt-1">
                   {g.count} pólizas
                 </div>
               )}
@@ -718,7 +718,7 @@ export default function Policies() {
         header: "Cliente",
         accessorFn: (row) => row.client?.business_name,
         cell: ({ row }) => (
-          <div className="font-medium text-gray-500">
+          <div className="font-medium text-zinc-500">
             {row.original.client?.business_name || "Sin Cliente"}
           </div>
         ),
@@ -733,30 +733,30 @@ export default function Policies() {
           if (isEditing) {
             return (
               <div className="flex flex-col gap-1" onClick={e => e.stopPropagation()}>
-                <label className="text-[10px] text-gray-400 uppercase">Inicio</label>
+                <label className="text-[10px] text-zinc-400 uppercase">Inicio</label>
                 <input
                   type="date"
                   value={editingRow.start_date}
                   onChange={(e) => setEditingRow(prev => ({ ...prev, start_date: e.target.value }))}
-                  className="px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-36"
+                  className="px-2 py-1 text-xs border border-zinc-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-36"
                 />
-                <label className="text-[10px] text-gray-400 uppercase">Vence</label>
+                <label className="text-[10px] text-zinc-400 uppercase">Vence</label>
                 <input
                   type="date"
                   value={editingRow.expiration_date}
                   onChange={(e) => setEditingRow(prev => ({ ...prev, expiration_date: e.target.value }))}
-                  className="px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-36"
+                  className="px-2 py-1 text-xs border border-zinc-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-36"
                 />
               </div>
             );
           }
           return (
-            <div className="text-gray-700">
+            <div className="text-zinc-700">
               <div>
                 Inicia:{" "}
                 {g.start_date ? new Date(g.start_date).toLocaleDateString() : "—"}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-zinc-500">
                 Vence:{" "}
                 {g.expiration_date ? new Date(g.expiration_date).toLocaleDateString() : "—"}
               </div>
@@ -777,7 +777,7 @@ export default function Policies() {
                 <select
                   value={editingRow.status}
                   onChange={(e) => setEditingRow(prev => ({ ...prev, status: e.target.value }))}
-                  className="px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
+                  className="px-2 py-1 text-xs border border-zinc-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
                 >
                   <option value="ACTIVE">Activo</option>
                   <option value="CANCELLED">Inactivo</option>
@@ -818,7 +818,7 @@ export default function Policies() {
                   </button>
                   <button
                     onClick={cancelEditRow}
-                    className="px-2 py-1 text-[11px] font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="px-2 py-1 text-[11px] font-semibold text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
                   >
                     Cancelar
                   </button>
@@ -828,7 +828,7 @@ export default function Policies() {
                   {!isStandalone && (
                     <button
                       onClick={() => startEditRow(g)}
-                      className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-[#2277B4] hover:bg-blue-50 transition-colors"
+                      className="size-8 inline-flex items-center justify-center rounded-lg text-[#2277B4] hover:bg-blue-50 transition-colors"
                       title="Editar vigencia/estado"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
@@ -840,7 +840,7 @@ export default function Policies() {
                         handleDelete(g.policyIds?.[0])
                       : handleDeleteGroup(g);
                     }}
-                    className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-red-800 hover:bg-red-50 transition-colors"
+                    className="size-8 inline-flex items-center justify-center rounded-lg text-red-800 hover:bg-red-50 transition-colors"
                     title={
                       g.count === 1 ?
                         "Eliminar Póliza"
@@ -872,25 +872,25 @@ export default function Policies() {
   return (
     <div className="space-y-8 pb-20">
       {/* Header */}
-      <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+      <div className="bg-white p-6 rounded-md border border-zinc-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
+          <h1 className="text-3xl font-semibold text-zinc-800 tracking-tight">
             Historial de servicios y pólizas
           </h1>
-          <p className="text-sm text-gray-500 mt-1 max-w-lg">
+          <p className="text-sm text-zinc-500 mt-1 max-w-lg">
             Historial de servicios y pólizas.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Búsqueda global */}
-          <div className="flex gap-1 bg-white p-1 rounded-lg border border-gray-200">
+          <div className="flex gap-1 bg-white p-1 rounded-lg border border-zinc-200">
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar póliza..."
-              className="bg-transparent border-none text-sm text-gray-800 placeholder:text-gray-400 px-3 w-40 md:w-52 focus:outline-none"
+              placeholder="Buscar póliza…"
+              className="bg-transparent border-none text-sm text-zinc-800 placeholder:text-zinc-400 px-3 w-40 md:w-52 focus:outline-none"
             />
-            <div className="px-3 py-1.5 text-gray-400">
+            <div className="px-3 py-1.5 text-zinc-400">
               <Search size={16} />
             </div>
           </div>
@@ -915,12 +915,12 @@ export default function Policies() {
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
               showFilters || activeFilterCount > 0 ?
                 "bg-[#2277B4] text-white border-[#2277B4]"
-              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50"
             }`}>
             <SlidersHorizontal size={15} />
             Filtros
             {activeFilterCount > 0 && (
-              <span className="ml-1 bg-white text-[#2277B4] rounded-full text-xs font-bold w-5 h-5 flex items-center justify-center">
+              <span className="ml-1 bg-white text-[#2277B4] rounded-full text-xs font-bold size-5 flex items-center justify-center">
                 {activeFilterCount}
               </span>
             )}
@@ -953,34 +953,34 @@ export default function Policies() {
               <div
                 className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
                 onClick={(e) => e.stopPropagation()}>
-                <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
+                <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
                   <div>
-                    <h3 className="text-white font-bold text-base uppercase">
+                    <h3 className="text-white font-semibold text-base uppercase">
                       FILTRAR POR{activeFilterPickerField}
                     </h3>
-                    <p className="text-[11px] text-gray-300 mt-1">
+                    <p className="text-[11px] text-zinc-300 mt-1">
                       Selecciona o busca un valor
                     </p>
                   </div>
                   <button
                     onClick={closeFilterPicker}
-                    className="w-8 h-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
+                    className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
                     <X size={16} />
                   </button>
                 </div>
 
                 <div className="p-4 space-y-3">
-                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                    <Search size={15} className="text-gray-500" />
+                  <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+                    <Search size={15} className="text-zinc-500" />
                     <input
                       value={filterPickerSearch}
                       onChange={(e) => setFilterPickerSearch(e.target.value)}
-                      placeholder="Buscar valor..."
-                      className="w-full bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                      placeholder="Buscar valor…"
+                      className="w-full bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
                     />
                   </div>
 
-                  <div className="h-72 overflow-y-auto rounded-lg border border-gray-100 divide-y divide-gray-100">
+                  <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 divide-y divide-zinc-100">
                     {visibleFilterPickerOptions.length > 0 ?
                       visibleFilterPickerOptions.map((value) => {
                         const isSelected =
@@ -995,13 +995,13 @@ export default function Policies() {
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                               isSelected ?
                                 "bg-[#2277B4]/10 text-[#125280] font-semibold"
-                              : "text-gray-700 hover:bg-gray-50"
+                              : "text-zinc-700 hover:bg-zinc-50"
                             }`}>
                             {value}
                           </button>
                         );
                       })
-                    : <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                    : <div className="px-3 py-4 text-sm text-zinc-500 text-center">
                         No hay valores para mostrar.
                       </div>
                     }
@@ -1021,7 +1021,7 @@ export default function Policies() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold text-gray-400 whitespace-nowrap">
+            <span className="text-[11px] font-semibold text-zinc-400 whitespace-nowrap">
               Pág. {table.getState().pagination.pageIndex + 1} de{" "}
               {Math.max(1, table.getPageCount())}
             </span>
@@ -1037,7 +1037,7 @@ export default function Policies() {
                     className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] border transition-colors whitespace-nowrap ${
                       selectedValue ?
                         "bg-[#2277B4] text-white border-[#2277B4]"
-                      : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                      : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
                     }`}>
                     <span className="uppercase font-bold tracking-wide">
                       {button.label}
@@ -1050,7 +1050,7 @@ export default function Policies() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50 text-xs uppercase text-[#2277B4]">
+            <thead className="bg-zinc-50 text-xs uppercase text-[#2277B4]">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header, idx) => (
@@ -1083,12 +1083,12 @@ export default function Policies() {
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
+            <tbody className="divide-y divide-zinc-100 text-sm">
               {loading ?
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="p-8 text-center text-gray-500">
+                    className="p-8 text-center text-zinc-500">
                     Cargando pólizas...
                   </td>
                 </tr>
@@ -1096,7 +1096,7 @@ export default function Policies() {
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="p-8 text-center text-gray-500">
+                    className="p-8 text-center text-zinc-500">
                     No se encontraron pólizas.
                   </td>
                 </tr>
@@ -1104,7 +1104,7 @@ export default function Policies() {
                   <Fragment key={row.id}>
                     <tr
                       key={row.id}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="hover:bg-zinc-50 transition-colors cursor-pointer"
                       onClick={() =>
                         setExpanded((prev) => ({
                           ...prev,
@@ -1122,10 +1122,10 @@ export default function Policies() {
                     </tr>
 
                     {!!expanded[row.original.id] && (
-                      <tr key={`${row.id}__expanded`} className="bg-gray-50/40">
+                      <tr key={`${row.id}__expanded`} className="bg-zinc-50/40">
                         <td colSpan={columns.length} className="px-6 py-4">
                           <div className="ml-8">
-                            <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mb-2">
+                            <div className="text-[11px] text-zinc-500 font-semibold uppercase tracking-wider mb-2">
                               Folios ({row.original.count})
                             </div>
                             <LicenseTable
@@ -1143,8 +1143,8 @@ export default function Policies() {
         </div>
 
         {!loading && filteredGroups.length > 0 && (
-          <div className="px-4 py-3 border-t border-gray-100 bg-white flex items-center justify-between gap-3">
-            <label className="text-sm text-gray-500 flex items-center gap-2">
+          <div className="px-4 py-3 border-t border-zinc-100 bg-white flex items-center justify-between gap-3">
+            <label className="text-sm text-zinc-500 flex items-center gap-2">
               Mostrar
               <select
                 value={table.getState().pagination.pageSize}
@@ -1155,7 +1155,7 @@ export default function Policies() {
                     pageSize: Number(e.target.value),
                   }))
                 }
-                className="px-2 py-1 rounded-md border border-gray-200 text-sm text-gray-700 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                className="px-2 py-1 rounded-md border border-zinc-200 text-sm text-zinc-700 bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
                 {[10, 25, 50, 100].map((size) => (
                   <option key={size} value={size}>
                     {size}
@@ -1169,25 +1169,25 @@ export default function Policies() {
               <button
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
-                className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 ««
               </button>
               <button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Anterior
               </button>
               <button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Siguiente
               </button>
               <button
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
-                className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 »»
               </button>
             </div>

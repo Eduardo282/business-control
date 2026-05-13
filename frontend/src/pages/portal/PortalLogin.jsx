@@ -61,7 +61,7 @@ export default function PortalLogin() {
             alt="Business Control"
             className="w-80 mb-8 drop-shadow-[0_20px_25px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-500"
           />
-          <h2 className="text-white text-3xl font-bold text-center mb-4">
+          <h2 className="text-white text-3xl font-semibold text-center mb-4">
             Portal del cliente
           </h2>
           <p className="text-emerald-100 text-center text-lg max-w-md leading-relaxed">
@@ -113,10 +113,10 @@ export default function PortalLogin() {
 
           {/* Encabezado */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#235b42] mb-4 shadow-lg shadow-[#235b42]/25">
+            <div className="inline-flex items-center justify-center size-16 rounded-2xl bg-[#235b42] mb-4 shadow-lg shadow-[#235b42]/25">
               <Lock size={32} className="text-white" />
             </div>
-            <h1 className="text-3xl font-extrabold text-[#1a2b4c] mb-2 tracking-tight">
+            <h1 className="text-3xl font-semibold text-[#1a2b4c] mb-2 tracking-tight">
               Portal del cliente
             </h1>
             <p className="text-[#3b4b6b]/70">
@@ -132,14 +132,14 @@ export default function PortalLogin() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-zinc-400" />
                 </div>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="usuario@empresa.com"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#235b42] focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#235b42] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -151,14 +151,14 @@ export default function PortalLogin() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-zinc-400" />
                 </div>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#235b42] focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#235b42] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -175,7 +175,7 @@ export default function PortalLogin() {
               disabled={loading}
               className="w-full py-3.5 mt-2 bg-[#235b42] text-white font-semibold rounded-xl hover:bg-[#1b4733] focus:outline-none focus:ring-2 focus:ring-[#235b42] focus:ring-offset-2 transition-all shadow-lg shadow-[#235b42]/30 disabled:opacity-50 disabled:cursor-not-allowed border border-[#1b4733]">
               {loading ?
-                "Verificando..."
+                "Verificando…"
               : <span className="flex items-center justify-center gap-2">
                   Acceder al Portal <ArrowRight size={18} />
                 </span>

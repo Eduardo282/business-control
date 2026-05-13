@@ -122,7 +122,7 @@ export default function Register() {
             alt="Business Control"
             className="w-80 mb-8 drop-shadow-[0_20px_25px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-500"
           />
-          <h2 className="text-white text-3xl font-bold text-center mb-4">
+          <h2 className="text-white text-3xl font-semibold text-center mb-4">
             Configuración de Usuarios
           </h2>
           <p className="text-blue-100 text-center text-lg max-w-md leading-relaxed">
@@ -175,7 +175,7 @@ export default function Register() {
 
           {/* Encabezado */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-extrabold text-[#1a2b4c] mb-2 tracking-tight">
+            <h1 className="text-3xl font-semibold text-[#1a2b4c] mb-2 tracking-tight">
               Configurar Usuario
             </h1>
             <p className="text-[#3b4b6b]/70">
@@ -191,14 +191,14 @@ export default function Register() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
+                  <User className="h-5 w-5 text-zinc-400" />
                 </div>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Ej. Juan Pérez"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -210,14 +210,14 @@ export default function Register() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-zinc-400" />
                 </div>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="correo@empresa.com"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -229,14 +229,14 @@ export default function Register() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-gray-400" />
+                  <Phone className="h-5 w-5 text-zinc-400" />
                 </div>
                 <input
                   type="tel"
                   value={telefono}
                   onChange={(e) => setTelefono(e.target.value)}
                   placeholder="Ej. 55 1234 5678"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -248,14 +248,14 @@ export default function Register() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-zinc-400" />
                 </div>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="EJ: &q/N,sKz"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] bg-white shadow-sm text-[#1a2b4c] placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -268,11 +268,11 @@ export default function Register() {
               <div className="flex items-center gap-3">
                 <div className="relative flex-1">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Shield className="h-5 w-5 text-gray-400" />
+                    <Shield className="h-5 w-5 text-zinc-400" />
                   </div>
                   <div
                     className={`w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] shadow-sm text-[#1a2b4c] focus:outline-none transition-all min-h-[52px] flex items-center ${
-                      roleName ? "bg-white" : "bg-gray-100 text-gray-400"
+                      roleName ? "bg-white" : "bg-zinc-100 text-zinc-400"
                     }`}
                     aria-live="polite">
                     {roleName || "Sin rol seleccionado"}
@@ -283,7 +283,7 @@ export default function Register() {
                   <button
                     type="button"
                     onClick={goToRolesRegister}
-                    className="group relative h-[52px] w-[52px] rounded-xl border border-[#d6d4c9] bg-white text-[#1a2b4c] hover:bg-gray-50 transition-colors flex items-center justify-center"
+                    className="group relative h-[52px] w-[52px] rounded-xl border border-[#d6d4c9] bg-white text-[#1a2b4c] hover:bg-zinc-50 transition-colors flex items-center justify-center"
                     title="Click para registrar un nuevo rol"
                     aria-label="Registrar nuevo rol">
                     <CircleHelp size={20} />
@@ -315,7 +315,7 @@ export default function Register() {
               {loading ?
                 <span className="flex items-center justify-center gap-2">
                   <span className="animate-spin h-5 w-5 border-2 border-white/50 border-t-white rounded-full"></span>
-                  Actualizando...
+                  Actualizando…
                 </span>
               : "Registrar Usuario"}
             </button>

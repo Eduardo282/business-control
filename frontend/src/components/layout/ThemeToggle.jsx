@@ -9,7 +9,7 @@ export default function ThemeToggle() {
     <button
       id="theme-toggle-btn"
       onClick={toggleTheme}
-      className="relative flex items-center justify-center w-10 h-10 rounded-xl border transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400"
+      className="relative flex items-center justify-center size-10 rounded-xl border transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400"
       style={{
         background: isDark
           ? "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03))"

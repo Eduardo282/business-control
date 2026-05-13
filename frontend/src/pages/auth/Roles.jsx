@@ -133,7 +133,7 @@ export default function Roles() {
             alt="Business Control"
             className="w-80 mb-8 drop-shadow-[0_20px_25px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-500"
           />
-          <h2 className="text-white text-3xl font-bold text-center mb-4">
+          <h2 className="text-white text-3xl font-semibold text-center mb-4">
             Gestion de Roles
           </h2>
           <p className="text-blue-100 text-center text-lg max-w-md leading-relaxed">
@@ -164,7 +164,7 @@ export default function Roles() {
 
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#F1F4F8] relative">
         <div className="w-full max-w-md rounded-3xl border border-white/40 bg-white/90 backdrop-blur-sm p-8 shadow-[0_30px_60px_-35px_rgba(22,42,66,0.55)]">
-          <h1 className="text-3xl font-extrabold text-[#153465] text-center mb-3">
+          <h1 className="text-3xl font-semibold text-[#153465] text-center mb-3">
             Registrar Rol
           </h1>
           <p className="text-[#6f7f9a] text-center text-lg mb-8">
@@ -180,7 +180,7 @@ export default function Roles() {
                 <span className="text-[#7987a0] text-sm">Solo MAYUSCULAS</span>
               </div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-400">
                   <Shield size={20} />
                 </div>
                 <input
@@ -190,7 +190,7 @@ export default function Roles() {
                   placeholder="EJ: SUPERVISOR"
                   pattern="[A-ZÁÉÍÓÚÜÑ ]+"
                   title="Solo letras MAYUSCULAS y espacios"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-[#494949] bg-white text-black placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2277B4] focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-[#494949] bg-white text-black placeholder-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#2277B4] focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -215,23 +215,23 @@ export default function Roles() {
               type="submit"
               disabled={savingRole}
               className="w-full py-3.5 bg-[#8AB6D6] text-white text-xl font-semibold rounded-2xl hover:bg-[#2277B4] transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
-              {savingRole ? "Registrando..." : "Registrar Rol"}
+              {savingRole ? "Registrando…" : "Registrar Rol"}
             </button>
           </form>
 
-          <div className="my-8 border-t border-gray-200" />
+          <div className="my-8 border-t border-zinc-200" />
 
-          <h2 className="text-[#1a2b4c] font-bold text-xl mb-3">
+          <h2 className="text-[#1a2b4c] font-semibold text-xl mb-3">
             Seleccionar un rol:
           </h2>
 
-          <div className="rounded-2xl border border-gray-200 bg-[#f7f8fb] p-3 min-h-[80px] max-h-[170px] overflow-y-auto flex flex-wrap gap-2 content-start pr-2">
+          <div className="rounded-2xl border border-zinc-200 bg-[#f7f8fb] p-3 min-h-[80px] max-h-[170px] overflow-y-auto flex flex-wrap gap-2 content-start pr-2">
             {loadingRoles && (
-              <span className="text-sm text-gray-500">Cargando roles...</span>
+              <span className="text-sm text-zinc-500">Cargando roles...</span>
             )}
 
             {!loadingRoles && roles.length === 0 && (
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-zinc-500">
                 Aun no hay roles registrados.
               </span>
             )}

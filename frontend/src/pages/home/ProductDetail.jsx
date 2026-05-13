@@ -97,9 +97,9 @@ function ProductAvatar({ name = "", category = "", size = "md" }) {
   const [bg, fg] = getAvatarColors(category + name);
 
   const sizeClasses = {
-    sm: "w-9 h-9 text-[11px] rounded-lg",
-    md: "w-14 h-14 text-[20px] rounded-2xl",
-    lg: "w-20 h-20 text-[28px] rounded-3xl",
+    sm: "size-9 text-[11px] rounded-lg",
+    md: "size-14 text-[20px] rounded-2xl",
+    lg: "size-20 text-[28px] rounded-3xl",
   };
 
   if (!imgError && name) {
@@ -111,12 +111,12 @@ function ProductAvatar({ name = "", category = "", size = "md" }) {
     const imgUrl = `https://loremflickr.com/100/100/${keyword}?lock=${(h % 1000) + 1}`;
     
     return (
-      <div className={`flex-shrink-0 overflow-hidden bg-white border border-gray-100 shadow-sm ${sizeClasses[size] || sizeClasses.md}`}>
+      <div className={`flex-shrink-0 overflow-hidden bg-white border border-zinc-100 shadow-sm ${sizeClasses[size] || sizeClasses.md}`}>
         <img 
           src={imgUrl} 
           alt={name} 
           onError={() => setImgError(true)} 
-          className="w-full h-full object-cover"
+          className="size-full object-cover"
         />
       </div>
     );
@@ -204,7 +204,7 @@ export default function ProductDetail() {
                 minimumFractionDigits: 2,
               })}
             </div>
-            <div className="text-[10px] text-light-text-secondary dark:text-slate-500 mt-0.5 uppercase tracking-wider">
+            <div className="text-[10px] text-light-text-secondary dark:text-zinc-500 mt-0.5 uppercase tracking-wider">
               Precio Anterior
             </div>
           </div>
@@ -238,7 +238,7 @@ export default function ProductDetail() {
               <div className="text-xs text-black font-semibold">
                 {date.toLocaleDateString()}
               </div>
-              <div className="text-[10px] text-light-text-secondary/70 dark:text-slate-600 mt-0.5">
+              <div className="text-[10px] text-light-text-secondary/70 dark:text-zinc-600 mt-0.5">
                 {date.toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -341,7 +341,7 @@ export default function ProductDetail() {
 
   if (loading)
     return (
-      <div className="flex h-screen items-center justify-center text-light-text-secondary dark:text-slate-400">
+      <div className="flex h-screen items-center justify-center text-light-text-secondary dark:text-zinc-400">
         Cargando producto...
       </div>
     );
@@ -353,7 +353,7 @@ export default function ProductDetail() {
     );
   if (!product)
     return (
-      <div className="p-8 text-center text-light-text-secondary dark:text-slate-400">
+      <div className="p-8 text-center text-light-text-secondary dark:text-zinc-400">
         Producto no encontrado
       </div>
     );
@@ -361,12 +361,12 @@ export default function ProductDetail() {
   return (
     <div className="space-y-6 animate-fade-in pb-20 max-w-7xl mx-auto">
       {/* Fondo decorativo */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-600/10 blur-[100px] rounded-full -z-10" />
+      <div className="absolute top-0 right-0 size-96 bg-primary-600/10 blur-[100px] rounded-full -z-10" />
 
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
         {/* Info principal */}
         <div className="flex-1 glass-panel p-8 rounded-md relative overflow-hidden group dark:border-white/10">
-          <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-slate-200 to-slate-300" />
+          <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-zinc-200 to-zinc-300" />
 
           {!isEditing ?
             <div className="relative z-10">
@@ -378,10 +378,10 @@ export default function ProductDetail() {
                     size="md"
                   />
                   <div>
-                    <h2 className="text-3xl font-bold text-light-text-primary hover:text-[#2277B4]">
+                    <h2 className="text-3xl font-semibold text-light-text-primary hover:text-[#2277B4]">
                       {product.name}
                     </h2>
-                    <span className="inline-block mt-1 px-3 py-1 bg-[#F2F5F9] text-gray-500 rounded-full text-xs font-medium border border-gray-100">
+                    <span className="inline-block mt-1 px-3 py-1 bg-[#F2F5F9] text-zinc-500 rounded-full text-xs font-medium border border-zinc-100">
                       {product.category}
                     </span>
                   </div>
@@ -393,14 +393,14 @@ export default function ProductDetail() {
                 </Link>
               </div>
 
-              <p className="mt-6 text-light-text-secondary dark:text-slate-400 leading-relaxed max-w-2xl">
+              <p className="mt-6 text-light-text-secondary dark:text-zinc-400 leading-relaxed max-w-2xl">
                 {product.description ||
                   "Sin descripción disponible para este producto."}
               </p>
               <div className="mt-8 flex flex-wrap items-end gap-8 lg:gap-12">
                 <div className="flex items-end gap-4 p-4 rounded-xl w-fit">
                   <div>
-                    <div className="text-xs text-light-text-secondary dark:text-slate-500 mb-1">
+                    <div className="text-xs text-light-text-secondary dark:text-zinc-500 mb-1">
                       Precio Actual
                     </div>
                     <div className="text-4xl font-mono text-stone-600 font-bold tracking-tight">
@@ -428,7 +428,7 @@ export default function ProductDetail() {
                       <Users size={20} className="text-black" />
                     </div>
                     <div>
-                      <div className="text-xs text-light-text-secondary dark:text-slate-500">
+                      <div className="text-xs text-light-text-secondary dark:text-zinc-500">
                         Usuarios
                       </div>
                       <div className="text-lg font-bold text-light-text-primary">
@@ -504,16 +504,16 @@ export default function ProductDetail() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-light-text-secondary dark:text-slate-400 ml-1">
+                <label className="text-xs font-medium text-light-text-secondary dark:text-zinc-400 ml-1">
                   Descripción
                 </label>
                 <textarea
-                  className="w-full bg-white text-light-text-primary text-sm border border-gray-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#1a2b4c] resize-none h-32"
+                  className="w-full bg-white text-light-text-primary text-sm border border-zinc-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-[#1a2b4c] resize-none h-32"
                   value={editForm.description}
                   onChange={(e) =>
                     setEditForm({ ...editForm, description: e.target.value })
                   }
-                  placeholder="Descripción detallada..."
+                  placeholder="Descripción detallada…"
                 />
               </div>
               <div className="flex pt-2 text-lg font-bold text-white items-center gap-2">
@@ -521,7 +521,7 @@ export default function ProductDetail() {
                   variant="ghost"
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="flex-1 py-3 text-gray-600 font-semibold rounded-xl hover:bg-slate-100 transition-colors">
+                  className="flex-1 py-3 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors">
                   Cancelar
                 </button>
                 <button
@@ -537,8 +537,8 @@ export default function ProductDetail() {
         <div className="w-full md:w-96 space-y-6">
           {/* Tarjeta de actualizacion de precio */}
           {user?.role?.name !== "SOPORTE" && (
-            <div className="rounded-md p-6 bg-white border border-gray-200 shadow-md shadow-zinc-200">
-              <h3 className="font-bold text-light-text-primary mb-2 flex items-center gap-2">
+            <div className="rounded-md p-6 bg-white border border-zinc-200 shadow-md shadow-zinc-200">
+              <h3 className="font-semibold text-light-text-primary mb-2 flex items-center gap-2">
                 <span className="text-black">$</span> Actualizar Precio
               </h3>
               <div className="flex gap-2 items-end">
@@ -563,13 +563,13 @@ export default function ProductDetail() {
                       <button
                         type="button"
                         onClick={() => handlePriceStep(1)}
-                        className="w-4 h-4 leading-none text-[10px] font-bold text-[#2277B4] bg-[#e8f2ff] hover:bg-[#dcecff] transition-colors">
+                        className="size-4 leading-none text-[10px] font-bold text-[#2277B4] bg-[#e8f2ff] hover:bg-[#dcecff] transition-colors">
                         ▲
                       </button>
                       <button
                         type="button"
                         onClick={() => handlePriceStep(-1)}
-                        className="w-4 h-4 leading-none text-[10px] font-bold text-[#2277B4] bg-[#e8f2ff] hover:bg-[#dcecff] border-t border-[#b8cce6] transition-colors">
+                        className="size-4 leading-none text-[10px] font-bold text-[#2277B4] bg-[#e8f2ff] hover:bg-[#dcecff] border-t border-[#b8cce6] transition-colors">
                         ▼
                       </button>
                     </div>
@@ -586,10 +586,10 @@ export default function ProductDetail() {
           )}
 
           {/* Tarjeta de historial */}
-          <div className="rounded-md p-0 overflow-visible flex flex-col mt-4 bg-white border border-gray-200 shadow-sm">
+          <div className="rounded-md p-0 overflow-visible flex flex-col mt-4 bg-white border border-zinc-200 shadow-sm">
             <div className="p-4 bg-light-bg/50 dark:bg-white/5 flex flex-col gap-3 border-b border-light-border dark:border-white/10">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-light-text-primary text-sm flex items-center gap-2">
+                <h3 className="font-semibold text-light-text-primary text-sm flex items-center gap-2">
                   <History size={16} className="text-black" />
                   Precios
                 </h3>
@@ -602,18 +602,18 @@ export default function ProductDetail() {
               <div className="flex gap-2 relative">
                 <div className="relative flex-1">
                   <Search
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400"
                     size={14}
                   />
                   <input
                     type="text"
-                    placeholder="Buscar precio..."
+                    placeholder="Buscar precio…"
                     value={globalFilter ?? ""}
                     onChange={(e) => {
                       setSelectedHistoryDate(null);
                       setGlobalFilter(e.target.value);
                     }}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 bg-white text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
                   />
                   {globalFilter && (
                     <button
@@ -621,7 +621,7 @@ export default function ProductDetail() {
                         setSelectedHistoryDate(null);
                         setGlobalFilter("");
                       }}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
                       <X size={12} />
                     </button>
                   )}
@@ -659,19 +659,19 @@ export default function ProductDetail() {
                     showPopperArrow={false}
                     popperClassName="price-history-datepicker-popper"
                     calendarClassName="price-history-datepicker-calendar"
-                    className="w-full rounded-lg border border-gray-200 text-xs px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#2277B4] text-gray-700 bg-white"
+                    className="w-full rounded-lg border border-zinc-200 text-xs px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#2277B4] text-zinc-700 bg-white"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50/30">
+            <div className="p-4 bg-zinc-50/30">
               {table.getRowModel().rows.length > 0 ?
                 <div className="space-y-3">
                   {table.getRowModel().rows.map((row) => (
                     <div
                       key={row.id}
-                      className="flex justify-between items-center p-3 rounded-lg bg-white shadow-sm border border-gray-100/80 transition-colors">
+                      className="flex justify-between items-center p-3 rounded-lg bg-white shadow-sm border border-zinc-100/80 transition-colors">
                       {row.getVisibleCells().map((cell) => (
                         <div key={cell.id}>
                           {flexRender(
@@ -683,7 +683,7 @@ export default function ProductDetail() {
                     </div>
                   ))}
                 </div>
-              : <div className="text-center py-8 text-light-text-secondary dark:text-slate-500 text-sm">
+              : <div className="text-center py-8 text-light-text-secondary dark:text-zinc-500 text-sm">
                   {product.price_history?.length > 0 ?
                     "No hay resultados para la búsqueda."
                   : "No hay historial registrado."}
@@ -693,12 +693,12 @@ export default function ProductDetail() {
 
             {/* Paginación */}
             {product.price_history && product.price_history.length > 3 && (
-              <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+              <div className="px-4 py-3 border-t border-zinc-100 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
-                    className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-black">
+                    className="p-1 rounded hover:bg-zinc-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-black">
                     <ChevronLeft size={16} />
                   </button>
                   <span className="text-[11px] font-medium text-black min-w-max">
@@ -708,7 +708,7 @@ export default function ProductDetail() {
                   <button
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
-                    className="p-1 rounded hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-black">
+                    className="p-1 rounded hover:bg-zinc-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-black">
                     <ChevronRight size={16} />
                   </button>
                 </div>
@@ -717,7 +717,7 @@ export default function ProductDetail() {
                   onChange={(e) => {
                     table.setPageSize(Number(e.target.value));
                   }}
-                  className="text-[11px] bg-gray-50 border border-gray-200 rounded px-1.5 py-1 text-gray-600 outline-none">
+                  className="text-[11px] bg-zinc-50 border border-zinc-200 rounded px-1.5 py-1 text-zinc-600 outline-none">
                   {[3, 5, 10, 20].map((pageSize) => (
                     <option key={pageSize} value={pageSize}>
                       Mostrar {pageSize}

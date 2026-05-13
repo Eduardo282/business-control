@@ -33,8 +33,8 @@ function Item({
       className={({ isActive }) =>
         `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all relative ${
           isActive && !shouldDisableActive ?
-            "bg-white dark:bg-white/10 text-gray-900 dark:text-slate-100 shadow-[0_5px_5px_0px_#00000050] ring-1 ring-light-border/50 dark:ring-white/10"
-          : "text-gray-500 dark:text-slate-400 hover:bg-white/40 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-slate-100"
+            "bg-white dark:bg-white/10 text-zinc-900 dark:text-zinc-100 shadow-[0_5px_5px_0px_#00000050] ring-1 ring-light-border/50 dark:ring-white/10"
+          : "text-zinc-500 dark:text-zinc-400 hover:bg-white/40 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-zinc-100"
         }`
       }>
       <Icon size={20} strokeWidth={1.5} />
@@ -68,11 +68,11 @@ export default function Sidebar({ role }) {
   }, [role]);
 
   return (
-    <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-300 z-40 border-r border-white/30 dark:border-white/10 bg-white/35 dark:bg-dark-800/60 backdrop-blur-2xl shadow-xl shadow-slate-900/5 dark:shadow-black/30 ring-1 ring-white/20 dark:ring-white/5">
+    <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-300 z-40 border-r border-white/30 dark:border-white/10 bg-white/35 dark:bg-dark-800/60 backdrop-blur-2xl shadow-xl shadow-zinc-900/5 dark:shadow-black/30 ring-1 ring-white/20 dark:ring-white/5">
       {/* Rol actual */}
       <div className="mb-6 px-3 py-3 rounded-xl bg-white/40 dark:bg-white/5 border border-white/30 dark:border-white/10 backdrop-blur-xl">
         <div className="flex items-center justify-center gap-3">
-          <div className="text-sm font-bold text-gray-800 dark:text-slate-200 tracking-wide whitespace-nowrap leading-none">
+          <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200 tracking-wide whitespace-nowrap leading-none">
             {roleLabel}
           </div>
           <div className="flex h-11 w-[112px] items-center justify-center overflow-hidden leading-none text-center shrink-0">
@@ -122,7 +122,7 @@ export default function Sidebar({ role }) {
       </nav>
 
       <div className="pt-4 text-center">
-        <span className="text-xs font-bold text-[#1a2b4c] dark:text-slate-400 whitespace-nowrap">
+        <span className="text-xs font-bold text-[#1a2b4c] dark:text-zinc-400 whitespace-nowrap">
           Business Control 
         </span>
       </div>

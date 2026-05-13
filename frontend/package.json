@@ -1,35 +1,36 @@
 {
-    "name": "frontend",
-    "private": true,
-    "version": "1.0.0",
-    "type": "module",
-    "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "preview": "vite preview"
-    },
-    "dependencies": {
-        "@fontsource/inter": "^5.2.8",
-        "@tanstack/react-table": "^8.21.3",
-        "axios": "^1.16.0",
-        "date-fns": "^4.1.0",
-        "html2canvas": "^1.4.1",
-        "html2pdf.js": "^0.14.0",
-        "jspdf": "^4.2.1",
-        "jspdf-autotable": "^5.0.7",
-        "react": "18.3.1",
-        "react-datepicker": "^9.1.0",
-        "react-dom": "18.3.1",
-        "react-router-dom": "6.26.2",
-        "socket.io-client": "^4.8.3",
-        "sweetalert2": "^11.26.24",
-        "xlsx": "^0.18.5"
-    },
-    "devDependencies": {
-        "@vitejs/plugin-react": "4.3.1",
-        "autoprefixer": "10.4.20",
-        "postcss": "8.4.41",
-        "tailwindcss": "3.4.10",
-        "vite": "5.4.2"
-    }
+  "name": "frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/open-sans": "^5.2.7",
+    "@tanstack/react-table": "^8.21.3",
+    "axios": "^1.16.0",
+    "date-fns": "^4.1.0",
+    "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.14.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
+    "react": "18.3.1",
+    "react-datepicker": "^9.1.0",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.26.2",
+    "socket.io-client": "^4.8.3",
+    "sweetalert2": "^11.26.24",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.3.1",
+    "autoprefixer": "10.4.20",
+    "postcss": "8.4.41",
+    "tailwindcss": "3.4.10",
+    "vite": "5.4.2"
+  }
 }

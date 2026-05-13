@@ -142,7 +142,7 @@ export default function PortalCatalog() {
         accessorKey: "name",
         header: "Nombre",
         cell: ({ getValue }) => (
-          <span className="font-semibold text-gray-800">{getValue()}</span>
+          <span className="font-semibold text-zinc-800">{getValue()}</span>
         ),
       },
       {
@@ -150,7 +150,7 @@ export default function PortalCatalog() {
         header: "Descripción",
         enableSorting: false,
         cell: ({ getValue }) => (
-          <span className="text-sm text-gray-500 line-clamp-2">
+          <span className="text-sm text-zinc-500 line-clamp-2">
             {getValue()}
           </span>
         ),
@@ -168,18 +168,18 @@ export default function PortalCatalog() {
                 className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors border border-emerald-200 whitespace-nowrap">
                 <Plus size={14} /> Agregar
               </button>
-            : <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
+            : <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg p-0.5 shadow-sm">
                 <button
                   onClick={() => updateCart(id, -1)}
-                  className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-md transition-colors">
+                  className="size-7 flex items-center justify-center text-zinc-500 hover:bg-zinc-100 rounded-md transition-colors">
                   <Minus size={14} />
                 </button>
-                <span className="font-bold text-gray-800 min-w-[1.25rem] text-center text-sm">
+                <span className="font-bold text-zinc-800 min-w-[1.25rem] text-center text-sm">
                   {qty}
                 </span>
                 <button
                   onClick={() => updateCart(id, 1)}
-                  className="w-7 h-7 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors">
+                  className="size-7 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors">
                   <Plus size={14} />
                 </button>
               </div>;
@@ -209,11 +209,11 @@ export default function PortalCatalog() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className="text-2xl font-semibold text-zinc-800 flex items-center gap-2">
             <ShoppingBag className="text-black" size={24} /> Catálogo de
             Productos
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-zinc-500 mt-1">
             Explora nuestras soluciones y solicita una cotización personalizada.
           </p>
         </div>
@@ -223,15 +223,15 @@ export default function PortalCatalog() {
           {/* Búsqueda global */}
           <div className="relative">
             <Search
-              className="absolute left-3 top-2.5 text-gray-400"
+              className="absolute left-3 top-2.5 text-zinc-400"
               size={16}
             />
             <input
               type="text"
-              placeholder="Buscar productos..."
+              placeholder="Buscar productos…"
               value={globalFilter ?? ""}
               onChange={(e) => setGlobalFilter(e.target.value)}
-              className="pl-9 pr-4 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all w-56 bg-white"
+              className="pl-9 pr-4 py-2 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all w-56 bg-white"
             />
           </div>
 
@@ -239,7 +239,7 @@ export default function PortalCatalog() {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white text-gray-700 cursor-pointer">
+            className="px-3 py-2 border border-zinc-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all bg-white text-zinc-700 cursor-pointer">
             {categories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat === "ALL" ? "Todas las categorías" : cat}
@@ -251,13 +251,13 @@ export default function PortalCatalog() {
 
       {/* Tabla */}
       {loading ?
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-zinc-500">
           Cargando catálogo...
         </div>
-      : <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      : <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-zinc-50 border-b border-zinc-200">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
@@ -269,17 +269,17 @@ export default function PortalCatalog() {
                               header.getSize()
                             : undefined,
                         }}
-                        className="px-5 py-3.5 text-left font-semibold text-gray-600 select-none">
+                        className="px-5 py-3.5 text-left font-semibold text-zinc-600 select-none">
                         {header.isPlaceholder ? null : (
                           <div
-                            className={`flex items-center gap-1 ${header.column.getCanSort() ? "cursor-pointer hover:text-gray-900" : ""}`}
+                            className={`flex items-center gap-1 ${header.column.getCanSort() ? "cursor-pointer hover:text-zinc-900" : ""}`}
                             onClick={header.column.getToggleSortingHandler()}>
                             {flexRender(
                               header.column.columnDef.header,
                               header.getContext(),
                             )}
                             {header.column.getCanSort() && (
-                              <span className="text-gray-400">
+                              <span className="text-zinc-400">
                                 {header.column.getIsSorted() === "asc" ?
                                   <ChevronUp size={14} />
                                 : header.column.getIsSorted() === "desc" ?
@@ -294,19 +294,19 @@ export default function PortalCatalog() {
                   </tr>
                 ))}
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-zinc-100">
                 {table.getRowModel().rows.length === 0 ?
                   <tr>
                     <td
                       colSpan={columns.length}
-                      className="text-center py-16 text-gray-400">
+                      className="text-center py-16 text-zinc-400">
                       No se encontraron productos.
                     </td>
                   </tr>
                 : table.getRowModel().rows.map((row) => (
                     <tr
                       key={row.id}
-                      className={`transition-colors hover:bg-gray-50/70 ${
+                      className={`transition-colors hover:bg-zinc-50/70 ${
                         getQuantity(row.original.id) > 0 ?
                           "bg-emerald-50/40 border-l-2 border-l-emerald-500"
                         : ""
@@ -327,7 +327,7 @@ export default function PortalCatalog() {
           </div>
 
           {/* Paginación */}
-          <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-600">
+          <div className="px-5 py-3 border-t border-zinc-100 bg-zinc-50 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-zinc-600">
             <span>
               Mostrando{" "}
               <strong>
@@ -349,7 +349,7 @@ export default function PortalCatalog() {
               <select
                 value={table.getState().pagination.pageSize}
                 onChange={(e) => table.setPageSize(Number(e.target.value))}
-                className="border border-gray-200 rounded-lg px-2 py-1 text-xs bg-white">
+                className="border border-zinc-200 rounded-lg px-2 py-1 text-xs bg-white">
                 {[5, 10, 20, 50].map((s) => (
                   <option key={s} value={s}>
                     {s} por página
@@ -360,7 +360,7 @@ export default function PortalCatalog() {
               <button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                 <ChevronLeft size={16} />
               </button>
               <span className="text-xs font-medium px-1">
@@ -370,7 +370,7 @@ export default function PortalCatalog() {
               <button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                className="p-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -382,7 +382,7 @@ export default function PortalCatalog() {
       {cartTotalItems > 0 && (
         <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50 px-4">
           <div className="bg-emerald-600 text-white shadow-2xl rounded-2xl p-4 flex items-center gap-6 max-w-2xl w-full">
-            <div className="flex items-center justify-center bg-white/20 w-12 h-12 rounded-xl backdrop-blur-sm">
+            <div className="flex items-center justify-center bg-white/20 size-12 rounded-xl backdrop-blur-sm">
               <ShoppingCart size={24} className="text-white" />
             </div>
             <div className="flex-1">
@@ -398,7 +398,7 @@ export default function PortalCatalog() {
               disabled={isSubmitting}
               className="bg-white text-emerald-700 hover:bg-emerald-50 font-bold py-3 px-6 rounded-xl transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
               {isSubmitting ?
-                "Enviando..."
+                "Enviando…"
               : <>
                   <CheckCircle size={18} /> Solicitar
                 </>

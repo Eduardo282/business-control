@@ -132,18 +132,17 @@ export async function getMessage(id) {
 }
 
 export async function getMessages(conversationId, limit = 100, beforeId = null) {
-  let query = `SELECT * FROM support_messages WHERE conversation_id = ?`;
+  let sql = `SELECT * FROM support_messages WHERE conversation_id = ?`;
   const params = [conversationId];
 
   if (beforeId) {
-    query += ` AND id < ?`;
+    sql += ` AND id < ?`;
     params.push(beforeId);
   }
 
-  query += ` ORDER BY created_at ASC LIMIT ?`;
-  params.push(limit);
+  sql += ` ORDER BY created_at ASC LIMIT ${Number(limit)}`;
 
-  const [rows] = await pool.execute(query, params);
+  const [rows] = await pool.query(sql, params);
   return rows;
 }
 

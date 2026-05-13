@@ -1064,7 +1064,7 @@ export default function QuoteDetail() {
       {showEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in">
           <Card className="w-full max-w-lg shadow-2xl shadow-primary-500/10 border-light-border dark:border-white/10 !bg-light-card dark:!bg-zinc-900/95">
-            <h3 className="text-xl font-bold text-light-text-primary dark:text-white mb-4 flex items-center gap-2">
+            <h3 className="text-xl font-semibold text-light-text-primary dark:text-white mb-4 flex items-center gap-2">
               <span className="text-primary-600 dark:text-primary-400">
                 <Mail size={24} />
               </span>{" "}
@@ -1137,7 +1137,7 @@ export default function QuoteDetail() {
                   onClick={handleSendEmail}
                   disabled={sendingEmail}
                   className="shadow-lg shadow-primary-500/20 button-primary">
-                  {sendingEmail ? "Enviando..." : "Enviar Correo"}
+                  {sendingEmail ? "Enviando…" : "Enviar Correo"}
                 </Button>
               </div>
             </div>
@@ -1156,14 +1156,14 @@ export default function QuoteDetail() {
               className="absolute inset-0 bg-zinc-900/45 backdrop-blur-[2px]"
             />
 
-            <Card className="relative w-full max-w-lg overflow-hidden !bg-white border border-zinc-200 shadow-2xl shadow-slate-900/20">
+            <Card className="relative w-full max-w-lg overflow-hidden !bg-white border border-zinc-200 shadow-2xl shadow-zinc-900/20">
               <div className="px-6 py-5 border-b border-zinc-100 flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
                   <div className="size-10 rounded-xl bg-[#1B4733]/10 text-[#1B4733] inline-flex items-center justify-center shrink-0">
                     <Globe size={20} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-zinc-900 leading-none">
+                    <h3 className="text-2xl font-semibold text-zinc-900 leading-none">
                       Enviar a Portal
                     </h3>
                     <p className="text-sm text-zinc-600 mt-2 max-w-sm leading-relaxed">
@@ -1232,7 +1232,7 @@ export default function QuoteDetail() {
                   onClick={confirmSendToPortal}
                   disabled={toggleLoading || !selectedPortalContactHasAccess}
                   className="!bg-[#2B7FBE] hover:!bg-[#236EA8] !text-white !rounded-2xl !px-6 !py-2.5 shadow-[0_7px_14px_rgba(43,127,190,0.32)] hover:shadow-[0_9px_18px_rgba(43,127,190,0.38)] !transition-all !duration-150 disabled:!opacity-50 disabled:!cursor-not-allowed">
-                  {toggleLoading ? "Enviando..." : "Confirmar y Enviar"}
+                  {toggleLoading ? "Enviando…" : "Confirmar y Enviar"}
                 </button>
               </div>
             </Card>
@@ -1252,7 +1252,7 @@ export default function QuoteDetail() {
             Volver al historial
           </Link>
           <div className="flex items-center gap-3 mt-1">
-            <h2 className="text-xl font-bold text-light-text-primary">
+            <h2 className="text-xl font-semibold text-light-text-primary">
               Cotización {quoteFolio}
             </h2>
             <span
@@ -1274,7 +1274,7 @@ export default function QuoteDetail() {
               disabled={sendingToContact || !preferredContactEmail}
               className="flex-1 sm:flex-none !px-3 !py-1.5 !rounded-md !text-[13px] !font-semibold !border !border-[#1B4733]/30 !text-light-text-secondary !transition-all !duration-150 disabled:!opacity-50 disabled:!cursor-not-allowed disabled:!bg-white disabled:!text-emerald-700 disabled:!border-emerald-200 !flex !items-center !gap-2 !justify-center hover:!bg-[#1B4733]/15">
               <Mail size={16} />
-              {sendingToContact ? "Enviando..." : "Enviar al contacto"}
+              {sendingToContact ? "Enviando…" : "Enviar al contacto"}
             </Button>
           )}
           <Button
@@ -1367,7 +1367,7 @@ export default function QuoteDetail() {
         <div className="px-8 md:px-12 py-8 bg-zinc-50/60 border-b border-zinc-100">
           <div className="grid lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 rounded-2xl border border-zinc-200 bg-white p-5">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-3">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-3">
                 Cliente asignado
               </h3>
               <div className="font-bold text-xl text-zinc-900 leading-tight">
@@ -1401,7 +1401,7 @@ export default function QuoteDetail() {
             </div>
 
             <div className="rounded-2xl border border-zinc-200 bg-white p-5">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-3">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 mb-3">
                 Ejecutivo de Ventas
               </h3>
               <div className="font-bold text-zinc-900 text-lg">

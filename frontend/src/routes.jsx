@@ -41,11 +41,12 @@ const PortalSupport = lazy(() => import("./pages/portal/PortalSupport"));
 function LocationTracker() {
   const location = useLocation();
   useEffect(() => {
-    if (!["/register", "/roles"].includes(location.pathname)) {
-      sessionStorage.setItem("last_route", location.pathname);
+    const { pathname } = location;
+    if (!["/register", "/roles"].includes(pathname)) {
+      sessionStorage.setItem("last_route", pathname);
       resetMasterGranted();
     }
-  }, [location.pathname]);
+  }, [location]);
   return null;
 }
 
@@ -55,8 +56,8 @@ export default function AppRoutes() {
       <LocationTracker />
       <Suspense
         fallback={
-          <div className="min-h-screen w-full flex items-center justify-center text-slate-600 text-sm">
-            Cargando...
+          <div className="min-h-screen w-full flex items-center justify-center text-zinc-600 text-sm">
+            Cargando…
           </div>
         }>
         <Routes>

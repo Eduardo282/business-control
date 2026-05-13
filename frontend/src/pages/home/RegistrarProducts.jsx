@@ -1154,7 +1154,7 @@ export default function RegistrarProducts() {
     <div className="space-y-6 pb-20 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
+          <h1 className="text-3xl font-semibold text-zinc-800 tracking-tight">
             Registrar productos
           </h1>
         </div>
@@ -1177,7 +1177,7 @@ export default function RegistrarProducts() {
           <div className="mb-6">
             <div className="relative">
               <div
-                className="w-full pl-4 pr-10 py-3 rounded-xl bg-white text-[#2277B4] border border-gray-200 outline-none transition-all cursor-pointer hover:bg-gray-50 flex justify-between items-center"
+                className="w-full pl-4 pr-10 py-3 rounded-xl bg-white text-[#2277B4] border border-zinc-200 outline-none transition-all cursor-pointer hover:bg-zinc-50 flex justify-between items-center"
                 onClick={openSourceModal}>
                 <span className="truncate pr-3">
                   {newProduct.name ?
@@ -1187,7 +1187,7 @@ export default function RegistrarProducts() {
                 <ChevronDown size={16} className="text-light-text-secondary" />
               </div>
             </div>
-            <div className="mt-2 text-xs text-slate-500">
+            <div className="mt-2 text-xs text-zinc-500">
               {selectedCategory ?
                 ``
               : "Primero selecciona o registra una categoría para abrir el selector."
@@ -1213,7 +1213,7 @@ export default function RegistrarProducts() {
               />
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-light-text-secondary dark:text-slate-400 ml-1 uppercase tracking-wider transition-colors">
+                <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 ml-1 uppercase tracking-wider transition-colors">
                   CATEGORÍA
                 </label>
                 <input
@@ -1221,7 +1221,7 @@ export default function RegistrarProducts() {
                   value={newProduct.category}
                   readOnly
                   disabled={!selectedCategory}
-                  className="w-full rounded-xl px-4 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-gray-300 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed"
+                  className="w-full rounded-xl px-4 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300 disabled:bg-zinc-100 disabled:text-zinc-500 disabled:border-zinc-200 disabled:cursor-not-allowed"
                   required
                 />
               </div>
@@ -1230,7 +1230,7 @@ export default function RegistrarProducts() {
             <div
               className={`grid ${isServiceMode ? "grid-cols-1" : "grid-cols-2"} gap-4`}>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-light-text-secondary dark:text-slate-400 ml-1 uppercase tracking-wider transition-colors">
+                <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 ml-1 uppercase tracking-wider transition-colors">
                   PRECIO (MXN)
                 </label>
                 <div className="relative">
@@ -1242,20 +1242,20 @@ export default function RegistrarProducts() {
                     placeholder="0.00"
                     value={newProduct.price}
                     onChange={(e) => handlePriceChange(e.target.value)}
-                    className="w-full rounded-xl pl-4 pr-16 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-gray-300"
+                    className="w-full rounded-xl pl-4 pr-16 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300"
                     required
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex overflow-hidden rounded-md border border-[#b8cce6] shadow-sm bg-[#e8f2ff]">
                     <button
                       type="button"
                       onClick={() => handlePriceStep(-1)}
-                      className="w-4 h-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] transition-colors leading-none">
+                      className="size-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] transition-colors leading-none">
                       -
                     </button>
                     <button
                       type="button"
                       onClick={() => handlePriceStep(1)}
-                      className="w-4 h-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] border-l border-[#b8cce6] transition-colors leading-none">
+                      className="size-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] border-l border-[#b8cce6] transition-colors leading-none">
                       +
                     </button>
                   </div>
@@ -1269,7 +1269,7 @@ export default function RegistrarProducts() {
 
               {!isServiceMode && (
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-light-text-secondary dark:text-slate-400 ml-1 uppercase tracking-wider transition-colors">
+                  <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 ml-1 uppercase tracking-wider transition-colors">
                     {`USUARIOS (MÁXIMA CAPACIDAD. ${currentMaxUsers})`}
                   </label>
                   <div className="relative">
@@ -1282,20 +1282,20 @@ export default function RegistrarProducts() {
                       placeholder="1"
                       value={newProduct.users_count}
                       onChange={(e) => handleUsersChange(e.target.value)}
-                      className="w-full rounded-xl pl-4 pr-16 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-gray-300"
+                      className="w-full rounded-xl pl-4 pr-16 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300"
                       required
                     />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex overflow-hidden rounded-md border border-[#b8cce6] shadow-sm bg-[#e8f2ff]">
                       <button
                         type="button"
                         onClick={() => handleUsersStep(-1)}
-                        className="w-4 h-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] transition-colors leading-none">
+                        className="size-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] transition-colors leading-none">
                         -
                       </button>
                       <button
                         type="button"
                         onClick={() => handleUsersStep(1)}
-                        className="w-4 h-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] border-l border-[#b8cce6] transition-colors leading-none">
+                        className="size-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] border-l border-[#b8cce6] transition-colors leading-none">
                         +
                       </button>
                     </div>
@@ -1307,12 +1307,12 @@ export default function RegistrarProducts() {
 
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-light-text-secondary dark:text-slate-400">
+              <label className="text-xs font-medium text-light-text-secondary dark:text-zinc-400">
                 Descripción
               </label>
               <textarea
                 className="w-full bg-white border border-light-border rounded-lg p-3 text-sm text-light-text-primary outline-none focus:ring-1 focus:ring-[#125280] min-h-[100px]"
-                placeholder="Detalles técnicos..."
+                placeholder="Detalles técnicos…"
                 value={newProduct.description}
                 onChange={(e) =>
                   setNewProduct({
@@ -1337,10 +1337,10 @@ export default function RegistrarProducts() {
       {/* Modal selector de origen */}
       {isSourceModalOpen &&
         createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in relative">
               <div className="p-4 rounded-t-2xl border-b border-[#24395f] bg-[#1a2b4c] flex items-center justify-between">
-                <h2 className="font-bold text-white text-lg">
+                <h2 className="font-semibold text-white text-lg">
                   Productos y Servicios
                 </h2>
                 <button
@@ -1351,7 +1351,7 @@ export default function RegistrarProducts() {
               </div>
 
               <div className="p-4 space-y-4">
-                <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+                <div className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
                   Categoría activa: <strong>{selectedCategory}</strong>
                 </div>
 
@@ -1363,7 +1363,7 @@ export default function RegistrarProducts() {
                   }}
                   className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-[#125280] font-semibold transition-all flex items-center justify-between group">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                    <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
                       <Package size={18} />
                     </div>
                     Productos de CONTPAQI
@@ -1382,7 +1382,7 @@ export default function RegistrarProducts() {
                   }}
                   className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-[#125280] font-semibold transition-all flex items-center justify-between group">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-purple-600">
+                    <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-purple-600">
                       <Shield size={18} />
                     </div>
                     Pólizas
@@ -1401,7 +1401,7 @@ export default function RegistrarProducts() {
                   }}
                   className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-[#125280] font-semibold transition-all flex items-center justify-between group">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-emerald-600">
+                    <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-emerald-600">
                       <ShoppingBag size={18} />
                     </div>
                     Productos
@@ -1430,10 +1430,10 @@ export default function RegistrarProducts() {
       {/* Modal de categorías */}
       {isCategoriesModalOpen &&
         createPortal(
-          <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-fade-in relative">
               <div className="p-4 rounded-t-2xl border-b border-[#24395f] bg-[#1a2b4c] flex items-center justify-between">
-                <h2 className="font-bold text-white text-lg">Categorías</h2>
+                <h2 className="font-semibold text-white text-lg">Categorías</h2>
                 <button
                   onClick={() => setIsCategoriesModalOpen(false)}
                   className="text-white/80 hover:text-white transition-colors p-1">
@@ -1447,7 +1447,7 @@ export default function RegistrarProducts() {
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
                     placeholder="Ej. Contabilidad"
-                    className="flex-1 rounded-xl px-4 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-gray-300"
+                    className="flex-1 rounded-xl px-4 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300"
                   />
                   <button
                     type="button"
@@ -1478,11 +1478,11 @@ export default function RegistrarProducts() {
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-bold text-gray-400 uppercase mb-3">
+                  <h3 className="text-xs font-semibold text-zinc-400 uppercase mb-3">
                     Categorías
                   </h3>
                   {availableCategories.length === 0 ?
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-zinc-500">
                       Aún no hay categorías registradas.
                     </p>
                   : <div className="min-h-[190px] flex flex-col">
@@ -1501,7 +1501,7 @@ export default function RegistrarProducts() {
                                 normalizeServicePolicyCategory(selectedCategory)
                               ) ?
                                 "border-[#2277B4] bg-[#2277B4]/10 text-[#2277B4]"
-                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                              : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
                             }`}>
                             {category}
                           </button>
@@ -1509,7 +1509,7 @@ export default function RegistrarProducts() {
                       </div>
 
                       <div className="mt-3 flex items-center justify-between">
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-zinc-500">
                           Página {safeCategoryPage} de {totalCategoryPages}
                         </span>
                         <div className="flex items-center gap-2">
@@ -1519,7 +1519,7 @@ export default function RegistrarProducts() {
                               setCategoryPage((prev) => Math.max(1, prev - 1))
                             }
                             disabled={safeCategoryPage === 1}
-                            className="px-3 py-1.5 rounded-md border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-3 py-1.5 rounded-md border border-zinc-200 text-xs font-semibold text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                             Anterior
                           </button>
                           <button
@@ -1530,7 +1530,7 @@ export default function RegistrarProducts() {
                               )
                             }
                             disabled={safeCategoryPage === totalCategoryPages}
-                            className="px-3 py-1.5 rounded-md border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-3 py-1.5 rounded-md border border-zinc-200 text-xs font-semibold text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                             Siguiente
                           </button>
                         </div>
@@ -1547,7 +1547,7 @@ export default function RegistrarProducts() {
       {/* Contpaqi Categories Modal */}
       {isContpaqiModalOpen &&
         createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
             <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl animate-fade-in flex flex-col max-h-[85vh] overflow-hidden">
               <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
                 <button
@@ -1558,7 +1558,7 @@ export default function RegistrarProducts() {
                   className="text-white/80 hover:text-white transition-colors p-2 bg-white/10 hover:bg-white/20 rounded-full">
                   <ArrowLeft size={20} />
                 </button>
-                <h2 className="font-bold text-white text-xl flex items-center gap-2">
+                <h2 className="font-semibold text-white text-xl flex items-center gap-2">
                   <Package className="text-blue-300" size={24} /> Productos de
                   CONTPAQi
                 </h2>
@@ -1584,7 +1584,7 @@ export default function RegistrarProducts() {
               <div className="p-6 overflow-y-auto space-y-8 bg-[#f8fafc]">
                 <div className="space-y-3">
                   {filteredContpaqiProducts.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-500 text-center">
+                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-5 text-sm text-zinc-500 text-center">
                       No hay productos para la categoría{" "}
                       <strong>{selectedCategory}</strong>. <br /> Usa el botón{" "}
                       <strong>Nuevo producto</strong>.
@@ -1599,10 +1599,10 @@ export default function RegistrarProducts() {
                         key={item.id}
                         type="button"
                         onClick={() => selectContpaqiProduct(item)}
-                        className="w-full text-left p-5 rounded-2xl border border-gray-200 bg-white hover:border-blue-300 hover:shadow-md transition-all group">
+                        className="w-full text-left p-5 rounded-2xl border border-zinc-200 bg-white hover:border-blue-300 hover:shadow-md transition-all group">
                         <div className="flex justify-between items-start gap-4 mb-1.5">
                           <div className="flex items-start gap-3 min-w-0">
-                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-400 group-hover:border-blue-200 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 text-zinc-400 group-hover:border-blue-200 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
                               <ProductLogo size={13} />
                             </span>
                             <div className="font-bold text-lg text-[#1e293b] group-hover:text-blue-600 min-w-0 truncate">
@@ -1622,7 +1622,7 @@ export default function RegistrarProducts() {
                         </div>
 
                         {item.description && (
-                          <div className="text-sm text-gray-500 leading-relaxed line-clamp-2">
+                          <div className="text-sm text-zinc-500 leading-relaxed line-clamp-2">
                             {item.description}
                           </div>
                         )}
@@ -1639,7 +1639,7 @@ export default function RegistrarProducts() {
       {/* Modal General Products */}
       {isGeneralProductsModalOpen &&
         createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
               <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
                 <button
@@ -1650,7 +1650,7 @@ export default function RegistrarProducts() {
                   className="text-white/80 hover:text-white transition-colors p-2 bg-white/10 hover:bg-white/20 rounded-full">
                   <ArrowLeft size={20} />
                 </button>
-                <h2 className="font-bold text-white text-lg">Productos</h2>
+                <h2 className="font-semibold text-white text-lg">Productos</h2>
                 <button
                   type="button"
                   onClick={() => {
@@ -1673,7 +1673,7 @@ export default function RegistrarProducts() {
               <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto">
                 <div className="space-y-2">
                   {filteredGeneralProducts.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500 text-center">
+                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-4 text-sm text-zinc-500 text-center">
                       No hay productos para la categoría{" "}
                       <strong>{selectedCategory}</strong>.
                     </div>
@@ -1685,14 +1685,14 @@ export default function RegistrarProducts() {
                       type="button"
                       onClick={() => selectGeneralProduct(product)}
                       className="w-full text-left p-4 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50 transition-colors">
-                      <div className="font-semibold text-slate-800 truncate">
+                      <div className="font-semibold text-zinc-800 truncate">
                         {product.name}
                       </div>
-                      <div className="text-[11px] text-slate-500 uppercase tracking-wide mt-1 truncate">
+                      <div className="text-[11px] text-zinc-500 uppercase tracking-wide mt-1 truncate">
                         {product.category}
                       </div>
                       {product.description && (
-                        <div className="text-xs text-slate-400 mt-2 line-clamp-2">
+                        <div className="text-xs text-zinc-400 mt-2 line-clamp-2">
                           {product.description}
                         </div>
                       )}
@@ -1708,7 +1708,7 @@ export default function RegistrarProducts() {
       {/* Modal Policies */}
       {isPoliciesModalOpen &&
         createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
               <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
                 <button
@@ -1719,7 +1719,7 @@ export default function RegistrarProducts() {
                   className="text-white/80 hover:text-white transition-colors p-2 bg-white/10 hover:bg-white/20 rounded-full">
                   <ArrowLeft size={20} />
                 </button>
-                <h2 className="font-bold text-white text-lg">Pólizas</h2>
+                <h2 className="font-semibold text-white text-lg">Pólizas</h2>
                 <button
                   type="button"
                   onClick={() => {
@@ -1742,7 +1742,7 @@ export default function RegistrarProducts() {
               <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto">
                 <div className="space-y-2">
                   {filteredPolicies.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500 text-center">
+                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-4 text-sm text-zinc-500 text-center">
                       No hay pólizas para la categoría{" "}
                       <strong>{selectedCategory}</strong>.
                     </div>
@@ -1754,14 +1754,14 @@ export default function RegistrarProducts() {
                       type="button"
                       onClick={() => selectPolicy(policy)}
                       className="w-full text-left p-4 rounded-xl border border-purple-200 bg-white hover:bg-purple-50 transition-colors">
-                      <div className="font-semibold text-slate-800 truncate">
+                      <div className="font-semibold text-zinc-800 truncate">
                         {policy.name}
                       </div>
-                      <div className="text-[11px] text-slate-500 uppercase tracking-wide mt-1 truncate">
+                      <div className="text-[11px] text-zinc-500 uppercase tracking-wide mt-1 truncate">
                         {policy.category}
                       </div>
                       {policy.description && (
-                        <div className="text-xs text-slate-400 mt-2 line-clamp-2">
+                        <div className="text-xs text-zinc-400 mt-2 line-clamp-2">
                           {policy.description}
                         </div>
                       )}
@@ -1779,7 +1779,7 @@ export default function RegistrarProducts() {
       {/* Modal de servicios propios */}
       {isServicesModalOpen &&
         createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-500/50 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
               <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
                 <button
@@ -1790,7 +1790,7 @@ export default function RegistrarProducts() {
                   className="text-white/80 hover:text-white transition-colors p-2 bg-white/10 hover:bg-white/20 rounded-full">
                   <ArrowLeft size={20} />
                 </button>
-                <h2 className="font-bold text-white text-lg">Servicios</h2>
+                <h2 className="font-semibold text-white text-lg">Servicios</h2>
                 <button
                   type="button"
                   onClick={() => {
@@ -1813,7 +1813,7 @@ export default function RegistrarProducts() {
               <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto">
                 <div className="space-y-2">
                   {filteredServices.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500 text-center">
+                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-4 text-sm text-zinc-500 text-center">
                       No hay servicios para la categoría{" "}
                       <strong>{selectedCategory}</strong>. <br /> Usa el botón
                       <strong> Nuevo servicio</strong>.
@@ -1826,10 +1826,10 @@ export default function RegistrarProducts() {
                       type="button"
                       onClick={() => selectService(service)}
                       className="w-full text-left p-4 rounded-xl border border-[#B58DE0]/45 bg-white hover:bg-[#B58DE0]/5 transition-colors">
-                      <div className="font-semibold text-slate-800 truncate">
+                      <div className="font-semibold text-zinc-800 truncate">
                         {service.name}
                       </div>
-                      <div className="text-[11px] text-slate-500 uppercase tracking-wide mt-1 truncate">
+                      <div className="text-[11px] text-zinc-500 uppercase tracking-wide mt-1 truncate">
                         {service.category}
                       </div>
                     </button>

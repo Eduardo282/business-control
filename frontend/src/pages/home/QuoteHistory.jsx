@@ -407,7 +407,7 @@ export default function QuoteHistory() {
               type="text"
               value={q}
               onChange={(e) => dispatchFilter({ type: "SET_Q", payload: e.target.value })}
-              placeholder="Buscar por cliente, vendedor..."
+              placeholder="Buscar por cliente, vendedor…"
               className="w-full sm:w-80 pl-4 pr-11 py-3 bg-white border border-zinc-300 rounded-xl text-sm text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] transition-all shadow-sm"
             />
           </div>
@@ -476,7 +476,7 @@ export default function QuoteHistory() {
                   onKeyDown={(e) => e.stopPropagation()}>
                   <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
                     <div>
-                      <h3 className="text-white font-bold text-base uppercase">
+                      <h3 className="text-white font-semibold text-base uppercase">
                         FILTRAR POR {filterFieldLabels[activeFilterPickerField]}
                       </h3>
                       <p className="text-[11px] text-zinc-300 mt-1">
@@ -496,7 +496,7 @@ export default function QuoteHistory() {
                       <input
                         value={filterPickerSearch}
                         onChange={(e) => dispatchFilter({ type: "SET_FILTER_PICKER_SEARCH", payload: e.target.value })}
-                        placeholder="Buscar valor..."
+                        placeholder="Buscar valor…"
                         className="w-full bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
                       />
                     </div>

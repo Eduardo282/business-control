@@ -892,11 +892,11 @@ export default function Clients() {
 
           return (
             <div className="flex items-start gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center border border-gray-200 bg-gray-100 text-gray-900 font-bold text-sm shadow-sm">
+              <div className="size-9 rounded-full shrink-0 flex items-center justify-center border border-zinc-200 bg-zinc-100 text-zinc-900 font-bold text-sm shadow-sm">
                 {firstChar}
               </div>
               <span
-                className="font-medium text-gray-800 leading-snug min-w-0"
+                className="font-medium text-zinc-800 leading-snug min-w-0"
                 style={{
                   whiteSpace: "normal",
                   overflowWrap: "anywhere",
@@ -910,7 +910,7 @@ export default function Clients() {
 
         return (
           <span
-            className="block w-full text-gray-600 text-sm leading-snug"
+            className="block w-full text-zinc-600 text-sm leading-snug"
             style={{
               whiteSpace: "normal",
               overflowWrap: "anywhere",
@@ -950,7 +950,7 @@ export default function Clients() {
                   [clientId]: !prev[clientId],
                 }))
               }
-              className="w-7 h-7 inline-flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+              className="size-7 inline-flex items-center justify-center rounded-lg hover:bg-zinc-100 transition-colors text-zinc-500"
               title={isOpen ? "Ocultar más detalles" : "Ver más detalles"}>
               {isOpen ?
                 <ChevronDown size={16} />
@@ -981,13 +981,13 @@ export default function Clients() {
                 <>
                   <button
                     onClick={() => openEditModal(row.original)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-amber-800 hover:scale-75 transition-colors"
+                    className="size-8 flex items-center justify-center rounded-lg text-amber-800 hover:scale-75 transition-colors"
                     title="Editar">
                     <Edit2 size={16} />
                   </button>
                   <button
                     onClick={() => remove(row.original.id)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-red-700 hover:scale-75 transition-colors"
+                    className="size-8 flex items-center justify-center rounded-lg text-red-700 hover:scale-75 transition-colors"
                     title="Eliminar">
                     <Trash2 size={16} />
                   </button>
@@ -1207,10 +1207,10 @@ export default function Clients() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-2xl font-semibold text-zinc-800">
             Clientes Registrados
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-zinc-500 mt-1">
             Gestiónes y permisos al portal del cliente
           </p>
         </div>
@@ -1225,22 +1225,22 @@ export default function Clients() {
       {/* Tabla con TanStack */}
       <div className="glass-panel rounded-md border overflow-hidden">
         {/* Toolbar de la tabla */}
-        <div className="px-4 py-3 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="px-4 py-3 border-b border-zinc-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-gray-600">
+            <span className="text-sm font-semibold text-zinc-600">
               Total clientes ({clients.length})
             </span>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {/* Búsqueda global */}
-            <div className="flex gap-1 bg-white p-1 rounded-lg border border-gray-200">
+            <div className="flex gap-1 bg-white p-1 rounded-lg border border-zinc-200">
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Buscar cliente..."
+                placeholder="Buscar cliente…"
                 title="Busca por todos los campos. Ignora acentos, mayusculas y caracteres especiales."
-                className="bg-transparent border-none text-sm text-gray-800 placeholder:text-gray-400 px-3 w-40 md:w-52 focus:outline-none"
+                className="bg-transparent border-none text-sm text-zinc-800 placeholder:text-zinc-400 px-3 w-40 md:w-52 focus:outline-none"
               />
               <div className="px-3 py-1.5 text-black">
                 <Search size={16} />
@@ -1268,12 +1268,12 @@ export default function Clients() {
               onClick={() => setShowFilters((v) => !v)}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${showFilters || activeFilterCount > 0 ?
                   "bg-[#2277B4] text-white border-[#2277B4]"
-                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                  : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50"
                 }`}>
               <SlidersHorizontal size={15} />
               Filtros
               {activeFilterCount > 0 && (
-                <span className="ml-1 bg-white text-[#2277B4] rounded-full text-xs font-bold w-5 h-5 flex items-center justify-center">
+                <span className="ml-1 bg-white text-[#2277B4] rounded-full text-xs font-bold size-5 flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
@@ -1305,7 +1305,7 @@ export default function Clients() {
               </button>
             )}
 
-            <span className="text-xs text-gray-400 hidden md:inline">
+            <span className="text-xs text-zinc-400 hidden md:inline">
               Pág. {table.getState().pagination.pageIndex + 1} de{" "}
               {table.getPageCount() || 1}
             </span>
@@ -1321,38 +1321,38 @@ export default function Clients() {
               <div
                 className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
                 onClick={(e) => e.stopPropagation()}>
-                <div className="px-5 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
+                <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
                   <div>
-                    <h3 className="text-white font-bold text-base">
+                    <h3 className="text-white font-semibold text-base">
                       Filtrar por{" "}
                       {activeFilterPickerConfig?.buttonLabel || "campo"}
                     </h3>
-                    <p className="text-[11px] text-gray-300 mt-1">
+                    <p className="text-[11px] text-zinc-300 mt-1">
                       Selecciona o busca un valor
                     </p>
                   </div>
                   <button
                     onClick={closeFilterPicker}
-                    className="w-8 h-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
+                    className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
                     <X size={16} />
                   </button>
                 </div>
 
                 <div className="p-4 space-y-3">
-                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-                    <Search size={15} className="text-gray-500" />
+                  <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+                    <Search size={15} className="text-zinc-500" />
                     <input
                       value={filterPickerSearch}
                       onChange={(e) => {
                         setFilterPickerSearch(e.target.value);
                         setFilterPickerPage(0);
                       }}
-                      placeholder="Buscar valor..."
-                      className="w-full bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                      placeholder="Buscar valor…"
+                      className="w-full bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
                     />
                   </div>
 
-                  <div className="h-72 overflow-y-auto rounded-lg border border-gray-100 divide-y divide-gray-100">
+                  <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 divide-y divide-zinc-100">
                     {visibleFilterPickerOptions.length > 0 ?
                       visibleFilterPickerOptions
                         .slice(filterPickerPage * FILTER_PAGE_SIZE, (filterPickerPage + 1) * FILTER_PAGE_SIZE)
@@ -1368,33 +1368,33 @@ export default function Clients() {
                               onClick={() => applyFilterValue(value)}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${isSelected ?
                                   "bg-[#2277B4]/10 text-[#125280] font-semibold"
-                                  : "text-gray-700 hover:bg-gray-50"
+                                  : "text-zinc-700 hover:bg-zinc-50"
                                 }`}>
                               {value}
                             </button>
                           );
                         })
-                      : <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                      : <div className="px-3 py-4 text-sm text-zinc-500 text-center">
                         No hay valores para mostrar.
                       </div>
                     }
                   </div>
                   {visibleFilterPickerOptions.length > FILTER_PAGE_SIZE && (
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                      <span className="text-xs text-gray-500">
+                    <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
+                      <span className="text-xs text-zinc-500">
                         {filterPickerPage * FILTER_PAGE_SIZE + 1} - {Math.min((filterPickerPage + 1) * FILTER_PAGE_SIZE, visibleFilterPickerOptions.length)} de {visibleFilterPickerOptions.length}
                       </span>
                       <div className="flex gap-1">
                         <button
                           onClick={() => setFilterPickerPage(p => Math.max(0, p - 1))}
                           disabled={filterPickerPage === 0}
-                          className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="px-2 py-1 text-xs font-medium text-zinc-600 bg-zinc-100 rounded hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                           Anterior
                         </button>
                         <button
                           onClick={() => setFilterPickerPage(p => p + 1)}
                           disabled={(filterPickerPage + 1) * FILTER_PAGE_SIZE >= visibleFilterPickerOptions.length}
-                          className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="px-2 py-1 text-xs font-medium text-zinc-600 bg-zinc-100 rounded hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                           Siguiente
                         </button>
                       </div>
@@ -1425,7 +1425,7 @@ export default function Clients() {
                       onClick={() => openFilterPicker(button.fieldName)}
                       className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${selectedValue ?
                           "bg-[#2277B4] text-white border-[#2277B4]"
-                          : "bg-white text-gray-700 border-gray-200 hover:bg-gray-100"
+                          : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
                         }`}>
                       <span className="uppercase font-bold tracking-wide">
                         {button.buttonLabel}
@@ -1437,7 +1437,7 @@ export default function Clients() {
 
               <button
                 onClick={handleDownloadTemplate}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-700 bg-white transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 bg-white transition-colors whitespace-nowrap"
                 title="Descargar plantilla de carga masiva">
                 <FileSpreadsheet size={13} /> Descargar plantilla excel
               </button>
@@ -1450,14 +1450,14 @@ export default function Clients() {
           className={`overflow-x-auto ${isTableScrollable ? "max-h-[65vh] overflow-y-auto" : ""}`}>
           <table className="w-full table-fixed">
             <thead
-              className={`bg-gray-50 border-b border-gray-100 ${isTableScrollable ? "sticky top-0 z-20" : ""}`}>
+              className={`bg-zinc-50 border-b border-zinc-100 ${isTableScrollable ? "sticky top-0 z-20" : ""}`}>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
                       style={{ width: header.getSize() }}
-                      className={`${header.column.id === "expander" ? "glass-flash " : ""}px-4 py-3 text-left text-xs font-semibold text-[#2277B4] uppercase tracking-wider transition-colors ${header.column.getCanSort() ? "cursor-pointer hover:bg-gray-100" : "cursor-default"}`}
+                      className={`${header.column.id === "expander" ? "glass-flash " : ""}px-4 py-3 text-left text-xs font-semibold text-[#2277B4] uppercase tracking-wider transition-colors ${header.column.getCanSort() ? "cursor-pointer hover:bg-zinc-100" : "cursor-default"}`}
                       onClick={
                         header.column.getCanSort() ?
                           header.column.getToggleSortingHandler()
@@ -1478,7 +1478,7 @@ export default function Clients() {
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-zinc-100">
               {table.getRowModel().rows.length > 0 ?
                 table.getRowModel().rows.map((row) => {
                   const rowDetailColumns = getRowDetailColumns(row.original);
@@ -1506,7 +1506,7 @@ export default function Clients() {
 
                   return (
                     <React.Fragment key={row.id}>
-                      <tr className="hover:bg-gray-50 transition-colors">
+                      <tr className="hover:bg-zinc-50 transition-colors">
                         {row.getVisibleCells().map((cell) => (
                           <td
                             key={cell.id}
@@ -1520,7 +1520,7 @@ export default function Clients() {
                       </tr>
 
                       {isExpanded && rowDetailColumns.length > 0 && (
-                        <tr className="bg-gray-50/80">
+                        <tr className="bg-zinc-50/80">
                           {row.getVisibleCells().map((cell) => {
                             const columnId = cell.column.id;
                             const alignedDetails =
@@ -1547,7 +1547,7 @@ export default function Clients() {
                                           <p className="text-[10px] font-semibold uppercase text-[#2277B4] tracking-wider">
                                             {column.label}
                                           </p>
-                                          <p className="text-sm text-gray-700 break-words">
+                                          <p className="text-sm text-zinc-700 break-words">
                                             {value}
                                           </p>
                                         </div>
@@ -1570,7 +1570,7 @@ export default function Clients() {
                     <div className="flex justify-center mb-3 opacity-50">
                       <FolderOpen size={36} />
                     </div>
-                    <p className="text-gray-500">
+                    <p className="text-zinc-500">
                       {loading ?
                         "Cargando clientes..."
                         : "No se encontraron clientes"}
@@ -1584,9 +1584,9 @@ export default function Clients() {
 
         {/* Paginación */}
         {clients.length > 0 && (
-          <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+          <div className="px-4 py-3 border-t border-zinc-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Mostrar</span>
+              <span className="text-sm text-zinc-500">Mostrar</span>
               <select
                 value={table.getState().pagination.pageSize}
                 onChange={(e) => table.setPageSize(Number(e.target.value))}
@@ -1597,32 +1597,32 @@ export default function Clients() {
                   </option>
                 ))}
               </select>
-              <span className="text-sm text-gray-500">por página</span>
+              <span className="text-sm text-zinc-500">por página</span>
             </div>
 
             <div className="flex items-center gap-1">
               <button
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
-                className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 ««
               </button>
               <button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Anterior
               </button>
               <button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Siguiente
               </button>
               <button
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
-                className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 »»
               </button>
             </div>
@@ -1636,8 +1636,8 @@ export default function Clients() {
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
               {/* Header del modal */}
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-[#1a2b4c]">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-[#1a2b4c]">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                   Nuevo Cliente
                 </h3>
                 <button
@@ -1645,7 +1645,7 @@ export default function Clients() {
                     setShowModal(false);
                     resetForm();
                   }}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-[#fff] transition-colors">
+                  className="size-8 flex items-center justify-center rounded-lg text-[#fff] transition-colors">
                   <X size={16} />
                 </button>
               </div>
@@ -1654,7 +1654,7 @@ export default function Clients() {
               <form onSubmit={create} className="p-6 space-y-4 overflow-y-auto">
                 {/* Razón Social */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 ">
+                  <label className="block text-sm font-medium text-zinc-700 mb-2 ">
                     Razón Social *
                   </label>
                   <input
@@ -1662,7 +1662,7 @@ export default function Clients() {
                     value={business_name}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="Ej. Empresa SA de CV"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
                     required
                     autoFocus
                   />
@@ -1671,7 +1671,7 @@ export default function Clients() {
                 {/* RFC y Correo Principal */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       RFC
                     </label>
                     <input
@@ -1679,11 +1679,11 @@ export default function Clients() {
                       value={rfc}
                       onChange={(e) => setRfc(e.target.value)}
                       placeholder="XAXX010101000"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       Correo Principal
                     </label>
                     <input
@@ -1691,14 +1691,14 @@ export default function Clients() {
                       value={email1}
                       onChange={(e) => setEmail1(e.target.value)}
                       placeholder="contacto@empresa.com"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
                     />
                   </div>
                 </div>
 
                 {/* Correo Secundario */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">
                     Correo Secundario
                   </label>
                   <input
@@ -1706,14 +1706,14 @@ export default function Clients() {
                     value={email2}
                     onChange={(e) => setEmail2(e.target.value)}
                     placeholder="ventas@empresa.com"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
                   />
                 </div>
 
                 {/* Celular y Teléfono */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       Celular
                     </label>
                     <input
@@ -1721,11 +1721,11 @@ export default function Clients() {
                       value={celular}
                       onChange={(e) => setCelular(e.target.value)}
                       placeholder="55 1234 5678"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       Teléfono
                     </label>
                     <input
@@ -1733,7 +1733,7 @@ export default function Clients() {
                       value={telefono}
                       onChange={(e) => setTelefono(e.target.value)}
                       placeholder="55 9876 5432"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
                     />
                   </div>
                 </div>
@@ -1741,7 +1741,7 @@ export default function Clients() {
                 {/* Código Postal y Ciudad */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       Código Postal
                     </label>
                     <input
@@ -1749,11 +1749,11 @@ export default function Clients() {
                       value={codigo_postal}
                       onChange={(e) => setCodigoPostal(e.target.value)}
                       placeholder="06600"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       Ciudad
                     </label>
                     <input
@@ -1761,20 +1761,20 @@ export default function Clients() {
                       value={ciudad}
                       onChange={(e) => setCiudad(e.target.value)}
                       placeholder="Ciudad de México"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
                     />
                   </div>
                 </div>
 
                 {/* Botones del modal */}
-                <div className="flex gap-3 pt-4 border-t border-gray-100">
+                <div className="flex gap-3 pt-4 border-t border-zinc-100">
                   <button
                     type="button"
                     onClick={() => {
                       setShowModal(false);
                       resetForm();
                     }}
-                    className="flex-1 py-3 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors">
+                    className="flex-1 py-3 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-50 transition-colors">
                     Cancelar
                   </button>
                   <button
@@ -1794,8 +1794,8 @@ export default function Clients() {
         createPortal(
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-              <div className="px-6 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
-                <h3 className="text-white text-xl font-bold flex items-center gap-2">
+              <div className="px-6 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
+                <h3 className="text-white text-xl font-semibold flex items-center gap-2">
                   Editar Cliente
                 </h3>
                 <X
@@ -1805,7 +1805,7 @@ export default function Clients() {
               <form onSubmit={updateClient} className="p-6 space-y-4">
                 {/* Razón Social */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 ">
+                  <label className="block text-sm font-medium text-zinc-700 mb-2 ">
                     Razón Social *
                   </label>
                   <Input
@@ -1814,14 +1814,14 @@ export default function Clients() {
                     value={business_name}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="Nombre de la empresa"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
                   />
                 </div>
 
                 {/* RFC y Correo Principal */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       RFC
                     </label>
                     <Input
@@ -1829,11 +1829,11 @@ export default function Clients() {
                       value={rfc}
                       onChange={(e) => setRfc(e.target.value)}
                       placeholder="XAXX010101000"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       Correo Principal
                     </label>
                     <Input
@@ -1841,14 +1841,14 @@ export default function Clients() {
                       value={email1}
                       onChange={(e) => setEmail1(e.target.value)}
                       placeholder="contacto@empresa.com"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
                     />
                   </div>
                 </div>
 
                 {/* Correo Secundario */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">
                     Correo Secundario
                   </label>
                   <Input
@@ -1856,14 +1856,14 @@ export default function Clients() {
                     value={email2}
                     onChange={(e) => setEmail2(e.target.value)}
                     placeholder="ventas@empresa.com"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
                   />
                 </div>
 
                 {/* Celular y Teléfono */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       Celular
                     </label>
                     <Input
@@ -1871,11 +1871,11 @@ export default function Clients() {
                       value={celular}
                       onChange={(e) => setCelular(e.target.value)}
                       placeholder="55 1234 5678"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       Teléfono
                     </label>
                     <Input
@@ -1883,7 +1883,7 @@ export default function Clients() {
                       value={telefono}
                       onChange={(e) => setTelefono(e.target.value)}
                       placeholder="55 9876 5432"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
                     />
                   </div>
                 </div>
@@ -1891,7 +1891,7 @@ export default function Clients() {
                 {/* Código Postal y Ciudad */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       Código Postal
                     </label>
                     <Input
@@ -1899,11 +1899,11 @@ export default function Clients() {
                       value={codigo_postal}
                       onChange={(e) => setCodigoPostal(e.target.value)}
                       placeholder="06600"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-zinc-700 mb-2">
                       Ciudad
                     </label>
                     <Input
@@ -1911,7 +1911,7 @@ export default function Clients() {
                       value={ciudad}
                       onChange={(e) => setCiudad(e.target.value)}
                       placeholder="Ciudad de México"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]                   "
+                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]                   "
                     />
                   </div>
                 </div>
@@ -1925,7 +1925,7 @@ export default function Clients() {
                       setEditingClient(null);
                       resetForm();
                     }}
-                    className="flex-1 py-3 text-gray-600 font-semibold rounded-xl hover:bg-slate-100 transition-colors">
+                    className="flex-1 py-3 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors">
                     Cancelar
                   </button>
                   <button
@@ -1946,8 +1946,8 @@ export default function Clients() {
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
               {/* Header */}
-              <div className="px-6 py-4 border-b border-gray-100 bg-[#1a2b4c] flex items-center justify-between">
-                <h3 className="text-white text-lg font-bold flex items-center gap-2">
+              <div className="px-6 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
+                <h3 className="text-white text-lg font-semibold flex items-center gap-2">
                   Carga de Clientes
                 </h3>
               </div>
@@ -2008,8 +2008,8 @@ export default function Clients() {
                 </div>
 
                 {/* Step 2: Importar desde Drive */}
-                <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-                  <p className="text-sm font-semibold text-gray-700">
+                <div className="border border-zinc-200 rounded-xl p-4 space-y-3">
+                  <p className="text-sm font-semibold text-zinc-700">
                     Importar desde Google Drive
                   </p>
                   <input
@@ -2017,7 +2017,7 @@ export default function Clients() {
                     value={driveUrl}
                     onChange={(e) => setDriveUrl(e.target.value)}
                     placeholder="https://drive.google.com/file/d/.../view"
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4]"
+                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-zinc-300 bg-white text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4]"
                   />
                   <button
                     onClick={executeDriveImport}
@@ -2025,8 +2025,8 @@ export default function Clients() {
                     className="px-4 py-2 bg-[#1a2b4c] text-white text-sm font-semibold rounded-lg hover:bg-[#16233f] transition-colors disabled:opacity-50 flex items-center gap-2">
                     {driveImporting ?
                       <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Importando...
+                        <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Importando…
                       </>
                       : "Importar"}
                   </button>
@@ -2043,12 +2043,12 @@ export default function Clients() {
                   />
                   <button
                     onClick={() => bulkFileRef.current?.click()}
-                    className="w-full py-8 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center gap-2 text-gray-500 hover:border-[#2277B4] hover:text-[#2277B4] transition-colors cursor-pointer">
+                    className="w-full py-8 border-2 border-dashed border-zinc-300 rounded-xl flex flex-col items-center gap-2 text-zinc-500 hover:border-[#2277B4] hover:text-[#2277B4] transition-colors cursor-pointer">
                     <Upload size={28} />
                     <span className="text-sm font-semibold">
                       Haz clic para seleccionar el archivo Excel
                     </span>
-                    <span className="text-[11px] text-gray-400">
+                    <span className="text-[11px] text-zinc-400">
                       O usa la plantilla descargada
                     </span>
                   </button>
@@ -2071,53 +2071,53 @@ export default function Clients() {
                 {/* Step 3: Vista previa */}
                 {bulkData.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 mb-2">
+                    <p className="text-sm font-semibold text-zinc-700 mb-2">
                       Vista previa ({bulkData.length} clientes listos para
                       importar)
                     </p>
-                    <div className="border border-gray-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
+                    <div className="border border-zinc-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
                       <table className="w-full text-xs">
-                        <thead className="bg-gray-50 sticky top-0">
+                        <thead className="bg-zinc-50 sticky top-0">
                           <tr>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
                               #
                             </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
                               Razón Social
                             </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
                               RFC
                             </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
                               Correo
                             </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
                               Celular
                             </th>
-                            <th className="px-3 py-2 text-left font-semibold text-gray-600">
+                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
                               Ciudad
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-zinc-100">
                           {bulkData.map((r, i) => (
-                            <tr key={i} className="hover:bg-gray-50">
-                              <td className="px-3 py-2 text-gray-400">
+                            <tr key={i} className="hover:bg-zinc-50">
+                              <td className="px-3 py-2 text-zinc-400">
                                 {i + 1}
                               </td>
-                              <td className="px-3 py-2 font-medium text-gray-800">
+                              <td className="px-3 py-2 font-medium text-zinc-800">
                                 {r.business_name}
                               </td>
-                              <td className="px-3 py-2 text-gray-600">
+                              <td className="px-3 py-2 text-zinc-600">
                                 {r.rfc || "—"}
                               </td>
-                              <td className="px-3 py-2 text-gray-600">
+                              <td className="px-3 py-2 text-zinc-600">
                                 {r.email1 || "—"}
                               </td>
-                              <td className="px-3 py-2 text-gray-600">
+                              <td className="px-3 py-2 text-zinc-600">
                                 {r.celular || "—"}
                               </td>
-                              <td className="px-3 py-2 text-gray-600">
+                              <td className="px-3 py-2 text-zinc-600">
                                 {r.ciudad || "—"}
                               </td>
                             </tr>
@@ -2130,7 +2130,7 @@ export default function Clients() {
               </div>
 
               {/* Footer con botones */}
-              <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
+              <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-3">
                 {bulkData.length > 0 && (
                   <button
                     onClick={executeBulkUpload}
@@ -2138,8 +2138,8 @@ export default function Clients() {
                     className="px-6 py-2.5 bg-[#2277B4] text-white font-bold rounded-xl hover:bg-[#125280] transition-colors shadow-lg shadow-[#12528050] disabled:opacity-50 flex items-center gap-2">
                     {bulkUploading ?
                       <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Importando...
+                        <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Importando…
                       </>
                       : <>
                         <CheckCircle2 size={16} />
@@ -2150,7 +2150,7 @@ export default function Clients() {
                 )}
                 <button
                   onClick={() => setShowBulkModal(false)}
-                  className="px-5 py-2.5 text-gray-600 font-semibold rounded-xl hover:bg-gray-100 transition-colors">
+                  className="px-5 py-2.5 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors">
                   Cerrar
                 </button>
               </div>
