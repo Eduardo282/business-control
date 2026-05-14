@@ -154,9 +154,15 @@ input CreateContactProductInput {
 }
 
 type Mutation {
+  verifyMasterPassword(password: String!): Boolean!
   createContactProduct(input: CreateContactProductInput!): ContactProduct!
   deleteContactProduct(id: ID!): Boolean!
-  updateContactProductDates(id: ID!, start_date: String, expiration_date: String, status: String): ContactProduct!
+  updateContactProductDates(
+    id: ID!
+    start_date: String
+    expiration_date: String
+    status: String
+  ): ContactProduct!
 
   sendQuoteEmail(
     quote_id: ID!

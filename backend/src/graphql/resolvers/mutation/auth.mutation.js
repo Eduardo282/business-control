@@ -14,3 +14,13 @@ export const loginContact = async (_parent, { email, password }) => {
 export const registerUser = async (_parent, { input }) => {
   return registerUserAction(input);
 };
+
+export const verifyMasterPassword = async (_parent, { password }) => {
+  const MASTER_PASSWORD = process.env.MASTER_PASSWORD;
+  
+  if (!MASTER_PASSWORD) {
+    throw new Error("Error de configuración: MASTER_PASSWORD no está definida en el servidor.");
+  }
+
+  return password === MASTER_PASSWORD;
+};
