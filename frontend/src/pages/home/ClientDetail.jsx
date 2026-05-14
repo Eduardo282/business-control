@@ -2414,21 +2414,21 @@ export default function ClientDetail() {
             <div className="flex items-center gap-3">
               <div>
                 <span
-                  className={`font-medium ${row.original.is_active === false || row.original.is_active === 0 ? "text-zinc-400 line-through" : "text-zinc-800"}`}>
+                  className={`font-medium ${row.original.is_active === false || row.original.is_active === 0 ? "text-zinc-400 dark:text-zinc-500 line-through" : "text-zinc-800 dark:text-zinc-100"}`}>
                   {value}
                 </span>
                 {(
                   row.original.is_active === false ||
                   row.original.is_active === 0
                 ) ?
-                  <span className="ml-2 text-[10px] uppercase font-bold text-zinc-400 bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-300">
+                  <span className="ml-2 text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-dark-800 px-1.5 py-0.5 rounded border border-zinc-300 dark:border-dark-700">
                     Deshabilitado
                   </span>
                 : row.original.has_portal_access ?
-                  <span className="ml-2 text-[8px] uppercase font-bold text-emerald-700 px-1.5 py-0.5 rounded">
+                  <span className="ml-2 text-[8px] uppercase font-bold text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded">
                     CON PORTAL
                   </span>
-                : <span className="ml-2 text-[8px] uppercase font-bold text-orange-500 px-1.5 py-0.5 rounded">
+                : <span className="ml-2 text-[8px] uppercase font-bold text-orange-500 dark:text-orange-400 px-1.5 py-0.5 rounded">
                     SIN PORTAL
                   </span>
                 }
@@ -2437,7 +2437,7 @@ export default function ClientDetail() {
           );
         }
 
-        return <span className="text-zinc-600 break-words">{value}</span>;
+        return <span className="text-zinc-600 dark:text-zinc-300 break-words">{value}</span>;
       },
     }));
 
@@ -2482,13 +2482,13 @@ export default function ClientDetail() {
           if (isDisabled) {
             return (
               <div className="flex items-center gap-2 opacity-30 pointer-events-none select-none">
-                <button className="px-4 py-1.5 text-sm font-semibold text-zinc-400 bg-zinc-100 rounded-xl border border-zinc-200 shadow-sm flex items-center gap-1.5">
+                <button className="px-4 py-1.5 text-sm font-semibold text-zinc-400 bg-zinc-100 dark:bg-dark-800 rounded-xl border border-zinc-200 dark:border-dark-700 shadow-sm flex items-center gap-1.5">
                   <Key size={14} /> Acceso
                 </button>
-                <button className="size-8 flex items-center justify-center rounded-lg text-[#92400E]">
+                <button className="size-8 flex items-center justify-center rounded-lg text-[#92400E] dark:text-amber-600">
                   <Edit2 size={16} />
                 </button>
-                <button className="size-8 flex items-center justify-center rounded-lg text-red-800">
+                <button className="size-8 flex items-center justify-center rounded-lg text-red-800 dark:text-red-600">
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -2502,20 +2502,20 @@ export default function ClientDetail() {
                            transition-colors duration-150 flex items-center gap-1.5
                            ${
                              row.original.has_portal_access ?
-                               "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
-                             : "bg-red-50 text-red-800 border-red-200 hover:bg-red-100"
+                               "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 dark:hover:bg-emerald-500/20"
+                             : "bg-red-50 text-red-800 border-red-200 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 dark:hover:bg-red-500/20"
                            }`}>
                 <Key size={14} className="opacity-90" /> Acceso
               </button>
               <button
                 onClick={() => startEditContact(row.original)}
-                className="size-8 flex items-center justify-center rounded-lg text-[#92400E] transition-colors hover:scale-75"
+                className="size-8 flex items-center justify-center rounded-lg text-[#92400E] dark:text-amber-500 transition-colors hover:scale-75"
                 title="Editar">
                 <Edit2 size={16} />
               </button>
               <button
                 onClick={() => handleDeleteContact(row.original.id)}
-                className="size-8 flex items-center justify-center rounded-lg text-red-800 transition-colors hover:scale-75"
+                className="size-8 flex items-center justify-center rounded-lg text-red-800 dark:text-red-400 transition-colors hover:scale-75"
                 title="Deshabilitar">
                 <Trash2 size={16} />
               </button>
@@ -3099,11 +3099,11 @@ export default function ClientDetail() {
                   return (
                     <div
                       key={field.name}
-                      className={`${isFullWidthField ? "md:col-span-2" : ""} h-full p-3.5 rounded-xl border border-zinc-200/80 shadow-sm`}>
-                      <span className="text-xs font-semibold text-[#2277B4] uppercase block mb-1.5 tracking-wide">
+                      className={`${isFullWidthField ? "md:col-span-2" : ""} h-full p-3.5 rounded-xl border border-zinc-200/80 dark:border-dark-700 shadow-sm`}>
+                      <span className="text-xs font-semibold text-[#2277B4] dark:text-blue-400 uppercase block mb-1.5 tracking-wide">
                         {field.label}
                       </span>
-                      <div className="text-light-text-primary whitespace-normal break-words leading-relaxed">
+                      <div className="text-light-text-primary dark:text-zinc-100 whitespace-normal break-words leading-relaxed">
                         {field.value}
                       </div>
                     </div>
@@ -3113,8 +3113,8 @@ export default function ClientDetail() {
             </Card>
 
             <Card>
-              <h3 className="font-semibold text-light-text-primary mb-4 flex items-center gap-2">
-                <UserPlus size={20} className="text-black" /> Asignar Contacto
+              <h3 className="font-semibold text-light-text-primary dark:text-zinc-100 mb-4 flex items-center gap-2">
+                <UserPlus size={20} className="text-black dark:text-zinc-100" /> Asignar Contacto
                 a: {client.business_name}
               </h3>
               <form onSubmit={addContact} className="space-y-3">
@@ -3169,7 +3169,7 @@ export default function ClientDetail() {
             <Card className="h-full">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="font-semibold text-lg text-light-text-primary">
+                  <h3 className="font-semibold text-lg text-light-text-primary dark:text-zinc-100">
                     Contactos registrados de: {client.business_name}
                   </h3>
                   <p className="text-xs text-light-text-secondary dark:text-zinc-400">
@@ -3193,7 +3193,7 @@ export default function ClientDetail() {
                         setBulkContactResult(null);
                         setBulkContactDriveUrl("");
                       }}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#1a2b4c] transition-colors">
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#1a2b4c] dark:text-zinc-100 transition-colors">
                       <Upload size={15} />
                       Cargar contactos
                     </button>
@@ -3204,14 +3204,14 @@ export default function ClientDetail() {
               {/* Toolbar de búsqueda y filtros */}
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 {/* Búsqueda global */}
-                <div className="flex gap-1 bg-white p-1 rounded-lg border border-zinc-200 flex-1 min-w-[200px]">
+                <div className="flex gap-1 bg-white dark:bg-dark-900 p-1 rounded-lg border border-zinc-200 dark:border-dark-700 flex-1 min-w-[200px]">
                   <input
                     value={contactSearch}
                     onChange={(e) => setContactSearch(e.target.value)}
                     placeholder="Buscar contacto…"
-                    className="bg-transparent border-none text-sm text-zinc-800 placeholder:text-zinc-400 px-3 w-full focus:outline-none"
+                    className="bg-transparent border-none text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 px-3 w-full focus:outline-none"
                   />
-                  <div className="px-3 py-1.5 text-black">
+                  <div className="px-3 py-1.5 text-black dark:text-zinc-400">
                     <Search size={16} />
                   </div>
                 </div>
@@ -3220,14 +3220,14 @@ export default function ClientDetail() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleExportContactsPDF}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 bg-white text-red-700 hover:bg-red-50 transition-colors whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 dark:border-red-500/30 bg-white dark:bg-red-500/10 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/20 transition-colors whitespace-nowrap"
                       title="Exportar a PDF">
                       <FileText size={14} /> Exportar a PDF
                     </button>
 
                     <button
                       onClick={handleExportContactsExcel}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 transition-colors whitespace-nowrap"
                       title="Exportar a Excel">
                       <FileSpreadsheet size={14} /> Exportar a Excel
                     </button>
@@ -3240,7 +3240,7 @@ export default function ClientDetail() {
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
                     showContactFilters || activeContactFilterCount > 0 ?
                       "bg-[#2277B4] text-white border-[#2277B4]"
-                    : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50"
+                    : "bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-50 dark:hover:bg-dark-800"
                   }`}>
                   <SlidersHorizontal size={15} />
                   Filtros
@@ -3342,7 +3342,7 @@ export default function ClientDetail() {
                   document.body,
                 )}
 
-              <div className="px-4 py-2 min-h-10 bg-blue-50 border border-zinc-200 border-b-0 rounded-t-md text-xs text-[#2277B4] flex items-center justify-between gap-3">
+              <div className="px-4 py-2 min-h-10 bg-blue-50 dark:bg-blue-500/5 border border-zinc-200 dark:border-dark-700 border-b-0 rounded-t-md text-xs text-[#2277B4] dark:text-blue-400 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-1 shrink-0">
                   <Lightbulb size={14} className="inline" /> Clic en
                   <ChevronRight size={12} className="inline" /> para más
@@ -3370,7 +3370,7 @@ export default function ClientDetail() {
                           className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${
                             selectedValue ?
                               "bg-[#2277B4] text-white border-[#2277B4]"
-                            : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                            : "bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-100 dark:hover:bg-dark-800"
                           }`}>
                           <span className="font-semibold tracking-wide">
                             {button.buttonLabel}
@@ -3382,7 +3382,7 @@ export default function ClientDetail() {
                   
                   <button
                     onClick={handleDownloadContactsTemplate}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 bg-white transition-colors whitespace-nowrap"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-dark-800 border border-zinc-200 dark:border-dark-700 hover:bg-zinc-50 dark:hover:bg-dark-700 transition-colors whitespace-nowrap"
                     title="Descargar plantilla de carga masiva de contactos"> 
                     <FileSpreadsheet size={13} /> Descargar plantilla excel
                   </button>
@@ -3393,7 +3393,7 @@ export default function ClientDetail() {
 
               {/* Tabla TanStack */}
               <div
-                className={`bg-white overflow-x-auto border border-zinc-200 border-t-0 rounded-b-md ${
+                className={`bg-white dark:bg-dark-900 overflow-x-auto border border-zinc-200 dark:border-dark-700 border-t-0 rounded-b-md ${
                   shouldEnableContactTableScroll ?
                     "h-[65vh] overflow-y-scroll"
                   : ""
@@ -3403,7 +3403,7 @@ export default function ClientDetail() {
                     {contactsTable.getHeaderGroups().map((hg) => (
                       <tr
                         key={hg.id}
-                        className="bg-zinc-50 border-b border-zinc-200">
+                        className="bg-zinc-50 dark:bg-dark-800 border-b border-zinc-200 dark:border-dark-700">
                         {hg.headers.map((header) => (
                           <th
                             key={header.id}
@@ -3412,13 +3412,13 @@ export default function ClientDetail() {
                                 header.column.getToggleSortingHandler()
                               : undefined
                             }
-                            className={`px-4 py-3 text-left text-xs font-semibold text-[#2277B4] uppercase tracking-wider transition-colors ${
+                            className={`px-4 py-3 text-left text-xs font-semibold text-[#2277B4] dark:text-blue-400 uppercase tracking-wider transition-colors ${
                               shouldEnableContactTableScroll ?
-                                "sticky top-0 z-20 bg-zinc-50"
+                                "sticky top-0 z-20 bg-zinc-50 dark:bg-dark-800"
                               : ""
                             } ${
                               header.column.getCanSort() ?
-                                "cursor-pointer hover:bg-zinc-100"
+                                "cursor-pointer hover:bg-zinc-100 dark:hover:bg-dark-700"
                               : "cursor-default"
                             } ${header.column.id === "expander" ? "w-12" : ""}`}>
                             <div className="flex items-center gap-2">
@@ -3477,7 +3477,7 @@ export default function ClientDetail() {
                           </tr>
 
                           {isExpanded && rowDetailColumns.length > 0 && (
-                            <tr className="bg-zinc-50/80">
+                            <tr className="bg-zinc-50/80 dark:bg-dark-800/80">
                               {row.getVisibleCells().map((cell) => {
                                 const columnId = cell.column.id;
                                 const alignedDetails =
@@ -3501,10 +3501,10 @@ export default function ClientDetail() {
                                             <div
                                               key={`${row.id}_${column.name}`}
                                               className="min-w-0">
-                                              <p className="text-[10px] font-semibold uppercase text-[#2277B4] tracking-wider">
+                                              <p className="text-[10px] font-semibold uppercase text-[#2277B4] dark:text-blue-400 tracking-wider">
                                                 {column.label}
                                               </p>
-                                              <p className="text-sm text-zinc-700 break-words">
+                                              <p className="text-sm text-zinc-700 dark:text-zinc-100 break-words">
                                                 {value}
                                               </p>
                                             </div>
@@ -3544,38 +3544,38 @@ export default function ClientDetail() {
               {filteredContacts.length > 0 && (
                 <div className="mt-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-zinc-500">Mostrar</span>
+                    <span className="text-sm text-zinc-500 dark:text-zinc-400">Mostrar</span>
                     <select
                       value={contactsTable.getState().pagination.pageSize}
                       onChange={(e) =>
                         contactsTable.setPageSize(Number(e.target.value))
                       }
-                      className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-white border border-zinc-200">
+                      className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500 bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700">
                       {[10, 25, 50, 100].map((size) => (
-                        <option key={size} value={size}>
+                        <option key={size} value={size} className="dark:bg-dark-900 dark:text-zinc-100">
                           {size}
                         </option>
                       ))}
                     </select>
-                    <span className="text-sm text-zinc-500">por página</span>
+                    <span className="text-sm text-zinc-500 dark:text-zinc-400">por página</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => contactsTable.setPageIndex(0)}
                       disabled={!contactsTable.getCanPreviousPage()}
-                      className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                       ««
                     </button>
                     <button
                       onClick={() => contactsTable.previousPage()}
                       disabled={!contactsTable.getCanPreviousPage()}
-                      className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                       Anterior
                     </button>
                     <button
                       onClick={() => contactsTable.nextPage()}
                       disabled={!contactsTable.getCanNextPage()}
-                      className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                       Siguiente
                     </button>
                     <button
@@ -3585,7 +3585,7 @@ export default function ClientDetail() {
                         )
                       }
                       disabled={!contactsTable.getCanNextPage()}
-                      className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                       »»
                     </button>
                   </div>

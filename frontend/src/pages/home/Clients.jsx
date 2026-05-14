@@ -1506,7 +1506,7 @@ export default function Clients() {
 
                   return (
                     <React.Fragment key={row.id}>
-                      <tr className="hover:bg-zinc-50 transition-colors">
+                      <tr className="hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
                         {row.getVisibleCells().map((cell) => (
                           <td
                             key={cell.id}
@@ -1520,7 +1520,7 @@ export default function Clients() {
                       </tr>
 
                       {isExpanded && rowDetailColumns.length > 0 && (
-                        <tr className="bg-zinc-50/80">
+                        <tr className="bg-zinc-50/80 dark:bg-dark-800/80">
                           {row.getVisibleCells().map((cell) => {
                             const columnId = cell.column.id;
                             const alignedDetails =
@@ -1544,10 +1544,10 @@ export default function Clients() {
                                         <div
                                           key={`${row.id}_${column.name}`}
                                           className="min-w-0">
-                                          <p className="text-[10px] font-semibold uppercase text-[#2277B4] tracking-wider">
+                                          <p className="text-[10px] font-semibold uppercase text-[#2277B4] dark:text-blue-400 tracking-wider">
                                             {column.label}
                                           </p>
-                                          <p className="text-sm text-zinc-700 break-words">
+                                          <p className="text-sm text-zinc-700 dark:text-zinc-100 break-words">
                                             {value}
                                           </p>
                                         </div>
@@ -1584,45 +1584,45 @@ export default function Clients() {
 
         {/* Paginación */}
         {clients.length > 0 && (
-          <div className="px-4 py-3 border-t border-zinc-100 flex items-center justify-between">
+          <div className="px-4 py-3 border-t border-zinc-100 dark:border-dark-700 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-zinc-500">Mostrar</span>
+              <span className="text-sm text-zinc-500 dark:text-zinc-400">Mostrar</span>
               <select
                 value={table.getState().pagination.pageSize}
                 onChange={(e) => table.setPageSize(Number(e.target.value))}
-                className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-[#fff]">
+                className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500 bg-[#fff] dark:bg-dark-900 border border-zinc-200 dark:border-dark-700">
                 {[10, 25, 50, 100].map((size) => (
-                  <option key={size} value={size}>
+                  <option key={size} value={size} className="dark:bg-dark-900 dark:text-zinc-100">
                     {size}
                   </option>
                 ))}
               </select>
-              <span className="text-sm text-zinc-500">por página</span>
+              <span className="text-sm text-zinc-500 dark:text-zinc-400">por página</span>
             </div>
 
             <div className="flex items-center gap-1">
               <button
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
-                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 ««
               </button>
               <button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 Anterior
               </button>
               <button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 Siguiente
               </button>
               <button
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
-                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 »»
               </button>
             </div>

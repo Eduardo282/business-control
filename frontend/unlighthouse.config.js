@@ -3,8 +3,7 @@ export default {
   site: "http://localhost:5173",
   cache: false,
   defaultQueryParams: {
-    lh_token:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3NjI4NTc5OSwiZXhwIjoxNzc2ODkwNTk5fQ.dB7udp5a4tIyqtDSXUGfyQM6hAssvoFBOwMM4YWo25E",
+    lh_token: process.env.UNLIGHTHOUSE_TOKEN || "",
   },
   lighthouseOptions: {
     disableStorageReset: true,
@@ -17,8 +16,7 @@ export default {
   },
   // Inyeccion nativa de sesion para rutas protegidas (sin hooks personalizados).
   localStorage: {
-    bc_token:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3NjI4NTc5OSwiZXhwIjoxNzc2ODkwNTk5fQ.dB7udp5a4tIyqtDSXUGfyQM6hAssvoFBOwMM4YWo25E",
+    bc_token: process.env.UNLIGHTHOUSE_TOKEN || "",
   },
   urls: [
     "/",

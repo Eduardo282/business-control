@@ -35,15 +35,15 @@ function getPolicyStatusClass(status) {
     .toUpperCase();
 
   if (normalized === "ACTIVE") {
-    return "text-emerald-700";
+    return "text-emerald-700 dark:text-emerald-400";
   }
   if (normalized === "EXPIRING_SOON") {
-    return "text-amber-600";
+    return "text-amber-600 dark:text-amber-400";
   }
   if (normalized === "CANCELLED") {
-    return "text-zinc-600";
+    return "text-zinc-600 dark:text-zinc-400";
   }
-  return "text-red-600";
+  return "text-red-600 dark:text-red-400";
 }
 
 function LicenseTable({ licenseKeys = [] }) {
@@ -689,19 +689,19 @@ export default function Policies() {
           const policyType = inferPolicyType(g.product);
           const typeLabel = policyType === "POLICY" ? "Póliza" : "Servicio";
           const typeClasses =
-            policyType === "POLICY" ? "text-blue-700" : "text-emerald-700";
+            policyType === "POLICY" ? "text-blue-700 border-blue-200 bg-blue-50 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400" : "text-emerald-700 border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400";
           return (
             <div>
               <div className="flex items-center gap-2">
-                <div className="font-bold text-zinc-800 hover:text-[#2277B4]">
+                <div className="font-bold text-zinc-800 dark:text-zinc-100 hover:text-[#2277B4] dark:hover:text-blue-400">
                   {g.product?.name || "—"}
                 </div>
                 <span
-                  className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded border ${typeClasses}`}>
+                  className={`text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded border ${typeClasses}`}>
                   {typeLabel}
                 </span>
               </div>
-              <div className="text-xs text-zinc-500">
+              <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                 {g.product?.category || ""}
               </div>
               {g.count > 1 && (
@@ -718,7 +718,7 @@ export default function Policies() {
         header: "Cliente",
         accessorFn: (row) => row.client?.business_name,
         cell: ({ row }) => (
-          <div className="font-medium text-zinc-500">
+          <div className="font-medium text-zinc-500 dark:text-zinc-300">
             {row.original.client?.business_name || "Sin Cliente"}
           </div>
         ),
@@ -751,12 +751,12 @@ export default function Policies() {
             );
           }
           return (
-            <div className="text-zinc-700">
+            <div className="text-zinc-700 dark:text-zinc-300">
               <div>
                 Inicia:{" "}
                 {g.start_date ? new Date(g.start_date).toLocaleDateString() : "—"}
               </div>
-              <div className="text-xs text-zinc-500">
+              <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                 Vence:{" "}
                 {g.expiration_date ? new Date(g.expiration_date).toLocaleDateString() : "—"}
               </div>
@@ -1050,7 +1050,7 @@ export default function Policies() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-zinc-50 text-xs uppercase text-[#2277B4]">
+            <thead className="bg-zinc-50 dark:bg-dark-800 text-xs uppercase text-[#2277B4] dark:text-blue-400">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header, idx) => (
@@ -1083,7 +1083,7 @@ export default function Policies() {
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-zinc-100 text-sm">
+            <tbody className="divide-y divide-zinc-100 dark:divide-dark-700 text-sm">
               {loading ?
                 <tr>
                   <td
@@ -1104,7 +1104,7 @@ export default function Policies() {
                   <Fragment key={row.id}>
                     <tr
                       key={row.id}
-                      className="hover:bg-zinc-50 transition-colors cursor-pointer"
+                      className="hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors cursor-pointer"
                       onClick={() =>
                         setExpanded((prev) => ({
                           ...prev,
@@ -1122,7 +1122,7 @@ export default function Policies() {
                     </tr>
 
                     {!!expanded[row.original.id] && (
-                      <tr key={`${row.id}__expanded`} className="bg-zinc-50/40">
+                      <tr key={`${row.id}__expanded`} className="bg-zinc-50/40 dark:bg-dark-800/80">
                         <td colSpan={columns.length} className="px-6 py-4">
                           <div className="ml-8">
                             <div className="text-[11px] text-zinc-500 font-semibold uppercase tracking-wider mb-2">
@@ -1143,8 +1143,8 @@ export default function Policies() {
         </div>
 
         {!loading && filteredGroups.length > 0 && (
-          <div className="px-4 py-3 border-t border-zinc-100 bg-white flex items-center justify-between gap-3">
-            <label className="text-sm text-zinc-500 flex items-center gap-2">
+          <div className="px-4 py-3 border-t border-zinc-100 dark:border-dark-700 bg-white dark:bg-dark-900 flex items-center justify-between gap-3">
+            <label className="text-sm text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
               Mostrar
               <select
                 value={table.getState().pagination.pageSize}
@@ -1155,9 +1155,9 @@ export default function Policies() {
                     pageSize: Number(e.target.value),
                   }))
                 }
-                className="px-2 py-1 rounded-md border border-zinc-200 text-sm text-zinc-700 bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                className="px-2 py-1 rounded-md border border-zinc-200 dark:border-dark-700 text-sm text-zinc-700 dark:text-zinc-100 bg-zinc-50 dark:bg-dark-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
                 {[10, 25, 50, 100].map((size) => (
-                  <option key={size} value={size}>
+                  <option key={size} value={size} className="dark:bg-dark-900 dark:text-zinc-100">
                     {size}
                   </option>
                 ))}
@@ -1169,25 +1169,25 @@ export default function Policies() {
               <button
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
-                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 ««
               </button>
               <button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 Anterior
               </button>
               <button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 Siguiente
               </button>
               <button
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
-                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 »»
               </button>
             </div>

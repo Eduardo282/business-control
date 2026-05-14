@@ -8,7 +8,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { ApolloServer } from "@apollo/server";
-import { expressMiddleware } from "@apollo/server/express4";
+import { expressMiddleware } from "@as-integrations/express5";
 import depthLimit from "graphql-depth-limit";
 
 import resolvers from "./graphql/resolvers/index.js";
@@ -58,11 +58,37 @@ app.use(
   })
 );
 
-// Use Helmet for security headers
+// Control estricto de Caché para mitigar "Directivas de Control de Caché" de ZAP
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+});
+
+// Interceptar y blindar cualquier Cookie generada (como las de Socket.io o proxy) mitigando "Cookie sin Flag" de ZAP
+app.use((req, res, next) => {
+  const originalCookie = res.cookie;
+  res.cookie = function (name, value, options) {
+    const secureOptions = {
+      ...options,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    };
+    return originalCookie.call(res, name, value, secureOptions);
+  };
+  next();
+});
+
+// Use Helmet for security headers (Reparando Anti-Clickjacking y CSP)
 app.use(
   helmet({
-    crossOriginEmbedderPolicy: false, // Prevents blocking Apollo Sandbox
+    crossOriginEmbedderPolicy: false, 
     contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false,
+    frameguard: { action: "deny" }, // Evita el enmarcado de iFrames por terceros (Clickjacking)
+    hidePoweredBy: true, // Oculta tecnología trasera (Express)
+    noSniff: true, // X-Content-Type-Options
   })
 );
 

@@ -198,7 +198,7 @@ export default function ProductDetail() {
         header: "Precio Anterior",
         cell: ({ row }) => (
           <div>
-            <div className="text-stone-600 font-mono font-bold text-[15px]">
+            <div className="text-stone-600 dark:text-zinc-100 font-mono font-bold text-[15px]">
               $
               {(Number(row.original.price) || 0).toLocaleString("es-MX", {
                 minimumFractionDigits: 2,
@@ -235,10 +235,10 @@ export default function ProductDetail() {
           );
           return (
             <div className="text-right">
-              <div className="text-xs text-black font-semibold">
+              <div className="text-xs text-black dark:text-zinc-100 font-semibold">
                 {date.toLocaleDateString()}
               </div>
-              <div className="text-[10px] text-light-text-secondary/70 dark:text-zinc-600 mt-0.5">
+              <div className="text-[10px] text-light-text-secondary/70 dark:text-zinc-400 mt-0.5">
                 {date.toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -378,17 +378,17 @@ export default function ProductDetail() {
                     size="md"
                   />
                   <div>
-                    <h2 className="text-3xl font-semibold text-light-text-primary hover:text-[#2277B4]">
+                    <h2 className="text-3xl font-semibold text-light-text-primary dark:text-zinc-100 hover:text-[#2277B4] dark:hover:text-blue-400">
                       {product.name}
                     </h2>
-                    <span className="inline-block mt-1 px-3 py-1 bg-[#F2F5F9] text-zinc-500 rounded-full text-xs font-medium border border-zinc-100">
+                    <span className="inline-block mt-1 px-3 py-1 bg-[#F2F5F9] dark:bg-dark-800 text-zinc-500 dark:text-zinc-300 rounded-full text-xs font-medium border border-zinc-100 dark:border-dark-700">
                       {product.category}
                     </span>
                   </div>
                 </div>
                 <Link
                   to="/productos"
-                  className="text-xs font-medium text-black  hover:text-light-text-primary flex items-center gap-1 transition-colors px-3 py-2 rounded-lg dark:hover:bg-white/5">
+                  className="text-xs font-medium text-black dark:text-zinc-100 hover:text-light-text-primary dark:hover:text-zinc-300 flex items-center gap-1 transition-colors px-3 py-2 rounded-lg dark:hover:bg-white/5">
                   <ArrowLeft size={16} /> Volver
                 </Link>
               </div>
@@ -403,7 +403,7 @@ export default function ProductDetail() {
                     <div className="text-xs text-light-text-secondary dark:text-zinc-500 mb-1">
                       Precio Actual
                     </div>
-                    <div className="text-4xl font-mono text-stone-600 font-bold tracking-tight">
+                    <div className="text-4xl font-mono text-stone-600 dark:text-zinc-100 font-bold tracking-tight">
                       $
                       {(Number(product.current_price) || 0).toLocaleString(
                         "es-MX",
@@ -413,7 +413,7 @@ export default function ProductDetail() {
                         },
                       )}
                     </div>
-                    <div className="text-[10px] text-black font-mono text-right mt-1">
+                    <div className="text-[10px] text-black dark:text-zinc-400 font-mono text-right mt-1">
                       + IVA $
                       {(parseFloat(product.current_price || 0) * 0.16).toFixed(
                         2,
@@ -425,13 +425,13 @@ export default function ProductDetail() {
                 {inferProductType(product) === "PRODUCT" && product.users_count > 0 && (
                   <div className="flex items-center gap-3 px-4 py-3 w-fit">
                     <div className="p-2 rounded-lg">
-                      <Users size={20} className="text-black" />
+                      <Users size={20} className="text-black dark:text-zinc-400" />
                     </div>
                     <div>
                       <div className="text-xs text-light-text-secondary dark:text-zinc-500">
                         Usuarios
                       </div>
-                      <div className="text-lg font-bold text-light-text-primary">
+                      <div className="text-lg font-bold text-light-text-primary dark:text-zinc-100">
                         {product.users_count}
                       </div>
                     </div>
@@ -537,14 +537,14 @@ export default function ProductDetail() {
         <div className="w-full md:w-96 space-y-6">
           {/* Tarjeta de actualizacion de precio */}
           {user?.role?.name !== "SOPORTE" && (
-            <div className="rounded-md p-6 bg-white border border-zinc-200 shadow-md shadow-zinc-200">
-              <h3 className="font-semibold text-light-text-primary mb-2 flex items-center gap-2">
-                <span className="text-black">$</span> Actualizar Precio
+            <div className="rounded-md p-6 bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 shadow-md shadow-zinc-200 dark:shadow-none">
+              <h3 className="font-semibold text-light-text-primary dark:text-zinc-100 mb-2 flex items-center gap-2">
+                <span className="text-black dark:text-zinc-400">$</span> Actualizar Precio
               </h3>
               <div className="flex gap-2 items-end">
                 <div className="w-full">
                   {newPrice && !isNaN(newPrice) && (
-                    <div className="text-[10px] text-black mt-1 font-mono text-right">
+                    <div className="text-[10px] text-black dark:text-zinc-400 mt-1 font-mono text-right">
                       + IVA: ${(parseFloat(newPrice) * 0.16).toFixed(2)}
                     </div>
                   )}
@@ -557,19 +557,19 @@ export default function ProductDetail() {
                       min="0"
                       step="0.01"
                       placeholder="0.00"
-                      className="w-full rounded-xl pl-4 pr-12 py-3 font-mono text-lg text-light-text-primary bg-white border border-[#cfd9e6] focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30"
+                      className="w-full rounded-xl pl-4 pr-12 py-3 font-mono text-lg text-light-text-primary dark:text-zinc-100 bg-white dark:bg-dark-800 border border-[#cfd9e6] dark:border-dark-700 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30"
                     />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col overflow-hidden rounded-md border border-[#b8cce6] shadow-sm">
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col overflow-hidden rounded-md border border-[#b8cce6] dark:border-dark-600 shadow-sm">
                       <button
                         type="button"
                         onClick={() => handlePriceStep(1)}
-                        className="size-4 leading-none text-[10px] font-bold text-[#2277B4] bg-[#e8f2ff] hover:bg-[#dcecff] transition-colors">
+                        className="size-4 leading-none text-[10px] font-bold text-[#2277B4] dark:text-blue-400 bg-[#e8f2ff] dark:bg-dark-700 hover:bg-[#dcecff] hover:dark:bg-dark-600 transition-colors">
                         ▲
                       </button>
                       <button
                         type="button"
                         onClick={() => handlePriceStep(-1)}
-                        className="size-4 leading-none text-[10px] font-bold text-[#2277B4] bg-[#e8f2ff] hover:bg-[#dcecff] border-t border-[#b8cce6] transition-colors">
+                        className="size-4 leading-none text-[10px] font-bold text-[#2277B4] dark:text-blue-400 bg-[#e8f2ff] dark:bg-dark-700 hover:bg-[#dcecff] hover:dark:bg-dark-600 border-t border-[#b8cce6] dark:border-dark-600 transition-colors">
                         ▼
                       </button>
                     </div>
@@ -586,14 +586,14 @@ export default function ProductDetail() {
           )}
 
           {/* Tarjeta de historial */}
-          <div className="rounded-md p-0 overflow-visible flex flex-col mt-4 bg-white border border-zinc-200 shadow-sm">
+          <div className="rounded-md p-0 overflow-visible flex flex-col mt-4 bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 shadow-sm">
             <div className="p-4 bg-light-bg/50 dark:bg-white/5 flex flex-col gap-3 border-b border-light-border dark:border-white/10">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-light-text-primary text-sm flex items-center gap-2">
-                  <History size={16} className="text-black" />
+                <h3 className="font-semibold text-light-text-primary dark:text-zinc-100 text-sm flex items-center gap-2">
+                  <History size={16} className="text-black dark:text-zinc-400" />
                   Precios
                 </h3>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-black">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-black dark:text-zinc-100">
                   Total:{" "}
                   {product.price_history ? product.price_history.length : 0}
                 </span>
@@ -613,7 +613,7 @@ export default function ProductDetail() {
                       setSelectedHistoryDate(null);
                       setGlobalFilter(e.target.value);
                     }}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 bg-white text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-800 text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
                   />
                   {globalFilter && (
                     <button
@@ -621,7 +621,7 @@ export default function ProductDetail() {
                         setSelectedHistoryDate(null);
                         setGlobalFilter("");
                       }}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600">
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
                       <X size={12} />
                     </button>
                   )}
@@ -659,19 +659,19 @@ export default function ProductDetail() {
                     showPopperArrow={false}
                     popperClassName="price-history-datepicker-popper"
                     calendarClassName="price-history-datepicker-calendar"
-                    className="w-full rounded-lg border border-zinc-200 text-xs px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#2277B4] text-zinc-700 bg-white"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-dark-700 text-xs px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#2277B4] text-zinc-700 dark:text-zinc-100 bg-white dark:bg-dark-800"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="p-4 bg-zinc-50/30">
+            <div className="p-4 bg-zinc-50/30 dark:bg-dark-800/30">
               {table.getRowModel().rows.length > 0 ?
                 <div className="space-y-3">
                   {table.getRowModel().rows.map((row) => (
                     <div
                       key={row.id}
-                      className="flex justify-between items-center p-3 rounded-lg bg-white shadow-sm border border-zinc-100/80 transition-colors">
+                      className="flex justify-between items-center p-3 rounded-lg bg-white dark:bg-dark-800 shadow-sm border border-zinc-100/80 dark:border-dark-700 transition-colors">
                       {row.getVisibleCells().map((cell) => (
                         <div key={cell.id}>
                           {flexRender(
@@ -693,22 +693,22 @@ export default function ProductDetail() {
 
             {/* Paginación */}
             {product.price_history && product.price_history.length > 3 && (
-              <div className="px-4 py-3 border-t border-zinc-100 flex items-center justify-between">
+              <div className="px-4 py-3 border-t border-zinc-100 dark:border-dark-700 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => table.previousPage()}
                     disabled={!table.getCanPreviousPage()}
-                    className="p-1 rounded hover:bg-zinc-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-black">
+                    className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-dark-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-black dark:text-zinc-100">
                     <ChevronLeft size={16} />
                   </button>
-                  <span className="text-[11px] font-medium text-black min-w-max">
+                  <span className="text-[11px] font-medium text-black dark:text-zinc-100 min-w-max">
                     Pág {table.getState().pagination.pageIndex + 1} de{" "}
                     {Math.max(1, table.getPageCount())}
                   </span>
                   <button
                     onClick={() => table.nextPage()}
                     disabled={!table.getCanNextPage()}
-                    className="p-1 rounded hover:bg-zinc-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-black">
+                    className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-dark-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-black dark:text-zinc-100">
                     <ChevronRight size={16} />
                   </button>
                 </div>
@@ -717,7 +717,7 @@ export default function ProductDetail() {
                   onChange={(e) => {
                     table.setPageSize(Number(e.target.value));
                   }}
-                  className="text-[11px] bg-zinc-50 border border-zinc-200 rounded px-1.5 py-1 text-zinc-600 outline-none">
+                  className="text-[11px] bg-zinc-50 dark:bg-dark-800 border border-zinc-200 dark:border-dark-700 rounded px-1.5 py-1 text-zinc-600 dark:text-zinc-300 outline-none">
                   {[3, 5, 10, 20].map((pageSize) => (
                     <option key={pageSize} value={pageSize}>
                       Mostrar {pageSize}

@@ -216,7 +216,7 @@ export default function QuoteHistory() {
         accessorKey: "id",
         header: "Cotización",
         cell: ({ row }) => (
-          <div className="font-bold text-light-text-primary">
+          <div className="font-bold text-light-text-primary dark:text-zinc-100">
             Cotización #{row.original.id}
           </div>
         ),
@@ -225,7 +225,7 @@ export default function QuoteHistory() {
         accessorKey: "folio",
         header: "Folio",
         cell: ({ row }) => (
-          <div className="text-sm font-mono font-bold text-[#2277B4] tracking-wider">
+          <div className="text-sm font-mono font-bold text-[#2277B4] dark:text-blue-400 tracking-wider">
             {row.original.folio || "—"}
           </div>
         ),
@@ -234,7 +234,7 @@ export default function QuoteHistory() {
         accessorKey: "client.business_name",
         header: "Cliente",
         cell: ({ row }) => (
-          <div className="text-sm text-light-text-secondary">
+          <div className="text-sm text-light-text-secondary dark:text-zinc-400">
             {row.original.client?.business_name || "—"}
           </div>
         ),
@@ -243,7 +243,7 @@ export default function QuoteHistory() {
         accessorKey: "user.full_name",
         header: "Creada por",
         cell: ({ row }) => (
-          <div className="text-sm text-light-text-secondary">
+          <div className="text-sm text-light-text-secondary dark:text-zinc-400">
             {row.original.user?.full_name || "Usuario"}
           </div>
         ),
@@ -252,7 +252,7 @@ export default function QuoteHistory() {
         accessorKey: "created_at",
         header: "Fecha",
         cell: ({ row }) => (
-          <div className="text-sm text-light-text-secondary" suppressHydrationWarning>
+          <div className="text-sm text-light-text-secondary dark:text-zinc-400" suppressHydrationWarning>
             {row.original.created_at ?
               new Date(row.original.created_at).toLocaleDateString()
             : "—"}
@@ -263,7 +263,7 @@ export default function QuoteHistory() {
         accessorKey: "total",
         header: "Total (c/IVA)",
         cell: ({ row }) => (
-          <div className="font-bold text-stone-600 text-right">
+          <div className="font-bold text-stone-600 dark:text-zinc-300 text-right">
             $
             {Number(row.original.total || 0).toLocaleString("es-MX", {
               minimumFractionDigits: 2,
@@ -276,7 +276,7 @@ export default function QuoteHistory() {
         header: "Estado",
         cell: ({ row }) => (
           <div className="text-right">
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded text-yellow-600">
+            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded text-yellow-600 dark:text-yellow-400">
               {row.original.status || "N/A"}
             </span>
           </div>
@@ -290,7 +290,7 @@ export default function QuoteHistory() {
           <div className="flex items-center justify-end gap-2">
             <Link
               to={`/cotizaciones/${row.original.id}`}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#2277B4] bg-white rounded-lg border border-[#CBD5E1] hover:bg-[#F8FAFC] hover:border-[#B8C6D8] shadow-sm transition-colors duration-150">
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-[#2277B4] dark:text-blue-400 bg-white dark:bg-dark-800 rounded-lg border border-[#CBD5E1] dark:border-dark-600 hover:bg-[#F8FAFC] dark:hover:bg-dark-700 hover:border-[#B8C6D8] dark:hover:border-dark-500 shadow-sm transition-colors duration-150">
               <ExternalLink size={14} /> Ver
             </Link>
             {user?.role?.name !== "SOPORTE" && (
@@ -386,9 +386,9 @@ export default function QuoteHistory() {
     <div className="space-y-6 pb-16 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <BadgeDollarSign size={28} />
+          <BadgeDollarSign size={28} className="text-light-text-primary dark:text-zinc-100" />
           <div>
-            <h1 className="text-3xl font-semibold text-light-text-primary">
+            <h1 className="text-3xl font-semibold text-light-text-primary dark:text-zinc-100">
               Historial de Cotizaciones
             </h1>
             <p className="text-sm text-light-text-secondary dark:text-zinc-400">
@@ -408,7 +408,7 @@ export default function QuoteHistory() {
               value={q}
               onChange={(e) => dispatchFilter({ type: "SET_Q", payload: e.target.value })}
               placeholder="Buscar por cliente, vendedor…"
-              className="w-full sm:w-80 pl-4 pr-11 py-3 bg-white border border-zinc-300 rounded-xl text-sm text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] transition-all shadow-sm"
+              className="w-full sm:w-80 pl-4 pr-11 py-3 bg-white dark:bg-dark-900 border border-zinc-300 dark:border-dark-700 rounded-xl text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-500/30 focus:border-[#2277B4] dark:focus:border-blue-500 transition-all shadow-sm"
             />
           </div>
 
@@ -417,7 +417,7 @@ export default function QuoteHistory() {
             className={`inline-flex items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold border transition-colors whitespace-nowrap ${
               showFilters || activeFilterCount > 0 ?
                 "bg-[#2277B4] text-white border-[#2277B4]"
-              : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+              : "bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-100 dark:hover:bg-dark-800"
             }`}>
             <SlidersHorizontal size={14} /> Filtros
             {activeFilterCount > 0 && (
@@ -550,7 +550,7 @@ export default function QuoteHistory() {
                     className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] border transition-all whitespace-nowrap ${
                       selectedValue ?
                         "bg-[#2277B4] text-white border-[#2277B4]"
-                      : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                      : "bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-100 dark:hover:bg-dark-800"
                     } ${
                       showFilters ?
                         "opacity-100 translate-y-0"
@@ -583,7 +583,7 @@ export default function QuoteHistory() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="uppercase text-xs font-bold tracking-wider text-[#2277B4] border-b border-light-border dark:border-zinc-700">
+              <thead className="uppercase text-xs font-bold tracking-wider text-[#2277B4] dark:text-blue-400 border-b border-light-border dark:border-zinc-700">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
@@ -631,7 +631,7 @@ export default function QuoteHistory() {
 
               <tbody className="divide-y divide-light-border dark:divide-zinc-800">
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-zinc-50 transition">
+                  <tr key={row.id} className="hover:bg-zinc-50 dark:hover:bg-white/5 transition">
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
@@ -656,8 +656,8 @@ export default function QuoteHistory() {
             </table>
           </div>
 
-          <div className="px-4 py-3 border-t border-light-border bg-white flex items-center justify-between gap-3 flex-wrap">
-            <label className="text-sm text-light-text-secondary flex items-center gap-2">
+          <div className="px-4 py-3 border-t border-light-border dark:border-dark-700 bg-white dark:bg-dark-900 flex items-center justify-between gap-3 flex-wrap">
+            <label className="text-sm text-light-text-secondary dark:text-zinc-400 flex items-center gap-2">
               Mostrar
               <select
                 value={table.getState().pagination.pageSize}
@@ -668,9 +668,9 @@ export default function QuoteHistory() {
                     pageSize: Number(e.target.value),
                   }));
                 }}
-                className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-[#fff] border border-light-border">
+                className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500 bg-[#fff] dark:bg-dark-900 border border-light-border dark:border-dark-700">
                 {[10, 25, 50, 100].map((size) => (
-                  <option key={size} value={size}>
+                  <option key={size} value={size} className="dark:bg-dark-900 dark:text-zinc-100">
                     {size}
                   </option>
                 ))}
@@ -682,25 +682,25 @@ export default function QuoteHistory() {
               <button
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
-                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 ««
               </button>
               <button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 Anterior
               </button>
               <button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 Siguiente
               </button>
               <button
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
-                className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 »»
               </button>
             </div>

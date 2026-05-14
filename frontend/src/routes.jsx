@@ -12,6 +12,17 @@ import MasterPasswordGate, {
   resetMasterGranted,
 } from "./components/auth/MasterPasswordGate";
 import RolesAccessGate from "./components/auth/RolesAccessGate";
+import { Helmet } from "react-helmet-async";
+
+const PageMeta = ({ title, desc, children }) => (
+  <>
+    <Helmet>
+      <title>{title}</title>
+      {desc && <meta name="description" content={desc} />}
+    </Helmet>
+    {children}
+  </>
+);
 
 const Login = lazy(() => import("./pages/auth/Login"));
 const Register = lazy(() => import("./pages/auth/Register"));
@@ -61,60 +72,64 @@ export default function AppRoutes() {
           </div>
         }>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<PageMeta title="Iniciar Sesión" desc="Acceso al sistema de gestión empresarial."><Login /></PageMeta>} />
           <Route
             path="/register"
             element={
-              <MasterPasswordGate>
-                <Register />
-              </MasterPasswordGate>
+              <PageMeta title="Registrar Usuario" desc="Registro de nuevos usuarios del sistema.">
+                <MasterPasswordGate>
+                  <Register />
+                </MasterPasswordGate>
+              </PageMeta>
             }
           />
           <Route
             path="/roles"
             element={
-              <RolesAccessGate>
-                <Roles />
-              </RolesAccessGate>
+              <PageMeta title="Gestión de Roles" desc="Administración de roles y permisos de usuarios.">
+                <RolesAccessGate>
+                  <Roles />
+                </RolesAccessGate>
+              </PageMeta>
             }
           />
 
           {/* Rutas del portal */}
-          <Route path="/portal/login" element={<PortalLogin />} />
+          <Route path="/portal/login" element={<PageMeta title="Portal — Iniciar Sesión" desc="Acceso al portal de clientes."><PortalLogin /></PageMeta>} />
           <Route path="/portal" element={<PortalLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<PortalDashboard />} />
-            <Route path="quotes" element={<PortalQuotes />} />
-            <Route path="quotes/:id" element={<QuoteDetail />} />
-            <Route path="catalog" element={<PortalCatalog />} />
-            <Route path="support" element={<PortalSupport />} />
+            <Route path="dashboard" element={<PageMeta title="Portal — Dashboard" desc="Panel principal del portal de clientes."><PortalDashboard /></PageMeta>} />
+            <Route path="quotes" element={<PageMeta title="Portal — Cotizaciones" desc="Cotizaciones disponibles en el portal de clientes."><PortalQuotes /></PageMeta>} />
+            <Route path="quotes/:id" element={<PageMeta title="Portal — Detalle Cotización" desc="Detalle de cotización en el portal."><QuoteDetail /></PageMeta>} />
+            <Route path="catalog" element={<PageMeta title="Portal — Catálogo" desc="Catálogo de productos disponibles para clientes."><PortalCatalog /></PageMeta>} />
+            <Route path="support" element={<PageMeta title="Portal — Soporte" desc="Chat de soporte en tiempo real para clientes."><PortalSupport /></PageMeta>} />
           </Route>
 
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<PageMeta title="Panel de Control" desc="Vista general del panel de control empresarial."><Home /></PageMeta>} />
 
               <Route element={<RoleGate allow={["ADMIN", "VENTAS"]} />}>
-                <Route path="/clientes" element={<Clients />} />
-                <Route path="/clientes/:id" element={<ClientDetail />} />
+                <Route path="/clientes" element={<PageMeta title="Clientes" desc="Gestión y administración de clientes registrados."><Clients /></PageMeta>} />
+                <Route path="/clientes/:id" element={<PageMeta title="Detalle de Cliente" desc="Información detallada del cliente y sus contactos."><ClientDetail /></PageMeta>} />
               </Route>
 
               <Route
                 element={<RoleGate allow={["ADMIN", "VENTAS", "SOPORTE"]} />}>
-                <Route path="/productos" element={<Products />} />
+                <Route path="/productos" element={<PageMeta title="Productos" desc="Catálogo de productos y servicios disponibles."><Products /></PageMeta>} />
                 <Route
                   path="/registrar-productos"
-                  element={<RegistrarProducts />}
+                  element={<PageMeta title="Registrar Productos" desc="Registro de nuevos productos y servicios al catálogo."><RegistrarProducts /></PageMeta>}
                 />
-                <Route path="/polizas" element={<Policies />} />
-                <Route path="/productos/:id" element={<ProductDetail />} />
+                <Route path="/polizas" element={<PageMeta title="Servicios y Pólizas" desc="Gestión de pólizas y servicios activos."><Policies /></PageMeta>} />
+                <Route path="/productos/:id" element={<PageMeta title="Detalle de Producto" desc="Información detallada, precios e historial del producto."><ProductDetail /></PageMeta>} />
                 <Route
                   path="/cotizaciones/historial"
-                  element={<QuoteHistory />}
+                  element={<PageMeta title="Historial de Cotizaciones" desc="Historial completo de cotizaciones generadas."><QuoteHistory /></PageMeta>}
                 />
-                <Route path="/cotizaciones/nueva" element={<CreateQuote />} />
-                <Route path="/cotizaciones/:id" element={<QuoteDetail />} />
-                <Route path="/soporte" element={<AgentSupport />} />
+                <Route path="/cotizaciones/nueva" element={<PageMeta title="Nueva Cotización" desc="Creación de cotizaciones para clientes."><CreateQuote /></PageMeta>} />
+                <Route path="/cotizaciones/:id" element={<PageMeta title="Detalle de Cotización" desc="Vista detallada de la cotización con productos y totales."><QuoteDetail /></PageMeta>} />
+                <Route path="/soporte" element={<PageMeta title="Soporte" desc="Centro de soporte y chat en tiempo real con clientes."><AgentSupport /></PageMeta>} />
               </Route>
             </Route>
           </Route>

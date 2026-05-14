@@ -315,7 +315,7 @@ export default function Products({ categoryFilter }) {
               )}
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-zinc-800 text-[13px] tracking-tight truncate max-w-[200px] sm:max-w-xs">
+              <span className="font-semibold text-zinc-800 dark:text-zinc-100 text-[13px] tracking-tight truncate max-w-[200px] sm:max-w-xs">
                 {p.name}
               </span>
               <span className="text-[11px] text-zinc-400 truncate max-w-[200px] sm:max-w-xs">
@@ -330,7 +330,7 @@ export default function Products({ categoryFilter }) {
         header: "CATEGORÍA",
         enableSorting: true,
         cell: ({ getValue }) => (
-          <span className="inline-flex px-2 py-1 bg-zinc-100 text-zinc-600 rounded text-[10px] uppercase font-bold tracking-wider whitespace-nowrap">
+          <span className="inline-flex px-2 py-1 bg-zinc-100 dark:bg-dark-700 text-zinc-600 dark:text-zinc-300 rounded text-[10px] uppercase font-bold tracking-wider whitespace-nowrap">
             {getValue()}
           </span>
         ),
@@ -341,7 +341,7 @@ export default function Products({ categoryFilter }) {
         enableSorting: true,
         cell: ({ getValue }) => (
           <div className="text-right sm:text-left">
-            <span className="font-medium text-zinc-800 text-[13px]">
+            <span className="font-medium text-zinc-800 dark:text-zinc-100 text-[13px]">
               ${formatPrice(getValue())}
             </span>
             <span className="block text-[10px] text-zinc-400 mt-0.5">MXN</span>
@@ -359,8 +359,8 @@ export default function Products({ categoryFilter }) {
           
           if (!v) return <span className="text-zinc-300 text-xs">—</span>;
           return (
-            <span className="inline-flex items-center gap-1.5 text-xs text-zinc-600 font-medium">
-              <Users size={12} className="text-zinc-400" /> {v}
+            <span className="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 font-medium">
+              <Users size={12} className="text-zinc-400 dark:text-zinc-500" /> {v}
             </span>
           );
         },
@@ -373,15 +373,15 @@ export default function Products({ categoryFilter }) {
           <div className="flex items-center justify-end gap-2">
             <Link
               to={`/productos/${p.id}`}
-              className="px-4 py-1.5 text-sm font-semibold text-[#2277B4] bg-white rounded-xl border border-[#CBD5E1] hover:bg-[#F8FAFC] hover:border-[#B8C6D8] shadow-sm transition-colors duration-150 flex items-center gap-1">
+              className="px-4 py-1.5 text-sm font-semibold text-[#2277B4] dark:text-primary-400 bg-white dark:bg-dark-800 rounded-xl border border-[#CBD5E1] dark:border-dark-700 hover:bg-[#F8FAFC] dark:hover:bg-dark-700 hover:border-[#B8C6D8] dark:hover:border-dark-600 shadow-sm transition-colors duration-150 flex items-center gap-1">
               <ExternalLink size={16} /> Detalles
             </Link>
             {user?.role?.name !== "SOPORTE" && (
               <button
                 onClick={() => remove(p.id)}
-                className="px-3 py-1.5 rounded-lg text-red-800  transition-all text-sm font-bold border-red-200 flex items-center gap-1 hover:scale-90"
+                className="px-3 py-1.5 rounded-lg text-red-800 dark:text-red-400 transition-all text-sm font-bold border-red-200 flex items-center gap-1 hover:scale-90"
                 title="Eliminar producto">
-                <Trash2 size={16} className="text-red-700" />
+                <Trash2 size={16} className="text-red-700 dark:text-red-400" />
               </button>
             )}
           </div>
@@ -519,13 +519,13 @@ export default function Products({ categoryFilter }) {
   return (
     <div className="space-y-5 pb-20">
       {/* Header */}
-      <div className="bg-white p-6 rounded-md border border-zinc-200 shadow-sm">
+      <div className="bg-white dark:bg-dark-800 p-6 rounded-md border border-zinc-200 dark:border-dark-700 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold text-zinc-800 tracking-tight">
+            <h1 className="text-3xl font-semibold text-zinc-800 dark:text-zinc-100 tracking-tight">
               {categoryFilter ? categoryFilter + "s" : "Catálogo de Productos"}
             </h1>
-            <p className="text-sm text-zinc-500 mt-1">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
               {categoryFilter ?
                 `Administra el inventario de ${categoryFilter}s disponibles.`
               : "Productos para clientes."}
@@ -544,7 +544,7 @@ export default function Products({ categoryFilter }) {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Buscar por nombre, categoría…"
-                className="w-full pl-4 pr-9 py-2 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full pl-4 pr-9 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-colors"
               />
               {q && (
                 <button
@@ -557,14 +557,14 @@ export default function Products({ categoryFilter }) {
 
             <button
               onClick={handleExportPDF}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-semibold border border-red-200 bg-white text-red-600 hover:bg-red-50 transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-semibold border border-red-200 dark:border-red-900/50 bg-white dark:bg-dark-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors whitespace-nowrap"
               title="Exportar a PDF">
               <FileText size={14} />
               Exportar a PDF
             </button>
             <button
               onClick={handleExportExcel}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-semibold border border-emerald-200 bg-white text-emerald-600 hover:bg-emerald-50 transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-semibold border border-emerald-200 dark:border-emerald-900/50 bg-white dark:bg-dark-900 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors whitespace-nowrap"
               title="Exportar a Excel">
               <FileSpreadsheet size={14} />
               Exportar a Excel
@@ -574,8 +574,8 @@ export default function Products({ categoryFilter }) {
               onClick={() => setShowFilters((v) => !v)}
               className={`relative flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all ${
                 showFilters || activeFilterCount > 0 ?
-                  "bg-[#2277B4] text-white"
-                : "bg-white text-zinc-700 border-zinc-300 hover:border-zinc-400"
+                  "bg-[#2277B4] text-white border-transparent"
+                : "bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-dark-700 hover:border-zinc-400 dark:hover:border-zinc-500"
               }`}>
               <SlidersHorizontal size={15} />
               Filtros
@@ -599,7 +599,7 @@ export default function Products({ categoryFilter }) {
                 <select
                   value={filterCategory}
                   onChange={(e) => setFilterCategory(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-zinc-300 bg-white text-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="px-3 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
                   <option value="">Todas</option>
                   {categories.map((c) => (
                     <option key={c} value={c}>
@@ -615,7 +615,7 @@ export default function Products({ categoryFilter }) {
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-zinc-300 bg-white text-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="px-3 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
                   <option value="">Todos</option>
                   <option value="PRODUCT">Productos</option>
                   <option value="SERVICE">Servicios</option>
@@ -632,7 +632,7 @@ export default function Products({ categoryFilter }) {
                   value={filterPriceMin}
                   onChange={(e) => setFilterPriceMin(e.target.value)}
                   placeholder="0"
-                  className="px-3 py-2 rounded-xl border border-zinc-300 bg-white text-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                 />
               </div>
               <div className="flex flex-col gap-1 w-[120px]">
@@ -645,7 +645,7 @@ export default function Products({ categoryFilter }) {
                   value={filterPriceMax}
                   onChange={(e) => setFilterPriceMax(e.target.value)}
                   placeholder="∞"
-                  className="px-3 py-2 rounded-xl border border-zinc-300 bg-white text-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                 />
               </div>
               <div className="flex flex-col gap-1 w-[130px]">
@@ -658,13 +658,13 @@ export default function Products({ categoryFilter }) {
                   value={filterUsers}
                   onChange={(e) => setFilterUsers(e.target.value)}
                   placeholder="Cualquiera"
-                  className="px-3 py-2 rounded-xl border border-zinc-300 bg-white text-zinc-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                 />
               </div>
               {activeFilterCount > 0 && (
                 <button
                   onClick={clearFilters}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-red-500 text-sm font-medium hover:bg-red-50 transition-colors self-end">
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-red-500 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors self-end">
                   <X size={13} /> Limpiar
                 </button>
               )}
@@ -727,7 +727,7 @@ export default function Products({ categoryFilter }) {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm">
           {error}
         </div>
       )}
@@ -735,24 +735,24 @@ export default function Products({ categoryFilter }) {
       {/* Tabla */}
       <div className="w-full">
         {loading ?
-          <div className="p-16 text-center bg-white rounded-3xl border border-zinc-100 shadow-sm">
+          <div className="p-16 text-center bg-white dark:bg-dark-800 rounded-3xl border border-zinc-100 dark:border-dark-700 shadow-sm">
             <div className="animate-spin size-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4 scale-110" />
             <p className="text-zinc-400 font-medium tracking-wide">
               Analizando catálogo de productos...
             </p>
           </div>
         : filteredProducts.length === 0 ?
-          <div className="p-20 text-center bg-white rounded-3xl border border-zinc-100 shadow-sm">
+          <div className="p-20 text-center bg-white dark:bg-dark-800 rounded-3xl border border-zinc-100 dark:border-dark-700 shadow-sm">
             <div className="flex justify-center mb-6 opacity-20">
               <PackageX size={64} />
             </div>
-            <h3 className="text-xl font-semibold text-zinc-800">
+            <h3 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">
               No se encontraron coincidencias
             </h3>
           </div>
-        : <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden glass-panel">
+        : <div className="bg-white dark:bg-dark-800 rounded-xl border border-zinc-200 dark:border-dark-700 shadow-sm overflow-hidden glass-panel">
             {/* Toolbar de tabla */}
-            <div className="px-5 py-3.5 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-end gap-3 bg-zinc-50/50">
+            <div className="px-5 py-3.5 border-b border-zinc-100 dark:border-dark-700 flex flex-col sm:flex-row sm:items-center justify-end gap-3 bg-zinc-50/50 dark:bg-dark-900/50">
               <span className="text-[12px] text-zinc-500">
                 Pág. {pagination.pageIndex + 1} de {table.getPageCount()}
               </span>
@@ -766,14 +766,14 @@ export default function Products({ categoryFilter }) {
                   {table.getHeaderGroups().map((hg) => (
                     <tr
                       key={hg.id}
-                      className="bg-zinc-50/80 border-b border-zinc-200">
+                      className="bg-zinc-50/80 dark:bg-dark-900/50 border-b border-zinc-200 dark:border-dark-700">
                       {hg.headers.map((header) => (
                         <th
                           key={header.id}
                           onClick={header.column.getToggleSortingHandler()}
-                          className={`px-5 py-3 text-[11px] font-bold text-[#2277B4] uppercase tracking-wider ${
+                          className={`px-5 py-3 text-[11px] font-bold text-[#2277B4] dark:text-primary-400 uppercase tracking-wider ${
                             header.column.getCanSort() ?
-                              "cursor-pointer select-none hover:bg-zinc-100 transition-colors"
+                              "cursor-pointer select-none hover:bg-zinc-100 dark:hover:bg-dark-800 transition-colors"
                             : ""
                           }`}>
                           <div
@@ -807,11 +807,11 @@ export default function Products({ categoryFilter }) {
                     </tr>
                   ))}
                 </thead>
-                <tbody className="divide-y divide-zinc-100/80">
+                <tbody className="divide-y divide-zinc-100/80 dark:divide-dark-700/80">
                   {table.getRowModel().rows.map((row) => (
                     <tr
                       key={row.id}
-                      className="hover:bg-zinc-50/70 transition-colors">
+                      className="hover:bg-zinc-50/70 dark:hover:bg-dark-700/50 transition-colors">
                       {row.getVisibleCells().map((cell) => (
                         <td key={cell.id} className="px-5 py-3.5">
                           {flexRender(
@@ -826,8 +826,7 @@ export default function Products({ categoryFilter }) {
               </table>
             </div>
 
-            {/* Paginación final */}
-            <div className="px-5 py-3 border-t border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+            <div className="px-5 py-3 border-t border-zinc-100 dark:border-dark-700 flex items-center justify-between bg-zinc-50/50 dark:bg-dark-900/50">
               <label className="text-[12px] text-zinc-500 flex items-center gap-2">
                 Mostrar
                 <select
@@ -838,7 +837,7 @@ export default function Products({ categoryFilter }) {
                       pageSize: Number(e.target.value),
                     })
                   }
-                  className="px-2 py-1 rounded-md border border-zinc-200 text-[12px] text-zinc-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                  className="px-2 py-1 rounded-md border border-zinc-200 dark:border-dark-700 text-[12px] text-zinc-700 dark:text-zinc-300 bg-white dark:bg-dark-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors">
                   {[10, 25, 50, 100].map((s) => (
                     <option key={s} value={s}>
                       {s}
@@ -850,25 +849,25 @@ export default function Products({ categoryFilter }) {
                 <button
                   onClick={() => table.setPageIndex(0)}
                   disabled={!table.getCanPreviousPage()}
-                  className="px-2 py-1.5 rounded-md border border-zinc-200 bg-white text-zinc-600 text-[12px] font-medium hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-40 disabled:hover:bg-white shadow-sm">
+                  className="px-2 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm">
                   ««
                 </button>
                 <button
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
-                  className="px-3 py-1.5 rounded-md border border-zinc-200 bg-white text-zinc-600 text-[12px] font-medium hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-40 disabled:hover:bg-white shadow-sm">
+                  className="px-3 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm">
                   Anterior
                 </button>
                 <button
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
-                  className="px-3 py-1.5 rounded-md border border-zinc-200 bg-white text-zinc-600 text-[12px] font-medium hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-40 disabled:hover:bg-white shadow-sm">
+                  className="px-3 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm">
                   Siguiente
                 </button>
                 <button
                   onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                   disabled={!table.getCanNextPage()}
-                  className="px-2 py-1.5 rounded-md border border-zinc-200 bg-white text-zinc-600 text-[12px] font-medium hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-40 disabled:hover:bg-white shadow-sm">
+                  className="px-2 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm">
                   »»
                 </button>
               </div>

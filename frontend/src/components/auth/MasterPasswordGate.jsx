@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { verifyMasterPasswordApi } from "../../actionsAPI/auth.api";
 
 const Login = lazy(() => import("../../pages/auth/Login"));
 const PortalLogin = lazy(() => import("../../pages/portal/PortalLogin"));
@@ -11,9 +12,20 @@ const PortalLogin = lazy(() => import("../../pages/portal/PortalLogin"));
 // durante la navegación SPA normal dentro de la misma carga de página.
 let _masterGranted = false;
 
+// Sanitizar la ruta local para prevenir vulnerabilidades de Open Redirect
+function safelyGetLastRoute() {
+  const route = sessionStorage.getItem("last_route");
+  if (typeof route !== "string") return "/login";
+  // Evitar rutas absolutas o protocol-relative (//malicious.com) que causan Open Redirect
+  if (!route.startsWith("/") || route.startsWith("//") || route.startsWith("/\\")) {
+    return "/login";
+  }
+  return route;
+}
+
 // Devuelve el componente de fondo según la última ruta que visitó el usuario
 function BackgroundPage() {
-  const lastRoute = sessionStorage.getItem("last_route") || "/login";
+  const lastRoute = safelyGetLastRoute();
   const BackgroundComponent =
     lastRoute === "/portal/login" ? PortalLogin : Login;
 
@@ -23,9 +35,6 @@ function BackgroundPage() {
     </Suspense>
   );
 }
-
-// Contraseña maestra — solo Tecno360 la conoce
-const MASTER_PASSWORD = "Tc3@N360!";
 
 export function resetMasterGranted() {
   _masterGranted = false;
@@ -83,32 +92,47 @@ export default function MasterPasswordGate({ children }) {
       const { value, isDismissed } = result;
 
       if (isDismissed) {
-        const back = sessionStorage.getItem("last_route") || "/login";
+        const back = safelyGetLastRoute();
         navigate(back, { replace: true });
         return;
       }
 
-      if (value === MASTER_PASSWORD) {
-        _masterGranted = true;
-        setGranted(true);
-        await Swal.fire({
-          icon: "success",
-          title: "Acceso concedido",
-          text: "Bienvenido, Tecno360.",
-          timer: 1500,
-          showConfirmButton: false,
-          confirmButtonColor: "#162A42",
-        });
-      } else {
+      try {
+        const isCorrect = await verifyMasterPasswordApi(value);
+        if (isCorrect) {
+          _masterGranted = true;
+          setGranted(true);
+          await Swal.fire({
+            icon: "success",
+            title: "Acceso concedido",
+            text: "Bienvenido, Tecno360.",
+            timer: 1500,
+            showConfirmButton: false,
+            confirmButtonColor: "#162A42",
+          });
+        } else {
+          await Swal.fire({
+            icon: "error",
+            title: "Contraseña incorrecta",
+            text: "No tienes permiso para acceder a esta sección.",
+            confirmButtonText: "Entendido",
+            confirmButtonColor: "#162A42",
+          });
+          if (isMounted) {
+            const back = safelyGetLastRoute();
+            navigate(back, { replace: true });
+          }
+        }
+      } catch (error) {
         await Swal.fire({
           icon: "error",
-          title: "Contraseña incorrecta",
-          text: "No tienes permiso para acceder a esta sección.",
+          title: "Error de conexión",
+          text: error.message || "No se pudo verificar la contraseña.",
           confirmButtonText: "Entendido",
           confirmButtonColor: "#162A42",
         });
         if (isMounted) {
-          const back = sessionStorage.getItem("last_route") || "/login";
+          const back = safelyGetLastRoute();
           navigate(back, { replace: true });
         }
       }

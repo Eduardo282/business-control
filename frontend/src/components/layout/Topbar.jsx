@@ -140,8 +140,8 @@ export default function Topbar() {
 
             {/* Dropdown Panel */}
             {showNotifications && (
-              <div className="absolute right-0 mt-3 w-80 md:w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-dark-900 rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/40 border border-zinc-100 dark:border-white/10 overflow-hidden z-50 animate-fade-in-down">
-                <div className="px-4 py-3 border-b border-zinc-100 dark:border-white/10 flex items-center justify-between bg-zinc-50 dark:bg-dark-800">
+              <div className="absolute right-0 mt-3 w-80 md:w-96 max-w-[calc(100vw-2rem)] bg-[#ffffff] dark:bg-dark-900 rounded-2xl shadow-2xl dark:shadow-[0_8px_30px_rgba(0,0,0,0.8)] border border-zinc-200 dark:border-dark-700 overflow-hidden z-[100] animate-fade-in-down opacity-100">
+                <div className="px-4 py-3 border-b border-zinc-200 dark:border-dark-700 flex items-center justify-between bg-zinc-50 dark:bg-dark-800">
                   <h3 className="font-semibold text-zinc-800 dark:text-zinc-100">Notificaciones</h3>
                   <span className="text-xs bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300 px-2 py-1 rounded-full font-medium">
                     {notifications.length} Nuevas
@@ -150,11 +150,16 @@ export default function Topbar() {
                 
                 <div className="max-h-[60vh] overflow-y-auto">
                   {notifications.length === 0 ? (
-                    <div className="p-6 text-center text-zinc-500 dark:text-zinc-400 text-sm">
-                      No tienes notificaciones nuevas
+                    <div className="p-8 text-center flex flex-col items-center justify-center gap-3">
+                      <div className="size-12 rounded-full bg-zinc-100 dark:bg-white/5 flex items-center justify-center text-zinc-400 dark:text-zinc-500">
+                        <Bell size={24} />
+                      </div>
+                      <span className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">
+                        No tienes notificaciones nuevas
+                      </span>
                     </div>
                   ) : (
-                    <div className="divide-y divide-zinc-50 dark:divide-white/5">
+                    <div className="divide-y divide-zinc-100 dark:divide-white/5">
                       {notifications.map((notif) => (
                         <div
                           key={notif.id}

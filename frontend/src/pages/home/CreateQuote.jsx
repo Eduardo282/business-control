@@ -138,8 +138,8 @@ const DiscountInputCell = ({ item, setItems }) => {
       value={localDiscount}
       onChange={(e) => setLocalDiscount(e.target.value)}
       onBlur={(e) => commitChange(e.target.value)}
-      className="w-20 px-2 py-1 rounded-md border border-light-border bg-white text-xs font-mono text-right text-[#125280] focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
-      style={{ colorScheme: "light" }}
+      className="w-20 px-2 py-1 rounded-md border border-light-border dark:border-dark-700 bg-white dark:bg-dark-900 text-xs font-mono text-right text-[#125280] dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-[#2277B4]"
+      style={{ colorScheme: "dark light" }}
     />
   );
 };
@@ -289,7 +289,7 @@ export default function CreateQuote() {
         id: "idx",
         header: "#",
         cell: ({ row }) => (
-          <span className="font-mono text-xs text-light-text-secondary opacity-50">
+          <span className="font-mono text-xs text-light-text-secondary dark:text-zinc-500 opacity-50">
             {row.index + 1}
           </span>
         ),
@@ -299,7 +299,7 @@ export default function CreateQuote() {
         accessorKey: "name",
         header: "Producto",
         cell: ({ getValue }) => (
-          <span className="font-medium text-light-text-primary">
+          <span className="font-medium text-light-text-primary dark:text-zinc-100">
             {getValue()}
           </span>
         ),
@@ -309,7 +309,7 @@ export default function CreateQuote() {
         header: "Cant",
         cell: ({ row }) => (
           <div className="flex items-center justify-center gap-1">
-            <span className=" px-2 py-0.5 rounded text-xs font-mono font-bold min-w-[28px] text-center text-black">
+            <span className=" px-2 py-0.5 rounded text-xs font-mono font-bold min-w-[28px] text-center text-black dark:text-zinc-100">
               {row.original.quantity}
             </span>
           </div>
@@ -319,7 +319,7 @@ export default function CreateQuote() {
         accessorKey: "price",
         header: "Precio Unit. (MXN)",
         cell: ({ getValue }) => (
-          <span className="font-mono text-light-text-secondary">
+          <span className="font-mono text-light-text-secondary dark:text-zinc-300">
             $
             {Number(getValue()).toLocaleString("es-MX", {
               minimumFractionDigits: 2,
@@ -338,7 +338,7 @@ export default function CreateQuote() {
         accessorKey: "total",
         header: "Importe",
         cell: ({ getValue }) => (
-          <span className="font-mono font-semibold text-light-text-primary">
+          <span className="font-mono font-semibold text-light-text-primary dark:text-zinc-100">
             $
             {Number(getValue()).toLocaleString("es-MX", {
               minimumFractionDigits: 2,
@@ -351,7 +351,7 @@ export default function CreateQuote() {
         header: "Total + IVA",
         accessorFn: (row) => row.total * 1.16,
         cell: ({ getValue }) => (
-          <span className="font-mono font-bold text-[#1B4733]">
+          <span className="font-mono font-bold text-[#1B4733] dark:text-emerald-400">
             $
             {Number(getValue()).toLocaleString("es-MX", {
               minimumFractionDigits: 2,
@@ -367,13 +367,13 @@ export default function CreateQuote() {
           <div className="flex items-center justify-end gap-1.5">
             <button
               onClick={() => openEditItem(row.original)}
-              className="size-7 flex items-center justify-center rounded-lg text-[#2277B4] hover:bg-blue-50 transition-all"
+              className="size-7 flex items-center justify-center rounded-lg text-[#2277B4] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/20 transition-all"
               title="Editar producto">
               <Edit2 size={13} />
             </button>
             <button
               onClick={() => removeItem(row.original.tempId)}
-              className="size-7 flex items-center justify-center rounded-lg text-red-600 hover:bg-red-50 transition-all"
+              className="size-7 flex items-center justify-center rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/20 transition-all"
               title="Eliminar item">
               <Trash2 size={13} />
             </button>
@@ -849,7 +849,7 @@ export default function CreateQuote() {
         header: "Producto",
         cell: ({ row: { original: p } }) => (
           <div>
-            <div className="font-bold text-light-text-primary text-base flex items-center gap-2">
+            <div className="font-bold text-light-text-primary dark:text-zinc-100 text-base flex items-center gap-2">
               {p.name}
               {p._groupCount > 1 && (
                 <span className="bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">
@@ -857,11 +857,11 @@ export default function CreateQuote() {
                 </span>
               )}
             </div>
-            <div className="text-xs text-light-text-secondary dark:text-zinc-500 mt-0.5">
+            <div className="text-xs text-light-text-secondary dark:text-zinc-400 mt-0.5">
               {p.category}
             </div>
             {p.description && (
-              <div className="text-xs text-light-text-secondary dark:text-zinc-400 mt-1 line-clamp-1">
+              <div className="text-xs text-light-text-secondary dark:text-zinc-500 mt-1 line-clamp-1">
                 {p.description}
               </div>
             )}
@@ -873,13 +873,13 @@ export default function CreateQuote() {
         header: "Precio",
         cell: ({ row: { original: p } }) => (
           <div className="text-right">
-            <div className="font-mono text-[#1B4733] font-bold text-base">
+            <div className="font-mono text-[#1B4733] dark:text-emerald-400 font-bold text-base">
               $
               {Number(p.current_price).toLocaleString("es-MX", {
                 minimumFractionDigits: 2,
               })}
             </div>
-            <div className="text-[10px] text-light-text-secondary dark:text-zinc-500 text-right mt-0.5">
+            <div className="text-[10px] text-light-text-secondary dark:text-zinc-400 text-right mt-0.5">
               + IVA
             </div>
           </div>
@@ -1338,7 +1338,7 @@ export default function CreateQuote() {
                   <div className="p-2 rounded-lg text-black">
                     <Building2 size={24} />
                   </div>
-                  <h3 className="font-semibold text-lg text-light-text-primary">
+                  <h3 className="font-semibold text-lg text-light-text-primary dark:text-zinc-100">
                     Datos del Cliente
                   </h3>
                 </div>
@@ -1358,7 +1358,7 @@ export default function CreateQuote() {
                         setClientSearch("");
                         setClientResults([]);
                       }}
-                      className="w-full px-3 py-2 text-left cursor-pointer text-[#1B4733] font-medium">
+                      className="w-full px-3 py-2 text-left cursor-pointer text-[#1B4733] dark:text-emerald-400 font-medium">
                       {selectedClient.business_name}
                     </div>
                   : <div className="relative">
@@ -1371,12 +1371,12 @@ export default function CreateQuote() {
                           setShowClientModal(true);
                         }}
                         placeholder="Escribe para buscar un cliente…"
-                        className="w-full border-none shadow-none focus:ring-0 text-zinc-700 bg-transparent"
+                        className="w-full border-none shadow-none focus:ring-0 text-zinc-700 dark:text-zinc-200 bg-transparent"
                         style={{ paddingRight: "2.25rem" }}
                       />
                       <Search
                         size={14}
-                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
+                        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary dark:text-zinc-400"
                       />
                     </div>
                   }
@@ -1389,7 +1389,7 @@ export default function CreateQuote() {
                     <div className="text-xs text-emerald-600 font-bold uppercase mb-1">
                       Cliente Seleccionado
                     </div>
-                    <div className="text-sm text-light-text-primary font-medium">
+                    <div className="text-sm text-light-text-primary dark:text-zinc-100 font-medium">
                       {selectedClient.business_name}
                     </div>
                     <div className="text-xs text-zinc-500 mt-0.5">
@@ -1405,10 +1405,10 @@ export default function CreateQuote() {
                       <select
                         value={selectedContactId}
                         onChange={(e) => setSelectedContactId(e.target.value)}
-                        className="w-full p-3 rounded-xl bg-white border border-light-border  focus:border-[#1a2b4c] focus:ring-1 focus:ring-[#1a2b4c] text-light-text-primary  text-sm outline-none transition-all">
+                        className="w-full p-3 rounded-xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 focus:border-[#1a2b4c] dark:focus:border-[#2277B4] focus:ring-1 focus:ring-[#1a2b4c] dark:focus:ring-[#2277B4] text-light-text-primary dark:text-zinc-100 text-sm outline-none transition-all">
                         <option value="">-- Sin asignar --</option>
                         {selectedClient.contacts.map((contact) => (
-                          <option key={contact.id} value={contact.id}>
+                          <option key={contact.id} value={contact.id} className="dark:bg-dark-900 dark:text-zinc-100">
                             {contact.full_name}
                           </option>
                         ))}
@@ -1427,7 +1427,7 @@ export default function CreateQuote() {
                   <div className="p-2 rounded-lg text-black">
                     <Building2 size={24} />
                   </div>
-                  <h3 className="font-semibold text-lg text-light-text-primary">
+                  <h3 className="font-semibold text-lg text-light-text-primary dark:text-zinc-100">
                     Datos del Cliente
                   </h3>
                 </div>
@@ -1437,7 +1437,7 @@ export default function CreateQuote() {
                 <div className="text-xs text-emerald-600 font-bold uppercase mb-1">
                   Cliente Vinculado
                 </div>
-                <div className="text-sm text-light-text-primary font-medium">
+                <div className="text-sm text-light-text-primary dark:text-zinc-100 font-medium">
                   {selectedClient.business_name}
                 </div>
                 <div className="text-xs text-zinc-500 mt-0.5">
@@ -1453,16 +1453,16 @@ export default function CreateQuote() {
                   <select
                     value={selectedContactId}
                     onChange={(e) => setSelectedContactId(e.target.value)}
-                    className="w-full p-3 rounded-xl bg-white border border-light-border  focus:border-[#1a2b4c] focus:ring-1 focus:ring-[#1a2b4c] text-light-text-primary  text-sm outline-none transition-all">
+                    className="w-full p-3 rounded-xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 focus:border-[#1a2b4c] dark:focus:border-[#2277B4] focus:ring-1 focus:ring-[#1a2b4c] dark:focus:ring-[#2277B4] text-light-text-primary dark:text-zinc-100 text-sm outline-none transition-all">
                     <option value="">-- Sin asignar --</option>
                     {selectedClient.contacts.map((contact) => (
-                      <option key={contact.id} value={contact.id}>
+                      <option key={contact.id} value={contact.id} className="dark:bg-dark-900 dark:text-zinc-100">
                         {contact.full_name}
                       </option>
                     ))}
                   </select>
                 </div>
-              : <div className="mt-4 p-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-sm">
+              : <div className="mt-4 p-3 rounded-xl border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-200 text-sm">
                   Este cliente no tiene contactos registrados. Agrégalo desde
                   Gestionar cliente y vuelve a esta cotización.
                 </div>
@@ -1502,7 +1502,7 @@ export default function CreateQuote() {
                   <ShoppingBag size={24} />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg text-light-text-primary">
+                  <h3 className="font-semibold text-lg text-light-text-primary dark:text-zinc-100">
                     Agregar Productos o Servicios
                   </h3>
                 </div>
@@ -1511,7 +1511,7 @@ export default function CreateQuote() {
                 <button
                   variant="ghost"
                   onClick={() => navigate("/cotizaciones/historial")}
-                  className="inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold text-black hover:text-zinc-700 border border-transparent transition-all">
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold text-black dark:text-zinc-100 hover:text-zinc-700 dark:hover:text-zinc-300 border border-transparent transition-all">
                   <ArrowLeft size={16} /> Regresar a historial
                 </button>
               </div>
@@ -1549,14 +1549,14 @@ export default function CreateQuote() {
                 <div className="relative">
                   <Search
                     size={13}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary dark:text-zinc-400"
                   />
                   <input
                     type="text"
                     placeholder="Filtrar productos agregados…"
                     value={tableFilter}
                     onChange={(e) => setTableFilter(e.target.value)}
-                    className="pl-3 pr-8 py-2.5 text-sm rounded-xl border border-light-border bg-white focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-full text-black"
+                    className="pl-3 pr-8 py-2.5 text-sm rounded-xl border border-light-border dark:border-white/10 bg-white dark:bg-black/30 focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-full text-black dark:text-white transition-colors"
                   />
                 </div>
               </div>
@@ -1641,7 +1641,7 @@ export default function CreateQuote() {
                 <div className="p-3 bg-white dark:bg-zinc-800 rounded-full shadow-lg mb-3">
                   <BadgeDollarSign size={32} className="text-zinc-400" />
                 </div>
-                <p className="text-zinc-600 dark:text-zinc-300 font-semibold max-w-sm text-center px-4">
+                <p className="text-zinc-600 dark:text-zinc-200 font-semibold max-w-sm text-center px-4">
                   Agrega "Datos del Cliente y Agrega Productos" para habilitar.
                 </p>
               </div>
@@ -1715,7 +1715,7 @@ export default function CreateQuote() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-light-bg/50 uppercase text-xs font-bold text-[#2277B4] tracking-wider">
+                <thead className="bg-light-bg/50 dark:bg-dark-800 uppercase text-xs font-bold text-[#2277B4] dark:text-blue-400 tracking-wider">
                   {itemsTable.getHeaderGroups().map((hg) => (
                     <tr key={hg.id}>
                       {hg.headers.map((header) => (
@@ -1807,8 +1807,8 @@ export default function CreateQuote() {
 
             {/* Paginación */}
             {items.length > 0 && (
-              <div className="px-4 py-3 border-t border-light-border bg-white flex items-center justify-between gap-3 flex-wrap">
-                <label className="text-sm text-light-text-secondary flex items-center gap-2">
+              <div className="px-4 py-3 border-t border-light-border dark:border-dark-700 bg-white dark:bg-dark-800 flex items-center justify-between gap-3 flex-wrap">
+                <label className="text-sm text-light-text-secondary dark:text-zinc-400 flex items-center gap-2">
                   Mostrar
                   <select
                     value={itemsTable.getState().pagination.pageSize}
@@ -1816,9 +1816,9 @@ export default function CreateQuote() {
                       itemsTable.setPageSize(Number(e.target.value));
                       itemsTable.setPageIndex(0);
                     }}
-                    className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-[#fff] border border-light-border">
+                    className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500 bg-[#fff] dark:bg-dark-900 border border-light-border dark:border-dark-700">
                     {[10, 25, 50, 100].map((size) => (
-                      <option key={size} value={size}>
+                      <option key={size} value={size} className="dark:bg-dark-900 dark:text-zinc-100">
                         {size}
                       </option>
                     ))}
@@ -1830,19 +1830,22 @@ export default function CreateQuote() {
                   <button
                     onClick={() => itemsTable.setPageIndex(0)}
                     disabled={!itemsTable.getCanPreviousPage()}
-                    className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                     ««
                   </button>
                   <button
                     onClick={() => itemsTable.previousPage()}
                     disabled={!itemsTable.getCanPreviousPage()}
-                    className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                     Anterior
                   </button>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 mx-2">
+                    Pág. {itemsTable.getState().pagination.pageIndex + 1} de {itemsTable.getPageCount()}
+                  </span>
                   <button
                     onClick={() => itemsTable.nextPage()}
                     disabled={!itemsTable.getCanNextPage()}
-                    className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                     Siguiente
                   </button>
                   <button
@@ -1850,7 +1853,7 @@ export default function CreateQuote() {
                       itemsTable.setPageIndex(itemsTable.getPageCount() - 1)
                     }
                     disabled={!itemsTable.getCanNextPage()}
-                    className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                     »»
                   </button>
                 </div>
@@ -2100,7 +2103,7 @@ export default function CreateQuote() {
       {showProductModal &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-dark-900 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col">
               {/* Header del modal */}
               <div className="px-6 py-4 border-b border-zinc-100 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c]">
                 <div>
@@ -2140,12 +2143,12 @@ export default function CreateQuote() {
                 </div>
 
                 {/* Lista de resultados (Tabla paginada) */}
-                <div className="bg-white rounded-xl dark:border-white/10 flex-1 flex flex-col min-h-0 overflow-hidden">
+                <div className="bg-white dark:bg-dark-800 rounded-xl dark:border-white/10 flex-1 flex flex-col min-h-0 overflow-hidden">
                   <div className="flex-1 overflow-auto relative">
                     <table className="w-full text-left text-sm table-fixed">
                       <thead className="sticky top-0 z-10">
                         {productSearchTable.getHeaderGroups().map((hg) => (
-                          <tr key={hg.id} className="bg-zinc-50/95 backdrop-blur-sm border-b border-light-border shadow-sm">
+                          <tr key={hg.id} className="bg-zinc-50/95 dark:bg-dark-800/95 backdrop-blur-sm border-b border-light-border dark:border-dark-700 shadow-sm">
                             {hg.headers.map((header) => (
                               <th
                                 key={header.id}
@@ -2167,14 +2170,14 @@ export default function CreateQuote() {
                           <tr>
                             <td colSpan="3" className="py-12 text-center">
                               <Search size={48} className="mx-auto mb-3 opacity-20 animate-spin" />
-                              <p className="text-light-text-secondary dark:text-zinc-500 font-medium">
+                              <p className="text-light-text-secondary dark:text-zinc-400 font-medium">
                                 Buscando productos...
                               </p>
                             </td>
                           </tr>
                         ) : productSearchTable.getRowModel().rows.length > 0 ? (
                           productSearchTable.getRowModel().rows.map((row) => (
-                            <tr key={row.id} className="hover:bg-light-bg/50 transition-colors">
+                            <tr key={row.id} className="hover:bg-light-bg/50 dark:hover:bg-white/5 transition-colors">
                               {row.getVisibleCells().map((cell) => (
                                 <td
                                   key={cell.id}
@@ -2195,7 +2198,7 @@ export default function CreateQuote() {
                               <div className="flex justify-center mb-3 opacity-20">
                                 <ShoppingBag size={48} />
                               </div>
-                              <p className="text-light-text-secondary dark:text-zinc-500 font-medium">
+                              <p className="text-light-text-secondary dark:text-zinc-400 font-medium">
                                 {prodSearch.trim().length > 0
                                   ? `No se encontraron productos con "${prodSearch}"`
                                   : "No hay productos disponibles."}
@@ -2209,8 +2212,8 @@ export default function CreateQuote() {
 
                   {/* Controles de Paginación */}
                   {!isProductSearching && prodResults.length > 0 && (
-                    <div className="px-4 py-3 border-t border-light-border bg-white flex items-center justify-between gap-3 flex-wrap shrink-0">
-                      <label className="text-sm text-light-text-secondary flex items-center gap-2">
+                    <div className="px-4 py-3 border-t border-light-border dark:border-dark-700 bg-white dark:bg-dark-800 flex items-center justify-between gap-3 flex-wrap shrink-0">
+                      <label className="text-sm text-light-text-secondary dark:text-zinc-400 flex items-center gap-2">
                         Mostrar
                         <select
                           value={productSearchTable.getState().pagination.pageSize}
@@ -2218,9 +2221,9 @@ export default function CreateQuote() {
                             productSearchTable.setPageSize(Number(e.target.value));
                             productSearchTable.setPageIndex(0);
                           }}
-                          className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-[#fff] border border-light-border">
+                          className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500 bg-[#fff] dark:bg-dark-900 border border-light-border dark:border-dark-700">
                           {[5, 10, 25, 50].map((size) => (
-                            <option key={size} value={size}>
+                            <option key={size} value={size} className="dark:bg-dark-900 dark:text-zinc-100">
                               {size}
                             </option>
                           ))}
@@ -2232,22 +2235,22 @@ export default function CreateQuote() {
                         <button
                           onClick={() => productSearchTable.setPageIndex(0)}
                           disabled={!productSearchTable.getCanPreviousPage()}
-                          className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                           ««
                         </button>
                         <button
                           onClick={() => productSearchTable.previousPage()}
                           disabled={!productSearchTable.getCanPreviousPage()}
-                          className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                           Anterior
                         </button>
-                        <span className="text-xs text-zinc-500 mx-2">
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400 mx-2">
                           Pág. {productSearchTable.getState().pagination.pageIndex + 1} de {productSearchTable.getPageCount()}
                         </span>
                         <button
                           onClick={() => productSearchTable.nextPage()}
                           disabled={!productSearchTable.getCanNextPage()}
-                          className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                           Siguiente
                         </button>
                         <button
@@ -2255,7 +2258,7 @@ export default function CreateQuote() {
                             productSearchTable.setPageIndex(productSearchTable.getPageCount() - 1)
                           }
                           disabled={!productSearchTable.getCanNextPage()}
-                          className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                           »»
                         </button>
                       </div>
@@ -2265,7 +2268,7 @@ export default function CreateQuote() {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 border-t border-zinc-100 flex justify-between items-center bg-zinc-50">
+              <div className="px-6 py-4 border-t border-zinc-100 dark:border-dark-700 flex justify-between items-center bg-zinc-50 dark:bg-dark-900">
                 <p className="text-xs text-light-text-secondary dark:text-zinc-400">
                   {prodResults.length > 0 && (
                     <span>{prodResults.length} producto(s) encontrado(s)</span>
@@ -2287,7 +2290,7 @@ export default function CreateQuote() {
       {showPreviewModal &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/65 backdrop-blur-md p-4 animate-fade-in">
-            <div className="w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-3xl bg-white shadow-[0_30px_120px_rgba(8,20,45,0.45)] flex flex-col">
+            <div className="w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-3xl bg-white dark:bg-dark-900 shadow-[0_30px_120px_rgba(8,20,45,0.45)] flex flex-col">
               {/* Header Modal */}
               <div className="px-6 md:px-7 py-4 border-b border-white/20 flex items-center justify-between bg-gradient-to-r from-[#102445] via-[#0F2B5A] to-[#0A1F43] text-white">
                 <div className="flex items-center gap-3">
@@ -2311,28 +2314,28 @@ export default function CreateQuote() {
               </div>
 
               {/* Content ModaL */}
-              <div className="flex-1 overflow-y-auto px-6 md:px-7 py-6 bg-gradient-to-b from-zinc-100/70 via-white to-zinc-50">
+              <div className="flex-1 overflow-y-auto px-6 md:px-7 py-6 bg-gradient-to-b from-zinc-100/70 via-white to-zinc-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900">
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                   <div className="xl:col-span-2 space-y-6">
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Info Cliente */}
-                      <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-sm">
-                        <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <div className="bg-white dark:bg-dark-800 p-5 rounded-2xl border border-zinc-200/80 dark:border-dark-700 shadow-sm">
+                        <h3 className="text-sm font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                           <Building2 size={16} /> Cliente
                         </h3>
                         <div className="space-y-1">
-                          <p className="text-2xl xl:text-3xl leading-tight font-bold text-zinc-800">
+                          <p className="text-2xl xl:text-3xl leading-tight font-bold text-zinc-800 dark:text-zinc-100">
                             {selectedClient?.business_name}
                           </p>
-                          <p className="text-sm text-zinc-500 font-mono">
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400 font-mono">
                             {selectedClient?.rfc || "Sin RFC"}
                           </p>
                           {folio && (
-                            <div className="mt-3 pt-3 border-t border-zinc-100">
-                              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">
+                            <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-dark-700">
+                              <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-0.5">
                                 Folio
                               </p>
-                              <p className="text-sm font-mono font-bold text-[#2277B4] tracking-widest">
+                              <p className="text-sm font-mono font-bold text-[#2277B4] dark:text-blue-400 tracking-widest">
                                 {folio}
                               </p>
                             </div>
@@ -2341,29 +2344,29 @@ export default function CreateQuote() {
                       </div>
 
                       {/* Info Contacto */}
-                      <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-sm">
-                        <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">
+                      <div className="bg-white dark:bg-dark-800 p-5 rounded-2xl border border-zinc-200/80 dark:border-dark-700 shadow-sm">
+                        <h3 className="text-sm font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">
                           Contacto
                         </h3>
                         {selectedContact ?
                           <div className="space-y-1">
-                            <p className="text-xl leading-tight font-bold text-zinc-800">
+                            <p className="text-xl leading-tight font-bold text-zinc-800 dark:text-zinc-100">
                               {selectedContact.full_name}
                             </p>
-                            <p className="text-xs text-zinc-500">
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
                               {selectedContact.position_title || "Sin puesto"}
                             </p>
-                            <div className="mt-3 pt-3 border-t border-zinc-100 space-y-1">
-                              <p className="text-sm text-zinc-700 break-all">
+                            <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-dark-700 space-y-1">
+                              <p className="text-sm text-zinc-700 dark:text-zinc-300 break-all">
                                 {selectedContact.email || "Sin correo"}
                               </p>
-                              <p className="text-sm text-zinc-700">
+                              <p className="text-sm text-zinc-700 dark:text-zinc-300">
                                 {selectedContact.phone || "Sin telefono"}
                               </p>
                             </div>
                           </div>
                         : <div className="h-full min-h-[112px] flex items-center">
-                            <p className="text-sm text-zinc-500 font-medium">
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
                               Sin contacto asignado para esta cotizacion.
                             </p>
                           </div>
@@ -2371,14 +2374,14 @@ export default function CreateQuote() {
                       </div>
 
                       {/* Desglose */}
-                      <div className="md:col-span-2 bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-sm flex flex-col justify-center">
-                        <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <div className="md:col-span-2 bg-white dark:bg-dark-800 p-5 rounded-2xl border border-zinc-200/80 dark:border-dark-700 shadow-sm flex flex-col justify-center">
+                        <h3 className="text-sm font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                           Productos
                         </h3>
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm text-zinc-500 font-medium gap-3">
+                          <div className="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400 font-medium gap-3">
                             <span>Productos en total:</span>
-                            <span className="text-zinc-800 font-bold whitespace-nowrap">
+                            <span className="text-zinc-800 dark:text-zinc-100 font-bold whitespace-nowrap">
                               {items.reduce(
                                 (acc, item) => acc + item.quantity,
                                 0,
@@ -2391,24 +2394,24 @@ export default function CreateQuote() {
                     </div>
 
                     {/* Lista compacta de items */}
-                    <div className="bg-white border border-zinc-200/80 rounded-2xl shadow-sm overflow-hidden">
-                      <div className="px-5 py-3 bg-zinc-50 border-b border-zinc-100 text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
+                    <div className="bg-white dark:bg-dark-800 border border-zinc-200/80 dark:border-dark-700 rounded-2xl shadow-sm overflow-hidden">
+                      <div className="px-5 py-3 bg-zinc-50 dark:bg-dark-900 border-b border-zinc-100 dark:border-dark-700 text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center justify-between">
                         <span>Productos Cotizados</span>
                       </div>
-                      <div className="max-h-[42vh] overflow-y-auto divide-y divide-zinc-100">
+                      <div className="max-h-[42vh] overflow-y-auto divide-y divide-zinc-100 dark:divide-dark-700">
                         {items.map((i, index) => (
                           <div
                             key={i.tempId}
-                            className="flex justify-between items-start gap-4 px-5 py-3.5 hover:bg-zinc-50/80 transition-colors">
+                            className="flex justify-between items-start gap-4 px-5 py-3.5 hover:bg-zinc-50/80 dark:hover:bg-white/5 transition-colors">
                             <div className="flex items-start gap-3 min-w-0">
-                              <span className="size-6 mt-0.5 inline-flex items-center justify-center rounded-full bg-zinc-100 text-zinc-500 font-mono text-xs shrink-0">
+                              <span className="size-6 mt-0.5 inline-flex items-center justify-center rounded-full bg-zinc-100 dark:bg-dark-700 text-zinc-500 dark:text-zinc-300 font-mono text-xs shrink-0">
                                 {index + 1}
                               </span>
                               <div className="min-w-0">
-                                <p className="text-sm font-bold text-zinc-800 truncate">
+                                <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100 truncate">
                                   {i.name}
                                 </p>
-                                <p className="text-xs text-zinc-500 mt-0.5">
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                                   {i.quantity} uds x $
                                   {i.price.toLocaleString("es-MX", {
                                     minimumFractionDigits: 2,
@@ -2421,7 +2424,7 @@ export default function CreateQuote() {
                                     })}%`}
                                 </p>
                                 {clampDiscount(i.discount || 0) > 0 && (
-                                  <p className="text-[11px] text-[#2277B4] mt-0.5 font-medium">
+                                  <p className="text-[11px] text-[#2277B4] dark:text-blue-400 mt-0.5 font-medium">
                                     Unitario c/desc: $
                                     {calculateDiscountedUnitPrice(
                                       i.price,
@@ -2434,10 +2437,10 @@ export default function CreateQuote() {
                               </div>
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="text-[10px] uppercase tracking-wider text-zinc-400 mb-0.5">
+                              <p className="text-[10px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">
                                 Importe
                               </p>
-                              <p className="text-sm font-bold text-zinc-800 font-mono">
+                              <p className="text-sm font-bold text-zinc-800 dark:text-zinc-100 font-mono">
                                 $
                                 {i.total.toLocaleString("es-MX", {
                                   minimumFractionDigits: 2,
@@ -2452,52 +2455,52 @@ export default function CreateQuote() {
 
                   {/* Final Total */}
                   <div className="xl:col-span-1">
-                    <div className="bg-white p-5 rounded-2xl border border-zinc-200/80 shadow-sm xl:sticky xl:top-1">
-                      <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">
+                    <div className="bg-white dark:bg-dark-800 p-5 rounded-2xl border border-zinc-200/80 dark:border-dark-700 shadow-sm xl:sticky xl:top-1">
+                      <h3 className="text-sm font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">
                         Resumen financiero
                       </h3>
                       <div className="space-y-3">
-                        <div className="flex justify-between text-sm text-zinc-500 font-medium">
+                        <div className="flex justify-between text-sm text-zinc-500 dark:text-zinc-400 font-medium">
                           <span>Subtotal bruto</span>
-                          <span className="font-mono text-zinc-800">
+                          <span className="font-mono text-zinc-800 dark:text-zinc-100">
                             $
                             {(grossSubtotal || 0).toLocaleString("es-MX", {
                               minimumFractionDigits: 2,
                             })}
                           </span>
                         </div>
-                        <div className="flex justify-between text-sm text-zinc-500 font-medium">
+                        <div className="flex justify-between text-sm text-zinc-500 dark:text-zinc-400 font-medium">
                           <span>Descuento</span>
-                          <span className="font-mono text-rose-600">
+                          <span className="font-mono text-rose-600 dark:text-rose-400">
                             -$
                             {(totalDiscount || 0).toLocaleString("es-MX", {
                               minimumFractionDigits: 2,
                             })}
                           </span>
                         </div>
-                        <div className="flex justify-between text-sm text-zinc-500 font-medium">
+                        <div className="flex justify-between text-sm text-zinc-500 dark:text-zinc-400 font-medium">
                           <span>Subtotal neto</span>
-                          <span className="font-mono text-zinc-800">
+                          <span className="font-mono text-zinc-800 dark:text-zinc-100">
                             $
                             {(grandTotal || 0).toLocaleString("es-MX", {
                               minimumFractionDigits: 2,
                             })}
                           </span>
                         </div>
-                        <div className="flex justify-between text-sm text-zinc-500 font-medium">
+                        <div className="flex justify-between text-sm text-zinc-500 dark:text-zinc-400 font-medium">
                           <span>IVA (16%)</span>
-                          <span className="font-mono text-zinc-800">
+                          <span className="font-mono text-zinc-800 dark:text-zinc-100">
                             $
                             {(ivaTotal || 0).toLocaleString("es-MX", {
                               minimumFractionDigits: 2,
                             })}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center pt-3 border-t border-zinc-100">
-                          <span className="font-bold text-zinc-800 text-base">
+                        <div className="flex justify-between items-center pt-3 border-t border-zinc-100 dark:border-dark-700">
+                          <span className="font-bold text-zinc-800 dark:text-zinc-100 text-base">
                             Total Neto
                           </span>
-                          <span className="font-bold text-2xl text-[#1a2b4c] font-mono tracking-tight">
+                          <span className="font-bold text-2xl text-[#1a2b4c] dark:text-emerald-400 font-mono tracking-tight">
                             $
                             {(totalWithIva || 0).toLocaleString("es-MX", {
                               minimumFractionDigits: 2,
@@ -2511,10 +2514,10 @@ export default function CreateQuote() {
               </div>
 
               {/* Footer con acciones */}
-              <div className="px-6 md:px-7 py-4 bg-white/95 border-t border-zinc-200 flex justify-between items-center gap-3">
+              <div className="px-6 md:px-7 py-4 bg-white/95 dark:bg-dark-900 border-t border-zinc-200 dark:border-dark-700 flex justify-between items-center gap-3">
                 <button
                   onClick={() => setShowPreviewModal(false)}
-                  className="px-6 py-2.5 rounded-xl text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 font-bold transition-all">
+                  className="px-6 py-2.5 rounded-xl text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-dark-800 font-bold transition-all">
                   Volver a editar
                 </button>
                 <button

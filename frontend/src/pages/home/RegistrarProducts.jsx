@@ -1154,8 +1154,8 @@ export default function RegistrarProducts() {
     <div className="space-y-6 pb-20 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-zinc-800 tracking-tight">
-            Registrar productos
+          <h1 className="inline-flex items-center gap-3 text-3xl font-semibold text-zinc-800 dark:text-zinc-100 tracking-tight">
+            <span>Registrar productos</span>
           </h1>
         </div>
         <Link
@@ -1177,7 +1177,7 @@ export default function RegistrarProducts() {
           <div className="mb-6">
             <div className="relative">
               <div
-                className="w-full pl-4 pr-10 py-3 rounded-xl bg-white text-[#2277B4] border border-zinc-200 outline-none transition-all cursor-pointer hover:bg-zinc-50 flex justify-between items-center"
+                className="w-full pl-4 pr-10 py-3 rounded-xl bg-white dark:bg-dark-900 text-[#2277B4] dark:text-blue-400 border border-zinc-200 dark:border-dark-700 outline-none transition-all cursor-pointer hover:bg-zinc-50 dark:hover:bg-dark-800 flex justify-between items-center"
                 onClick={openSourceModal}>
                 <span className="truncate pr-3">
                   {newProduct.name ?
@@ -1221,7 +1221,7 @@ export default function RegistrarProducts() {
                   value={newProduct.category}
                   readOnly
                   disabled={!selectedCategory}
-                  className="w-full rounded-xl px-4 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300 disabled:bg-zinc-100 disabled:text-zinc-500 disabled:border-zinc-200 disabled:cursor-not-allowed"
+                  className="w-full rounded-xl px-4 py-3 text-sm bg-white dark:bg-dark-900 text-light-text-primary dark:text-zinc-100 focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300 dark:border-dark-700 disabled:bg-zinc-100 dark:disabled:bg-dark-800 disabled:text-zinc-500 disabled:border-zinc-200 dark:disabled:border-dark-700 disabled:cursor-not-allowed transition-colors"
                   required
                 />
               </div>
@@ -1242,10 +1242,10 @@ export default function RegistrarProducts() {
                     placeholder="0.00"
                     value={newProduct.price}
                     onChange={(e) => handlePriceChange(e.target.value)}
-                    className="w-full rounded-xl pl-4 pr-16 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300"
+                    className="w-full rounded-xl pl-4 pr-16 py-3 text-sm bg-white dark:bg-dark-900 text-light-text-primary dark:text-zinc-100 focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300 dark:border-dark-700 transition-colors"
                     required
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex overflow-hidden rounded-md border border-[#b8cce6] shadow-sm bg-[#e8f2ff]">
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex overflow-hidden rounded-md border border-[#b8cce6] dark:border-dark-600 shadow-sm bg-[#e8f2ff] dark:bg-dark-800">
                     <button
                       type="button"
                       onClick={() => handlePriceStep(-1)}
@@ -1255,13 +1255,13 @@ export default function RegistrarProducts() {
                     <button
                       type="button"
                       onClick={() => handlePriceStep(1)}
-                      className="size-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] border-l border-[#b8cce6] transition-colors leading-none">
+                      className="size-4 text-xs font-bold text-[#2277B4] dark:text-blue-400 hover:bg-[#dcecff] dark:hover:bg-dark-700 border-l border-[#b8cce6] dark:border-dark-600 transition-colors leading-none">
                       +
                     </button>
                   </div>
                 </div>
                 {Number(newProduct.price) > 0 && (
-                  <div className="text-[10px] text-black mt-1 font-mono text-right">
+                  <div className="text-[10px] text-black dark:text-zinc-400 mt-1 font-mono text-right">
                     + IVA: ${(parseFloat(newProduct.price) * 0.16).toFixed(2)}
                   </div>
                 )}
@@ -1282,10 +1282,10 @@ export default function RegistrarProducts() {
                       placeholder="1"
                       value={newProduct.users_count}
                       onChange={(e) => handleUsersChange(e.target.value)}
-                      className="w-full rounded-xl pl-4 pr-16 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300"
+                      className="w-full rounded-xl pl-4 pr-16 py-3 text-sm bg-white dark:bg-dark-900 text-light-text-primary dark:text-zinc-100 focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300 dark:border-dark-700 transition-colors"
                       required
                     />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex overflow-hidden rounded-md border border-[#b8cce6] shadow-sm bg-[#e8f2ff]">
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex overflow-hidden rounded-md border border-[#b8cce6] dark:border-dark-600 shadow-sm bg-[#e8f2ff] dark:bg-dark-800">
                       <button
                         type="button"
                         onClick={() => handleUsersStep(-1)}
@@ -1295,7 +1295,7 @@ export default function RegistrarProducts() {
                       <button
                         type="button"
                         onClick={() => handleUsersStep(1)}
-                        className="size-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] border-l border-[#b8cce6] transition-colors leading-none">
+                        className="size-4 text-xs font-bold text-[#2277B4] dark:text-blue-400 hover:bg-[#dcecff] dark:hover:bg-dark-700 border-l border-[#b8cce6] dark:border-dark-600 transition-colors leading-none">
                         +
                       </button>
                     </div>
@@ -1311,7 +1311,7 @@ export default function RegistrarProducts() {
                 Descripción
               </label>
               <textarea
-                className="w-full bg-white border border-light-border rounded-lg p-3 text-sm text-light-text-primary outline-none focus:ring-1 focus:ring-[#125280] min-h-[100px]"
+                className="w-full bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 rounded-lg p-3 text-sm text-light-text-primary dark:text-zinc-100 outline-none focus:ring-1 focus:ring-[#125280] min-h-[100px] transition-colors"
                 placeholder="Detalles técnicos…"
                 value={newProduct.description}
                 onChange={(e) =>
@@ -1338,7 +1338,7 @@ export default function RegistrarProducts() {
       {isSourceModalOpen &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in relative">
+            <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in relative">
               <div className="p-4 rounded-t-2xl border-b border-[#24395f] bg-[#1a2b4c] flex items-center justify-between">
                 <h2 className="font-semibold text-white text-lg">
                   Productos y Servicios
@@ -1351,8 +1351,8 @@ export default function RegistrarProducts() {
               </div>
 
               <div className="p-4 space-y-4">
-                <div className="text-xs text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
-                  Categoría activa: <strong>{selectedCategory}</strong>
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 rounded-lg px-3 py-2">
+                  Categoría activa: <strong className="dark:text-zinc-200">{selectedCategory}</strong>
                 </div>
 
                 <button
@@ -1361,7 +1361,7 @@ export default function RegistrarProducts() {
                     setIsSourceModalOpen(false);
                     setIsContpaqiModalOpen(true);
                   }}
-                  className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-[#125280] font-semibold transition-all flex items-center justify-between group">
+                  className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 dark:border-dark-600 bg-blue-50/50 dark:bg-dark-700 hover:bg-blue-50 dark:hover:bg-dark-600 text-[#125280] dark:text-blue-400 font-semibold transition-all flex items-center justify-between group">
                   <div className="flex items-center gap-3">
                     <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
                       <Package size={18} />
@@ -1380,7 +1380,7 @@ export default function RegistrarProducts() {
                     setIsSourceModalOpen(false);
                     setIsPoliciesModalOpen(true);
                   }}
-                  className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-[#125280] font-semibold transition-all flex items-center justify-between group">
+                  className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 dark:border-dark-600 bg-blue-50/50 dark:bg-dark-700 hover:bg-blue-50 dark:hover:bg-dark-600 text-[#125280] dark:text-blue-400 font-semibold transition-all flex items-center justify-between group">
                   <div className="flex items-center gap-3">
                     <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-purple-600">
                       <Shield size={18} />
@@ -1399,7 +1399,7 @@ export default function RegistrarProducts() {
                     setIsSourceModalOpen(false);
                     setIsGeneralProductsModalOpen(true);
                   }}
-                  className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 text-[#125280] font-semibold transition-all flex items-center justify-between group">
+                  className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 dark:border-dark-600 bg-blue-50/50 dark:bg-dark-700 hover:bg-blue-50 dark:hover:bg-dark-600 text-[#125280] dark:text-blue-400 font-semibold transition-all flex items-center justify-between group">
                   <div className="flex items-center gap-3">
                     <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-emerald-600">
                       <ShoppingBag size={18} />
@@ -1418,7 +1418,7 @@ export default function RegistrarProducts() {
                     setIsSourceModalOpen(false);
                     setIsServicesModalOpen(true);
                   }}
-                  className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-[#125280]/35 text-[#125280] font-semibold hover:border-[#125280] hover:text-[#125280] hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
+                  className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-[#125280]/35 dark:border-dark-600 text-[#125280] dark:text-blue-500 font-semibold hover:border-[#125280] dark:hover:border-blue-400 hover:text-[#125280] dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-dark-700 transition-all flex items-center justify-center gap-2">
                   <Library size={18} /> Servicios
                 </button>
               </div>
@@ -1431,7 +1431,7 @@ export default function RegistrarProducts() {
       {isCategoriesModalOpen &&
         createPortal(
           <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-fade-in relative">
+            <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-fade-in relative">
               <div className="p-4 rounded-t-2xl border-b border-[#24395f] bg-[#1a2b4c] flex items-center justify-between">
                 <h2 className="font-semibold text-white text-lg">Categorías</h2>
                 <button
@@ -1447,7 +1447,7 @@ export default function RegistrarProducts() {
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
                     placeholder="Ej. Contabilidad"
-                    className="flex-1 rounded-xl px-4 py-3 text-sm bg-white text-light-text-primary focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300"
+                    className="flex-1 rounded-xl px-4 py-3 text-sm bg-white dark:bg-dark-900 text-light-text-primary dark:text-zinc-100 focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300 dark:border-dark-700 transition-colors"
                   />
                   <button
                     type="button"
@@ -1500,8 +1500,8 @@ export default function RegistrarProducts() {
                                 normalizeServicePolicyCategory(category) ===
                                 normalizeServicePolicyCategory(selectedCategory)
                               ) ?
-                                "border-[#2277B4] bg-[#2277B4]/10 text-[#2277B4]"
-                              : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50"
+                                "border-[#2277B4] bg-[#2277B4]/10 text-[#2277B4] dark:text-blue-400"
+                              : "border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-dark-800"
                             }`}>
                             {category}
                           </button>
@@ -1519,7 +1519,7 @@ export default function RegistrarProducts() {
                               setCategoryPage((prev) => Math.max(1, prev - 1))
                             }
                             disabled={safeCategoryPage === 1}
-                            className="px-3 py-1.5 rounded-md border border-zinc-200 text-xs font-semibold text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-3 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-dark-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                             Anterior
                           </button>
                           <button
@@ -1530,7 +1530,7 @@ export default function RegistrarProducts() {
                               )
                             }
                             disabled={safeCategoryPage === totalCategoryPages}
-                            className="px-3 py-1.5 rounded-md border border-zinc-200 text-xs font-semibold text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-3 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-dark-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                             Siguiente
                           </button>
                         </div>
@@ -1548,7 +1548,7 @@ export default function RegistrarProducts() {
       {isContpaqiModalOpen &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl animate-fade-in flex flex-col max-h-[85vh] overflow-hidden">
+            <div className="bg-white dark:bg-dark-800 rounded-3xl w-full max-w-2xl shadow-2xl animate-fade-in flex flex-col max-h-[85vh] overflow-hidden">
               <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
                 <button
                   onClick={() => {
@@ -1581,10 +1581,10 @@ export default function RegistrarProducts() {
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto space-y-8 bg-[#f8fafc]">
+              <div className="p-6 overflow-y-auto space-y-8 bg-[#f8fafc] dark:bg-dark-800">
                 <div className="space-y-3">
                   {filteredContpaqiProducts.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-5 text-sm text-zinc-500 text-center">
+                    <div className="rounded-xl border border-dashed border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 p-5 text-sm text-zinc-500 dark:text-zinc-400 text-center">
                       No hay productos para la categoría{" "}
                       <strong>{selectedCategory}</strong>. <br /> Usa el botón{" "}
                       <strong>Nuevo producto</strong>.
@@ -1599,13 +1599,13 @@ export default function RegistrarProducts() {
                         key={item.id}
                         type="button"
                         onClick={() => selectContpaqiProduct(item)}
-                        className="w-full text-left p-5 rounded-2xl border border-zinc-200 bg-white hover:border-blue-300 hover:shadow-md transition-all group">
+                        className="w-full text-left p-5 rounded-2xl border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 hover:border-blue-300 dark:hover:border-dark-600 hover:shadow-md transition-all group">
                         <div className="flex justify-between items-start gap-4 mb-1.5">
                           <div className="flex items-start gap-3 min-w-0">
-                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-zinc-200 bg-zinc-50 text-zinc-400 group-hover:border-blue-200 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-zinc-200 dark:border-dark-700 bg-zinc-50 dark:bg-dark-800 text-zinc-400 group-hover:border-blue-200 dark:group-hover:bg-dark-700 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
                               <ProductLogo size={13} />
                             </span>
-                            <div className="font-bold text-lg text-[#1e293b] group-hover:text-blue-600 min-w-0 truncate">
+                            <div className="font-bold text-lg text-[#1e293b] dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 min-w-0 truncate">
                               {item.name}
                             </div>
                           </div>
@@ -1640,7 +1640,7 @@ export default function RegistrarProducts() {
       {isGeneralProductsModalOpen &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
+            <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
               <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
                 <button
                   onClick={() => {
@@ -1673,7 +1673,7 @@ export default function RegistrarProducts() {
               <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto">
                 <div className="space-y-2">
                   {filteredGeneralProducts.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-4 text-sm text-zinc-500 text-center">
+                    <div className="rounded-xl border border-dashed border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 p-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">
                       No hay productos para la categoría{" "}
                       <strong>{selectedCategory}</strong>.
                     </div>
@@ -1684,8 +1684,8 @@ export default function RegistrarProducts() {
                       key={product.id}
                       type="button"
                       onClick={() => selectGeneralProduct(product)}
-                      className="w-full text-left p-4 rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50 transition-colors">
-                      <div className="font-semibold text-zinc-800 truncate">
+                      className="w-full text-left p-4 rounded-xl border border-emerald-200 dark:border-dark-700 bg-white dark:bg-dark-900 hover:bg-emerald-50 dark:hover:bg-dark-800 transition-colors">
+                      <div className="font-semibold text-zinc-800 dark:text-zinc-100 truncate">
                         {product.name}
                       </div>
                       <div className="text-[11px] text-zinc-500 uppercase tracking-wide mt-1 truncate">
@@ -1709,7 +1709,7 @@ export default function RegistrarProducts() {
       {isPoliciesModalOpen &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
+            <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
               <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
                 <button
                   onClick={() => {
@@ -1742,7 +1742,7 @@ export default function RegistrarProducts() {
               <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto">
                 <div className="space-y-2">
                   {filteredPolicies.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-4 text-sm text-zinc-500 text-center">
+                    <div className="rounded-xl border border-dashed border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 p-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">
                       No hay pólizas para la categoría{" "}
                       <strong>{selectedCategory}</strong>.
                     </div>
@@ -1753,8 +1753,8 @@ export default function RegistrarProducts() {
                       key={policy.id}
                       type="button"
                       onClick={() => selectPolicy(policy)}
-                      className="w-full text-left p-4 rounded-xl border border-purple-200 bg-white hover:bg-purple-50 transition-colors">
-                      <div className="font-semibold text-zinc-800 truncate">
+                      className="w-full text-left p-4 rounded-xl border border-purple-200 dark:border-dark-700 bg-white dark:bg-dark-900 hover:bg-purple-50 dark:hover:bg-dark-800 transition-colors">
+                      <div className="font-semibold text-zinc-800 dark:text-zinc-100 truncate">
                         {policy.name}
                       </div>
                       <div className="text-[11px] text-zinc-500 uppercase tracking-wide mt-1 truncate">
@@ -1780,7 +1780,7 @@ export default function RegistrarProducts() {
       {isServicesModalOpen &&
         createPortal(
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
+            <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
               <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
                 <button
                   onClick={() => {
@@ -1813,7 +1813,7 @@ export default function RegistrarProducts() {
               <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto">
                 <div className="space-y-2">
                   {filteredServices.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-4 text-sm text-zinc-500 text-center">
+                    <div className="rounded-xl border border-dashed border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 p-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">
                       No hay servicios para la categoría{" "}
                       <strong>{selectedCategory}</strong>. <br /> Usa el botón
                       <strong> Nuevo servicio</strong>.
@@ -1825,8 +1825,8 @@ export default function RegistrarProducts() {
                       key={service.id}
                       type="button"
                       onClick={() => selectService(service)}
-                      className="w-full text-left p-4 rounded-xl border border-[#B58DE0]/45 bg-white hover:bg-[#B58DE0]/5 transition-colors">
-                      <div className="font-semibold text-zinc-800 truncate">
+                      className="w-full text-left p-4 rounded-xl border border-[#B58DE0]/45 dark:border-dark-600 bg-white dark:bg-dark-900 hover:bg-[#B58DE0]/5 dark:hover:bg-dark-800 transition-colors">
+                      <div className="font-semibold text-zinc-800 dark:text-zinc-100 truncate">
                         {service.name}
                       </div>
                       <div className="text-[11px] text-zinc-500 uppercase tracking-wide mt-1 truncate">

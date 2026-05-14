@@ -28,6 +28,20 @@ export async function meApi() {
   return data.data.me;
 }
 
+export async function verifyMasterPasswordApi(password) {
+  const query = `
+    mutation VerifyMasterPassword($password: String!) {
+      verifyMasterPassword(password: $password)
+    }
+  `;
+  const { data } = await axiosClient.post("", {
+    query,
+    variables: { password },
+  });
+  if (data.errors?.length) throw new Error(data.errors[0].message);
+  return data.data.verifyMasterPassword;
+}
+
 export async function registerUserApi(
   full_name,
   email,

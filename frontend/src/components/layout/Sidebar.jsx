@@ -70,7 +70,7 @@ export default function Sidebar({ role }) {
   return (
     <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-300 z-40 border-r border-white/30 dark:border-white/10 bg-white/35 dark:bg-dark-800/60 backdrop-blur-2xl shadow-xl shadow-zinc-900/5 dark:shadow-black/30 ring-1 ring-white/20 dark:ring-white/5">
       {/* Rol actual */}
-      <div className="mb-6 px-3 py-3 rounded-xl bg-white/40 dark:bg-white/5 border border-white/30 dark:border-white/10 backdrop-blur-xl">
+      <div className="mb-6 px-3 py-3 rounded-xl bg-white/40 dark:bg-transparent border border-white/30 dark:border-transparent backdrop-blur-xl dark:backdrop-blur-none">
         <div className="flex items-center justify-center gap-3">
           <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200 tracking-wide whitespace-nowrap leading-none">
             {roleLabel}
