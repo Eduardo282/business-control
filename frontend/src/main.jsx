@@ -9,7 +9,6 @@ import "@fontsource/inter/700.css";
 import App from "./App.jsx";
 import "./styles/index.css";
 import { AuthProvider } from "./context/AuthContext.jsx";
-import { ThemeProvider } from "./context/ThemeContext.jsx";
 
 registerLocale("es", es);
 setDefaultLocale("es");
@@ -31,9 +30,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <HelmetProvider>
       <AuthProvider>
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
+        <App />
       </AuthProvider>
     </HelmetProvider>
   </React.StrictMode>,

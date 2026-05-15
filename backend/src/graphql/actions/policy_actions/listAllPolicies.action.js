@@ -39,7 +39,7 @@ function determineStatus(storedStatus, expirationDate) {
   }
   const diffTime = Math.abs(exp - now);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  if (diffDays <= 30) {
+  if (diffDays <= 5) {
     return "EXPIRING_SOON";
   }
   return "ACTIVE";

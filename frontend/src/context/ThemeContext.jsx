@@ -1,15 +1,28 @@
 import { createContext, useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 
 export const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
+  const location = useLocation();
+  const isPortal = location.pathname.startsWith("/portal");
+  const storageKey = isPortal ? "portal_theme" : "theme";
+
   // Por defecto 'dark' ya que el diseño actual del usuario es oscuro
   const [theme, setTheme] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("theme") || "dark";
+      return localStorage.getItem(storageKey) || "dark";
     }
     return "dark";
   });
+
+  // Escuchar si la clave de almacenamiento cambia (al cambiar entre admin y portal)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem(storageKey) || "dark";
+      setTheme(savedTheme);
+    }
+  }, [storageKey]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -19,8 +32,8 @@ export const ThemeProvider = ({ children }) => {
     } else {
       root.classList.remove("dark");
     }
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+    localStorage.setItem(storageKey, theme);
+  }, [theme, storageKey]);
 
   const toggleTheme = useCallback(() => {
     const switchTheme = () => {

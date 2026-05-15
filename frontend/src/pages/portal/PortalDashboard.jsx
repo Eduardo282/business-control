@@ -126,6 +126,7 @@ export default function PortalDashboard() {
                   { value: "ACTIVE", label: "Activo" },
                   { value: "EXPIRING_SOON", label: "Por Vencer" },
                   { value: "EXPIRED", label: "Vencido" },
+                  { value: "CANCELLED", label: "Cancelado" },
                 ].map(({ value, label }) => (
                   <button
                     key={value}
@@ -135,6 +136,7 @@ export default function PortalDashboard() {
                         value === "ACTIVE" ? "bg-emerald-500 text-white"
                         : value === "EXPIRING_SOON" ? "bg-orange-400 text-white"
                         : value === "EXPIRED" ? "bg-zinc-400 text-white"
+                        : value === "CANCELLED" ? "bg-zinc-600 text-white"
                         : "bg-blue-900 text-white"
                       : "text-zinc-500 hover:bg-zinc-100"
                     }`}>
@@ -378,6 +380,40 @@ function QuoteStatusBadge({ status }) {
   );
 }
 
+function getDaysRemaining(expirationDate) {
+  if (!expirationDate) return null;
+  const end = new Date(expirationDate).getTime();
+  if (Number.isNaN(end)) return null;
+  const now = new Date().getTime();
+  return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+}
+
+function formatRemainingLabel(daysRemaining) {
+  if (typeof daysRemaining !== "number" || Number.isNaN(daysRemaining)) {
+    return "—";
+  }
+  if (daysRemaining <= 0) return "Vencido";
+
+  const years = Math.floor(daysRemaining / 365);
+  const daysAfterYears = daysRemaining % 365;
+  const months = Math.floor(daysAfterYears / 30);
+  const days = daysAfterYears % 30;
+
+  const parts = [];
+  if (years) parts.push(`${years} año${years === 1 ? "" : "s"}`);
+  if (months && parts.length < 2) {
+    parts.push(`${months} mes${months === 1 ? "" : "es"}`);
+  }
+
+  if (!years && !months) {
+    parts.push(`${days} día${days === 1 ? "" : "s"}`);
+  } else if (days && parts.length < 2) {
+    parts.push(`${days} día${days === 1 ? "" : "s"}`);
+  }
+
+  return `${parts.join(" ")} restantes`;
+}
+
 function ValidityGraph({ startDate, expirationDate }) {
   const start = new Date(startDate).getTime();
   const end = new Date(expirationDate).getTime();
@@ -386,44 +422,45 @@ function ValidityGraph({ startDate, expirationDate }) {
 
   const now = new Date().getTime();
 
-  const totalDuration = end - start;
-  const elapsed = now - start;
+  const daysRemaining = getDaysRemaining(expirationDate);
+  const isExpired = typeof daysRemaining === "number" && daysRemaining <= 0;
+  const isExpiringSoon =
+    typeof daysRemaining === "number" && daysRemaining <= 5;
+  const isCritical =
+    typeof daysRemaining === "number" && daysRemaining > 0 && daysRemaining <= 2;
 
-  // Evitar división por cero
-  let remainingPercentage = 0;
-  if (totalDuration > 0) {
-    remainingPercentage = 100 - (elapsed / totalDuration) * 100;
-  } else {
-    // Si start y end son iguales o raros, manejamos casos borde
-    remainingPercentage = now > end ? 0 : 100;
+  let remainingPercentage = 100;
+  if (isExpired) {
+    remainingPercentage = 0;
+  } else if (isExpiringSoon && typeof daysRemaining === "number") {
+    remainingPercentage = (daysRemaining / 5) * 100;
   }
 
-  // Clamping
   if (remainingPercentage < 0) remainingPercentage = 0;
   if (remainingPercentage > 100) remainingPercentage = 100;
 
-  const diffTime = end - now;
-  const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  const isExpiringSoon = daysRemaining <= 20;
-  const isExpired = daysRemaining <= 0;
-
   let colorClass = "bg-emerald-500";
-  if (isExpiringSoon && !isExpired) colorClass = "bg-red-500";
-  if (isExpired) colorClass = "bg-zinc-300";
+  if (isExpiringSoon && !isExpired) {
+    colorClass = isCritical ? "bg-red-500" : "bg-amber-400";
+  }
+  if (isExpired) colorClass = "bg-red-600";
 
   let textColor = "text-emerald-600";
-  if (isExpiringSoon && !isExpired) textColor = "text-red-600";
-  if (isExpired) textColor = "text-zinc-500";
+  if (isExpiringSoon && !isExpired) {
+    textColor = isCritical ? "text-red-600" : "text-amber-600";
+  }
+  if (isExpired) textColor = "text-red-600";
 
   return (
     <div className="mt-4 mb-2 bg-zinc-50 p-3 rounded-xl border border-zinc-100">
-      <div className="flex justify-between items-end mb-2">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-2">
         <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide flex items-center gap-1">
           <Clock size={12} /> Vigencia
         </span>
-        <span className={`text-xs font-bold ${textColor}`}>
-          {isExpired ? "Vencido" : `${daysRemaining} días restantes`}
+        <span
+          className={`text-[11px] font-bold ${textColor} sm:text-xs sm:text-right leading-tight break-words sm:max-w-[160px]`}
+        >
+          {formatRemainingLabel(daysRemaining)}
         </span>
       </div>
       <div className="h-2.5 w-full bg-zinc-200 rounded-full overflow-hidden shadow-inner">
@@ -436,17 +473,26 @@ function ValidityGraph({ startDate, expirationDate }) {
   );
 }
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, daysRemaining }) {
+  const isCritical =
+    status === "EXPIRING_SOON" &&
+    typeof daysRemaining === "number" &&
+    daysRemaining > 0 &&
+    daysRemaining <= 2;
   const styles = {
     ACTIVE: "bg-emerald-50 text-emerald-600 border-emerald-200",
-    EXPIRING_SOON: "bg-red-50 text-red-600 border-red-200", // Changed to red per instructions "red if expiring"
-    EXPIRED: "bg-zinc-100 text-zinc-500 border-zinc-200",
+    EXPIRING_SOON: isCritical ?
+      "bg-red-50 text-red-600 border-red-200"
+    : "bg-amber-50 text-amber-700 border-amber-200",
+    EXPIRED: "bg-red-50 text-red-600 border-red-200",
+    CANCELLED: "bg-zinc-200 text-zinc-600 border-zinc-300",
   };
 
   const labels = {
     ACTIVE: "Activo",
     EXPIRING_SOON: "Por Vencer",
     EXPIRED: "Vencido",
+    CANCELLED: "Cancelado",
   };
 
   return (
@@ -459,9 +505,15 @@ function StatusBadge({ status }) {
   );
 }
 
-function getTimeColor(status) {
-  if (status === "EXPIRED") return "text-zinc-400 line-through";
-  if (status === "EXPIRING_SOON") return "text-red-600";
+function getTimeColor(status, daysRemaining) {
+  if (status === "CANCELLED") return "text-zinc-400";
+  if (status === "EXPIRED") return "text-red-600 line-through";
+  if (status === "EXPIRING_SOON") {
+    if (typeof daysRemaining === "number" && daysRemaining <= 2) {
+      return "text-red-600";
+    }
+    return "text-amber-600";
+  }
   return "text-emerald-600";
 }
 
@@ -503,14 +555,27 @@ function ServiceReel({ service, spinCount, index }) {
             className="symbol-face"
             style={{ transform: `rotateX(${fIdx * 30}deg) translateZ(525px)` }}>
             {item ?
-              <div className="p-5 flex flex-col h-[280px] bg-white border-l-4 border-[#1a2b4c] overflow-hidden shadow-sm mx-2 my-2.5 rounded-xl">
+              <div
+                className={`p-5 flex flex-col h-[280px] bg-white overflow-hidden shadow-sm mx-2 my-2.5 rounded-xl ${
+                  item.status === "CANCELLED" ?
+                    "opacity-50 grayscale"
+                  : ""
+                }`}
+              >
                 <div className="flex justify-between items-start mb-1 gap-2">
+                  {(() => {
+                    const daysRemaining = getDaysRemaining(item.expiration_date);
+                    return (
+                      <>
                   <h3
                     className="font-semibold text-zinc-800 line-clamp-2 md:text-sm lg:text-base leading-tight"
                     title={item.product?.name}>
                     {item.product?.name || "Servicio"}
                   </h3>
-                  <StatusBadge status={item.status} />
+                  <StatusBadge status={item.status} daysRemaining={daysRemaining} />
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <ValidityGraph
@@ -546,6 +611,7 @@ function ServiceReel({ service, spinCount, index }) {
                       <span
                         className={`font-mono font-semibold z-10 ${getTimeColor(
                           item.status,
+                          getDaysRemaining(item.expiration_date),
                         )}`}>
                         {new Date(item.expiration_date).toLocaleDateString()}
                       </span>

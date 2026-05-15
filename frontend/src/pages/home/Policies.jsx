@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState, useContext, Fragment } from "react";
 import { createPortal } from "react-dom";
 import { axiosClient } from "../../actionsAPI/axiosClient";
-import { deleteContactProductApi, updateContactProductDatesApi } from "../../actionsAPI/contacts.api";
+import {
+  createContactProductApi,
+  deleteContactProductApi,
+  listContactsByClientApi,
+  updateContactProductDatesApi,
+} from "../../actionsAPI/contacts.api";
+import { listClientsApi } from "../../actionsAPI/clients.api";
 import { AuthContext } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 
@@ -124,6 +130,7 @@ import {
   ChevronRight,
   Lightbulb,
   SlidersHorizontal,
+  UserPlus,
   X,
 } from "@icons";
 import {
@@ -139,6 +146,13 @@ function formatPolicyDate(value) {
   return new Date(value).toLocaleDateString("es-MX");
 }
 
+function toInputDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
 function listAllPoliciesApi() {
   return axiosClient
     .post("", {
@@ -151,13 +165,16 @@ function listAllPoliciesApi() {
           expiration_date
           status
           product {
+            id
             name
             category
           }
           client {
+            id
             business_name
           }
           contact {
+            id
             full_name
             email
           }
@@ -194,6 +211,21 @@ export default function Policies() {
   const [expanded, setExpanded] = useState({});
   const [editingRow, setEditingRow] = useState(null); // { id, start_date, expiration_date, status }
   const [savingEdit, setSavingEdit] = useState(false);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [assignTarget, setAssignTarget] = useState(null);
+  const [assignClients, setAssignClients] = useState([]);
+  const [assignContacts, setAssignContacts] = useState([]);
+  const [assignLoadingClients, setAssignLoadingClients] = useState(false);
+  const [assignLoadingContacts, setAssignLoadingContacts] = useState(false);
+  const [assignSaving, setAssignSaving] = useState(false);
+  const [assignForm, setAssignForm] = useState({
+    client_id: "",
+    contact_id: "",
+    license_key: "",
+    start_date: "",
+    expiration_date: "",
+    status: "ACTIVE",
+  });
 
   const clearFilters = () => {
     setQ("");
@@ -288,6 +320,56 @@ export default function Policies() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (!assignModalOpen) return;
+    let canceled = false;
+
+    setAssignLoadingClients(true);
+    listClientsApi()
+      .then((res) => {
+        if (canceled) return;
+        setAssignClients(res || []);
+      })
+      .catch((e) => {
+        if (canceled) return;
+        Swal.fire("Error", e.message || "Error cargando clientes", "error");
+      })
+      .finally(() => {
+        if (!canceled) setAssignLoadingClients(false);
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [assignModalOpen]);
+
+  useEffect(() => {
+    if (!assignModalOpen) return;
+    if (!assignForm.client_id) {
+      setAssignContacts([]);
+      return;
+    }
+
+    let canceled = false;
+    setAssignLoadingContacts(true);
+    listContactsByClientApi(assignForm.client_id)
+      .then((res) => {
+        if (canceled) return;
+        setAssignContacts(res || []);
+      })
+      .catch((e) => {
+        if (canceled) return;
+        Swal.fire("Error", e.message || "Error cargando contactos", "error");
+      })
+      .finally(() => {
+        if (!canceled) setAssignLoadingContacts(false);
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [assignModalOpen, assignForm.client_id]);
+
   const load = async () => {
     setLoading(true);
     try {
@@ -297,6 +379,78 @@ export default function Policies() {
       setError(e.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openAssignModal = (group) => {
+    if (!group?.product?.id) {
+      Swal.fire("Error", "No hay producto para asignar.", "error");
+      return;
+    }
+
+    const clientId = group.client?.id ? String(group.client.id) : "";
+    const startDate = toInputDate(group.start_date) ||
+      new Date().toISOString().slice(0, 10);
+    const expDate = toInputDate(group.expiration_date);
+
+    setAssignTarget(group);
+    setAssignContacts([]);
+    setAssignForm({
+      client_id: clientId,
+      contact_id: "",
+      license_key: "",
+      start_date: startDate,
+      expiration_date: expDate,
+      status: group.status || "ACTIVE",
+    });
+    setAssignModalOpen(true);
+  };
+
+  const closeAssignModal = () => {
+    setAssignModalOpen(false);
+    setAssignTarget(null);
+    setAssignContacts([]);
+    setAssignForm({
+      client_id: "",
+      contact_id: "",
+      license_key: "",
+      start_date: "",
+      expiration_date: "",
+      status: "ACTIVE",
+    });
+  };
+
+  const handleAssignSubmit = async (e) => {
+    e.preventDefault();
+    if (!assignTarget?.product?.id) return;
+    if (!assignForm.contact_id || !assignForm.start_date || !assignForm.expiration_date) {
+      Swal.fire("Faltan datos", "Completa los campos obligatorios.", "info");
+      return;
+    }
+
+    setAssignSaving(true);
+    try {
+      await createContactProductApi({
+        contact_id: assignForm.contact_id,
+        product_id: assignTarget.product.id,
+        license_key: assignForm.license_key?.trim() || null,
+        start_date: assignForm.start_date,
+        expiration_date: assignForm.expiration_date,
+        status: assignForm.status || "ACTIVE",
+      });
+      await load();
+      closeAssignModal();
+      Swal.fire({
+        title: "Asignado",
+        text: "El servicio/póliza se asignó correctamente.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (e) {
+      Swal.fire("Error", e.message || "Error al asignar", "error");
+    } finally {
+      setAssignSaving(false);
     }
   };
 
@@ -825,6 +979,13 @@ export default function Policies() {
                 </>
               ) : (
                 <>
+                  <button
+                    onClick={() => openAssignModal(g)}
+                    className="size-8 inline-flex items-center justify-center rounded-lg text-emerald-700 hover:bg-emerald-50 transition-colors"
+                    title="Asignar a contacto"
+                  >
+                    <UserPlus size={16} />
+                  </button>
                   {!isStandalone && (
                     <button
                       onClick={() => startEditRow(g)}
@@ -887,7 +1048,7 @@ export default function Policies() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar póliza…"
+              placeholder="Buscar póliza o servicio…"
               className="bg-transparent border-none text-sm text-zinc-800 placeholder:text-zinc-400 px-3 w-40 md:w-52 focus:outline-none"
             />
             <div className="px-3 py-1.5 text-zinc-400">
@@ -1007,6 +1168,213 @@ export default function Policies() {
                     }
                   </div>
                 </div>
+              </div>
+            </div>,
+            document.body,
+          )}
+
+        {assignModalOpen &&
+          createPortal(
+            <div
+              className="fixed inset-0 z-[9999] bg-black/45 flex items-center justify-center p-4"
+              onClick={closeAssignModal}>
+              <div
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()}>
+                <div className="px-6 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
+                  <div>
+                    <h3 className="text-white font-semibold text-base uppercase">
+                      Asignar servicio/póliza
+                    </h3>
+                    <p className="text-[11px] text-zinc-300 mt-1">
+                      {assignTarget?.product?.name || "Producto"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={closeAssignModal}
+                    className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleAssignSubmit} className="p-6 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">
+                        Servicio/Póliza
+                      </label>
+                      <input
+                        type="text"
+                        value={assignTarget?.product?.name || ""}
+                        disabled
+                        className="w-full px-3 py-2 rounded-lg border border-zinc-200 bg-zinc-50 text-sm text-zinc-700"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">
+                        Cliente
+                      </label>
+                      {assignTarget?.client?.id ? (
+                        <input
+                          type="text"
+                          value={assignTarget?.client?.business_name || ""}
+                          disabled
+                          className="w-full px-3 py-2 rounded-lg border border-zinc-200 bg-zinc-50 text-sm text-zinc-700"
+                        />
+                      ) : (
+                        <select
+                          value={assignForm.client_id}
+                          onChange={(e) =>
+                            setAssignForm((prev) => ({
+                              ...prev,
+                              client_id: e.target.value,
+                              contact_id: "",
+                            }))
+                          }
+                          className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] outline-none"
+                        >
+                          <option value="">
+                            {assignLoadingClients ? "Cargando..." : "Seleccionar..."}
+                          </option>
+                          {assignClients.map((client) => (
+                            <option key={client.id} value={client.id}>
+                              {client.business_name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">
+                        Contacto *
+                      </label>
+                      <select
+                        value={assignForm.contact_id}
+                        onChange={(e) =>
+                          setAssignForm((prev) => ({
+                            ...prev,
+                            contact_id: e.target.value,
+                          }))
+                        }
+                        disabled={!assignForm.client_id || assignLoadingContacts}
+                        className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] outline-none disabled:bg-zinc-100"
+                        required>
+                        <option value="">
+                          {assignLoadingContacts ?
+                            "Cargando contactos..."
+                          : assignForm.client_id ?
+                            "Seleccionar..."
+                          : "Selecciona un cliente"}
+                        </option>
+                        {assignContacts.map((contact) => (
+                          <option key={contact.id} value={contact.id}>
+                            {contact.full_name}
+                          </option>
+                        ))}
+                      </select>
+                      {!assignLoadingContacts &&
+                        assignForm.client_id &&
+                        assignContacts.length === 0 && (
+                          <p className="text-[11px] text-zinc-400 mt-1">
+                            No hay contactos para este cliente.
+                          </p>
+                        )}
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">
+                        Licencia / Folio
+                      </label>
+                      <input
+                        type="text"
+                        value={assignForm.license_key}
+                        onChange={(e) =>
+                          setAssignForm((prev) => ({
+                            ...prev,
+                            license_key: e.target.value,
+                          }))
+                        }
+                        placeholder="Opcional"
+                        className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">
+                        Inicio *
+                      </label>
+                      <input
+                        type="date"
+                        value={assignForm.start_date}
+                        onChange={(e) =>
+                          setAssignForm((prev) => ({
+                            ...prev,
+                            start_date: e.target.value,
+                          }))
+                        }
+                        required
+                        className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">
+                        Vence *
+                      </label>
+                      <input
+                        type="date"
+                        value={assignForm.expiration_date}
+                        onChange={(e) =>
+                          setAssignForm((prev) => ({
+                            ...prev,
+                            expiration_date: e.target.value,
+                          }))
+                        }
+                        required
+                        className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-zinc-500 mb-1 block">
+                        Estado
+                      </label>
+                      <select
+                        value={assignForm.status}
+                        onChange={(e) =>
+                          setAssignForm((prev) => ({
+                            ...prev,
+                            status: e.target.value,
+                          }))
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] outline-none"
+                      >
+                        <option value="ACTIVE">Activo</option>
+                        <option value="CANCELLED">Inactivo</option>
+                        <option value="EXPIRED">Vencido</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={closeAssignModal}
+                      className="px-4 py-2 rounded-lg text-sm font-semibold text-zinc-600 hover:bg-zinc-100 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={assignSaving}
+                      className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                    >
+                      {assignSaving ? "Asignando..." : "Asignar"}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>,
             document.body,
