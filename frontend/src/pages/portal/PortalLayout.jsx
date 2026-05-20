@@ -111,7 +111,7 @@ export default function PortalLayout() {
         {/* Navegación */}
         <nav className="space-y-1 flex-1">
           <PortalItem to="/portal/dashboard" icon={LayoutDashboard}>
-            Mis Servicios
+            Mis Servicios y pólizas
           </PortalItem>
           <PortalItem
             to="/portal/quotes?filter=recent"
@@ -123,7 +123,7 @@ export default function PortalLayout() {
             to="/portal/quotes?filter=older"
             icon={History}
             matchFilter="older">
-            Cotizaciones
+            Cotizaciones anteriores
           </PortalItem>
           <PortalItem to="/portal/catalog" icon={BookOpen}>
             Productos
@@ -148,7 +148,15 @@ export default function PortalLayout() {
         <header className="bg-[#1B4733] text-white shadow-md">
           <div className="px-6 py-4 flex justify-between items-center">
             <div>
-              <h1 className="text-xl font-semibold">Portal del Cliente</h1>
+              <h1 className="text-xl font-semibold">Portal</h1>
+              <div className="text-xs text-white/70 mt-0.5">
+                Bienvenido {contact?.full_name} • XXXX3 •{" "}
+                {new Date().toLocaleDateString("es-MX", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <ThemeToggle />

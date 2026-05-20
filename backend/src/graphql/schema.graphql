@@ -120,9 +120,15 @@ type SendEmailResponse {
   message: String
 }
 
+type ProductCategory {
+  id: ID!
+  name: String!
+}
+
 type Query {
   me: User
   roles: [Role!]!
+  productCategories: [ProductCategory!]!
 
   clients: [Client!]!
   client(id: ID!): Client
@@ -162,6 +168,7 @@ type Mutation {
     start_date: String
     expiration_date: String
     status: String
+    license_key: String
   ): ContactProduct!
 
   sendQuoteEmail(
@@ -196,18 +203,25 @@ type Mutation {
   deleteQuote(id: ID!): Boolean!
   markQuoteNotificationRead(id: ID!): Boolean!
 
+  createCategory(name: String!): ProductCategory!
+  deleteCategory(id: ID!): Boolean!
+
   createRole(name: String!): Role!
   deleteRole(id: ID!): Boolean!
 
   requestQuote(input: RequestQuoteInput!): Quote!
   deletePortalQuote(id: ID!): Boolean!
   updatePortalQuoteRequest(id: ID!, input: RequestQuoteInput!): Quote!
+  rejectPortalQuote(id: ID!): Boolean!
+  rejectQuote(id: ID!): Boolean!
+  updateQuoteStatus(id: ID!, status: String!): Quote!
 }
 
 type PortalProduct {
   id: ID!
   name: String!
   category: String!
+  product_type: String
   description: String
 }
 

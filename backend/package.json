@@ -5,7 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "migrate": "node src/migrations/cli.js",
+    "test": "node --env-file=.env --test tests/**/*.test.js"
   },
   "dependencies": {
     "@apollo/server": "5.5.1",

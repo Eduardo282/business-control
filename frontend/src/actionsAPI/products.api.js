@@ -6,6 +6,7 @@ export async function listProductsApi(client_id = null) {
       products(client_id: $clientId) {
         id name category description
         current_price users_count client_id
+        product_type
       }
     }
   `;
@@ -21,6 +22,7 @@ export async function getProductApi(id) {
       product(id: $id) {
         id name category description
         current_price users_count client_id
+        product_type
         price_history { id price changed_at }
         client { id business_name rfc email1 }
       }
@@ -34,7 +36,7 @@ export async function getProductApi(id) {
 export async function createProductApi(input) {
   const query = `
     mutation CreateProduct($input: CreateProductInput!) {
-      createProduct(input: $input) { id name }
+      createProduct(input: $input) { id name product_type }
     }
   `;
   const { data } = await axiosClient.post("", { query, variables: { input } });
@@ -79,6 +81,7 @@ export async function searchProductsApi(q, client_id = null) {
       searchProducts(q: $q, client_id: $client_id) {
         id name category description
         current_price users_count client_id
+        product_type
       }
     }
   `;
@@ -105,4 +108,39 @@ export async function clearProductPriceHistoryApi(product_id) {
   });
   if (data.errors?.length) throw new Error(data.errors[0].message);
   return data.data.clearProductPriceHistory;
+}
+
+// ─── Category API ──────────────────────────────────────────────────────────────
+
+export async function listCategoriesApi() {
+  const query = `
+    query ListProductCategories {
+      productCategories { id name }
+    }
+  `;
+  const { data } = await axiosClient.post("", { query });
+  if (data.errors?.length) throw new Error(data.errors[0].message);
+  return data.data.productCategories; // [{ id, name }]
+}
+
+export async function createCategoryApi(name) {
+  const query = `
+    mutation CreateCategory($name: String!) {
+      createCategory(name: $name) { id name }
+    }
+  `;
+  const { data } = await axiosClient.post("", { query, variables: { name } });
+  if (data.errors?.length) throw new Error(data.errors[0].message);
+  return data.data.createCategory; // { id, name }
+}
+
+export async function deleteCategoryApi(id) {
+  const query = `
+    mutation DeleteCategory($id: ID!) {
+      deleteCategory(id: $id)
+    }
+  `;
+  const { data } = await axiosClient.post("", { query, variables: { id } });
+  if (data.errors?.length) throw new Error(data.errors[0].message);
+  return data.data.deleteCategory; // Boolean
 }

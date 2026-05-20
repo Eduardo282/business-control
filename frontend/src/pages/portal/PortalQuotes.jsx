@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, FileText, FolderOpen, Clock, History, ExternalLink, Trash2, Edit2, X, Plus, Minus, Search } from "@icons";
+import { ChevronLeft, ChevronRight, FileText, FolderOpen, Clock, History, ExternalLink, Trash2, Edit2, X, Plus, Minus, Search, FileSpreadsheet, Building2, Globe, BadgeDollarSign, Package, Users, User, ClipboardList, Download, Shield, LayoutDashboard, ShoppingBag, ShoppingCart } from "@icons";
 import { listPortalQuotesApi, deletePortalQuoteApi, updatePortalQuoteRequestApi } from "../../actionsAPI/portal.api";
 import Swal from "sweetalert2";
 
@@ -49,13 +49,33 @@ function portalReducer(state, action) {
   }
 }
 
+const PRODUCT_LOGO_MAP = {
+  "CONTPAQi Contabilidad": FileSpreadsheet,
+  "CONTPAQi Bancos": Building2,
+  "CONTPAQi Contabiliza (Nube)": Globe,
+  "CONTPAQi Gastos": BadgeDollarSign,
+  "CONTPAQi Comercial Premium": ShoppingBag,
+  "CONTPAQi Comercial Pro": ShoppingCart,
+  "CONTPAQi Comercial Start": Package,
+  "CONTPAQi Factura Electrónica": FileText,
+  "CONTPAQi Vende (Nube)": ShoppingCart,
+  "CONTPAQi Punto de Venta": Building2,
+  "CONTPAQi Nóminas": Users,
+  "CONTPAQi Personia (Nube)": User,
+  "CONTPAQi Evalúa": ClipboardList,
+  "CONTPAQi XML en Línea+": Download,
+  "CONTPAQi Respaldos": Shield,
+  "CONTPAQi Escritorio Virtual": Building2,
+  "CONTPAQi Optimiza": LayoutDashboard,
+};
+
 const initialState = {
   quotes: [],
   loading: true,
   error: "",
   statusFilter: "",
   page: 1,
-  pageSize: 10,
+  pageSize: 5,
   editingQuote: null,
   editItems: [],
   savingEdit: false,
@@ -113,7 +133,7 @@ function PortalHeader({ filter, statusFilter, onStatusFilterChange }) {
             onChange={(e) => onStatusFilterChange(e.target.value)}
             className="pl-3 pr-8 py-2 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-zinc-700 shadow-sm appearance-none"
           >
-            <option value="">Todos los Estados</option>
+            <option value="">Buscar estados</option>
             <option value="REQUESTED">Solicitada</option>
             <option value="PENDING">Pendiente </option>
             <option value="ACCEPTED">Aceptada </option>
@@ -130,6 +150,9 @@ function PortalHeader({ filter, statusFilter, onStatusFilterChange }) {
 }
 
 function QuoteRow({ quote, onEdit, onDelete }) {
+  const createdDate = new Date(quote.created_at);
+  const expirationDate = new Date(createdDate.getTime() + 15 * 24 * 60 * 60 * 1000);
+
   return (
     <tr className="hover:bg-zinc-50 transition-colors">
       <td className="p-4">
@@ -148,7 +171,10 @@ function QuoteRow({ quote, onEdit, onDelete }) {
         </div>
       </td>
       <td className="p-4 text-zinc-600" suppressHydrationWarning>
-        {new Date(quote.created_at).toLocaleDateString()}
+        {createdDate.toLocaleDateString("es-MX")}
+      </td>
+      <td className="p-4 text-zinc-600 font-medium" suppressHydrationWarning>
+        {expirationDate.toLocaleDateString("es-MX")}
       </td>
       <td className="p-4 text-right">
         <div className="font-mono font-semibold text-emerald-600 text-base">
@@ -170,24 +196,13 @@ function QuoteRow({ quote, onEdit, onDelete }) {
             <ExternalLink size={14} /> Ver
           </Link>
 
-          {(quote.status === "REQUESTED" || quote.status === "PENDING") && (
-            <>
-              <button
-                onClick={() => onEdit(quote)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors"
-                title="Editar cantidades"
-              >
-                <Edit2 size={14} />
-              </button>
-              <button
-                onClick={() => onDelete(quote.id)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-100 hover:bg-red-100 transition-colors"
-                title="Eliminar solicitud"
-              >
-                <Trash2 size={14} />
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => onDelete(quote.id)}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-red-700 bg-red-50 rounded-lg border border-red-100 hover:bg-red-100 transition-colors"
+            title="Eliminar solicitud"
+          >
+            <Trash2 size={14} />
+          </button>
         </div>
       </td>
     </tr>
@@ -207,16 +222,26 @@ function PaginationControls({ page, totalPages, totalItems, startIndex, endIndex
           onChange={(e) => dispatch({ type: "SET_PAGE_SIZE", payload: Number(e.target.value) })}
           className="pl-3 pr-8 py-1.5 bg-white border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-zinc-700 shadow-sm appearance-none relative"
         >
+          <option value={5}>5 por página</option>
           <option value={10}>10 por página</option>
           <option value={20}>20 por página</option>
           <option value={50}>50 por página</option>
         </select>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => dispatch({ type: "SET_PAGE", payload: 1 })}
+            disabled={page === 1}
+            className="size-8 flex items-center justify-center rounded-lg bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-semibold"
+            title="Primera página"
+          >
+            ««
+          </button>
           <button
             onClick={() => dispatch({ type: "SET_PAGE", payload: Math.max(1, page - 1) })}
             disabled={page === 1}
             className="size-8 flex items-center justify-center rounded-lg bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Anterior"
           >
             <ChevronLeft size={16} />
           </button>
@@ -227,8 +252,17 @@ function PaginationControls({ page, totalPages, totalItems, startIndex, endIndex
             onClick={() => dispatch({ type: "SET_PAGE", payload: Math.min(totalPages, page + 1) })}
             disabled={page === totalPages}
             className="size-8 flex items-center justify-center rounded-lg bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Siguiente"
           >
             <ChevronRight size={16} />
+          </button>
+          <button
+            onClick={() => dispatch({ type: "SET_PAGE", payload: totalPages })}
+            disabled={page === totalPages}
+            className="size-8 flex items-center justify-center rounded-lg bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-semibold"
+            title="Última página"
+          >
+            »»
           </button>
         </div>
       </div>
@@ -242,7 +276,7 @@ function EditQuoteModal({ editingQuote, editItems, savingEdit, dispatch, onSave 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-fade-in">
-        <div className="px-6 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-white/10 bg-[#1B4733] flex items-center justify-between">
           <h3 className="text-lg font-semibold text-white">
             Editar Cotización #{editingQuote.id}
           </h3>
@@ -260,16 +294,31 @@ function EditQuoteModal({ editingQuote, editItems, savingEdit, dispatch, onSave 
           </p>
 
           <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-            {editItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-3 border border-zinc-200 rounded-xl bg-zinc-50">
-                <div className="flex-1 min-w-0 pr-4">
-                  <h4 className="font-semibold text-zinc-800 text-sm truncate" title={item.product?.name}>
-                    {item.product?.name}
-                  </h4>
-                  <div className="text-xs text-zinc-500 mt-0.5">
-                    Precio Unitario (aprox): ${Number(item.total / item.quantity || 0).toLocaleString('es-MX')}
+            {editItems.map((item) => {
+              const name = item.product?.name || "Producto";
+              const Logo = PRODUCT_LOGO_MAP[name] || Package;
+              return (
+                <div key={item.id} className="flex items-center justify-between p-3 border border-zinc-200 rounded-xl bg-zinc-50">
+                  <div className="flex items-center gap-3 flex-1 min-w-0 pr-4">
+                    <div className="relative shrink-0">
+                      <span className="flex size-10 items-center justify-center rounded-lg bg-white border border-zinc-200 text-zinc-400">
+                        <Logo size={20} />
+                      </span>
+                      {item.quantity > 1 && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[9px] font-bold px-1 rounded-full min-w-[16px] h-4 flex items-center justify-center border border-white shadow-sm">
+                          x{item.quantity}
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-zinc-800 text-sm truncate" title={name}>
+                        {name}
+                      </h4>
+                      <div className="text-xs text-zinc-500 mt-0.5">
+                        Precio Unitario (aprox): ${Number(item.total / item.quantity || 0).toLocaleString('es-MX')}
+                      </div>
+                    </div>
                   </div>
-                </div>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => dispatch({ type: "UPDATE_EDIT_QUANTITY", payload: { itemId: item.id, change: -1 } })}
@@ -287,8 +336,9 @@ function EditQuoteModal({ editingQuote, editItems, savingEdit, dispatch, onSave 
                     <Plus size={14} />
                   </button>
                 </div>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
 
           <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-zinc-100">
@@ -463,6 +513,7 @@ export default function PortalQuotes() {
                   <th className="p-4">Cotización</th>
                   <th className="p-4">Folio</th>
                   <th className="p-4">Fecha</th>
+                  <th className="p-4">Fecha Final</th>
                   <th className="p-4 text-right">Total</th>
                   <th className="p-4 text-center">Estado</th>
                   <th className="p-4 text-right">Acciones</th>

@@ -1,35 +1,19 @@
-import { pool } from "../../../config/db.js";
-import { getProductAction } from "./getProduct.action.js";
+import { updateProduct, findProductById } from "../../../repositories/product.repository.js";
 
 export async function updateProductAction(
   id,
   { name, category, description, users_count },
 ) {
-  const updates = [];
-  const params = { id };
+  const fields = {};
 
-  if (name !== undefined) {
-    updates.push("name = :name");
-    params.name = name;
-  }
-  if (category !== undefined) {
-    updates.push("category = :category");
-    params.category = category;
-  }
-  if (users_count !== undefined) {
-    updates.push("users_count = :users_count");
-    params.users_count = users_count;
-  }
-  if (description !== undefined) {
-    updates.push("description = :description");
-    params.description = description;
+  if (name !== undefined) fields.name = name;
+  if (category !== undefined) fields.category = category;
+  if (users_count !== undefined) fields.users_count = users_count;
+  if (description !== undefined) fields.description = description;
+
+  if (Object.keys(fields).length > 0) {
+    await updateProduct(id, fields);
   }
 
-  if (updates.length > 0) {
-    await pool.query(
-      `UPDATE products SET ${updates.join(", ")} WHERE id = :id`,
-      params,
-    );
-  }
-  return getProductAction(id);
+  return await findProductById(id);
 }

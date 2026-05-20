@@ -1,12 +1,9 @@
-import { pool } from "../../../config/db.js";
+import { findContactsByEmail } from "../../../repositories/contact.repository.js";
 import { comparePassword } from "../../../utils/password.js";
 import { signToken } from "../../../utils/jwt.js";
 
 export async function loginContactAction({ email, password }) {
-  const [rows] = await pool.query(
-    "SELECT * FROM client_contacts WHERE email = :email AND has_portal_access = 1",
-    { email }
-  );
+  const rows = await findContactsByEmail(email);
 
   if (rows.length === 0) {
     throw new Error("Credenciales inválidas o acceso al portal no habilitado.");

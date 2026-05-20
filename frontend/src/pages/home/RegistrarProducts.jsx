@@ -1,7 +1,5 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import { createPortal } from "react-dom";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import Swal from "sweetalert2";
 import {
   ArrowLeft,
   BadgeDollarSign,
@@ -22,10 +20,20 @@ import {
   ShoppingCart,
   User,
   Users,
-  X,
 } from "@icons";
 import Input from "../../components/ui/Input";
-import { createProductApi } from "../../actionsAPI/products.api";
+import {
+  createProductApi,
+  listCategoriesApi,
+  createCategoryApi,
+  deleteCategoryApi,
+} from "../../actionsAPI/products.api";
+import { notificationService } from "../../services/notificationService";
+
+// Modularized components
+import SourceSelectionModal from "./registrar-products/SourceSelectionModal";
+import CategoryManagerModal from "./registrar-products/CategoryManagerModal";
+import ProductSelectorModal from "./registrar-products/ProductSelectorModal";
 
 export const CATALOG = [
   {
@@ -206,14 +214,6 @@ const PRODUCT_LOGO_MAP = {
   "CONTPAQi Optimiza": LayoutDashboard,
 };
 
-const STORAGE_KEYS = {
-  categories: "customProductCategories",
-  contpaqiProducts: "customContpaqiProducts",
-  services: "customRegisteredServices",
-  policies: "customRegisteredPolicies",
-  generalProducts: "customGeneralProducts",
-};
-
 const CATEGORY_CHIPS_PAGE_SIZE = 12;
 
 function sanitizeCategoryLabel(category = "") {
@@ -245,22 +245,6 @@ function uniqueByNormalizedValue(values = []) {
   return result;
 }
 
-function readStoredList(key, projector) {
-  if (typeof window === "undefined") return [];
-
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return [];
-
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed.map(projector).filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
 function categoryMatches(sourceCategory, selectedCategory) {
   const source = normalizeServicePolicyCategory(sourceCategory);
   const selected = normalizeServicePolicyCategory(selectedCategory);
@@ -268,7 +252,6 @@ function categoryMatches(sourceCategory, selectedCategory) {
   if (!selected) return true;
   if (!source) return false;
 
-  // Permitir coincidencia exacta o coincidencia parcial (ej. "comercial" en "comercial y ventas")
   return source === selected || selected.includes(source) || source.includes(selected);
 }
 
@@ -295,117 +278,15 @@ export default function RegistrarProducts() {
   const [isGeneralProductsModalOpen, setIsGeneralProductsModalOpen] = useState(false);
 
   const [activeFormMode, setActiveFormMode] = useState(null); // "PRODUCT" | "SERVICE" | "POLICY" | "CONTPAQI" | null
-
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryPage, setCategoryPage] = useState(1);
-  const [newContpaqiProduct, setNewContpaqiProduct] = useState({
-    name: "",
-    category: "",
-    price: 0,
-    max_users: 30,
-    description: "",
-  });
-  const [newService, setNewService] = useState({
-    name: "",
-    category: "",
-    price: 0,
-    description: "",
-  });
-  const [newPolicy, setNewPolicy] = useState({
-    name: "",
-    category: "",
-    price: 0,
-    description: "",
-  });
-  const [newGeneralProduct, setNewGeneralProduct] = useState({
-    name: "",
-    category: "",
-    price: 0,
-    max_users: 1,
-    description: "",
-  });
+  const [isFormHighlighted, setIsFormHighlighted] = useState(false);
 
-  const [customCategories, setCustomCategories] = useState(() => {
-    return uniqueByNormalizedValue(
-      readStoredList(STORAGE_KEYS.categories, (item) => {
-        if (typeof item === "string") return item;
-        if (item && typeof item === "object") return item.category;
-        return "";
-      }),
-    );
-  });
-
-  const [customPolicies, setCustomPolicies] = useState(() => {
-    return readStoredList(STORAGE_KEYS.policies, (item) => {
-      const name = String(item.name || "").trim();
-      const category = String(item.category || "").trim();
-      
-      if (!name || !category) return null;
-
-      return {
-        id: String(item.id || `${name}-${category}`),
-        name,
-        category,
-        price: Math.max(0, Number(item.price) || 0),
-        description: String(item.description || "").trim(),
-      };
-    });
-  });
-
-  const [customGeneralProducts, setCustomGeneralProducts] = useState(() => {
-    return readStoredList(STORAGE_KEYS.generalProducts, (item) => {
-      const name = String(item.name || "").trim();
-      const category = String(item.category || "").trim();
-      
-      if (!name || !category) return null;
-
-      return {
-        id: String(item.id || `${name}-${category}`),
-        name,
-        category,
-        price: Math.max(0, Number(item.price) || 0),
-        description: String(item.description || "").trim(),
-      };
-    });
-  });
-
-  const [customContpaqiProducts, setCustomContpaqiProducts] = useState(() => {
-    return readStoredList(STORAGE_KEYS.contpaqiProducts, (item) => {
-      if (!item || typeof item !== "object") return null;
-
-      const name = String(item.name || "").trim();
-      const category = String(item.category || "").trim();
-      if (!name || !category) return null;
-
-      return {
-        id: String(item.id || `${name}-${category}`),
-        name,
-        category,
-        price: Math.max(0, Number(item.price) || 0),
-        max_users: Math.max(1, parseInt(item.max_users, 10) || 30),
-        description: String(item.description || "").trim(),
-        isCustom: true,
-      };
-    });
-  });
-
-  const [customServices, setCustomServices] = useState(() => {
-    return readStoredList(STORAGE_KEYS.services, (item) => {
-      if (!item || typeof item !== "object") return null;
-
-      const name = String(item.name || "").trim();
-      const category = String(item.category || "").trim();
-      if (!name || !category) return null;
-
-      return {
-        id: String(item.id || `${name}-${category}`),
-        name,
-        category,
-        price: Math.max(0, Number(item.price) || 0),
-        description: String(item.description || "").trim(),
-      };
-    });
-  });
+  const [customCategories, setCustomCategories] = useState([]);
+  const [customPolicies, setCustomPolicies] = useState([]);
+  const [customGeneralProducts, setCustomGeneralProducts] = useState([]);
+  const [customContpaqiProducts, setCustomContpaqiProducts] = useState([]);
+  const [customServices, setCustomServices] = useState([]);
 
   const prevCustomCategoriesRef = useRef([]);
 
@@ -417,9 +298,8 @@ export default function RegistrarProducts() {
     try {
       const { listProductsApi } = await import("../../actionsAPI/products.api");
       const apiProducts = await listProductsApi();
-      const apiCategories = apiProducts.map(p => p.category);
-      
-      // Helper logic directly since inferProductType might not be imported
+      const apiCategories = apiProducts.map((p) => p.category);
+
       const getType = (p) => {
         const source = `${p?.name || ""} ${p?.category || ""}`;
         const normalized = source
@@ -427,19 +307,19 @@ export default function RegistrarProducts() {
           .replace(/[\u0300-\u036f]/g, "")
           .toLowerCase()
           .trim();
-        
+
         if (normalized.includes("poliza")) return "POLICY";
         if (normalized.includes("servicio")) return "SERVICE";
         return "PRODUCT";
       };
 
-      // Update customServices with API services
-      const apiServices = apiProducts.filter(p => getType(p) === "SERVICE");
+      // Services
+      const apiServices = apiProducts.filter((p) => getType(p) === "SERVICE");
       if (apiServices.length > 0) {
-        setCustomServices(prev => {
+        setCustomServices((prev) => {
           const map = new Map();
-          if (prev) prev.forEach(s => map.set(normalizeServicePolicyCategory(s.name), s));
-          apiServices.forEach(apiService => {
+          if (prev) prev.forEach((s) => map.set(normalizeServicePolicyCategory(s.name), s));
+          apiServices.forEach((apiService) => {
             const nName = normalizeServicePolicyCategory(apiService.name);
             if (!map.has(nName)) {
               map.set(nName, {
@@ -455,13 +335,13 @@ export default function RegistrarProducts() {
         });
       }
 
-      // Update customPolicies with API policies
-      const apiPolicies = apiProducts.filter(p => getType(p) === "POLICY");
+      // Policies
+      const apiPolicies = apiProducts.filter((p) => getType(p) === "POLICY");
       if (apiPolicies.length > 0) {
-        setCustomPolicies(prev => {
+        setCustomPolicies((prev) => {
           const map = new Map();
-          if (prev) prev.forEach(s => map.set(normalizeServicePolicyCategory(s.name), s));
-          apiPolicies.forEach(apiPolicy => {
+          if (prev) prev.forEach((s) => map.set(normalizeServicePolicyCategory(s.name), s));
+          apiPolicies.forEach((apiPolicy) => {
             const nName = normalizeServicePolicyCategory(apiPolicy.name);
             if (!map.has(nName)) {
               map.set(nName, {
@@ -477,18 +357,18 @@ export default function RegistrarProducts() {
         });
       }
 
-      // Update customGeneralProducts with API general products
-      const apiGeneralProducts = apiProducts.filter(p => {
+      // General Products
+      const apiGeneralProducts = apiProducts.filter((p) => {
         const type = getType(p);
         if (type === "SERVICE" || type === "POLICY") return false;
         if (p.name?.toUpperCase().includes("CONTPAQI")) return false;
         return true;
       });
       if (apiGeneralProducts.length > 0) {
-        setCustomGeneralProducts(prev => {
+        setCustomGeneralProducts((prev) => {
           const map = new Map();
-          if (prev) prev.forEach(s => map.set(normalizeServicePolicyCategory(s.name), s));
-          apiGeneralProducts.forEach(apiProduct => {
+          if (prev) prev.forEach((s) => map.set(normalizeServicePolicyCategory(s.name), s));
+          apiGeneralProducts.forEach((apiProduct) => {
             const nName = normalizeServicePolicyCategory(apiProduct.name);
             if (!map.has(nName)) {
               map.set(nName, {
@@ -503,18 +383,12 @@ export default function RegistrarProducts() {
           return Array.from(map.values());
         });
       }
-      
-      const localCategories = readStoredList(STORAGE_KEYS.categories, (item) => {
-        if (typeof item === "string") return item;
-        if (item && typeof item === "object") return item.category;
-        return "";
-      });
 
-      const allCategories = uniqueByNormalizedValue([...apiCategories, ...localCategories, ...prevCustomCategoriesRef.current]);
-      setCustomCategories(allCategories);
-      setCustomCategories(prev => {
-        return uniqueByNormalizedValue([...prev, ...allCategories]);
-      });
+      const allCategories = uniqueByNormalizedValue([
+        ...apiCategories,
+        ...prevCustomCategoriesRef.current,
+      ]);
+      setCustomCategories((prev) => uniqueByNormalizedValue([...prev, ...allCategories]));
     } catch (e) {
       console.error("Failed to load categories from API", e);
     }
@@ -528,7 +402,6 @@ export default function RegistrarProducts() {
 
   const builtInCategories = useMemo(() => {
     const values = [];
-
     CATALOG.forEach((group) => {
       group.items.forEach((item) => {
         if (item.category) {
@@ -536,25 +409,18 @@ export default function RegistrarProducts() {
         }
       });
     });
-
     return uniqueByNormalizedValue(values);
   }, []);
 
   const availableCategories = useMemo(
     () => uniqueByNormalizedValue([...builtInCategories, ...customCategories]),
-    [builtInCategories, customCategories],
+    [builtInCategories, customCategories]
   );
 
   const totalCategoryPages = Math.max(
     1,
-    Math.ceil(availableCategories.length / CATEGORY_CHIPS_PAGE_SIZE),
+    Math.ceil(availableCategories.length / CATEGORY_CHIPS_PAGE_SIZE)
   );
-  const safeCategoryPage = Math.min(categoryPage, totalCategoryPages);
-
-  const visibleCategories = useMemo(() => {
-    const start = (safeCategoryPage - 1) * CATEGORY_CHIPS_PAGE_SIZE;
-    return availableCategories.slice(start, start + CATEGORY_CHIPS_PAGE_SIZE);
-  }, [availableCategories, safeCategoryPage]);
 
   const builtInProducts = useMemo(
     () =>
@@ -567,49 +433,39 @@ export default function RegistrarProducts() {
           max_users: Math.max(1, parseInt(item.max_users, 10) || 30),
           description: item.description || "",
           isCustom: false,
-        })),
+        }))
       ),
-    [],
+    []
   );
 
   const filteredContpaqiProducts = useMemo(() => {
     const allProducts = [...builtInProducts, ...customContpaqiProducts];
-    return allProducts.filter((item) =>
-      categoryMatches(item.category, selectedCategory),
-    );
+    return allProducts.filter((item) => categoryMatches(item.category, selectedCategory));
   }, [builtInProducts, customContpaqiProducts, selectedCategory]);
 
   const filteredServices = useMemo(
-    () =>
-      customServices.filter((service) =>
-        categoryMatches(service.category, selectedCategory),
-      ),
-    [customServices, selectedCategory],
+    () => customServices.filter((service) => categoryMatches(service.category, selectedCategory)),
+    [customServices, selectedCategory]
   );
 
   const filteredPolicies = useMemo(
-    () =>
-      customPolicies.filter((policy) =>
-        categoryMatches(policy.category, selectedCategory),
-      ),
-    [customPolicies, selectedCategory],
+    () => customPolicies.filter((policy) => categoryMatches(policy.category, selectedCategory)),
+    [customPolicies, selectedCategory]
   );
 
   const filteredGeneralProducts = useMemo(
     () =>
       customGeneralProducts.filter((product) =>
-        categoryMatches(product.category, selectedCategory),
+        categoryMatches(product.category, selectedCategory)
       ),
-    [customGeneralProducts, selectedCategory],
+    [customGeneralProducts, selectedCategory]
   );
 
   const isServiceMode = useMemo(() => {
     if (activeFormMode === "SERVICE" || activeFormMode === "POLICY") return true;
     if (activeFormMode === "PRODUCT" || activeFormMode === "CONTPAQI") return false;
-    
-    const normalizedCategory = normalizeServicePolicyCategory(
-      newProduct.category,
-    );
+
+    const normalizedCategory = normalizeServicePolicyCategory(newProduct.category);
     return (
       selectedSourceType === "SERVICE" ||
       normalizedCategory.includes("servicio") ||
@@ -617,78 +473,52 @@ export default function RegistrarProducts() {
     );
   }, [selectedSourceType, newProduct.category, activeFormMode]);
 
+  const productTypeLabel = useMemo(() => {
+    if (activeFormMode === "POLICY") return "Póliza";
+    if (activeFormMode === "SERVICE") return "Servicio";
+    if (activeFormMode === "CONTPAQI") return "Producto";
+    if (activeFormMode === "PRODUCT") return "Producto";
+
+    const normalizedCategory = normalizeServicePolicyCategory(newProduct.category);
+    if (normalizedCategory.includes("poliza")) return "Póliza";
+    if (normalizedCategory.includes("servicio")) return "Servicio";
+
+    return "Producto";
+  }, [activeFormMode, newProduct.category]);
+
   const formLabels = useMemo(() => {
-    if (activeFormMode === "POLICY") return { nameLabel: "NOMBRE DE LA PÓLIZA", button: "Registrar Póliza" };
-    if (activeFormMode === "SERVICE") return { nameLabel: "NOMBRE DEL SERVICIO", button: "Registrar Servicio" };
-    if (activeFormMode === "CONTPAQI") return { nameLabel: "NOMBRE DEL PRODUCTO", button: "Registrar Producto" };
-    if (activeFormMode === "PRODUCT") return { nameLabel: "NOMBRE DEL PRODUCTO", button: "Registrar Producto" };
-    
+    if (activeFormMode === "POLICY")
+      return { nameLabel: "NOMBRE DE LA PÓLIZA", button: "Registrar Póliza" };
+    if (activeFormMode === "SERVICE")
+      return { nameLabel: "NOMBRE DEL SERVICIO", button: "Registrar Servicio" };
+    if (activeFormMode === "CONTPAQI")
+      return { nameLabel: "NOMBRE DEL PRODUCTO", button: "Registrar Producto" };
+    if (activeFormMode === "PRODUCT")
+      return { nameLabel: "NOMBRE DEL PRODUCTO", button: "Registrar Producto" };
+
     if (isServiceMode) {
       const normalizedCategory = normalizeServicePolicyCategory(newProduct.category);
-      if (normalizedCategory.includes("poliza")) return { nameLabel: "NOMBRE DE LA PÓLIZA", button: "Registrar Póliza" };
+      if (normalizedCategory.includes("poliza"))
+        return { nameLabel: "NOMBRE DE LA PÓLIZA", button: "Registrar Póliza" };
       return { nameLabel: "NOMBRE DEL SERVICIO", button: "Registrar Servicio" };
     }
     return { nameLabel: "NOMBRE DEL PRODUCTO", button: "Registrar Producto" };
   }, [activeFormMode, isServiceMode, newProduct.category]);
 
+  // Sync categories from API
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(
-      STORAGE_KEYS.categories,
-      JSON.stringify(uniqueByNormalizedValue(customCategories)),
-    );
-  }, [customCategories]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(
-      STORAGE_KEYS.contpaqiProducts,
-      JSON.stringify(customContpaqiProducts),
-    );
-  }, [customContpaqiProducts]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(
-      STORAGE_KEYS.services,
-      JSON.stringify(customServices),
-    );
-  }, [customServices]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(
-      STORAGE_KEYS.policies,
-      JSON.stringify(customPolicies),
-    );
-  }, [customPolicies]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(
-      STORAGE_KEYS.generalProducts,
-      JSON.stringify(customGeneralProducts),
-    );
-  }, [customGeneralProducts]);
-
-  useEffect(() => {
-    setNewContpaqiProduct((prev) => ({
-      ...prev,
-      category: selectedCategory || prev.category,
-    }));
-    setNewService((prev) => ({
-      ...prev,
-      category: selectedCategory || prev.category,
-    }));
-    setNewPolicy((prev) => ({
-      ...prev,
-      category: selectedCategory || prev.category,
-    }));
-    setNewGeneralProduct((prev) => ({
-      ...prev,
-      category: selectedCategory || prev.category,
-    }));
-  }, [selectedCategory]);
+    async function fetchCategories() {
+      try {
+        const cats = await listCategoriesApi();
+        setCustomCategories((prev) =>
+          uniqueByNormalizedValue([...cats.map((c) => c.name), ...prev])
+        );
+      } catch (e) {
+        console.warn("No se pudieron cargar categorías desde el servidor:", e.message);
+      }
+    }
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     setCategoryPage((prev) => Math.min(prev, totalCategoryPages));
@@ -699,18 +529,80 @@ export default function RegistrarProducts() {
     setCategoryPage(1);
   }, [isCategoriesModalOpen]);
 
+  const triggerFormHighlight = () => {
+    setIsFormHighlighted(true);
+    setTimeout(() => {
+      const input = document.getElementById("register-product-name-input");
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 150);
+    setTimeout(() => {
+      setIsFormHighlighted(false);
+    }, 700);
+  };
+
   const openSourceModal = () => {
     if (!selectedCategory) {
-      Swal.fire({
-        title: "Selecciona una categoría",
-        text: "Primero registra o elige una categoría para filtrar productos y servicios.",
-        icon: "info",
-        confirmButtonColor: "#2277B4",
-      });
+      notificationService.info(
+        "Selecciona una categoría",
+        "Primero registra o elige una categoría para filtrar productos y servicios."
+      );
+      return;
+    }
+    setIsSourceModalOpen(true);
+  };
+
+  const applyCategorySelection = (category) => {
+    const nextCategory = sanitizeCategoryLabel(category);
+    if (!nextCategory) return;
+
+    const isSameCategory =
+      normalizeServicePolicyCategory(nextCategory) ===
+      normalizeServicePolicyCategory(selectedCategory);
+
+    if (isSameCategory) return;
+
+    setNewProduct({
+      name: "",
+      category: nextCategory,
+      price: 0,
+      users_count: 1,
+      description: "",
+    });
+    setCurrentMaxUsers(30);
+    setActiveFormMode(null);
+  };
+
+  const handleAddCategory = async () => {
+    const nextCategory = sanitizeCategoryLabel(newCategoryName);
+    if (!nextCategory) return;
+
+    const normalizedNewCategoryName = normalizeServicePolicyCategory(newCategoryName);
+    const isDuplicateCategory =
+      !!normalizedNewCategoryName &&
+      availableCategories.some(
+        (category) => normalizeServicePolicyCategory(category) === normalizedNewCategoryName
+      );
+
+    if (isDuplicateCategory) {
+      notificationService.warning(
+        "Categoría duplicada",
+        "Ya existe una categoría registrada con ese nombre."
+      );
       return;
     }
 
-    setIsSourceModalOpen(true);
+    try {
+      await createCategoryApi(nextCategory);
+      setCustomCategories((prev) => uniqueByNormalizedValue([nextCategory, ...prev]));
+      applyCategorySelection(nextCategory);
+      setNewCategoryName("");
+      setIsCategoriesModalOpen(false);
+    } catch (e) {
+      notificationService.error("Error", e.message || "No se pudo crear la categoría.");
+    }
   };
 
   const selectContpaqiProduct = (item) => {
@@ -724,9 +616,10 @@ export default function RegistrarProducts() {
     }));
     setCurrentMaxUsers(Math.max(1, Number(item.max_users) || 30));
     setSelectedSourceType("PRODUCT");
+    setActiveFormMode("CONTPAQI");
     setIsSourceModalOpen(false);
     setIsContpaqiModalOpen(false);
-    setIsNewContpaqiModalOpen(false);
+    triggerFormHighlight();
   };
 
   const selectService = (service) => {
@@ -740,9 +633,10 @@ export default function RegistrarProducts() {
     }));
     setCurrentMaxUsers(1);
     setSelectedSourceType("SERVICE");
+    setActiveFormMode("SERVICE");
     setIsSourceModalOpen(false);
     setIsServicesModalOpen(false);
-    setIsNewServiceModalOpen(false);
+    triggerFormHighlight();
   };
 
   const selectPolicy = (policy) => {
@@ -756,8 +650,10 @@ export default function RegistrarProducts() {
     }));
     setCurrentMaxUsers(1);
     setSelectedSourceType("SERVICE");
+    setActiveFormMode("POLICY");
     setIsSourceModalOpen(false);
     setIsPoliciesModalOpen(false);
+    triggerFormHighlight();
   };
 
   const selectGeneralProduct = (product) => {
@@ -771,175 +667,10 @@ export default function RegistrarProducts() {
     }));
     setCurrentMaxUsers(product.max_users || 1);
     setSelectedSourceType("PRODUCT");
+    setActiveFormMode("PRODUCT");
     setIsSourceModalOpen(false);
     setIsGeneralProductsModalOpen(false);
-  };
-
-  const destroyCategory = (category) => {
-    const isEditing = normalizeServicePolicyCategory(category) === normalizeServicePolicyCategory(selectedCategory);
-    setCustomCategories((prev) => prev.filter((c) => normalizeServicePolicyCategory(c) !== normalizeServicePolicyCategory(category)));
-    if (isEditing) {
-      applyCategorySelection("");
-    }
-  };
-
-    const applyCategorySelection = (category) => {
-      const nextCategory = sanitizeCategoryLabel(category);
-      if (!nextCategory) return;
-  
-      const isSameCategory =
-        normalizeServicePolicyCategory(nextCategory) ===
-        normalizeServicePolicyCategory(selectedCategory);
-  
-      if (isSameCategory) return;
-  
-      setNewProduct({
-        name: "",
-        category: nextCategory,
-        price: 0,
-        users_count: 1,
-        description: "",
-      });
-      setCurrentMaxUsers(30);
-      setActiveFormMode(null);
-    };
-
-  const handleAddCategory = () => {
-    const nextCategory = sanitizeCategoryLabel(newCategoryName);
-    if (!nextCategory) return;
-    
-    const normalizedNewCategoryName = normalizeServicePolicyCategory(newCategoryName);
-    const isDuplicateCategory =
-      !!normalizedNewCategoryName &&
-      availableCategories.some(
-        (category) =>
-          normalizeServicePolicyCategory(category) === normalizedNewCategoryName,
-      );
-
-    if (isDuplicateCategory) {
-      Swal.fire({
-        title: "Categoría duplicada",
-        text: "Ya existe una categoría registrada con ese nombre.",
-        icon: "warning",
-        confirmButtonColor: "#2277B4",
-      });
-      return;
-    }
-
-    setCustomCategories((prev) =>
-      uniqueByNormalizedValue([nextCategory, ...prev]),
-    );
-    applyCategorySelection(nextCategory);
-    setNewCategoryName("");
-    setIsCategoriesModalOpen(false);
-  };
-
-  const handleCreateCustomContpaqiProduct = (e) => {
-    e.preventDefault();
-
-    const name = String(newContpaqiProduct.name || "").trim();
-    const category = String(
-      newContpaqiProduct.category || selectedCategory || "",
-    ).trim();
-    const price = Math.max(0, Number(newContpaqiProduct.price) || 0);
-    const maxUsers = Math.max(
-      1,
-      parseInt(newContpaqiProduct.max_users, 10) || 30,
-    );
-    const description = String(newContpaqiProduct.description || "").trim();
-
-    if (!name || !category) {
-      Swal.fire({
-        title: "Falta información",
-        text: "Debes capturar nombre y categoría.",
-        icon: "warning",
-        confirmButtonColor: "#2277B4",
-      });
-      return;
-    }
-
-    const nextItem = {
-      id: `custom-${Date.now()}`,
-      name,
-      category,
-      price,
-      max_users: maxUsers,
-      description,
-      isCustom: true,
-    };
-
-    setCustomContpaqiProducts((prev) => {
-      const normalizedName = normalizeServicePolicyCategory(name);
-      const normalizedCategory = normalizeServicePolicyCategory(category);
-      const filtered = prev.filter((item) => {
-        return !(
-          normalizeServicePolicyCategory(item.name) === normalizedName &&
-          normalizeServicePolicyCategory(item.category) === normalizedCategory
-        );
-      });
-      return [nextItem, ...filtered];
-    });
-
-    setCustomCategories((prev) => uniqueByNormalizedValue([category, ...prev]));
-    setNewContpaqiProduct({
-      name: "",
-      category,
-      price: 0,
-      max_users: 30,
-      description: "",
-    });
-    selectContpaqiProduct(nextItem);
-  };
-
-  const handleCreateService = (e) => {
-    e.preventDefault();
-
-    const name = String(newService.name || "").trim();
-    const category = String(
-      newService.category || selectedCategory || "",
-    ).trim();
-    const price = Math.max(0, Number(newService.price) || 0);
-    const description = String(newService.description || "").trim();
-
-    if (!name || !category) {
-      Swal.fire({
-        title: "Falta información",
-        text: "Debes capturar nombre y categoría del servicio.",
-        icon: "warning",
-        confirmButtonColor: "#2277B4",
-      });
-      return;
-    }
-
-    const nextService = {
-      id: `service-${Date.now()}`,
-      name,
-      category,
-      price,
-      description,
-    };
-
-    setCustomServices((prev) => {
-      const normalizedName = normalizeServicePolicyCategory(name);
-      const normalizedCategory = normalizeServicePolicyCategory(category);
-      const filtered = prev.filter((item) => {
-        return !(
-          normalizeServicePolicyCategory(item.name) === normalizedName &&
-          normalizeServicePolicyCategory(item.category) === normalizedCategory
-        );
-      });
-
-      return [nextService, ...filtered];
-    });
-
-    setCustomCategories((prev) => uniqueByNormalizedValue([category, ...prev]));
-    setNewService({
-      name: "",
-      category,
-      price: 0,
-      description: "",
-    });
-    selectService(nextService);
+    triggerFormHighlight();
   };
 
   const handlePriceChange = (value) => {
@@ -994,10 +725,7 @@ export default function RegistrarProducts() {
   const handleUsersStep = (direction) => {
     setNewProduct((prev) => {
       const base = clampUsersValue(prev.users_count || 1);
-      const nextUsers = Math.min(
-        currentMaxUsers,
-        Math.max(1, base + direction),
-      );
+      const nextUsers = Math.min(currentMaxUsers, Math.max(1, base + direction));
 
       return {
         ...prev,
@@ -1013,12 +741,7 @@ export default function RegistrarProducts() {
       const safeCategory = String(newProduct.category || "").trim();
 
       if (!safeName || !safeCategory) {
-        Swal.fire({
-          title: "Falta información",
-          text: "Debes capturar nombre y categoría.",
-          icon: "warning",
-          confirmButtonColor: "#2277B4",
-        });
+        notificationService.warning("Falta información", "Debes capturar nombre y categoría.");
         return;
       }
 
@@ -1029,13 +752,12 @@ export default function RegistrarProducts() {
           .replace(/[\u0300-\u036f]/g, "")
           .toLowerCase()
           .trim();
-        
+
         if (normalized.includes("poliza")) return "POLICY";
         if (normalized.includes("servicio")) return "SERVICE";
         return "PRODUCT";
       };
 
-      // Determine type: prefer explicit form mode, fallback to name/category detection
       let productType;
       if (activeFormMode === "SERVICE") productType = "SERVICE";
       else if (activeFormMode === "POLICY") productType = "POLICY";
@@ -1046,8 +768,7 @@ export default function RegistrarProducts() {
         name: safeName,
         category: safeCategory,
         price: parseFloat(newProduct.price) || 0,
-        users_count:
-          isServiceMode ? 1 : parseInt(newProduct.users_count, 10) || 1,
+        users_count: isServiceMode ? 1 : parseInt(newProduct.users_count, 10) || 1,
         client_id: fixedClientId || null,
         product_type: productType,
       };
@@ -1075,7 +796,7 @@ export default function RegistrarProducts() {
 
       if (productType === "SERVICE") {
         setCustomServices((prev) => {
-          const filtered = prev.filter(item => {
+          const filtered = prev.filter((item) => {
             const { nN, nC } = normalizeObj(item);
             return !(nN === nName && nC === nCat);
           });
@@ -1083,7 +804,7 @@ export default function RegistrarProducts() {
         });
       } else if (productType === "POLICY") {
         setCustomPolicies((prev) => {
-          const filtered = prev.filter(item => {
+          const filtered = prev.filter((item) => {
             const { nN, nC } = normalizeObj(item);
             return !(nN === nName && nC === nCat);
           });
@@ -1092,7 +813,7 @@ export default function RegistrarProducts() {
       } else {
         if (safeName.toUpperCase().includes("CONTPAQI")) {
           setCustomContpaqiProducts((prev) => {
-            const filtered = prev.filter(item => {
+            const filtered = prev.filter((item) => {
               const { nN, nC } = normalizeObj(item);
               return !(nN === nName && nC === nCat);
             });
@@ -1100,7 +821,7 @@ export default function RegistrarProducts() {
           });
         } else {
           setCustomGeneralProducts((prev) => {
-            const filtered = prev.filter(item => {
+            const filtered = prev.filter((item) => {
               const { nN, nC } = normalizeObj(item);
               return !(nN === nName && nC === nCat);
             });
@@ -1109,9 +830,7 @@ export default function RegistrarProducts() {
         }
       }
 
-      setCustomCategories((prev) =>
-        uniqueByNormalizedValue([safeCategory, ...prev]),
-      );
+      setCustomCategories((prev) => uniqueByNormalizedValue([safeCategory, ...prev]));
 
       setNewProduct({
         name: "",
@@ -1128,25 +847,14 @@ export default function RegistrarProducts() {
       const typeLabel = typeLabels[productType] || "Producto";
       const dualTable = productType === "SERVICE" || productType === "POLICY";
 
-      await Swal.fire({
-        title: "¡Éxito!",
-        text: dualTable
+      notificationService.success(
+        "¡Éxito!",
+        dualTable
           ? `${typeLabel} registrado en Productos y en Historial de Servicios y Pólizas.`
-          : `${typeLabel} registrado correctamente.`,
-        icon: "success",
-        confirmButtonColor: "#2277B4",
-        timer: 2800,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        allowOutsideClick: false,
-      });
+          : `${typeLabel} registrado correctamente.`
+      );
     } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message || "Error al crear producto",
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
+      notificationService.error("Error", e.message || "Error al crear producto");
     }
   };
 
@@ -1160,17 +868,25 @@ export default function RegistrarProducts() {
         </div>
         <Link
           to={"/productos"}
-          className="text-[#00] hover:text-primary-700 text-sm font-semibold flex items-center gap-2">
+          className="text-[#00] hover:text-primary-700 text-sm font-semibold flex items-center gap-2"
+        >
           <ArrowLeft size={16} /> Volver a productos
         </Link>
       </div>
 
       <form onSubmit={handleCreate} className="mb-6 animate-fade-in">
-        <div className="p-6 rounded-xl glass-panel shadow-xl">
+        <div
+          className={`p-6 rounded-xl glass-panel shadow-xl border transition-all duration-300 ${
+            isFormHighlighted
+              ? "ring-[1px] ring-[#2277B4]/25 dark:ring-blue-400/25 shadow-[0_0_10px_rgba(0,0,0,0.5)] bg-blue-50/5 dark:bg-blue-950/5"
+              : "border-zinc-200 dark:border-dark-700"
+          }`}
+        >
           <button
             type="button"
             onClick={() => setIsCategoriesModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#2277B4]/25 bg-[#2277B4]/5 text-[#2277B4] text-sm font-semibold hover:bg-[#2277B4]/10 transition-colors mb-4">
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#2277B4]/25 bg-[#2277B4]/5 text-[#2277B4] text-sm font-semibold hover:bg-[#2277B4]/10 transition-colors mb-4"
+          >
             <Plus size={16} /> Gestionar categorías
           </button>
 
@@ -1178,37 +894,37 @@ export default function RegistrarProducts() {
             <div className="relative">
               <div
                 className="w-full pl-4 pr-10 py-3 rounded-xl bg-white dark:bg-dark-900 text-[#2277B4] dark:text-blue-400 border border-zinc-200 dark:border-dark-700 outline-none transition-all cursor-pointer hover:bg-zinc-50 dark:hover:bg-dark-800 flex justify-between items-center"
-                onClick={openSourceModal}>
+                onClick={openSourceModal}
+              >
                 <span className="truncate pr-3">
-                  {newProduct.name ?
-                    `${newProduct.name} (${isServiceMode ? "Servicio" : "Producto"})`
-                  : "-- Seleccionar o agregar productos o servicios --"}
+                  {newProduct.name
+                    ? `${newProduct.name} (${productTypeLabel})`
+                    : "-- Seleccionar o agregar productos o servicios --"}
                 </span>
                 <ChevronDown size={16} className="text-light-text-secondary" />
               </div>
             </div>
             <div className="mt-2 text-xs text-zinc-500">
-              {selectedCategory ?
-                ``
-              : "Primero selecciona o registra una categoría para abrir el selector."
-              }
+              {selectedCategory
+                ? ``
+                : "Primero selecciona o registra una categoría para abrir el selector."}
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
+                id="register-product-name-input"
                 label={formLabels.nameLabel}
                 placeholder={
-                  isServiceMode ?
-                    "Ej. Renovación anual"
-                  : activeFormMode === "CONTPAQI" ? "Ej. CONTPAQi Contabilidad 2024" 
-                  : "Ej. Contabilidad 2024"
+                  isServiceMode
+                    ? "Ej. Renovación anual"
+                    : activeFormMode === "CONTPAQI"
+                    ? "Ej. CONTPAQi Contabilidad 2024"
+                    : "Ej. Contabilidad 2024"
                 }
                 value={newProduct.name}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, name: e.target.value })
-                }
+                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                 required
               />
 
@@ -1227,8 +943,7 @@ export default function RegistrarProducts() {
               </div>
             </div>
 
-            <div
-              className={`grid ${isServiceMode ? "grid-cols-1" : "grid-cols-2"} gap-4`}>
+            <div className={`grid ${isServiceMode ? "grid-cols-1" : "grid-cols-2"} gap-4`}>
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 ml-1 uppercase tracking-wider transition-colors">
                   PRECIO (MXN)
@@ -1249,13 +964,15 @@ export default function RegistrarProducts() {
                     <button
                       type="button"
                       onClick={() => handlePriceStep(-1)}
-                      className="size-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] transition-colors leading-none">
+                      className="size-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] transition-colors leading-none"
+                    >
                       -
                     </button>
                     <button
                       type="button"
                       onClick={() => handlePriceStep(1)}
-                      className="size-4 text-xs font-bold text-[#2277B4] dark:text-blue-400 hover:bg-[#dcecff] dark:hover:bg-dark-700 border-l border-[#b8cce6] dark:border-dark-600 transition-colors leading-none">
+                      className="size-4 text-xs font-bold text-[#2277B4] dark:text-blue-400 hover:bg-[#dcecff] dark:hover:bg-dark-700 border-l border-[#b8cce6] dark:border-dark-600 transition-colors leading-none"
+                    >
                       +
                     </button>
                   </div>
@@ -1289,13 +1006,15 @@ export default function RegistrarProducts() {
                       <button
                         type="button"
                         onClick={() => handleUsersStep(-1)}
-                        className="size-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] transition-colors leading-none">
+                        className="size-4 text-xs font-bold text-[#2277B4] hover:bg-[#dcecff] transition-colors leading-none"
+                      >
                         -
                       </button>
                       <button
                         type="button"
                         onClick={() => handleUsersStep(1)}
-                        className="size-4 text-xs font-bold text-[#2277B4] dark:text-blue-400 hover:bg-[#dcecff] dark:hover:bg-dark-700 border-l border-[#b8cce6] dark:border-dark-600 transition-colors leading-none">
+                        className="size-4 text-xs font-bold text-[#2277B4] dark:text-blue-400 hover:bg-[#dcecff] dark:hover:bg-dark-700 border-l border-[#b8cce6] dark:border-dark-600 transition-colors leading-none"
+                      >
                         +
                       </button>
                     </div>
@@ -1303,8 +1022,6 @@ export default function RegistrarProducts() {
                 </div>
               )}
             </div>
-
-
 
             <div className="space-y-1">
               <label className="text-xs font-medium text-light-text-secondary dark:text-zinc-400">
@@ -1327,520 +1044,159 @@ export default function RegistrarProducts() {
           <div className="flex justify-end mt-6 pt-4 border-t border-light-border dark:border-white/5">
             <button
               type="submit"
-              className="px-8 py-2 justify-center bg-[#2277B4] hover:bg-[#125280] text-white rounded-xl shadow-lg shadow-[#2277B450]">
+              className="px-8 py-2 justify-center bg-[#2277B4] hover:bg-[#125280] text-white rounded-xl shadow-lg shadow-[#2277B450]"
+            >
               {formLabels.button}
             </button>
           </div>
         </div>
       </form>
 
-      {/* Modal selector de origen */}
-      {isSourceModalOpen &&
-        createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in relative">
-              <div className="p-4 rounded-t-2xl border-b border-[#24395f] bg-[#1a2b4c] flex items-center justify-between">
-                <h2 className="font-semibold text-white text-lg">
-                  Productos y Servicios
-                </h2>
-                <button
-                  onClick={() => setIsSourceModalOpen(false)}
-                  className="text-white/80 hover:text-white transition-colors p-1">
-                  <X size={20} />
-                </button>
-              </div>
+      {/* Selector of origins */}
+      <SourceSelectionModal
+        isOpen={isSourceModalOpen}
+        onClose={() => setIsSourceModalOpen(false)}
+        selectedCategory={selectedCategory}
+        onSelectSource={(source) => {
+          setIsSourceModalOpen(false);
+          if (source === "CONTPAQI") setIsContpaqiModalOpen(true);
+          if (source === "POLICY") setIsPoliciesModalOpen(true);
+          if (source === "PRODUCT") setIsGeneralProductsModalOpen(true);
+          if (source === "SERVICE") setIsServicesModalOpen(true);
+        }}
+      />
 
-              <div className="p-4 space-y-4">
-                <div className="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 rounded-lg px-3 py-2">
-                  Categoría activa: <strong className="dark:text-zinc-200">{selectedCategory}</strong>
-                </div>
+      {/* Categories modal */}
+      <CategoryManagerModal
+        isOpen={isCategoriesModalOpen}
+        onClose={() => setIsCategoriesModalOpen(false)}
+        newCategoryName={newCategoryName}
+        setNewCategoryName={setNewCategoryName}
+        handleAddCategory={handleAddCategory}
+        availableCategories={availableCategories}
+        normalizeServicePolicyCategory={normalizeServicePolicyCategory}
+        selectedCategory={selectedCategory}
+        applyCategorySelection={applyCategorySelection}
+        categoryPage={categoryPage}
+        setCategoryPage={setCategoryPage}
+      />
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSourceModalOpen(false);
-                    setIsContpaqiModalOpen(true);
-                  }}
-                  className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 dark:border-dark-600 bg-blue-50/50 dark:bg-dark-700 hover:bg-blue-50 dark:hover:bg-dark-600 text-[#125280] dark:text-blue-400 font-semibold transition-all flex items-center justify-between group">
-                  <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                      <Package size={18} />
-                    </div>
-                    Productos de CONTPAQI
-                  </div>
-                  <ChevronDown
-                    size={16}
-                    className="-rotate-90 text-blue-400 group-hover:text-blue-600"
-                  />
-                </button>
+      {/* CONTPAQi Product Selector Modal */}
+      <ProductSelectorModal
+        isOpen={isContpaqiModalOpen}
+        onClose={() => setIsContpaqiModalOpen(false)}
+        onBack={() => {
+          setIsContpaqiModalOpen(false);
+          setIsSourceModalOpen(true);
+        }}
+        title="Productos de CONTPAQi"
+        type="CONTPAQI"
+        products={filteredContpaqiProducts}
+        selectedCategory={selectedCategory}
+        onSelectProduct={selectContpaqiProduct}
+        productLogoMap={PRODUCT_LOGO_MAP}
+        Icon={Package}
+        onNewProductClick={() => {
+          setIsContpaqiModalOpen(false);
+          setNewProduct({
+            name: "",
+            category: selectedCategory,
+            price: 0,
+            users_count: 1,
+            description: "",
+          });
+          setCurrentMaxUsers(30);
+          setActiveFormMode("CONTPAQI");
+          triggerFormHighlight();
+        }}
+      />
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSourceModalOpen(false);
-                    setIsPoliciesModalOpen(true);
-                  }}
-                  className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 dark:border-dark-600 bg-blue-50/50 dark:bg-dark-700 hover:bg-blue-50 dark:hover:bg-dark-600 text-[#125280] dark:text-blue-400 font-semibold transition-all flex items-center justify-between group">
-                  <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-purple-600">
-                      <Shield size={18} />
-                    </div>
-                    Pólizas
-                  </div>
-                  <ChevronDown
-                    size={16}
-                    className="-rotate-90 text-blue-400 group-hover:text-blue-600"
-                  />
-                </button>
+      {/* Policies Selector Modal */}
+      <ProductSelectorModal
+        isOpen={isPoliciesModalOpen}
+        onClose={() => setIsPoliciesModalOpen(false)}
+        onBack={() => {
+          setIsPoliciesModalOpen(false);
+          setIsSourceModalOpen(true);
+        }}
+        title="Pólizas"
+        type="POLICY"
+        products={filteredPolicies}
+        selectedCategory={selectedCategory}
+        onSelectProduct={selectPolicy}
+        Icon={Shield}
+        onNewProductClick={() => {
+          setIsPoliciesModalOpen(false);
+          setNewProduct({
+            name: "",
+            category: selectedCategory,
+            price: 0,
+            users_count: 1,
+            description: "",
+          });
+          setCurrentMaxUsers(1);
+          setActiveFormMode("POLICY");
+          triggerFormHighlight();
+        }}
+      />
 
-                 <button
-                  type="button"
-                  onClick={() => {
-                    setIsSourceModalOpen(false);
-                    setIsGeneralProductsModalOpen(true);
-                  }}
-                  className="w-full text-left px-4 py-3 rounded-xl border border-blue-200 dark:border-dark-600 bg-blue-50/50 dark:bg-dark-700 hover:bg-blue-50 dark:hover:bg-dark-600 text-[#125280] dark:text-blue-400 font-semibold transition-all flex items-center justify-between group">
-                  <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-blue-100 flex items-center justify-center text-emerald-600">
-                      <ShoppingBag size={18} />
-                    </div>
-                    Productos
-                  </div>
-                  <ChevronDown
-                    size={16}
-                    className="-rotate-90 text-blue-400 group-hover:text-blue-600"
-                  />
-                </button>
+      {/* General Products Selector Modal */}
+      <ProductSelectorModal
+        isOpen={isGeneralProductsModalOpen}
+        onClose={() => setIsGeneralProductsModalOpen(false)}
+        onBack={() => {
+          setIsGeneralProductsModalOpen(false);
+          setIsSourceModalOpen(true);
+        }}
+        title="Productos"
+        type="PRODUCT"
+        products={filteredGeneralProducts}
+        selectedCategory={selectedCategory}
+        onSelectProduct={selectGeneralProduct}
+        Icon={ShoppingBag}
+        onNewProductClick={() => {
+          setIsGeneralProductsModalOpen(false);
+          setNewProduct({
+            name: "",
+            category: selectedCategory,
+            price: 0,
+            users_count: 1,
+            description: "",
+          });
+          setCurrentMaxUsers(30);
+          setActiveFormMode("PRODUCT");
+          triggerFormHighlight();
+        }}
+      />
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSourceModalOpen(false);
-                    setIsServicesModalOpen(true);
-                  }}
-                  className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-[#125280]/35 dark:border-dark-600 text-[#125280] dark:text-blue-500 font-semibold hover:border-[#125280] dark:hover:border-blue-400 hover:text-[#125280] dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-dark-700 transition-all flex items-center justify-center gap-2">
-                  <Library size={18} /> Servicios
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
-
-      {/* Modal de categorías */}
-      {isCategoriesModalOpen &&
-        createPortal(
-          <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-fade-in relative">
-              <div className="p-4 rounded-t-2xl border-b border-[#24395f] bg-[#1a2b4c] flex items-center justify-between">
-                <h2 className="font-semibold text-white text-lg">Categorías</h2>
-                <button
-                  onClick={() => setIsCategoriesModalOpen(false)}
-                  className="text-white/80 hover:text-white transition-colors p-1">
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="p-5 space-y-4">
-                <div className="flex gap-2">
-                  <input
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    placeholder="Ej. Contabilidad"
-                    className="flex-1 rounded-xl px-4 py-3 text-sm bg-white dark:bg-dark-900 text-light-text-primary dark:text-zinc-100 focus:ring-2 focus:ring-[#153465] focus:outline-none border border-zinc-300 dark:border-dark-700 transition-colors"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddCategory}
-                    disabled={
-                      !normalizeServicePolicyCategory(newCategoryName) ||
-                      availableCategories.some(
-                        (c) =>
-                          normalizeServicePolicyCategory(c) ===
-                          normalizeServicePolicyCategory(newCategoryName),
-                      )
-                    }
-                    className="px-4 py-2 rounded-lg bg-[#2277B4] text-white text-sm font-semibold hover:bg-[#125280] transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#2277B4]">
-                    Agregar
-                  </button>
-                </div>
-                <div className="h-5 overflow-hidden" aria-live="polite">
-                  {!!normalizeServicePolicyCategory(newCategoryName) &&
-                    availableCategories.some(
-                      (c) =>
-                        normalizeServicePolicyCategory(c) ===
-                        normalizeServicePolicyCategory(newCategoryName),
-                    ) && (
-                      <p className="text-xs font-medium text-red-500">
-                        Ya existe una categoría con ese nombre.
-                      </p>
-                    )}
-                </div>
-
-                <div>
-                  <h3 className="text-xs font-semibold text-zinc-400 uppercase mb-3">
-                    Categorías
-                  </h3>
-                  {availableCategories.length === 0 ?
-                    <p className="text-sm text-zinc-500">
-                      Aún no hay categorías registradas.
-                    </p>
-                  : <div className="min-h-[190px] flex flex-col">
-                      <div className="flex flex-wrap content-start gap-2 h-[138px] overflow-hidden pr-1">
-                        {visibleCategories.map((category) => (
-                          <button
-                            key={category}
-                            type="button"
-                            onClick={() => {
-                              applyCategorySelection(category);
-                              setIsCategoriesModalOpen(false);
-                            }}
-                            className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors ${
-                              (
-                                normalizeServicePolicyCategory(category) ===
-                                normalizeServicePolicyCategory(selectedCategory)
-                              ) ?
-                                "border-[#2277B4] bg-[#2277B4]/10 text-[#2277B4] dark:text-blue-400"
-                              : "border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-dark-800"
-                            }`}>
-                            {category}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-xs text-zinc-500">
-                          Página {safeCategoryPage} de {totalCategoryPages}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setCategoryPage((prev) => Math.max(1, prev - 1))
-                            }
-                            disabled={safeCategoryPage === 1}
-                            className="px-3 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-dark-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            Anterior
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setCategoryPage((prev) =>
-                                Math.min(totalCategoryPages, prev + 1),
-                              )
-                            }
-                            disabled={safeCategoryPage === totalCategoryPages}
-                            className="px-3 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-dark-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            Siguiente
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  }
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
-
-      {/* Contpaqi Categories Modal */}
-      {isContpaqiModalOpen &&
-        createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-dark-800 rounded-3xl w-full max-w-2xl shadow-2xl animate-fade-in flex flex-col max-h-[85vh] overflow-hidden">
-              <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    setIsContpaqiModalOpen(false);
-                    setIsSourceModalOpen(true);
-                  }}
-                  className="text-white/80 hover:text-white transition-colors p-2 bg-white/10 hover:bg-white/20 rounded-full">
-                  <ArrowLeft size={20} />
-                </button>
-                <h2 className="font-semibold text-white text-xl flex items-center gap-2">
-                  <Package className="text-blue-300" size={24} /> Productos de
-                  CONTPAQi
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsContpaqiModalOpen(false);
-                    setNewProduct({
-                      name: "",
-                      category: selectedCategory,
-                      price: 0,
-                      users_count: 1,
-                      description: "",
-                    });
-                    setCurrentMaxUsers(30);
-                    setActiveFormMode("CONTPAQI");
-                  }}
-                  className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2277B4] hover:bg-[#125280] text-white text-xs font-semibold transition-colors">
-                  <Plus size={14} /> Nuevo producto
-                </button>
-              </div>
-
-              <div className="p-6 overflow-y-auto space-y-8 bg-[#f8fafc] dark:bg-dark-800">
-                <div className="space-y-3">
-                  {filteredContpaqiProducts.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 p-5 text-sm text-zinc-500 dark:text-zinc-400 text-center">
-                      No hay productos para la categoría{" "}
-                      <strong>{selectedCategory}</strong>. <br /> Usa el botón{" "}
-                      <strong>Nuevo producto</strong>.
-                    </div>
-                  )}
-
-                  {filteredContpaqiProducts.map((item) => {
-                    const ProductLogo = PRODUCT_LOGO_MAP[item.name] || Package;
-
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => selectContpaqiProduct(item)}
-                        className="w-full text-left p-5 rounded-2xl border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 hover:border-blue-300 dark:hover:border-dark-600 hover:shadow-md transition-all group">
-                        <div className="flex justify-between items-start gap-4 mb-1.5">
-                          <div className="flex items-start gap-3 min-w-0">
-                            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-zinc-200 dark:border-dark-700 bg-zinc-50 dark:bg-dark-800 text-zinc-400 group-hover:border-blue-200 dark:group-hover:bg-dark-700 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
-                              <ProductLogo size={13} />
-                            </span>
-                            <div className="font-bold text-lg text-[#1e293b] dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 min-w-0 truncate">
-                              {item.name}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {item.isCustom && (
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                                Nuevo
-                              </span>
-                            )}
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-500/70 bg-blue-50/50 px-2 py-0.5 rounded-md border border-blue-100/50">
-                              {item.category}
-                            </span>
-                          </div>
-                        </div>
-
-                        {item.description && (
-                          <div className="text-sm text-zinc-500 leading-relaxed line-clamp-2">
-                            {item.description}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
-
-      {/* Modal General Products */}
-      {isGeneralProductsModalOpen &&
-        createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
-              <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    setIsGeneralProductsModalOpen(false);
-                    setIsSourceModalOpen(true);
-                  }}
-                  className="text-white/80 hover:text-white transition-colors p-2 bg-white/10 hover:bg-white/20 rounded-full">
-                  <ArrowLeft size={20} />
-                </button>
-                <h2 className="font-semibold text-white text-lg">Productos</h2>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsGeneralProductsModalOpen(false);
-                    setNewProduct({
-                      name: "",
-                      category: selectedCategory,
-                      price: 0,
-                      users_count: 1,
-                      description: "",
-                    });
-                    setCurrentMaxUsers(30);
-                    setActiveFormMode("PRODUCT");
-                  }}
-                  className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2277B4] hover:bg-[#125280] text-white text-xs font-semibold transition-colors">
-                  <Plus size={14} /> Nuevo producto
-                </button>
-              </div>
-
-              <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto">
-                <div className="space-y-2">
-                  {filteredGeneralProducts.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 p-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">
-                      No hay productos para la categoría{" "}
-                      <strong>{selectedCategory}</strong>.
-                    </div>
-                  )}
-
-                  {filteredGeneralProducts.map((product) => (
-                    <button
-                      key={product.id}
-                      type="button"
-                      onClick={() => selectGeneralProduct(product)}
-                      className="w-full text-left p-4 rounded-xl border border-emerald-200 dark:border-dark-700 bg-white dark:bg-dark-900 hover:bg-emerald-50 dark:hover:bg-dark-800 transition-colors">
-                      <div className="font-semibold text-zinc-800 dark:text-zinc-100 truncate">
-                        {product.name}
-                      </div>
-                      <div className="text-[11px] text-zinc-500 uppercase tracking-wide mt-1 truncate">
-                        {product.category}
-                      </div>
-                      {product.description && (
-                        <div className="text-xs text-zinc-400 mt-2 line-clamp-2">
-                          {product.description}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
-
-      {/* Modal Policies */}
-      {isPoliciesModalOpen &&
-        createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
-              <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    setIsPoliciesModalOpen(false);
-                    setIsSourceModalOpen(true);
-                  }}
-                  className="text-white/80 hover:text-white transition-colors p-2 bg-white/10 hover:bg-white/20 rounded-full">
-                  <ArrowLeft size={20} />
-                </button>
-                <h2 className="font-semibold text-white text-lg">Pólizas</h2>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsPoliciesModalOpen(false);
-                    setNewProduct({
-                      name: "",
-                      category: selectedCategory,
-                      price: 0,
-                      users_count: 1,
-                      description: "",
-                    });
-                    setCurrentMaxUsers(1);
-                    setActiveFormMode("POLICY");
-                  }}
-                  className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2277B4] hover:bg-[#125280] text-white text-xs font-semibold transition-colors">
-                  <Plus size={14} /> Nueva póliza
-                </button>
-              </div>
-
-              <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto">
-                <div className="space-y-2">
-                  {filteredPolicies.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 p-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">
-                      No hay pólizas para la categoría{" "}
-                      <strong>{selectedCategory}</strong>.
-                    </div>
-                  )}
-
-                  {filteredPolicies.map((policy) => (
-                    <button
-                      key={policy.id}
-                      type="button"
-                      onClick={() => selectPolicy(policy)}
-                      className="w-full text-left p-4 rounded-xl border border-purple-200 dark:border-dark-700 bg-white dark:bg-dark-900 hover:bg-purple-50 dark:hover:bg-dark-800 transition-colors">
-                      <div className="font-semibold text-zinc-800 dark:text-zinc-100 truncate">
-                        {policy.name}
-                      </div>
-                      <div className="text-[11px] text-zinc-500 uppercase tracking-wide mt-1 truncate">
-                        {policy.category}
-                      </div>
-                      {policy.description && (
-                        <div className="text-xs text-zinc-400 mt-2 line-clamp-2">
-                          {policy.description}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
-
-
-
-      {/* Modal de servicios propios */}
-      {isServicesModalOpen &&
-        createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-xl shadow-2xl animate-fade-in overflow-hidden">
-              <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    setIsServicesModalOpen(false);
-                    setIsSourceModalOpen(true);
-                  }}
-                  className="text-white/80 hover:text-white transition-colors p-2 bg-white/10 hover:bg-white/20 rounded-full">
-                  <ArrowLeft size={20} />
-                </button>
-                <h2 className="font-semibold text-white text-lg">Servicios</h2>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsServicesModalOpen(false);
-                    setNewProduct({
-                      name: "",
-                      category: selectedCategory,
-                      price: 0,
-                      users_count: 1,
-                      description: "",
-                    });
-                    setCurrentMaxUsers(1);
-                    setActiveFormMode("SERVICE");
-                  }}
-                  className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2277B4] hover:bg-[#125280] text-white text-xs font-semibold transition-colors">
-                  <Plus size={14} /> Nuevo servicio
-                </button>
-              </div>
-
-              <div className="p-5 space-y-4 max-h-[72vh] overflow-y-auto">
-                <div className="space-y-2">
-                  {filteredServices.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 p-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">
-                      No hay servicios para la categoría{" "}
-                      <strong>{selectedCategory}</strong>. <br /> Usa el botón
-                      <strong> Nuevo servicio</strong>.
-                    </div>
-                  )}
-
-                  {filteredServices.map((service) => (
-                    <button
-                      key={service.id}
-                      type="button"
-                      onClick={() => selectService(service)}
-                      className="w-full text-left p-4 rounded-xl border border-[#B58DE0]/45 dark:border-dark-600 bg-white dark:bg-dark-900 hover:bg-[#B58DE0]/5 dark:hover:bg-dark-800 transition-colors">
-                      <div className="font-semibold text-zinc-800 dark:text-zinc-100 truncate">
-                        {service.name}
-                      </div>
-                      <div className="text-[11px] text-zinc-500 uppercase tracking-wide mt-1 truncate">
-                        {service.category}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
-
+      {/* Services Selector Modal */}
+      <ProductSelectorModal
+        isOpen={isServicesModalOpen}
+        onClose={() => setIsServicesModalOpen(false)}
+        onBack={() => {
+          setIsServicesModalOpen(false);
+          setIsSourceModalOpen(true);
+        }}
+        title="Servicios"
+        type="SERVICE"
+        products={filteredServices}
+        selectedCategory={selectedCategory}
+        onSelectProduct={selectService}
+        Icon={Library}
+        onNewProductClick={() => {
+          setIsServicesModalOpen(false);
+          setNewProduct({
+            name: "",
+            category: selectedCategory,
+            price: 0,
+            users_count: 1,
+            description: "",
+          });
+          setCurrentMaxUsers(1);
+          setActiveFormMode("SERVICE");
+          triggerFormHighlight();
+        }}
+      />
     </div>
   );
 }

@@ -1,20 +1,14 @@
 import { pool } from "../../../config/db.js";
-import { getProductAction } from "./getProduct.action.js";
+import { updateProduct, insertPriceHistory, findProductById } from "../../../repositories/product.repository.js";
 
 export async function updateProductPriceAction(id, newPrice) {
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
 
-    await conn.query(
-      "UPDATE products SET current_price = :price WHERE id = :id",
-      { id, price: newPrice }
-    );
+    await updateProduct(id, { current_price: newPrice }, conn);
 
-    await conn.query(
-      "INSERT INTO product_price_history (product_id, price) VALUES (:id, :price)",
-      { id, price: newPrice }
-    );
+    await insertPriceHistory({ product_id: id, price: newPrice }, conn);
 
     await conn.commit();
   } catch (e) {
@@ -24,5 +18,5 @@ export async function updateProductPriceAction(id, newPrice) {
     conn.release();
   }
 
-  return getProductAction(id);
+  return await findProductById(id);
 }

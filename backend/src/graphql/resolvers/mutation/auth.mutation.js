@@ -1,6 +1,7 @@
 import { loginAction } from "../../actions/user_actions/login.action.js";
 import { registerUserAction } from "../../actions/user_actions/registerUser.action.js";
 import { loginContactAction } from "../../actions/contact_actions/loginContact.action.js";
+import { env } from "../../../config/env.js";
 
 export const login = async (_parent, { input }) => {
   return loginAction(input);
@@ -16,7 +17,7 @@ export const registerUser = async (_parent, { input }) => {
 };
 
 export const verifyMasterPassword = async (_parent, { password }) => {
-  const MASTER_PASSWORD = process.env.MASTER_PASSWORD;
+  const MASTER_PASSWORD = env.MASTER_PASSWORD;
   
   if (!MASTER_PASSWORD) {
     throw new Error("Error de configuración: MASTER_PASSWORD no está definida en el servidor.");
@@ -24,3 +25,4 @@ export const verifyMasterPassword = async (_parent, { password }) => {
 
   return password === MASTER_PASSWORD;
 };
+

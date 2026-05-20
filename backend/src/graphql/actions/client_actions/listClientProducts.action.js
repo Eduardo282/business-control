@@ -1,15 +1,7 @@
-import { pool } from "../../../config/db.js";
+import { listClientProducts } from "../../../repositories/client.repository.js";
 
 export async function listClientProductsAction(client_id) {
-  const [rows] = await pool.query(
-    `SELECT cp.*, 
-            p.id as product_id, p.name as product_name, p.category as product_category, p.description as product_description 
-     FROM contact_products cp
-     JOIN client_contacts cc ON cp.contact_id = cc.id
-     JOIN products p ON cp.product_id = p.id
-     WHERE cc.client_id = :client_id`,
-    { client_id },
-  );
+  const rows = await listClientProducts(client_id);
 
   return rows.map((row) => ({
     id: row.id,

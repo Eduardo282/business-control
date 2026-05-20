@@ -1,9 +1,9 @@
-import { useCallback, useContext, useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import Card from "../../components/ui/Card";
 import Swal from "sweetalert2";
-import { deleteQuoteApi, listQuotesApi } from "../../actionsAPI/quotes.api";
+import { deleteQuoteApi, listQuotesApi, updateQuoteStatusApi } from "../../actionsAPI/quotes.api";
 import { AuthContext } from "../../context/AuthContext";
 import {
   BadgeDollarSign,
@@ -14,6 +14,9 @@ import {
   SlidersHorizontal,
   Trash2,
   X,
+  FileText,
+  FileSpreadsheet,
+  FolderOpen,
 } from "@icons";
 import {
   flexRender,
@@ -22,6 +25,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { exportRowsToExcel } from "../../utils/excelExport";
+import { normalizeSearchText } from "../../utils/formatters";
 
 function dataReducer(state, action) {
   switch (action.type) {
@@ -33,6 +38,15 @@ function dataReducer(state, action) {
       return { ...state, loading: false, error: action.payload };
     case "DELETE_QUOTE":
       return { ...state, quotes: state.quotes.filter((q) => String(q.id) !== String(action.payload)) };
+    case "UPDATE_QUOTE_STATUS":
+      return {
+        ...state,
+        quotes: state.quotes.map((q) =>
+          String(q.id) === String(action.payload.id)
+            ? { ...q, status: action.payload.status }
+            : q
+        ),
+      };
     default:
       return state;
   }
@@ -64,6 +78,97 @@ function filterReducer(state, action) {
   }
 }
 
+function StatusCell({ row, handleStatusChange }) {
+  const currentStatus = row.original.status || "PENDING";
+  const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = useRef(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+
+  const statusOptions = [
+    { value: "REQUESTED", label: "SOLICITADA", color: "text-blue-600 border-blue-600/30 bg-blue-50 dark:bg-blue-500/10" },
+    { value: "PENDING", label: "PENDIENTE", color: "text-yellow-600 border-yellow-600/30 bg-yellow-50 dark:bg-yellow-500/10" },
+    { value: "SENT", label: "ENVIADA", color: "text-indigo-600 border-indigo-600/30 bg-indigo-50 dark:bg-indigo-500/10" },
+    { value: "ACCEPTED", label: "ACEPTADA", color: "text-emerald-600 border-emerald-600/30 bg-emerald-50 dark:bg-emerald-500/10" },
+    { value: "REJECTED", label: "RECHAZADA", color: "text-red-600 border-red-600/30 bg-red-50 dark:bg-red-500/10" },
+  ];
+
+  const currentOption = statusOptions.find((o) => o.value === currentStatus);
+
+  const updateCoords = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom + window.scrollY,
+        left: rect.right + window.scrollX - 128, // alignment to match trigger (w-32 is 128px)
+      });
+    }
+  };
+
+  const handleToggle = () => {
+    updateCoords();
+    setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      window.addEventListener("scroll", updateCoords, true);
+      window.addEventListener("resize", updateCoords);
+    }
+    return () => {
+      window.removeEventListener("scroll", updateCoords, true);
+      window.removeEventListener("resize", updateCoords);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="text-right flex justify-end">
+      <div className="relative">
+        <button
+          ref={buttonRef}
+          onClick={handleToggle}
+          className={`text-[10px] uppercase font-bold tracking-wider pl-2 pr-6 py-1 rounded bg-transparent border focus:outline-none transition-colors cursor-pointer text-center min-w-[110px] relative ${currentOption?.color}`}
+        >
+          {currentOption?.label}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60">
+            <ChevronDown size={10} className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+          </div>
+        </button>
+
+        {isOpen &&
+          createPortal(
+            <>
+              <div className="fixed inset-0 z-[9999]" onClick={() => setIsOpen(false)} />
+              <div
+                style={{
+                  position: "absolute",
+                  top: `${coords.top}px`,
+                  left: `${coords.left}px`,
+                }}
+                className="mt-1 w-32 bg-white dark:bg-dark-900 rounded-lg shadow-xl border border-zinc-200 dark:border-white/10 z-[10000] overflow-hidden animate-fade-in-down"
+              >
+                {statusOptions
+                  .filter((opt) => opt.value !== currentStatus && opt.value !== "SENT")
+                  .map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => {
+                        handleStatusChange(row.original.id, opt.value);
+                        setIsOpen(false);
+                      }}
+                      className={`w-full px-3 py-2 text-[10px] font-bold text-left hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors border-l-2 border-transparent ${opt.color.split(" ")[0]}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+              </div>
+            </>,
+            document.body,
+          )}
+      </div>
+    </div>
+  );
+}
+
 export default function QuoteHistory() {
   const { user } = useContext(AuthContext);
   const [data, dispatchData] = useReducer(dataReducer, { quotes: [], loading: true, error: "" });
@@ -81,15 +186,6 @@ export default function QuoteHistory() {
     pageIndex: 0,
     pageSize: 10,
   });
-
-  const normalizeSearchText = (value) => {
-    return (value || "")
-      .toString()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .trim();
-  };
 
   useEffect(() => {
     dispatchData({ type: "FETCH_START" });
@@ -141,6 +237,157 @@ export default function QuoteHistory() {
       });
     }
   }, []);
+
+  const handleExportPDF = async () => {
+    if (!filteredQuotes.length) {
+      Swal.fire({
+        title: "Sin datos",
+        text: "No hay cotizaciones para exportar.",
+        icon: "info",
+        confirmButtonColor: "#2277B4",
+      });
+      return;
+    }
+
+    try {
+      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+      const autoTable = autoTableModule.default || autoTableModule.autoTable;
+
+      const doc = new jsPDF({ orientation: "landscape" });
+      doc.setFontSize(16);
+      doc.setTextColor(26, 43, 76);
+      doc.text("Historial de Cotizaciones", 14, 16);
+      doc.setFontSize(10);
+      doc.setTextColor(90, 90, 90);
+      doc.text(`Exportado: ${new Date().toLocaleString("es-MX")}`, 14, 23);
+
+      autoTable(doc, {
+        startY: 28,
+        head: [
+          [
+            "COTIZACIÓN",
+            "FOLIO",
+            "CLIENTE",
+            "CREADA POR",
+            "FECHA",
+            "TOTAL (C/IVA)",
+            "ESTADO",
+          ],
+        ],
+        body: filteredQuotes.map((row) => {
+          const idStr = `Cotización #${row.id}`;
+          const folioStr = row.folio || "—";
+          const clientStr = row.client?.business_name || "—";
+          const creatorStr = row.user?.full_name || row.contact?.full_name || "Usuario";
+          const dateStr = row.created_at ? new Date(row.created_at).toLocaleDateString("es-MX") : "—";
+          const totalStr = `$${Number(row.total || 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+          const statusStr = 
+            row.status === "PENDING" ? "PENDIENTE"
+            : row.status === "REQUESTED" ? "SOLICITADA"
+            : row.status === "ACCEPTED" ? "ACEPTADA"
+            : row.status === "REJECTED" ? "RECHAZADA"
+            : row.status;
+          return [idStr, folioStr, clientStr, creatorStr, dateStr, totalStr, statusStr];
+        }),
+        theme: "grid",
+        headStyles: { fillColor: [34, 119, 180] },
+        styles: { fontSize: 8, cellPadding: 2.5 },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 65 },
+          3: { cellWidth: 50 },
+          4: { cellWidth: 25 },
+          5: { cellWidth: 30 },
+          6: { cellWidth: 25 },
+        },
+      });
+
+      doc.save(
+        `Historial_Cotizaciones_${new Date().toISOString().slice(0, 10)}.pdf`,
+      );
+    } catch (e) {
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo generar el PDF.",
+        icon: "error",
+        confirmButtonColor: "#2277B4",
+      });
+    }
+  };
+
+  const handleExportExcel = async () => {
+    if (!filteredQuotes.length) {
+      Swal.fire({
+        title: "Sin datos",
+        text: "No hay cotizaciones para exportar.",
+        icon: "info",
+        confirmButtonColor: "#2277B4",
+      });
+      return;
+    }
+
+    try {
+      const rows = filteredQuotes.map((row) => {
+        const creatorStr = row.user?.full_name || row.contact?.full_name || "Usuario";
+        const dateStr = row.created_at ? new Date(row.created_at).toLocaleDateString("es-MX") : "—";
+        const statusStr = 
+          row.status === "PENDING" ? "PENDIENTE"
+          : row.status === "REQUESTED" ? "SOLICITADA"
+          : row.status === "ACCEPTED" ? "ACEPTADA"
+          : row.status === "REJECTED" ? "RECHAZADA"
+          : row.status;
+
+        return {
+          "Cotización": `Cotización #${row.id}`,
+          "Folio": row.folio || "—",
+          "Cliente": row.client?.business_name || "—",
+          "Creada por": creatorStr,
+          "Fecha": dateStr,
+          "Total (C/IVA)": Number(row.total || 0),
+          "Estado": statusStr,
+        };
+      });
+
+      await exportRowsToExcel({
+        rows,
+        sheetName: "Cotizaciones",
+        fileName: `Historial_Cotizaciones_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      });
+    } catch (e) {
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo generar el Excel.",
+        icon: "error",
+        confirmButtonColor: "#2277B4",
+      });
+    }
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await updateQuoteStatusApi(id, newStatus);
+      dispatchData({ type: "UPDATE_QUOTE_STATUS", payload: { id, status: newStatus } });
+      
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: `Estado actualizado a ${newStatus}`,
+      });
+    } catch (e) {
+      Swal.fire("Error", e.message || "No se pudo actualizar el estado", "error");
+    }
+  };
 
   const filterFieldLabels = {
     client: "Cliente",
@@ -244,7 +491,7 @@ export default function QuoteHistory() {
         header: "Creada por",
         cell: ({ row }) => (
           <div className="text-sm text-light-text-secondary dark:text-zinc-400">
-            {row.original.user?.full_name || "Usuario"}
+            {row.original.user?.full_name || row.original.contact?.full_name || "Usuario"}
           </div>
         ),
       },
@@ -275,11 +522,7 @@ export default function QuoteHistory() {
         accessorKey: "status",
         header: "Estado",
         cell: ({ row }) => (
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded text-yellow-600 dark:text-yellow-400">
-              {row.original.status || "N/A"}
-            </span>
-          </div>
+          <StatusCell row={row} handleStatusChange={handleStatusChange} />
         ),
       },
       {
@@ -317,7 +560,7 @@ export default function QuoteHistory() {
       const id = quote?.id != null ? `#${quote.id}` : "";
       const folio = quote?.folio || "";
       const client = quote?.client?.business_name || "";
-      const seller = quote?.user?.full_name || "";
+      const seller = quote?.user?.full_name || quote?.contact?.full_name || "";
       const status = quote?.status || "";
       const total =
         quote?.total != null ?
@@ -413,6 +656,20 @@ export default function QuoteHistory() {
           </div>
 
           <button
+            onClick={handleExportPDF}
+            className="inline-flex items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold border border-red-200 dark:border-red-500/30 bg-white dark:bg-dark-900 text-red-700 dark:text-red-400 hover:bg-red-50 hover:dark:bg-red-500/20 transition-colors whitespace-nowrap"
+            title="Exportar a PDF">
+            <FileText size={14} /> Exportar a PDF
+          </button>
+
+          <button
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-dark-900 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 hover:dark:bg-emerald-500/20 transition-colors whitespace-nowrap"
+            title="Exportar a Excel">
+            <FileSpreadsheet size={14} /> Exportar a Excel
+          </button>
+
+          <button
             onClick={() => dispatchFilter({ type: "TOGGLE_FILTERS" })}
             className={`inline-flex items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold border transition-colors whitespace-nowrap ${
               showFilters || activeFilterCount > 0 ?
@@ -442,8 +699,9 @@ export default function QuoteHistory() {
       )}
 
       {!loading && !error && quotes.length === 0 && (
-        <div className="text-center text-light-text-secondary dark:text-zinc-500 py-14">
-          No hay cotizaciones registradas.
+        <div className="flex flex-col items-center justify-center gap-3 text-center text-light-text-secondary dark:text-zinc-500 py-14">
+          <FolderOpen size={40} className="text-zinc-300 dark:text-zinc-600" />
+          <p className="text-sm font-medium">No se encontraron cotizaciones.</p>
         </div>
       )}
 
@@ -452,8 +710,9 @@ export default function QuoteHistory() {
         quotes.length > 0 &&
         filteredQuotes.length === 0 && (
           <Card className="overflow-hidden">
-            <div className="text-center text-light-text-secondary dark:text-zinc-500 py-14">
-              No se encontraron cotizaciones.
+            <div className="flex flex-col items-center justify-center gap-3 text-center text-light-text-secondary dark:text-zinc-500 py-14">
+              <FolderOpen size={40} className="text-zinc-300 dark:text-zinc-600" />
+              <p className="text-sm font-medium">No se encontraron cotizaciones.</p>
             </div>
           </Card>
         )}
@@ -509,6 +768,18 @@ export default function QuoteHistory() {
                               filters[activeFilterPickerField],
                             ) === normalizeSearchText(value);
 
+                          let displayValue = value;
+                          if (activeFilterPickerField === "status") {
+                            const statusMap = {
+                              PENDING: "PENDIENTE",
+                              REQUESTED: "SOLICITADA",
+                              SENT: "ENVIADA",
+                              ACCEPTED: "ACEPTADA",
+                              REJECTED: "RECHAZADA",
+                            };
+                            displayValue = statusMap[value] || value;
+                          }
+
                           return (
                             <button
                               key={`${activeFilterPickerField}_${value}`}
@@ -518,7 +789,7 @@ export default function QuoteHistory() {
                                   "bg-[#2277B4]/10 text-[#125280] font-semibold"
                                 : "text-zinc-700 hover:bg-zinc-50"
                               }`}>
-                              {value}
+                              {displayValue}
                             </button>
                           );
                         })

@@ -1,9 +1,6 @@
-import { pool } from "../../../config/db.js";
+import { markQuoteNotificationAsRead } from "../../../repositories/quote.repository.js";
 
 export const markQuoteNotificationReadAction = async (id) => {
-  const [res] = await pool.query(
-    "UPDATE quotes SET notification_read = 1 WHERE id = ?",
-    [id],
-  );
-  return res.affectedRows > 0;
+  const affected = await markQuoteNotificationAsRead(id);
+  return affected > 0;
 };

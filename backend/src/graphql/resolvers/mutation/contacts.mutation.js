@@ -37,7 +37,7 @@ export const deleteContactProduct = async (_parent, { id }, ctx) => {
   return deleteContactProductAction(id);
 };
 
-export const updateContactProductDates = async (_parent, { id, start_date, expiration_date, status }, ctx) => {
+export const updateContactProductDates = async (_parent, { id, start_date, expiration_date, status, license_key }, ctx) => {
   requireRoles(ctx.user, ["ADMIN"]);
-  return updateContactProductDatesAction(id, { start_date, expiration_date, status });
+  return updateContactProductDatesAction(id, { start_date, expiration_date, status, license_key });
 };

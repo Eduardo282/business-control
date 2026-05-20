@@ -1,39 +1,10 @@
 import { Server } from "socket.io";
-import { verifyToken } from "../utils/jwt.js";
-import * as chatService from "./chat.service.js";
-
-/**
- * Socket.IO Gateway for Support Chat
- *
- * Architecture notes:
- * - Each conversation gets its own Socket.IO "room" → conv:{id}
- * - Agents join an "agents" room to receive notifications of waiting chats
- * - Redis adapter can be plugged in for horizontal scaling (see commented code)
- *
- * Events emitted TO clients:
- *   conversation:created   — new conversation data
- *   conversation:assigned  — agent took the conversation
- *   conversation:closed    — conversation ended
- *   message:new            — new message in the conversation
- *   message:deleted        — a message was deleted
- *   queue:update           — updated waiting queue (agents only)
- *   user:disconnected      — the other party disconnected
- *   user:reconnected       — the other party reconnected
- *   messages:seen          — messages were marked as seen
- *   error                  — error message
- *
- * Events received FROM clients:
- *   conversation:start     — client wants to start a chat
- *   conversation:join      — agent/client joins existing conversation
- *   conversation:take      — agent takes a waiting conversation
- *   conversation:close     — agent/client closes conversation
- *   conversation:rate      — client rates the conversation
- *   message:send           — send a message
- *   message:delete         — delete a message
- *   messages:history       — request message history
- *   messages:seen          — mark messages as seen
- *   queue:list             — agent requests waiting queue
- */
+import { logger } from "../utils/logger.js";
+import { authMiddleware } from "./chat.auth.js";
+import { registerConversationHandlers } from "./handlers/conversation.handlers.js";
+import { registerMessageHandlers } from "./handlers/message.handlers.js";
+import { registerAgentHandlers } from "./handlers/agent.handlers.js";
+import { registerTypingHandlers } from "./handlers/typing.handlers.js";
 
 let io;
 
@@ -65,36 +36,13 @@ export function initSocketIO(httpServer, corsOrigin) {
     transports: ["websocket", "polling"], // Prefer websocket
   });
 
-  // ── Optional: Redis adapter for horizontal scaling ──
-  // Uncomment when you have Redis in production:
-  //
-  // import { createAdapter } from "@socket.io/redis-adapter";
-  // import { createClient } from "redis";
-  // const pubClient = createClient({ url: process.env.REDIS_URL });
-  // const subClient = pubClient.duplicate();
-  // await Promise.all([pubClient.connect(), subClient.connect()]);
-  // io.adapter(createAdapter(pubClient, subClient));
-  // console.log("🔴 Redis adapter connected for Socket.IO");
-
   // ── Authentication middleware ──
-  io.use((socket, next) => {
-    const token = socket.handshake.auth?.token;
-    if (!token) {
-      return next(new Error("Authentication required"));
-    }
-    try {
-      const decoded = verifyToken(token);
-      socket.user = decoded;
-      next();
-    } catch (err) {
-      next(new Error("Invalid token"));
-    }
-  });
+  io.use(authMiddleware);
 
   // ── Connection handler ──
   io.on("connection", (socket) => {
     const user = socket.user;
-    console.log(`🔌 Socket connected: ${socket.id} (user: ${JSON.stringify(user)})`);
+    logger.info(`🔌 Socket connected: ${socket.id} (user: ${JSON.stringify(user)})`);
 
     socketConversations.set(socket.id, new Set());
 
@@ -116,234 +64,25 @@ export function initSocketIO(httpServer, corsOrigin) {
       }
     }
 
-    // ── Client starts a new conversation ──
-    socket.on("conversation:start", async ({ subject, contactId } = {}) => {
-      try {
-        const cId = contactId || user.contactId;
-        if (!cId) {
-          return socket.emit("error", { message: "Se requiere contactId" });
-        }
+    // Prepare context to share with modular handlers
+    const context = {
+      user,
+      isAgent,
+      joinConvRoom,
+      socketConversations,
+      conversationPresence,
+      getPresence,
+    };
 
-        // Check if there's already an open conversation
-        const existing = await chatService.getOpenConversationByContact(cId);
-        if (existing) {
-          joinConvRoom(existing.id);
-          const messages = await chatService.getMessages(existing.id);
-          return socket.emit("conversation:created", { conversation: existing, messages, resumed: true });
-        }
-
-        const conversation = await chatService.createConversation(cId, subject || "Soporte General");
-
-        // Add system message
-        await chatService.addMessage(conversation.id, "SYSTEM", null, "Bienvenido al chat de soporte. Un agente se conectará pronto.");
-
-        joinConvRoom(conversation.id);
-
-        const messages = await chatService.getMessages(conversation.id);
-        socket.emit("conversation:created", { conversation, messages, resumed: false });
-
-        // Notify agents about new waiting conversation
-        const waiting = await chatService.getWaitingConversations();
-        io.to("agents").emit("queue:update", waiting);
-      } catch (err) {
-        console.error("conversation:start error:", err);
-        socket.emit("error", { message: "Error al iniciar conversación" });
-      }
-    });
-
-    // ── Agent takes a waiting conversation ──
-    socket.on("conversation:take", async ({ conversationId }) => {
-      try {
-        if (!isAgent) {
-          return socket.emit("error", { message: "Solo agentes pueden tomar conversaciones" });
-        }
-
-        const conversation = await chatService.assignAgent(conversationId, user.userId);
-        if (!conversation) {
-          return socket.emit("error", { message: "Conversación no encontrada" });
-        }
-
-        joinConvRoom(conversationId);
-
-        // System message
-        const sysMsg = await chatService.addMessage(
-          conversationId,
-          "SYSTEM",
-          null,
-          "Un agente se ha conectado. ¿En qué podemos ayudarte?"
-        );
-
-        // Notify the client in the room
-        io.to(`conv:${conversationId}`).emit("conversation:assigned", { conversation });
-        io.to(`conv:${conversationId}`).emit("message:new", sysMsg);
-
-        // Update waiting queue for all agents
-        const waiting = await chatService.getWaitingConversations();
-        io.to("agents").emit("queue:update", waiting);
-      } catch (err) {
-        console.error("conversation:take error:", err);
-        socket.emit("error", { message: "Error al tomar conversación" });
-      }
-    });
-
-    // ── Join an existing conversation ──
-    socket.on("conversation:join", async ({ conversationId }) => {
-      try {
-        const conversation = await chatService.getConversation(conversationId);
-        if (!conversation) {
-          return socket.emit("error", { message: "Conversación no encontrada" });
-        }
-
-        joinConvRoom(conversationId);
-        const messages = await chatService.getMessages(conversationId);
-        socket.emit("conversation:created", { conversation, messages, resumed: true });
-
-        // Notify the other party that we reconnected
-        socket.to(`conv:${conversationId}`).emit("user:reconnected", {
-          conversationId,
-          isAgent,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (err) {
-        console.error("conversation:join error:", err);
-        socket.emit("error", { message: "Error al unirse a conversación" });
-      }
-    });
-
-    // ── Send a message ──
-    socket.on("message:send", async ({ conversationId, body }) => {
-      try {
-        if (!body || !body.trim()) return;
-
-        const senderType = isAgent ? "AGENT" : "CLIENT";
-        const senderId = isAgent ? user.userId : (user.contactId || null);
-
-        const message = await chatService.addMessage(
-          conversationId,
-          senderType,
-          senderId,
-          body.trim()
-        );
-
-        // Broadcast to everyone in the room (including sender for confirmation)
-        io.to(`conv:${conversationId}`).emit("message:new", message);
-      } catch (err) {
-        console.error("message:send error:", err);
-        socket.emit("error", { message: "Error al enviar mensaje" });
-      }
-    });
-
-    // ── Delete a message ──
-    socket.on("message:delete", async ({ messageId, conversationId }) => {
-      try {
-        const deleted = await chatService.deleteMessage(messageId);
-        if (!deleted) {
-          return socket.emit("error", { message: "Mensaje no encontrado" });
-        }
-        // Notify everyone in the room
-        io.to(`conv:${conversationId}`).emit("message:deleted", {
-          messageId,
-          conversationId,
-          deletedBy: isAgent ? "AGENT" : "CLIENT",
-        });
-      } catch (err) {
-        console.error("message:delete error:", err);
-        socket.emit("error", { message: "Error al eliminar mensaje" });
-      }
-    });
-
-    // ── Request message history ──
-    socket.on("messages:history", async ({ conversationId, beforeId }) => {
-      try {
-        const messages = await chatService.getMessages(conversationId, 50, beforeId);
-        socket.emit("messages:history", { conversationId, messages });
-      } catch (err) {
-        console.error("messages:history error:", err);
-        socket.emit("error", { message: "Error al cargar historial" });
-      }
-    });
-
-    // ── Mark messages as seen ──
-    socket.on("messages:seen", ({ conversationId }) => {
-      socket.to(`conv:${conversationId}`).emit("messages:seen", {
-        conversationId,
-        seenBy: isAgent ? "AGENT" : "CLIENT",
-        timestamp: new Date().toISOString(),
-      });
-    });
-
-    // ── Close conversation ──
-    socket.on("conversation:close", async ({ conversationId }) => {
-      try {
-        const closedBy = isAgent ? "el agente" : "el cliente";
-        const conversation = await chatService.closeConversation(conversationId);
-
-        const sysMsg = await chatService.addMessage(
-          conversationId,
-          "SYSTEM",
-          null,
-          `La conversación ha sido cerrada por ${closedBy}. ¡Gracias por contactarnos!`
-        );
-
-        io.to(`conv:${conversationId}`).emit("message:new", sysMsg);
-        io.to(`conv:${conversationId}`).emit("conversation:closed", { conversation, closedBy });
-
-        // Update waiting queue
-        const waiting = await chatService.getWaitingConversations();
-        io.to("agents").emit("queue:update", waiting);
-
-        // Clean up presence
-        conversationPresence.delete(conversationId);
-      } catch (err) {
-        console.error("conversation:close error:", err);
-        socket.emit("error", { message: "Error al cerrar conversación" });
-      }
-    });
-
-    // ── Rate conversation ──
-    socket.on("conversation:rate", async ({ conversationId, rating }) => {
-      try {
-        if (rating < 1 || rating > 5) return;
-        await chatService.closeConversation(conversationId, rating);
-        socket.emit("conversation:rated", { conversationId, rating });
-      } catch (err) {
-        console.error("conversation:rate error:", err);
-      }
-    });
-
-    // ── Agent requests waiting queue ──
-    socket.on("queue:list", async () => {
-      try {
-        if (!isAgent) return;
-        const waiting = await chatService.getWaitingConversations();
-        socket.emit("queue:update", waiting);
-
-        // Also send active conversations for this agent
-        const active = await chatService.getActiveConversationsByAgent(user.userId);
-        socket.emit("agent:active", active);
-      } catch (err) {
-        console.error("queue:list error:", err);
-      }
-    });
-
-    // ── Typing indicators ──
-    socket.on("typing:start", ({ conversationId }) => {
-      socket.to(`conv:${conversationId}`).emit("typing:start", {
-        conversationId,
-        user: { id: user.userId || user.contactId, isAgent },
-      });
-    });
-
-    socket.on("typing:stop", ({ conversationId }) => {
-      socket.to(`conv:${conversationId}`).emit("typing:stop", {
-        conversationId,
-        user: { id: user.userId || user.contactId, isAgent },
-      });
-    });
+    // Register modular handlers
+    registerConversationHandlers(io, socket, context);
+    registerMessageHandlers(io, socket, context);
+    registerAgentHandlers(io, socket, context);
+    registerTypingHandlers(io, socket, context);
 
     // ── Disconnect — notify all conversation rooms ──
-    socket.on("disconnect", async (reason) => {
-      console.log(`🔌 Socket disconnected: ${socket.id} (${reason})`);
+    socket.on("disconnect", (reason) => {
+      logger.info(`🔌 Socket disconnected: ${socket.id} (${reason})`);
 
       const convIds = socketConversations.get(socket.id) || new Set();
 
@@ -367,7 +106,7 @@ export function initSocketIO(httpServer, corsOrigin) {
     });
   });
 
-  console.log("🔌 Socket.IO initialized for support chat");
+  logger.info("🔌 Socket.IO initialized for support chat");
   return io;
 }
 

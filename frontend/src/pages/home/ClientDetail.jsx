@@ -4,77 +4,49 @@ import {
   useState,
   useContext,
   useMemo,
-  useRef,
 } from "react";
-import { createPortal, flushSync } from "react-dom";
-import Swal from "sweetalert2";
+import { createPortal } from "react-dom";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
   getPaginationRowModel,
-  getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
 import { AuthContext } from "../../context/AuthContext";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
-import Button from "../../components/ui/Button";
 import {
   getClientApi,
   updateClientDynamicApi,
   deleteClientApi,
-  listClientActiveServicesApi,
   listClientsDynamicApi,
 } from "../../actionsAPI/clients.api";
 import {
   createContactApi,
-  updateContactApi,
   updateContactDynamicApi,
   deleteContactApi,
-  listContactProductsApi,
-  createContactProductApi,
-  deleteContactProductApi,
-  bulkCreateContactsApi,
   listContactsDynamicByClientApi,
-  importContactsFromDriveApi,
 } from "../../actionsAPI/contacts.api";
+import { listProductsApi } from "../../actionsAPI/products.api";
 import {
-  listProductsApi,
-  createProductApi,
-  deleteProductApi,
-} from "../../actionsAPI/products.api";
-import {
-  Lock,
-  Tag,
-  AlertTriangle,
-  Clipboard,
   ClipboardList,
   MapPin,
-  Building,
   Building2,
   Edit2,
-  ScrollText,
   UserPlus,
-  Pencil,
   ChevronUp,
   ChevronDown,
   ChevronRight,
-  Contact,
   Users,
   FileText,
   Trash2,
   X,
   Search,
   Key,
-  Package,
-  Sparkles,
-  Library,
-  Plus,
   Upload,
   FileSpreadsheet,
-  Download,
   CheckCircle2,
   AlertCircle,
   Lightbulb,
@@ -82,6 +54,23 @@ import {
   Filter,
   ArrowLeft,
 } from "@icons";
+import { useContactBulkImport } from "./client-detail/useContactBulkImport";
+import { useContactExport } from "./client-detail/useContactExport";
+import {
+  ClientProductsTab,
+  ManagePortalModal,
+} from "./client-detail/ClientDetailSections";
+import {
+  hasValue,
+  normalizeSearchText,
+} from "./client-detail/utils";
+import { notificationService } from "../../services/notificationService";
+
+// Modularized components
+import ClientEditModal from "./client-detail/ClientEditModal";
+import ContactEditModal from "./client-detail/ContactEditModal";
+import ContactBulkModal from "./client-detail/ContactBulkModal";
+import ContactFilterPicker from "./client-detail/ContactFilterPicker";
 
 const EXCEL_VIEW_STORAGE_KEY = "clients_excel_view_config";
 const CONTACTS_EXCEL_VIEW_STORAGE_KEY = "contacts_excel_view_config";
@@ -119,17 +108,15 @@ const CONTACT_FALLBACK_COLUMNS = [
   { name: "has_portal_access", label: "Acceso Portal", type: "tinyint" },
   { name: "is_active", label: "Activo", type: "tinyint" },
 ];
-const CONTACT_TEMPLATE_COLUMNS = [
-  "NOMBRE COMPLETO",
-  "CORREO ELECTRONICO",
-  "PUESTO",
-  "TELEFONO",
-];
 const CLIENT_DETAIL_HIDDEN_FIELDS = new Set([
   "id",
   "created_at",
   "updated_at",
   "created_by_user_id",
+  "address",
+  "direccion",
+  "has_client_portal_access",
+  "is_active",
   "portal_password_hash",
 ]);
 const CLIENT_DETAIL_FULL_WIDTH_FIELDS = new Set([
@@ -138,15 +125,6 @@ const CLIENT_DETAIL_FULL_WIDTH_FIELDS = new Set([
   "address",
   "direccion",
 ]);
-
-function getClientFieldInputType(fieldName) {
-  const key = String(fieldName || "").toLowerCase();
-  if (key.includes("email") || key.includes("correo")) return "email";
-  if (key.includes("tel") || key.includes("phone") || key.includes("celular")) {
-    return "tel";
-  }
-  return "text";
-}
 
 function isClientFieldFullWidth(fieldName) {
   const key = String(fieldName || "").toLowerCase();
@@ -157,31 +135,17 @@ function isClientFieldFullWidth(fieldName) {
   );
 }
 
+function getClientFieldInputType(fieldName) {
+  const key = String(fieldName || "").toLowerCase();
+  if (key.includes("email") || key.includes("correo")) return "email";
+  if (key.includes("tel") || key.includes("phone") || key.includes("celular")) {
+    return "tel";
+  }
+  return "text";
+}
+
 function isClientFieldReadOnly(fieldName) {
   return String(fieldName || "").toLowerCase() === "rfc";
-}
-
-function normalizeSearchText(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
-function normalizeExcelHeader(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function hasValue(value) {
-  return value !== null && value !== undefined && String(value).trim() !== "";
 }
 
 function tokenizeFieldTerms(value) {
@@ -247,1356 +211,6 @@ function getContactFieldInputType(fieldName) {
   return "text";
 }
 
-const CATALOG = [
-  {
-    category: "Contabilidad y Finanzas",
-    items: [
-      {
-        name: "CONTPAQi Contabilidad (Desktop)",
-        description:
-          "El sistema estándar para contadores que integra la gestión de CFDI y generación de pólizas.",
-      },
-      {
-        name: "CONTPAQi Contabiliza (Nube)",
-        description:
-          "Versión 100% web que permite llevar la contabilidad desde cualquier lugar, ideal para despachos modernos.",
-      },
-      {
-        name: "CONTPAQi Bancos (Desktop)",
-        description:
-          "Controla tesorería, flujo de efectivo y conciliaciones bancarias.",
-      },
-      {
-        name: "CONTPAQi Analiza (Nube)",
-        description:
-          "Herramienta de auditoría para validar y confrontar datos fiscales directamente con el SAT.",
-      },
-    ],
-  },
-  {
-    category: "Nóminas y Recursos Humanos",
-    items: [
-      {
-        name: "CONTPAQi Nóminas (Desktop)",
-        description:
-          "Software robusto para el cálculo masivo de sueldos, IMSS, ISR y timbrado de recibos (actualizado para 2026).",
-      },
-      {
-        name: "CONTPAQi Personia (Nube)",
-        description:
-          "Gestión de nómina en la nube para empresas que buscan movilidad y simplicidad.",
-      },
-      {
-        name: "CONTPAQi Evalúa 035",
-        description:
-          "Ayuda a cumplir con la NOM-035 (riesgos psicosociales) mediante encuestas y reportes.",
-      },
-      {
-        name: "CONTPAQi Colabora",
-        description:
-          "Plataforma de comunicación entre la empresa y sus empleados para entrega de recibos y avisos.",
-      },
-    ],
-  },
-  {
-    category: "Comercial y Ventas",
-    items: [
-      {
-        name: "CONTPAQi Comercial (Start, Pro y Premium)",
-        description:
-          "Niveles de software que van desde lo básico para emprendedores hasta soluciones complejas de manufactura e inventarios.",
-      },
-      {
-        name: "CONTPAQi Factura Electrónica",
-        description:
-          "Especializado en empresas de servicios que solo requieren emisión de comprobantes y cuentas por cobrar.",
-      },
-      {
-        name: "CONTPAQi Vende (Nube)",
-        description:
-          "Facturación rápida y sencilla desde el navegador, enfocada en microempresas y freelancers.",
-      },
-      {
-        name: "CONTPAQi Cobra",
-        description:
-          "Gestión de cobranza automatizada para mejorar el flujo de efectivo.",
-      },
-    ],
-  },
-  {
-    category: "Herramientas de Productividad y Nube",
-    items: [
-      {
-        name: "CONTPAQi XML en Línea+",
-        description: "Descarga masiva de facturas desde el portal del SAT.",
-      },
-      {
-        name: "CONTPAQi Respaldos",
-        description:
-          "Servicio para resguardar la información de tus sistemas de escritorio de forma segura en la nube.",
-      },
-      {
-        name: "CONTPAQi Escritorio Virtual",
-        description:
-          "Permite subir tus sistemas tradicionales (Desktop) a un servidor en la nube para acceder a ellos vía remota.",
-      },
-      {
-        name: "CONTPAQi Viáticos",
-        description: "Control y comprobación de gastos de viaje y caja chica.",
-      },
-    ],
-  },
-];
-
-const ManagePortalModal = ({ contact, onClose }) => {
-  const [access, setAccess] = useState(contact.has_portal_access);
-  const [saving, setSaving] = useState(false);
-  // Password state removed as it is auto-generated
-
-  const generatePassword = () => {
-    // Formato: 20240131 + 6 caracteres aleatorios (ej. 20240131ABC123)
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const random = Math.random().toString(36).slice(-6).toUpperCase();
-    return `${date}${random}`;
-  };
-
-  const handleSaveAccess = async () => {
-    if (saving) return;
-    setSaving(true);
-
-    try {
-      const newAccess = !access;
-      let generatedPass = undefined;
-
-      if (newAccess) {
-        generatedPass = generatePassword();
-      }
-
-      await updateContactApi(contact.id, {
-        has_portal_access: newAccess,
-        portal_password: generatedPass,
-      });
-
-      if (newAccess) {
-        Swal.fire({
-          icon: "success",
-          title: "Acceso habilitado",
-          text: `${contact.email || "su dirección"} ya tiene acceso al portal.`,
-          timer: 1500,
-          showConfirmButton: false,
-        });
-      } else {
-        Swal.fire({
-          icon: "success",
-          title: "Acceso revocado",
-          text: "El acceso al portal fue revocado correctamente.",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-      }
-      setAccess(newAccess);
-      setSaving(false);
-      onClose(true);
-      return;
-    } catch (e) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: e.message,
-        confirmButtonColor: "#2277B4",
-      });
-      setSaving(false);
-    }
-  };
-
-  return createPortal(
-    <div
-      style={{ zIndex: 9999 }}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
-        {/* Header del modal */}
-        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-[#1a2b4c]">
-          <div>
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              Portal del Contacto
-            </h2>
-            <div className="text-sm text-zinc-300 mt-1">
-              {" "}
-              <span className="text-white font-medium">
-                {contact.full_name}
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={() => onClose(false)}
-            className="size-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors">
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Body del modal */}
-        <div className="p-6 space-y-6 bg-zinc-50/50">
-          <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-sm relative overflow-hidden">
-            {/* Decoration */}
-            <div className="absolute top-0 right-0 size-32 bg-[#2277B4]/10 blur-2xl -translate-y-1/2 translate-x-1/2 rounded-full"></div>
-
-            <h3 className="font-semibold text-[#1a2b4c] mb-6 flex items-center gap-2 relative z-10">
-              <span className="text-lg text-[#2277B4]">
-                <Lock size={20} />
-              </span>{" "}
-              Credenciales de Acceso
-            </h3>
-
-            <div className="space-y-6 relative z-10">
-              <p className="text-sm text-zinc-600">
-                Al habilitar el acceso, se generará una{" "}
-                <strong>nueva contraseña automática</strong> y se enviará por
-                correo electrónico al contacto.
-              </p>
-
-              <button
-                onClick={handleSaveAccess}
-                disabled={saving}
-                className={`w-full justify-center text-white shadow-lg py-3 rounded-xl font-bold mt-4 border-0 ${saving ? "opacity-70 cursor-not-allowed" : ""} ${access ? "bg-red-600 hover:bg-red-700 shadow-red-200" : "bg-[#2277B4] hover:bg-[#125280] shadow-[#2277B450]"}`}>
-                {saving ?
-                  "Procesando…"
-                : access ?
-                  "Revocar acceso al portal"
-                : "Habilitar acceso al portal"}
-              </button>
-            </div>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-sm relative overflow-hidden">
-            <h3 className="font-semibold text-[#1a2b4c] mb-2 flex items-center gap-2 text-sm">
-              <span className="text-lg text-[#2277B4]">
-                <Tag size={20} />
-              </span>{" "}
-              Enviar Oferta Rápida a: {contact.full_name}
-            </h3>
-            <p className="text-xs text-zinc-500 mb-4">
-              Notificar al contacto sobre una promoción especial.
-            </p>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Ej. Descuento del 10% en renovación"
-                className="flex-1 px-3 py-2 rounded-lg text-sm border border-zinc-300 bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] transition-all placeholder:text-zinc-400 text-zinc-800"
-              />
-              <button className="px-4 py-2 rounded-lg bg-white border border-zinc-300 hover:bg-zinc-50 text-zinc-700 text-xs font-bold transition-colors shadow-sm">
-                Enviar
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>,
-    document.body,
-  );
-};
-
-// Componente para gestionar servicios activos del cliente
-const ServicesSection = ({ clientId, contacts = [], productsList = [] }) => {
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [serviceForm, setServiceForm] = useState({
-    contact_id: "",
-    product_id: "",
-    license_key: "",
-    expiration_date: "",
-  });
-
-  const loadServices = () => {
-    setLoading(true);
-    listClientActiveServicesApi(clientId)
-      .then((res) => {
-        setServices(res);
-        setLoading(false);
-      })
-      .catch((e) => {
-        console.error(e);
-        setLoading(false);
-      });
-  };
-
-  useEffect(() => {
-    loadServices();
-  }, [clientId]);
-
-  const handleAddService = async (e) => {
-    e.preventDefault();
-    if (
-      !serviceForm.contact_id ||
-      !serviceForm.product_id ||
-      !serviceForm.expiration_date
-    ) {
-      alert("Por favor completa los campos requeridos");
-      return;
-    }
-    try {
-      await createContactProductApi({
-        contact_id: serviceForm.contact_id,
-        product_id: serviceForm.product_id,
-        license_key: serviceForm.license_key || null,
-        expiration_date: serviceForm.expiration_date,
-        start_date: new Date().toISOString().split("T")[0],
-      });
-      setServiceForm({
-        contact_id: "",
-        product_id: "",
-        license_key: "",
-        expiration_date: "",
-      });
-      loadServices();
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  const handleDeleteService = async (id) => {
-    if (!confirm("¿Eliminar este servicio?")) return;
-    try {
-      await deleteContactProductApi(id);
-      loadServices();
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  return (
-    <Card>
-      <h3 className="font-semibold text-light-text-primary dark:text-white mb-6 flex items-center gap-2">
-        <span className="text-accent-400">
-          <Tag size={20} />
-        </span>{" "}
-        Servicios Activos
-      </h3>
-
-      {/* Formulario para agregar servicio */}
-      <form
-        onSubmit={handleAddService}
-        className="mb-6 p-4 rounded-xl bg-zinc-50 border border-zinc-200">
-        <h4 className="text-sm font-semibold text-zinc-700 mb-3 flex items-center gap-2">
-          <UserPlus size={16} /> Asignar Nuevo Servicio
-        </h4>
-        <div className="grid grid-cols-12 gap-3">
-          <div className="col-span-3">
-            <label className="text-xs text-zinc-500 mb-1 block">
-              Contacto *
-            </label>
-            <select
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              value={serviceForm.contact_id}
-              onChange={(e) =>
-                setServiceForm({ ...serviceForm, contact_id: e.target.value })
-              }
-              required>
-              <option value="">Seleccionar...</option>
-              {contacts.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.full_name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="col-span-3">
-            <label className="text-xs text-zinc-500 mb-1 block">
-              Producto *
-            </label>
-            <select
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              value={serviceForm.product_id}
-              onChange={(e) =>
-                setServiceForm({ ...serviceForm, product_id: e.target.value })
-              }
-              required>
-              <option value="">Seleccionar...</option>
-              {productsList.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="col-span-2">
-            <label className="text-xs text-zinc-500 mb-1 block">
-              Licencia / Serial
-            </label>
-            <input
-              type="text"
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              placeholder="Opcional"
-              value={serviceForm.license_key}
-              onChange={(e) =>
-                setServiceForm({ ...serviceForm, license_key: e.target.value })
-              }
-            />
-          </div>
-          <div className="col-span-2">
-            <label className="text-xs text-zinc-500 mb-1 block">
-              Vencimiento *
-            </label>
-            <input
-              type="date"
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              value={serviceForm.expiration_date}
-              onChange={(e) =>
-                setServiceForm({
-                  ...serviceForm,
-                  expiration_date: e.target.value,
-                })
-              }
-              required
-            />
-          </div>
-          <div className="col-span-2 flex items-end">
-            <button
-              type="submit"
-              className="w-full px-4 py-2 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors text-sm">
-              Asignar
-            </button>
-          </div>
-        </div>
-      </form>
-
-      {loading ?
-        <div className="text-center py-8 text-zinc-500">
-          Cargando servicios...
-        </div>
-      : <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-zinc-50 border-b border-zinc-200">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
-                  Producto
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
-                  Contacto
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
-                  Licencia
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
-                  Vence
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
-                  Estado
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {services.map((s) => (
-                <tr
-                  key={s.id}
-                  className="hover:bg-blue-50/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-zinc-800">
-                    {s.product.name}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-600">{s.contact_name}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-zinc-500">
-                    {s.license_key || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-600">
-                    {new Date(s.expiration_date).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-bold ${
-                        s.status === "ACTIVE" ?
-                          "bg-emerald-100 text-emerald-600"
-                        : s.status === "CANCELLED" ?
-                          "bg-zinc-100 text-zinc-600"
-                        : s.status === "EXPIRING_SOON" ?
-                          "bg-amber-100 text-amber-600"
-                        : "bg-red-100 text-red-500"
-                      }`}>
-                      {s.status === "ACTIVE" ?
-                        "Activo"
-                      : s.status === "CANCELLED" ?
-                        "Inactivo"
-                      : s.status === "EXPIRING_SOON" ?
-                        "Por vencer"
-                      : "Vencido"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => handleDeleteService(s.id)}
-                      className="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1"
-                      title="Eliminar">
-                      <Trash2 size={16} /> Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {services.length === 0 && (
-            <div className="py-12 text-center">
-              <div className="flex justify-center mb-2 opacity-20">
-                <Tag size={36} />
-              </div>
-              <p className="text-sm text-zinc-500">
-                No hay servicios asignados a este cliente.
-              </p>
-            </div>
-          )}
-        </div>
-      }
-    </Card>
-  );
-};
-
-const ClientProductsTab = ({ clientId, contacts, productsList }) => {
-  const [products, setProducts] = useState([]);
-  const [isCreating, setIsCreating] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    category: "Licencia de Software",
-    price: 0,
-    users_count: 0,
-    description: "",
-  });
-
-  const load = () => {
-    setLoading(true);
-    listProductsApi(clientId)
-      .then((res) => {
-        // Filtrar para mostrar solo los productos EXCLUSIVOS de este cliente
-        setProducts(res.filter((p) => p.client_id == clientId));
-        setLoading(false);
-      })
-      .catch((e) => {
-        console.error(e);
-        setLoading(false);
-      });
-  };
-
-  useEffect(() => {
-    if (clientId) load();
-  }, [clientId]);
-
-  const handleTemplateSelect = (e) => {
-    const val = e.target.value;
-    if (!val) return;
-    const [catIdx, itemIdx] = val.split("-");
-    const item = CATALOG[catIdx].items[itemIdx];
-    const category = CATALOG[catIdx].category;
-
-    if (item) {
-      setNewProduct({
-        ...newProduct,
-        name: item.name,
-        category: category,
-        price: 0,
-        description: item.description || "",
-        users_count: 0,
-      });
-    }
-  };
-
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    try {
-      await createProductApi({ ...newProduct, client_id: clientId });
-      setIsCreating(false);
-      setNewProduct({
-        name: "",
-        category: "Licencia de Software",
-        price: 0,
-        users_count: 0,
-        description: "",
-      });
-      load();
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm("¿Eliminar producto?")) return;
-    try {
-      await deleteProductApi(id);
-      load();
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <Card>
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="font-semibold text-light-text-primary dark:text-white flex items-center gap-2">
-            <span className="text-light-accent dark:text-primary-400">
-              <Package size={20} />
-            </span>{" "}
-            Productos Exclusivos
-          </h3>
-          <Button size="sm" onClick={() => setIsCreating(!isCreating)}>
-            + Nuevo Producto
-          </Button>
-        </div>
-
-        {isCreating && (
-          <form onSubmit={handleCreate} className="mb-6 animate-fade-in">
-            <div className="p-6 rounded-xl glass-panel shadow-xl">
-              <h4 className="flex items-center gap-2 font-bold text-light-text-primary dark:text-white mb-4">
-                <span className="text-lg">
-                  <Sparkles size={20} />
-                </span>{" "}
-                Nuevo Producto
-                <span className="text-xs font-normal text-light-text-secondary dark:text-zinc-400 ml-2">
-                  Registra un nuevo item en el inventario/catálogo.
-                </span>
-              </h4>
-
-              {/* Rapid Catalog */}
-              <div className="mb-6">
-                <label className="text-xs font-bold text-light-accent dark:text-primary-400 uppercase mb-2 flex items-center gap-1">
-                  <span className="text-lg">
-                    <Library size={20} />
-                  </span>{" "}
-                  Catálogo Rápido
-                </label>
-                <div className="relative">
-                  <select
-                    className="w-full pl-4 pr-10 py-3 rounded-xl bg-light-bg dark:bg-zinc-950/50 border border-light-border dark:border-white/10 text-light-text-primary dark:text-zinc-300 focus:ring-1 focus:ring-light-accent dark:focus:ring-primary-500 outline-none appearance-none transition-all cursor-pointer hover:bg-light-bg/80 dark:hover:bg-zinc-900"
-                    onChange={handleTemplateSelect}
-                    defaultValue="">
-                    <option value="">-- Seleccionar plantilla --</option>
-                    {CATALOG.map((cat, catIdx) => (
-                      <optgroup
-                        key={cat.category}
-                        label={cat.category}
-                        className="bg-light-card dark:bg-zinc-900 text-light-text-primary dark:text-zinc-300 font-semibold">
-                        {cat.items.map((item, itemIdx) => (
-                          <option
-                            key={item.name}
-                            value={`${catIdx}-${itemIdx}`}
-                            className="bg-light-bg dark:bg-zinc-800 text-light-text-secondary dark:text-zinc-400 font-normal">
-                            {item.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-light-text-secondary dark:text-zinc-500">
-                    <ChevronDown size={16} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <Input
-                  label="NOMBRE DEL PRODUCTO"
-                  placeholder="Ej. Contabilidad 2024"
-                  value={newProduct.name}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, name: e.target.value })
-                  }
-                  required
-                />
-                <Input
-                  label="CATEGORÍA"
-                  placeholder="Ej. Licencias"
-                  value={newProduct.category}
-                  onChange={(e) =>
-                    setNewProduct({ ...newProduct, category: e.target.value })
-                  }
-                  required
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Input
-                      label="PRECIO (MXN)"
-                      type="number"
-                      placeholder="0.00"
-                      value={newProduct.price}
-                      onChange={(e) =>
-                        setNewProduct({ ...newProduct, price: e.target.value })
-                      }
-                      required
-                    />
-                    {newProduct.price && !isNaN(newProduct.price) && (
-                      <div className="text-[10px] text-light-accent dark:text-primary-400 mt-1 font-mono text-right">
-                        + IVA: $
-                        {(parseFloat(newProduct.price) * 0.16).toFixed(2)}
-                      </div>
-                    )}
-                  </div>
-                  <Input
-                    label="USUARIOS (OP)"
-                    type="number"
-                    placeholder="1"
-                    value={newProduct.users_count}
-                    onChange={(e) =>
-                      setNewProduct({
-                        ...newProduct,
-                        users_count: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-light-text-secondary dark:text-zinc-400">
-                    Descripción
-                  </label>
-                  <textarea
-                    className="w-full bg-light-bg/50 dark:bg-zinc-950/30 border border-light-border dark:border-white/10 rounded-lg p-3 text-sm text-light-text-primary dark:text-zinc-200 outline-none focus:ring-1 focus:ring-light-accent dark:focus:ring-primary-500 min-h-[100px]"
-                    placeholder="Detalles técnicos…"
-                    value={newProduct.description}
-                    onChange={(e) =>
-                      setNewProduct({
-                        ...newProduct,
-                        description: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-light-border dark:border-white/5">
-                <Button
-                  type="submit"
-                  className="px-8 justify-center bg-light-accent dark:bg-primary-600 hover:bg-light-accent/90 dark:hover:bg-primary-500">
-                  Registrar Producto
-                </Button>
-              </div>
-            </div>
-          </form>
-        )}
-
-        <div className="space-y-2">
-          {products.map((p) => (
-            <div
-              key={p.id}
-              className="flex justify-between items-center p-3 rounded-lg glass-panel hover:border-light-accent/30 dark:hover:border-white/20 transition-all">
-              <div>
-                <div className="font-bold text-light-text-primary dark:text-zinc-200">
-                  {p.name}
-                </div>
-                <div className="text-xs text-light-text-secondary dark:text-zinc-400">
-                  {p.category} • $
-                  {(parseFloat(p.current_price) || 0).toLocaleString("es-MX", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Link
-                  to={`/productos/${p.id}`}
-                  className="text-xs bg-light-bg dark:bg-zinc-800 hover:bg-light-bg/80 dark:hover:bg-zinc-700 text-light-accent dark:text-primary-400 px-3 py-1.5 rounded-lg transition-colors border border-light-border dark:border-white/5">
-                  Ver detalles
-                </Link>
-                <button
-                  onClick={() => handleDelete(p.id)}
-                  className="text-light-error dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 px-2"
-                  title="Eliminar producto">
-                  🗑️
-                </button>
-              </div>
-            </div>
-          ))}
-          {products.length === 0 && !loading && (
-            <p className="text-light-text-secondary dark:text-zinc-500 text-sm text-center py-4">
-              No hay productos exclusivos registrados.
-            </p>
-          )}
-        </div>
-      </Card>
-
-      {/* Sección de Servicios Activos */}
-      <ServicesSection
-        clientId={clientId}
-        contacts={contacts}
-        productsList={productsList}
-      />
-    </div>
-  );
-};
-
-const STATUS_LABELS = {
-  ACTIVE: "ACTIVO",
-  CANCELLED: "INACTIVO",
-  EXPIRING_SOON: "Por vencer",
-  EXPIRED: "EXPIRADO",
-};
-
-const STATUS_STYLES = {
-  ACTIVE: "text-[#1B4733]",
-  CANCELLED: "text-zinc-600",
-  EXPIRING_SOON: "text-amber-700",
-  EXPIRED: "text-red-700",
-};
-
-const POLICIES_COLUMNS = [
-  {
-    accessorKey: "product_name",
-    header: "Póliza o servicio",
-    cell: ({ getValue }) => (
-      <span className="font-medium text-light-text-primary hover:text-[#2277B4]">
-        {getValue()}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "contact_name",
-    header: "Contacto Asignado",
-    cell: ({ getValue }) => (
-      <span className="text-light-text-secondary">{getValue() || "—"}</span>
-    ),
-  },
-  {
-    accessorKey: "license_key",
-    header: "Folio",
-    cell: ({ getValue }) => (
-      <span className="font-mono text-xs text-light-text-secondary">
-        {getValue() || "—"}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "expiration_date",
-    header: "Vence",
-    cell: ({ getValue }) => (
-      <span className="text-light-text-secondary">
-        {getValue() ? new Date(getValue()).toLocaleDateString() : "—"}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "status",
-    header: "Estado",
-    cell: ({ getValue }) => {
-      const v = getValue();
-      return (
-        <span
-          className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-            STATUS_STYLES[v] || "bg-zinc-100 text-zinc-600"
-          }`}>
-          {STATUS_LABELS[v] || v}
-        </span>
-      );
-    },
-    filterFn: (row, columnId, filterValue) =>
-      !filterValue ||
-      row.getValue(columnId)?.toLowerCase().includes(filterValue.toLowerCase()),
-  },
-];
-
-const ClientPoliciesTab = ({ clientId }) => {
-  const [services, setServices] = useState([]);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [sorting, setSorting] = useState([]);
-  const [deletingServiceId, setDeletingServiceId] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    status: "",
-    license_key: "",
-  });
-  const [activePolicyFilterPickerField, setActivePolicyFilterPickerField] =
-    useState(null);
-  const [policyFilterPickerSearch, setPolicyFilterPickerSearch] = useState("");
-
-  const loadServices = () => {
-    listClientActiveServicesApi(clientId)
-      .then((data) =>
-        setServices(
-          data.map((s) => ({
-            ...s,
-            product_name: s.product?.name || "",
-          })),
-        ),
-      )
-      .catch(console.error);
-  };
-
-  useEffect(() => {
-    loadServices();
-  }, [clientId]);
-
-  const handleDeleteService = async (service) => {
-    const result = await Swal.fire({
-      title: "¿Eliminar póliza o servicio?",
-      text: "Esta acción desasignará el registro del cliente.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#dc2626",
-      cancelButtonColor: "#2277B4",
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-      setDeletingServiceId(service.id);
-      await deleteContactProductApi(service.id);
-      await Swal.fire({
-        icon: "success",
-        title: "Eliminado",
-        text: "La póliza o servicio fue eliminado correctamente.",
-        timer: 1300,
-        showConfirmButton: false,
-      });
-      loadServices();
-    } catch (e) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: e.message || "No se pudo eliminar el registro.",
-        confirmButtonColor: "#2277B4",
-      });
-    } finally {
-      setDeletingServiceId(null);
-    }
-  };
-
-  const activeFilterCount = Object.values(filters).filter(
-    (v) => v.trim() !== "",
-  ).length;
-  const canClearFilters = activeFilterCount > 0 || globalFilter.trim() !== "";
-
-  const policyFilterFieldLabels = {
-    status: "Estado",
-    license_key: "Folio",
-  };
-
-  const openPolicyFilterPicker = (fieldName) => {
-    setActivePolicyFilterPickerField(fieldName);
-    setPolicyFilterPickerSearch("");
-  };
-
-  const closePolicyFilterPicker = () => {
-    setActivePolicyFilterPickerField(null);
-    setPolicyFilterPickerSearch("");
-  };
-
-  const applyPolicyFilterValue = (value) => {
-    if (!activePolicyFilterPickerField) return;
-
-    setFilters((prev) => ({
-      ...prev,
-      [activePolicyFilterPickerField]: value,
-    }));
-    closePolicyFilterPicker();
-  };
-
-  useEffect(() => {
-    if (!showFilters) {
-      closePolicyFilterPicker();
-    }
-  }, [showFilters]);
-
-  const policyFilterPickerOptions = useMemo(() => {
-    if (!activePolicyFilterPickerField) return [];
-
-    const uniqueValues = new Map();
-
-    services.forEach((service) => {
-      let value = "";
-
-      if (activePolicyFilterPickerField === "license_key") {
-        value = service.license_key || "";
-      } else if (activePolicyFilterPickerField === "status") {
-        value = STATUS_LABELS[service.status] || service.status || "";
-      }
-
-      const normalized = normalizeSearchText(value);
-      if (!normalized || uniqueValues.has(normalized)) return;
-      uniqueValues.set(normalized, value);
-    });
-
-    return Array.from(uniqueValues.values()).sort((a, b) =>
-      a.localeCompare(b, "es", { sensitivity: "base" }),
-    );
-  }, [services, activePolicyFilterPickerField]);
-
-  const visiblePolicyFilterPickerOptions = useMemo(() => {
-    const s = normalizeSearchText(policyFilterPickerSearch);
-    if (!s) return policyFilterPickerOptions;
-
-    return policyFilterPickerOptions.filter((value) =>
-      normalizeSearchText(value).includes(s),
-    );
-  }, [policyFilterPickerSearch, policyFilterPickerOptions]);
-
-  const filteredServices = useMemo(() => {
-    const s = normalizeSearchText(globalFilter);
-    const hasFieldFilters = Object.values(filters).some((v) => v.trim() !== "");
-
-    if (!s && !hasFieldFilters) return services;
-
-    return services.filter((service) => {
-      const statusLabel = STATUS_LABELS[service.status] || service.status || "";
-      const expirationDate =
-        service.expiration_date ?
-          new Date(service.expiration_date).toLocaleDateString("es-MX")
-        : "";
-
-      const haystack = normalizeSearchText(
-        [
-          service.product_name,
-          service.contact_name,
-          service.license_key,
-          service.status,
-          statusLabel,
-          expirationDate,
-        ].join(" "),
-      );
-
-      const matchGlobal = !s || haystack.includes(s);
-
-      const matchFilters =
-        (!filters.license_key ||
-          normalizeSearchText(service.license_key).includes(
-            normalizeSearchText(filters.license_key),
-          )) &&
-        (!filters.status ||
-          normalizeSearchText(statusLabel) ===
-            normalizeSearchText(filters.status));
-
-      return matchGlobal && matchFilters;
-    });
-  }, [services, globalFilter, filters]);
-
-  const clearFilters = () => {
-    setGlobalFilter("");
-    setFilters({
-      status: "",
-      license_key: "",
-    });
-    closePolicyFilterPicker();
-  };
-
-  const policyColumns = [
-    ...POLICIES_COLUMNS,
-    {
-      id: "actions",
-      header: "Acciones",
-      enableSorting: false,
-      cell: ({ row }) => {
-        const service = row.original;
-        const isDeleting = deletingServiceId === service.id;
-
-        return (
-          <button
-            onClick={() => handleDeleteService(service)}
-            disabled={isDeleting}
-            className="inline-flex items-center justify-center size-8 text-red-700 transition-transform duration-150 hover:scale-75 disabled:opacity-60 disabled:cursor-not-allowed"
-            title={isDeleting ? "Eliminando…" : "Eliminar póliza o servicio"}>
-            <Trash2 size={13} className={isDeleting ? "animate-pulse" : ""} />
-          </button>
-        );
-      },
-    },
-  ];
-
-  const table = useReactTable({
-    data: filteredServices,
-    columns: policyColumns,
-    state: { sorting },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 10 } },
-  });
-
-  const { pageIndex, pageSize } = table.getState().pagination;
-  const totalRows = filteredServices.length;
-  const from = totalRows === 0 ? 0 : pageIndex * pageSize + 1;
-  const to = Math.min((pageIndex + 1) * pageSize, totalRows);
-
-  return (
-    <Card className="animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-        <h3 className="font-semibold text-light-text-primary flex items-center gap-2 flex-1">
-          <FileText size={18} /> Pólizas y Servicios
-          {totalRows !== services.length && (
-            <span className="ml-2 text-xs font-normal text-light-text-secondary">
-              ({totalRows} de {services.length})
-            </span>
-          )}
-        </h3>
-
-        <div className="flex items-center gap-2 min-h-[32px]">
-          {canClearFilters && (
-            <button
-              onClick={clearFilters}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-medium text-red-600 border border-red-100 hover:bg-red-50 transition-colors"
-              title="Limpiar filtros">
-              <X size={14} /> Limpiar
-            </button>
-          )}
-
-          {[
-            { id: "status", label: "ESTADO" },
-            { id: "license_key", label: "FOLIO" },
-          ].map((button) => {
-            const selectedValue = String(filters[button.id] || "");
-
-            return (
-              <button
-                key={button.id}
-                onClick={() => openPolicyFilterPicker(button.id)}
-                tabIndex={showFilters ? 0 : -1}
-                className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] border transition-all whitespace-nowrap ${
-                  selectedValue ?
-                    "bg-[#2277B4] text-white border-[#2277B4]"
-                  : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
-                } ${
-                  showFilters ?
-                    "opacity-100 translate-y-0"
-                  : "opacity-0 -translate-y-1 pointer-events-none"
-                }`}>
-                <span className="uppercase font-bold tracking-wide">
-                  {button.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Buscador global */}
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search
-              size={14}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
-            />
-            <input
-              type="text"
-              placeholder="Buscar…"
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              className="pl-3 pr-8 py-1.5 text-sm rounded-lg border border-light-border bg-white focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-44 text-black"
-            />
-          </div>
-          <button
-            onClick={() => setShowFilters((p) => !p)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
-              showFilters || activeFilterCount > 0 ?
-                "bg-[#2277B4] text-white border-[#2277B4]"
-              : "bg-white text-light-text-secondary border-light-border hover:bg-zinc-50"
-            }`}>
-            <Filter size={13} />
-            Filtros
-            {activeFilterCount > 0 && (
-              <span className="ml-1 bg-white text-[#2277B4] rounded-full px-1.5 py-0 text-[10px] font-bold">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-          <span className="text-xs text-light-text-secondary whitespace-nowrap">
-            Pág. {pageIndex + 1} de {table.getPageCount() || 1}
-          </span>
-        </div>
-      </div>
-
-      {activePolicyFilterPickerField &&
-        showFilters &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-[9999] bg-black/45 flex items-center justify-center p-4"
-            onClick={closePolicyFilterPicker}>
-            <div
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-              onClick={(e) => e.stopPropagation()}>
-              <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
-                <div>
-                  <h3 className="text-white font-semibold text-base uppercase">
-                    FILTRAR POR{" "}
-                    {policyFilterFieldLabels[activePolicyFilterPickerField]}
-                  </h3>
-                  <p className="text-[11px] text-zinc-300 mt-1">
-                    Selecciona o busca un valor para filtrar 
-                  </p>
-                </div>
-                <button
-                  onClick={closePolicyFilterPicker}
-                  className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
-                  <X size={16} />
-                </button>
-              </div>
-
-              <div className="p-4 space-y-3">
-                <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
-                  <Search size={15} className="text-zinc-500" />
-                  <input
-                    value={policyFilterPickerSearch}
-                    onChange={(e) =>
-                      setPolicyFilterPickerSearch(e.target.value)
-                    }
-                    placeholder="Buscar valor…"
-                    className="w-full bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
-                  />
-                </div>
-
-                <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 divide-y divide-zinc-100">
-                  {visiblePolicyFilterPickerOptions.length > 0 ?
-                    visiblePolicyFilterPickerOptions.map((value) => {
-                      const isSelected =
-                        normalizeSearchText(
-                          filters[activePolicyFilterPickerField],
-                        ) === normalizeSearchText(value);
-
-                      return (
-                        <button
-                          key={`${activePolicyFilterPickerField}_${value}`}
-                          onClick={() => applyPolicyFilterValue(value)}
-                          className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                            isSelected ?
-                              "bg-[#2277B4]/10 text-[#125280] font-semibold"
-                            : "text-zinc-700 hover:bg-zinc-50"
-                          }`}>
-                          {value}
-                        </button>
-                      );
-                    })
-                  : <div className="px-3 py-4 text-sm text-zinc-500 text-center">
-                      No hay valores para mostrar.
-                    </div>
-                  }
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
-
-      {/* Tabla */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs text-light-text-secondary uppercase bg-[#F2F5F9]">
-            {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id}>
-                {hg.headers.map((header, i) => {
-                  const canSort = header.column.getCanSort();
-
-                  return (
-                    <th
-                      key={header.id}
-                      onClick={
-                        canSort ?
-                          header.column.getToggleSortingHandler()
-                        : undefined
-                      }
-                      className={`px-4 py-3 select-none whitespace-nowrap transition-colors text-[#2277B4] ${
-                        canSort ? "cursor-pointer hover:bg-[#e8edf3]" : ""
-                      } ${i === 0 ? "rounded-l-lg" : ""} ${
-                        i === hg.headers.length - 1 ? "rounded-r-lg" : ""
-                      }`}>
-                      <span className="flex items-center gap-1">
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                        {canSort && header.column.getIsSorted() === "asc" && (
-                          <ChevronUp size={12} />
-                        )}
-                        {canSort && header.column.getIsSorted() === "desc" && (
-                          <ChevronDown size={12} />
-                        )}
-                        {canSort && !header.column.getIsSorted() && (
-                          <span className="opacity-30 text-[10px]">⇅</span>
-                        )}
-                      </span>
-                    </th>
-                  );
-                })}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-light-border">
-            {table.getRowModel().rows.length > 0 ?
-              table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-zinc-50 transition-colors">
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            : <tr>
-                <td
-                  colSpan={policyColumns.length}
-                  className="text-center py-10 text-light-text-secondary text-sm">
-                  {services.length === 0 ?
-                    "No hay servicios activos."
-                  : "Sin resultados para los filtros aplicados."}
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      {/* Paginación */}
-      <div className="flex items-center justify-between pt-4 border-t border-light-border mt-4 flex-wrap gap-2">
-        <div className="flex items-center gap-2 text-xs text-light-text-secondary">
-          <span>Mostrar</span>
-          <select
-            value={pageSize}
-            onChange={(e) => table.setPageSize(Number(e.target.value))}
-            className="text-xs border border-light-border rounded px-2 py-1 bg-white text-black">
-            {[10, 25, 50, 100].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-          <span className="hidden sm:inline">
-            {from}–{to} de {totalRows} registros
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-            className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
-            ««
-          </button>
-          <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
-            Anterior
-          </button>
-          <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
-            Siguiente
-          </button>
-          <button
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-            className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
-            »»
-          </button>
-        </div>
-      </div>
-    </Card>
-  );
-};
-
 export default function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -1659,292 +273,6 @@ export default function ClientDetail() {
   const [expandedContactRows, setExpandedContactRows] = useState({});
   const [showDisabled, setShowDisabled] = useState(false);
 
-  // Carga masiva de contactos
-  const [showBulkContactModal, setShowBulkContactModal] = useState(false);
-  const [bulkContactData, setBulkContactData] = useState([]);
-  const [bulkContactErrors, setBulkContactErrors] = useState([]);
-  const [bulkContactUploading, setBulkContactUploading] = useState(false);
-  const [bulkContactDriveImporting, setBulkContactDriveImporting] =
-    useState(false);
-  const [bulkContactDriveUrl, setBulkContactDriveUrl] = useState("");
-  const [bulkContactResult, setBulkContactResult] = useState(null);
-  const bulkContactFileRef = useRef(null);
-
-  const CONTACT_COLUMN_MAP = {
-    nombre: "full_name",
-    "nombre completo": "full_name",
-    full_name: "full_name",
-    "full name": "full_name",
-    contacto: "full_name",
-    correo: "email",
-    email: "email",
-    "correo electronico": "email",
-    "correo principal": "email",
-    telefono: "phone",
-    tel: "phone",
-    phone: "phone",
-    celular: "phone",
-    puesto: "position_title",
-    position_title: "position_title",
-    cargo: "position_title",
-    posicion: "position_title",
-  };
-
-  const handleBulkContactFile = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setBulkContactResult(null);
-    setBulkContactErrors([]);
-
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      try {
-        const XLSX = await import("xlsx");
-        const wb = XLSX.read(evt.target.result, { type: "array" });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(ws, {
-          header: 1,
-          defval: "",
-          blankrows: false,
-        });
-
-        if (!rows.length) {
-          setBulkContactData([]);
-          setBulkContactErrors([
-            "El archivo está vacío o no contiene encabezados.",
-          ]);
-          return;
-        }
-
-        const [headerRow = [], ...sheetRows] = rows;
-        const normalizedHeaders = headerRow.map((header) =>
-          normalizeExcelHeader(header),
-        );
-        const mappedFields = normalizedHeaders.map(
-          (header) => CONTACT_COLUMN_MAP[header] || null,
-        );
-
-        if (!mappedFields.some(Boolean)) {
-          setBulkContactData([]);
-          setBulkContactErrors([
-            "No se reconocieron columnas válidas. Usa la plantilla 'Descargar plantilla'.",
-          ]);
-          return;
-        }
-
-        const missingTemplateHeaders = CONTACT_TEMPLATE_COLUMNS.filter(
-          (header) => !normalizedHeaders.includes(normalizeExcelHeader(header)),
-        );
-
-        const mapped = [];
-        sheetRows.forEach((row, idx) => {
-          const cells = Array.isArray(row) ? row : [];
-          const isEmptyRow = cells.every(
-            (cell) => String(cell ?? "").trim() === "",
-          );
-          if (isEmptyRow) return;
-
-          const mapped_row = {};
-          cells.forEach((value, columnIndex) => {
-            const field = mappedFields[columnIndex];
-            if (!field) return;
-
-            const parsedValue = String(value ?? "").trim();
-            if (parsedValue === "") return;
-
-            mapped_row[field] = parsedValue;
-          });
-
-          mapped_row._row = idx + 2;
-          mapped.push(mapped_row);
-        });
-
-        if (!mapped.length) {
-          setBulkContactData([]);
-          setBulkContactErrors([
-            "El archivo no contiene filas con datos para importar.",
-          ]);
-          return;
-        }
-
-        const errors = [];
-
-        if (missingTemplateHeaders.length) {
-          errors.push(
-            `Faltan columnas de la plantilla: ${missingTemplateHeaders.join(", ")}.`,
-          );
-        }
-
-        mapped.forEach((r) => {
-          if (!r.full_name) {
-            errors.push(`Fila ${r._row}: Falta "Nombre" (obligatorio).`);
-          }
-        });
-
-        const valid = mapped.filter((r) => r.full_name);
-
-        if (!valid.length) {
-          errors.push("No hay filas válidas para importar.");
-        }
-
-        setBulkContactData(valid);
-        setBulkContactErrors(errors);
-      } catch {
-        setBulkContactData([]);
-        setBulkContactErrors([
-          "No se pudo leer el archivo. Verifica que sea un Excel válido (.xlsx / .xls).",
-        ]);
-      }
-    };
-    reader.readAsArrayBuffer(file);
-    e.target.value = "";
-  };
-
-  const fireBulkContactModalAlert = (options) =>
-    Swal.fire({
-      ...options,
-      didOpen: () => {
-        const container = Swal.getContainer();
-        if (container) {
-          container.style.zIndex = "11000";
-        }
-
-        if (typeof options.didOpen === "function") {
-          options.didOpen();
-        }
-      },
-    });
-
-  const executeBulkContactUpload = async () => {
-    setBulkContactUploading(true);
-    setBulkContactResult(null);
-    try {
-      const inputs = bulkContactData.map(({ _row, ...rest }) => ({
-        client_id: id,
-        full_name: rest.full_name,
-        email: rest.email || null,
-        phone: rest.phone || null,
-        position_title: rest.position_title || null,
-      }));
-
-      // Enviar en lotes de 200 para evitar error 413
-      const CHUNK = 200;
-      let totalCreated = 0;
-      for (let i = 0; i < inputs.length; i += CHUNK) {
-        const chunk = inputs.slice(i, i + CHUNK);
-        const created = await bulkCreateContactsApi(chunk);
-        totalCreated += created.length;
-      }
-
-      setBulkContactResult({ success: true, count: totalCreated });
-      flushSync(() => {
-        setShowBulkContactModal(false);
-      });
-      await fireBulkContactModalAlert({
-        title: "Importacion completada",
-        text: `Se importaron ${totalCreated} contactos exitosamente.`,
-        icon: "success",
-        confirmButtonColor: "#2277B4",
-        timer: 2200,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        allowOutsideClick: false,
-      });
-      setBulkContactData([]);
-      await load();
-    } catch (err) {
-      setBulkContactResult({
-        success: false,
-        message: err.message || "Error en la carga masiva.",
-      });
-      fireBulkContactModalAlert({
-        title: "Error",
-        text: err.message || "Error en la carga masiva.",
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
-    } finally {
-      setBulkContactUploading(false);
-    }
-  };
-
-  const executeBulkContactDriveImport = async () => {
-    const fileUrl = bulkContactDriveUrl.trim();
-    if (!fileUrl) {
-      setBulkContactResult({
-        success: false,
-        message: "Debes ingresar la URL del archivo en Google Drive.",
-      });
-      fireBulkContactModalAlert({
-        title: "Falta la URL",
-        text: "Debes ingresar la URL del archivo en Google Drive.",
-        icon: "warning",
-        confirmButtonColor: "#2277B4",
-      });
-      return;
-    }
-
-    setBulkContactDriveImporting(true);
-    setBulkContactResult(null);
-    try {
-      const report = await importContactsFromDriveApi({
-        fileUrl,
-        clientId: id,
-      });
-
-      const mappedHeadersByColumn = report.mappedHeadersByColumn || {};
-      const mappedColumnNames = Object.keys(mappedHeadersByColumn);
-      if (mappedColumnNames.length) {
-        setContactColumnLabelOverrides(mappedHeadersByColumn);
-        setContactExcelViewColumns(mappedColumnNames);
-        localStorage.setItem(
-          CONTACTS_EXCEL_VIEW_STORAGE_KEY,
-          JSON.stringify({
-            columnLabelOverrides: mappedHeadersByColumn,
-            excelViewColumns: mappedColumnNames,
-          }),
-        );
-      }
-
-      setBulkContactResult({
-        success: true,
-        count: report.importedCount,
-        skippedCount: report.skippedCount,
-        details: report,
-      });
-      flushSync(() => {
-        setShowBulkContactModal(false);
-      });
-      await fireBulkContactModalAlert({
-        title: "Importacion completada",
-        text:
-          report.skippedCount > 0 ?
-            `Se importaron ${report.importedCount} contactos. Se omitieron ${report.skippedCount} filas.`
-          : `Se importaron ${report.importedCount} contactos exitosamente.`,
-        icon: "success",
-        confirmButtonColor: "#2277B4",
-        timer: 2200,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        allowOutsideClick: false,
-      });
-      await load();
-    } catch (err) {
-      setBulkContactResult({
-        success: false,
-        message: err.message || "Error importando archivo desde Drive.",
-      });
-      fireBulkContactModalAlert({
-        title: "Error",
-        text: err.message || "Error importando archivo desde Drive.",
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
-    } finally {
-      setBulkContactDriveImporting(false);
-    }
-  };
-
   const load = async () => {
     setError("");
     setLoading(true);
@@ -1966,7 +294,6 @@ export default function ClientDetail() {
           {
             ...c,
             ...dynamicClientRow,
-            // Keep canonical GraphQL id for route/actions and safe rendering.
             id: c?.id ?? dynamicClientRow?.id,
           }
         : c;
@@ -2021,7 +348,6 @@ export default function ClientDetail() {
           ciudad: mergedClient.ciudad || "",
         });
       }
-      // Obtener SOLO productos pertenecientes a ESTE cliente para el selector del modal
       listProductsApi(id)
         .then((all) => {
           setProductsList(all.filter((p) => p.client_id == id));
@@ -2033,6 +359,31 @@ export default function ClientDetail() {
       setLoading(false);
     }
   };
+
+  const {
+    showBulkContactModal,
+    setShowBulkContactModal,
+    bulkContactData,
+    bulkContactErrors,
+    bulkContactUploading,
+    bulkContactDriveImporting,
+    bulkContactDriveUrl,
+    setBulkContactDriveUrl,
+    bulkContactResult,
+    bulkContactFileRef,
+    openBulkContactModal,
+    handleBulkContactFile,
+    executeBulkContactUpload,
+    executeBulkContactDriveImport,
+  } = useContactBulkImport({
+    clientId: id,
+    onImported: load,
+    contactsExcelViewStorageKey: CONTACTS_EXCEL_VIEW_STORAGE_KEY,
+    onDriveMapping: ({ columnLabelOverrides, excelViewColumns }) => {
+      setContactColumnLabelOverrides(columnLabelOverrides);
+      setContactExcelViewColumns(excelViewColumns);
+    },
+  });
 
   useEffect(() => {
     load();
@@ -2148,7 +499,10 @@ export default function ClientDetail() {
 
   const orphanClientGeneralFieldName = useMemo(() => {
     const compactFields = clientGeneralFields.filter(
-      (field) => field?.name && field.name !== "business_name",
+      (field) =>
+        field?.name &&
+        field.name !== "business_name" &&
+        !isClientFieldFullWidth(field.name),
     );
 
     if (compactFields.length % 2 === 0) return null;
@@ -2277,7 +631,6 @@ export default function ClientDetail() {
     try {
       const payload = { ...clientForm };
 
-      // RFC is immutable from this form.
       if (Object.prototype.hasOwnProperty.call(payload, "rfc")) {
         payload.rfc = client?.rfc ?? payload.rfc;
       }
@@ -2285,8 +638,9 @@ export default function ClientDetail() {
       await updateClientDynamicApi(id, payload);
       setIsEditingClient(false);
       await load();
+      notificationService.success("¡Cliente actualizado!", "Los datos del cliente se guardaron correctamente.");
     } catch (e) {
-      alert(e.message);
+      notificationService.error("Error al actualizar", e.message);
     }
   };
 
@@ -2297,36 +651,21 @@ export default function ClientDetail() {
         `Este cliente tiene ${contactCount} contacto(s) asociado(s). Se eliminará "${client.business_name}" y todos sus datos.`
       : `Se eliminará el cliente "${client.business_name}".`;
 
-    const result = await Swal.fire({
+    const confirm = await notificationService.confirm({
       title: "¿Estás seguro?",
-      text: text,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#2277B4",
+      text,
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
     });
 
-    if (!result.isConfirmed) return;
+    if (!confirm) return;
 
     try {
       await deleteClientApi(id);
-      Swal.fire({
-        title: "¡Eliminado!",
-        text: "El cliente ha sido eliminado.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      notificationService.toast({ title: "Cliente eliminado correctamente", icon: "success" });
       navigate("/clientes");
     } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message,
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-      });
+      notificationService.error("Error", e.message);
     }
   };
 
@@ -2341,8 +680,9 @@ export default function ClientDetail() {
         position_title: "",
       });
       load();
+      notificationService.toast({ title: "Contacto agregado", icon: "success" });
     } catch (e) {
-      alert(e.message);
+      notificationService.error("Error", e.message);
     }
   };
 
@@ -2370,37 +710,29 @@ export default function ClientDetail() {
       await updateContactDynamicApi(editingContactId, contactForm);
       setEditingContactId(null);
       load();
+      notificationService.success("¡Contacto actualizado!", "Los cambios se aplicaron correctamente.");
     } catch (e) {
-      alert(e.message);
+      notificationService.error("Error", e.message);
     }
   };
 
   const handleDeleteContact = async (contactId) => {
-    const result = await Swal.fire({
+    const confirm = await notificationService.confirm({
       title: "¿Deshabilitar contacto?",
       text: "El contacto dejará de ser accesible.",
-      icon: "warning",
-      showCancelButton: true,
       confirmButtonText: "Sí, deshabilitar",
       cancelButtonText: "Cancelar",
-      confirmButtonColor: "#dc2626",
-      cancelButtonColor: "#2277B4",
     });
-    if (!result.isConfirmed) return;
+    if (!confirm) return;
     try {
       await deleteContactApi(contactId);
       load();
+      notificationService.toast({ title: "Contacto deshabilitado", icon: "success" });
     } catch (e) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: e.message,
-        confirmButtonColor: "#2277B4",
-      });
+      notificationService.error("Error", e.message);
     }
   };
 
-  // Columnas para la tabla de contactos (debe estar antes de los early returns)
   const contactsColumns = useMemo(() => {
     const dynamicDataColumns = contactPrimaryColumns.map((column) => ({
       accessorKey: column.name,
@@ -2462,7 +794,7 @@ export default function ClientDetail() {
                   [contactId]: !prev[contactId],
                 }))
               }
-              className="size-7 inline-flex items-center justify-center rounded-lg hover:bg-zinc-100 transition-colors text-zinc-500"
+              className="size-7 inline-flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-dark-700 transition-colors text-zinc-500"
               title={isOpen ? "Ocultar más detalles" : "Ver más detalles"}>
               {isOpen ?
                 <ChevronDown size={16} />
@@ -2654,14 +986,12 @@ export default function ClientDetail() {
     return contactRows.filter((c) => {
       if (c.is_active === false || c.is_active === 0) return false;
 
-      // Búsqueda global
       const matchQ =
         !normalizedQuery ||
         searchableColumns.some((column) =>
           normalizeSearchText(c?.[column.name]).includes(normalizedQuery),
         );
 
-      // Filtros individuales
       const matchFilters = activeFilters.every(
         ([key, value]) =>
           normalizeSearchText(c?.[key]) === normalizeSearchText(value),
@@ -2740,175 +1070,11 @@ export default function ClientDetail() {
   const contactsPageSize = contactsTable.getState().pagination.pageSize;
   const shouldEnableContactTableScroll = contactsPageSize >= 25;
 
-  const getContactExportContext = () => {
-    const usedLabels = new Set();
-    const exportColumns = contactColumnsFromView
-      .filter((column) => column.name !== "is_active")
-      .map((column) => {
-      const baseLabel = String(column.label || column.name || "").trim();
-      const fallbackLabel = String(column.name || "").trim();
-      let base = baseLabel || fallbackLabel || "Columna";
-
-      if (column.name === "has_portal_access") {
-        base = "Acceso al Portal";
-      }
-
-      let label = base;
-      const normalized = base.toLowerCase();
-
-      if (usedLabels.has(normalized)) {
-        label = `${base} (${fallbackLabel || normalized})`;
-      }
-
-      usedLabels.add(normalized);
-
-      return {
-        name: column.name,
-        label,
-      };
-    });
-
-    const exportRows = contactsTable
-      .getSortedRowModel()
-      .rows.map((row) => row.original);
-
-    return {
-      exportColumns,
-      exportRows,
-    };
-  };
-
-  const resolveContactExportValue = (row, columnName) => {
-    if (columnName === "has_portal_access") {
-      return row?.has_portal_access ? "Sí" : "No";
-    }
-
-    if (columnName === "is_active") {
-      const isActive = row?.is_active !== false && row?.is_active !== 0;
-      return isActive ? "Sí" : "No";
-    }
-
-    const rawValue = row?.[columnName];
-    return hasValue(rawValue) ? rawValue : "";
-  };
-
-  const handleExportContactsPDF = async () => {
-    const { exportColumns, exportRows } = getContactExportContext();
-
-    if (!exportRows.length) {
-      Swal.fire({
-        title: "Sin datos",
-        text: "No hay contactos para exportar.",
-        icon: "info",
-        confirmButtonColor: "#2277B4",
-      });
-      return;
-    }
-
-    try {
-      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
-        import("jspdf"),
-        import("jspdf-autotable"),
-      ]);
-
-      const autoTable = autoTableModule.default || autoTableModule.autoTable;
-      const doc = new jsPDF({ orientation: "landscape" });
-
-      doc.setFontSize(16);
-      doc.setTextColor(26, 43, 76);
-      doc.text("Contactos", 14, 16);
-      doc.setFontSize(10);
-      doc.setTextColor(90, 90, 90);
-      doc.text(`Exportado: ${new Date().toLocaleString("es-MX")}`, 14, 23);
-
-      autoTable(doc, {
-        startY: 28,
-        head: [exportColumns.map((column) => column.label.toUpperCase())],
-        body: exportRows.map((row) =>
-          exportColumns.map((column) => {
-            const value = resolveContactExportValue(row, column.name);
-            return hasValue(value) ? String(value) : "—";
-          }),
-        ),
-        theme: "grid",
-        headStyles: { fillColor: [34, 119, 180] },
-        styles: { fontSize: 8, cellPadding: 2.5 },
-      });
-
-      doc.save(`Contactos_${new Date().toISOString().slice(0, 10)}.pdf`);
-    } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message || "No se pudo generar el PDF.",
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
-    }
-  };
-
-  const handleExportContactsExcel = async () => {
-    const { exportColumns, exportRows } = getContactExportContext();
-
-    if (!exportRows.length) {
-      Swal.fire({
-        title: "Sin datos",
-        text: "No hay contactos para exportar.",
-        icon: "info",
-        confirmButtonColor: "#2277B4",
-      });
-      return;
-    }
-
-    try {
-      const XLSX = await import("xlsx");
-
-      const rows = exportRows.map((row) => {
-        const nextRow = {};
-
-        exportColumns.forEach((column) => {
-          const value = resolveContactExportValue(row, column.name);
-          nextRow[column.label] = hasValue(value) ? value : "";
-        });
-
-        return nextRow;
-      });
-
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Contactos");
-      XLSX.writeFile(
-        wb,
-        `Contactos_${new Date().toISOString().slice(0, 10)}.xlsx`,
-      );
-    } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message || "No se pudo generar el Excel.",
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
-    }
-  };
-
-  const handleDownloadContactsTemplate = async () => {
-    try {
-      const XLSX = await import("xlsx");
-
-      const ws = XLSX.utils.aoa_to_sheet([CONTACT_TEMPLATE_COLUMNS]);
-      ws["!cols"] = [{ wch: 34 }, { wch: 34 }, { wch: 26 }, { wch: 20 }];
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Plantilla Contactos");
-      XLSX.writeFile(wb, "Plantilla_Contactos.xlsx");
-    } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message || "No se pudo generar la plantilla de Excel.",
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
-    }
-  };
+  const {
+    handleExportContactsPDF,
+    handleExportContactsExcel,
+    handleDownloadContactsTemplate,
+  } = useContactExport({ contactColumnsFromView, contactsTable });
 
   if (loading)
     return (
@@ -2929,72 +1095,18 @@ export default function ClientDetail() {
   return (
     <div className="space-y-6 animate-fade-in pb-20">
       {/* Modal edición de cliente */}
-      {isEditingClient &&
-        createPortal(
-          <div
-            style={{ zIndex: 9999 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
-              <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-[#1a2b4c]">
-                <div className="flex justify-center items-center gap-2">
-                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                    Editar cliente
-                  </h2>
-                  <span className="text-sm text-zinc-300">
-                    {clientBusinessName}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setIsEditingClient(false)}
-                  className="p-2 rounded-full text-white transition-colors">
-                  <X size={18} />
-                </button>
-              </div>
-              <form
-                onSubmit={handleUpdateClient}
-                className="px-6 py-2 space-y-4 overflow-y-auto max-h-[70vh]">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {clientGeneralFields.map((field) => (
-                    <div
-                      key={field.name}
-                      className={
-                        isClientFieldFullWidth(field.name) ? "md:col-span-2" : (
-                          ""
-                        )
-                      }>
-                      <Input
-                        label={field.label}
-                        type={getClientFieldInputType(field.name)}
-                        disabled={isClientFieldReadOnly(field.name)}
-                        value={clientForm[field.name] || ""}
-                        onChange={(e) =>
-                          setClientForm((prev) => ({
-                            ...prev,
-                            [field.name]: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingClient(false)}
-                    className="flex-1 py-3 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors">
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-3 bg-[#2277B4] hover:bg-[#125280] text-white font-bold rounded-xl shadow-lg shadow-[#2277B450] transition-all duration-150 active:scale-95 active:translate-y-px">
-                    Guardar cambios
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>,
-          document.body,
-        )}
+      <ClientEditModal
+        isOpen={isEditingClient}
+        onClose={() => setIsEditingClient(false)}
+        clientBusinessName={clientBusinessName}
+        clientGeneralFields={clientGeneralFields}
+        clientForm={clientForm}
+        setClientForm={setClientForm}
+        handleUpdateClient={handleUpdateClient}
+        isClientFieldFullWidth={isClientFieldFullWidth}
+        getClientFieldInputType={getClientFieldInputType}
+        isClientFieldReadOnly={isClientFieldReadOnly}
+      />
 
       {managingPortalContact && (
         <ManagePortalModal
@@ -3008,10 +1120,10 @@ export default function ClientDetail() {
       )}
 
       {/* Header */}
-      <div className="bg-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-white dark:bg-dark-800 p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-baseline gap-3">
-            <h1 className="text-3xl font-semibold text-[#1a2b4c] tracking-tight">
+            <h1 className="text-3xl font-semibold text-[#1a2b4c] dark:text-zinc-100 tracking-tight">
               {clientBusinessName.toUpperCase()}
             </h1>
             <span className="px-2 py-0.5 rounded text-xs font-mono bg-white/10 text-zinc-400 border border-white/5">
@@ -3020,12 +1132,12 @@ export default function ClientDetail() {
           </div>
           <div className="flex flex-wrap gap-4 mt-2 text-sm text-light-text-secondary dark:text-zinc-400">
             <span className="flex items-center gap-1">
-              <ClipboardList size={16} className="text-black" />{" "}
+              <ClipboardList size={16} className="text-black dark:text-zinc-400" />{" "}
               {client.rfc || "Sin RFC"}
             </span>
             {hasValue(client.address) && (
               <span className="flex items-center gap-1">
-                <MapPin size={16} className="text-black" /> {client.address}
+                <MapPin size={16} className="text-black dark:text-zinc-400" /> {client.address}
               </span>
             )}
           </div>
@@ -3033,7 +1145,8 @@ export default function ClientDetail() {
 
         <Link
           to="/clientes"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-black hover:text-light-text-primary px-1 py-1 rounded-lg transition-colors">
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-black dark:text-zinc-300 hover:text-light-text-primary px-1 py-1 rounded-lg transition-colors"
+        >
           <ArrowLeft size={16} />
           Volver
         </Link>
@@ -3055,9 +1168,10 @@ export default function ClientDetail() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors whitespace-nowrap ${
               activeTab === tab.id ?
-                "bg-white text-black border-[#CBD5E1] shadow-sm"
-              : "text-zinc-400 border-transparent hover:text-black hover:border-zinc-200 hover:bg-white/70"
-            }`}>
+                "bg-white dark:bg-dark-900 text-black dark:text-zinc-100 border-[#CBD5E1] dark:border-dark-700 shadow-sm"
+              : "text-zinc-400 border-transparent hover:text-black hover:border-zinc-200 dark:hover:border-dark-700 hover:bg-white/70 dark:hover:bg-dark-900/50"
+            }`}
+          >
             {tab.icon}
             {tab.label}
           </button>
@@ -3070,21 +1184,23 @@ export default function ClientDetail() {
           <div className="space-y-6">
             <Card>
               <div className="flex justify-between items-center mb-6">
-                <h3 className="font-semibold text-[#1a2b4c] flex items-center gap-2">
-                  <Building2 size={20} className="text-black" /> Datos generales
+                <h3 className="font-semibold text-[#1a2b4c] dark:text-zinc-100 flex items-center gap-2">
+                  <Building2 size={20} className="text-black dark:text-zinc-300" /> Datos generales
                   de {client.business_name}
                 </h3>
                 <div className="flex gap-2">
                   <button
                     onClick={openEditClientModal}
-                    className="p-1.5 rounded-lg text-[#92400E] transition hover:scale-75"
-                    title="Editar">
+                    className="p-1.5 rounded-lg text-[#92400E] dark:text-amber-500 transition hover:scale-75"
+                    title="Editar"
+                  >
                     <Edit2 size={18} />
                   </button>
                   <button
                     onClick={handleDeleteClient}
-                    className="p-1.5 rounded-lg text-red-800 transition hover:scale-75"
-                    title="Eliminar cliente">
+                    className="p-1.5 rounded-lg text-red-800 dark:text-red-500 transition hover:scale-75"
+                    title="Eliminar cliente"
+                  >
                     <Trash2 size={18} />
                   </button>
                 </div>
@@ -3094,17 +1210,30 @@ export default function ClientDetail() {
                 {clientGeneralFields.map((field) => {
                   const isFullWidthField =
                     field.name === "business_name" ||
+                    isClientFieldFullWidth(field.name) ||
                     field.name === orphanClientGeneralFieldName;
 
                   return (
                     <div
                       key={field.name}
-                      className={`${isFullWidthField ? "md:col-span-2" : ""} h-full p-3.5 rounded-xl border border-zinc-200/80 dark:border-dark-700 shadow-sm`}>
+                      className={`${isFullWidthField ? "md:col-span-2" : ""} h-full p-3.5 rounded-xl border border-zinc-200/80 dark:border-dark-700 shadow-sm`}
+                    >
                       <span className="text-xs font-semibold text-[#2277B4] dark:text-blue-400 uppercase block mb-1.5 tracking-wide">
                         {field.label}
                       </span>
-                      <div className="text-light-text-primary dark:text-zinc-100 whitespace-normal break-words leading-relaxed">
-                        {field.value}
+                      <div className="w-full overflow-visible">
+                        <div className="relative group/email inline-block max-w-full">
+                          <div className="text-light-text-primary dark:text-zinc-100 truncate leading-relaxed">
+                            {field.value}
+                          </div>
+
+                          {field.name === "email1" && field.value && field.value !== "—" && (
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 pointer-events-none opacity-0 group-hover/email:opacity-100 scale-95 translate-y-4 group-hover/email:-translate-y-6 group-hover/email:scale-100 transition-all duration-300 ease-out bg-gradient-to-br from-blue-200/50 to-blue-200/50 backdrop-blur-md text-black text-[11px] font-medium py-2 px-3.5 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.25)] whitespace-nowrap z-50 normal-case tracking-normal flex items-center gap-2">    
+                              <span>{field.value}</span>
+                              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-blue-200/50 dark:border-t-blue-200/50"></div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -3114,7 +1243,7 @@ export default function ClientDetail() {
 
             <Card>
               <h3 className="font-semibold text-light-text-primary dark:text-zinc-100 mb-4 flex items-center gap-2">
-                <UserPlus size={20} className="text-black dark:text-zinc-100" /> Asignar Contacto
+                <UserPlus size={20} className="text-black dark:text-zinc-300" /> Asignar Contacto
                 a: {client.business_name}
               </h3>
               <form onSubmit={addContact} className="space-y-3">
@@ -3186,14 +1315,9 @@ export default function ClientDetail() {
                   {(user?.role?.name === "ADMIN" ||
                     user?.role?.name === "VENTAS") && (
                     <button
-                      onClick={() => {
-                        setShowBulkContactModal(true);
-                        setBulkContactData([]);
-                        setBulkContactErrors([]);
-                        setBulkContactResult(null);
-                        setBulkContactDriveUrl("");
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#1a2b4c] dark:text-zinc-100 transition-colors">
+                      onClick={openBulkContactModal}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#1a2b4c] dark:text-zinc-100 transition-colors"
+                    >
                       <Upload size={15} />
                       Cargar contactos
                     </button>
@@ -3221,14 +1345,16 @@ export default function ClientDetail() {
                     <button
                       onClick={handleExportContactsPDF}
                       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 dark:border-red-500/30 bg-white dark:bg-red-500/10 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/20 transition-colors whitespace-nowrap"
-                      title="Exportar a PDF">
+                      title="Exportar a PDF"
+                    >
                       <FileText size={14} /> Exportar a PDF
                     </button>
 
                     <button
                       onClick={handleExportContactsExcel}
                       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 transition-colors whitespace-nowrap"
-                      title="Exportar a Excel">
+                      title="Exportar a Excel"
+                    >
                       <FileSpreadsheet size={14} /> Exportar a Excel
                     </button>
                   </div>
@@ -3241,7 +1367,8 @@ export default function ClientDetail() {
                     showContactFilters || activeContactFilterCount > 0 ?
                       "bg-[#2277B4] text-white border-[#2277B4]"
                     : "bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-50 dark:hover:bg-dark-800"
-                  }`}>
+                  }`}
+                >
                   <SlidersHorizontal size={15} />
                   Filtros
                   {activeContactFilterCount > 0 && (
@@ -3255,7 +1382,8 @@ export default function ClientDetail() {
                 {activeContactFilterCount > 0 && (
                   <button
                     onClick={clearContactFilters}
-                    className="flex items-center gap-1 px-2 py-2 rounded-lg text-xs text-red-500 hover:bg-red-50 transition-colors">
+                    className="flex items-center gap-1 px-2 py-2 rounded-lg text-xs text-red-500 hover:bg-red-50 transition-colors"
+                  >
                     <X size={14} /> Limpiar
                   </button>
                 )}
@@ -3266,81 +1394,19 @@ export default function ClientDetail() {
                 </span>
               </div>
 
-              {activeContactFilterPickerField &&
-                showContactFilters &&
-                createPortal(
-                  <div
-                    className="fixed inset-0 z-[9999] bg-black/45 flex items-center justify-center p-4"
-                    onClick={closeContactFilterPicker}>
-                    <div
-                      className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-                      onClick={(e) => e.stopPropagation()}>
-                      <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
-                        <div>
-                          <h3 className="text-white font-semibold text-base">
-                            Filtrar por{" "}
-                            {(
-                              activeContactFilterPickerConfig?.buttonLabel ||
-                              "campo"
-                            ).toLowerCase()}
-                          </h3>
-                          <p className="text-[11px] text-zinc-300 mt-1">
-                            Selecciona o busca un valor
-                          </p>
-                        </div>
-                        <button
-                          onClick={closeContactFilterPicker}
-                          className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
-                          <X size={16} />
-                        </button>
-                      </div>
-
-                      <div className="p-4 space-y-3">
-                        <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
-                          <Search size={15} className="text-zinc-500" />
-                          <input
-                            value={contactFilterPickerSearch}
-                            onChange={(e) =>
-                              setContactFilterPickerSearch(e.target.value)
-                            }
-                            placeholder="Buscar valor…"
-                            className="w-full bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
-                          />
-                        </div>
-
-                        <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 divide-y divide-zinc-100">
-                          {visibleContactFilterPickerOptions.length > 0 ?
-                            visibleContactFilterPickerOptions.map((value) => {
-                              const isSelected =
-                                normalizeSearchText(
-                                  contactFilters[
-                                    activeContactFilterPickerField
-                                  ],
-                                ) === normalizeSearchText(value);
-
-                              return (
-                                <button
-                                  key={`${activeContactFilterPickerField}_${value}`}
-                                  onClick={() => applyContactFilterValue(value)}
-                                  className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                    isSelected ?
-                                      "bg-[#2277B4]/10 text-[#125280] font-semibold"
-                                    : "text-zinc-700 hover:bg-zinc-50"
-                                  }`}>
-                                  {value}
-                                </button>
-                              );
-                            })
-                          : <div className="px-3 py-4 text-sm text-zinc-500 text-center">
-                              No hay valores para mostrar.
-                            </div>
-                          }
-                        </div>
-                      </div>
-                    </div>
-                  </div>,
-                  document.body,
-                )}
+              {/* Selector de filtros individuales */}
+              <ContactFilterPicker
+                isOpen={!!activeContactFilterPickerField && showContactFilters}
+                onClose={closeContactFilterPicker}
+                activeContactFilterPickerField={activeContactFilterPickerField}
+                activeContactFilterPickerConfig={activeContactFilterPickerConfig}
+                contactFilterPickerSearch={contactFilterPickerSearch}
+                setContactFilterPickerSearch={setContactFilterPickerSearch}
+                visibleContactFilterPickerOptions={visibleContactFilterPickerOptions}
+                contactFilters={contactFilters}
+                applyContactFilterValue={applyContactFilterValue}
+                normalizeSearchText={normalizeSearchText}
+              />
 
               <div className="px-4 py-2 min-h-10 bg-blue-50 dark:bg-blue-500/5 border border-zinc-200 dark:border-dark-700 border-b-0 rounded-t-md text-xs text-[#2277B4] dark:text-blue-400 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-1 shrink-0">
@@ -3352,10 +1418,9 @@ export default function ClientDetail() {
                 <div className="flex items-center gap-3">
                   <div
                     className={`flex items-center gap-2 transition-opacity duration-150 ${
-                      showContactFilters ? "opacity-100" : (
-                        "opacity-0 pointer-events-none"
-                      )
-                    }`}>
+                      showContactFilters ? "opacity-100" : "opacity-0 pointer-events-none"
+                    }`}
+                  >
                     {contactQuickFilterButtons.map((button) => {
                       const selectedValue = String(
                         contactFilters[button.fieldName] || "",
@@ -3371,7 +1436,8 @@ export default function ClientDetail() {
                             selectedValue ?
                               "bg-[#2277B4] text-white border-[#2277B4]"
                             : "bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-100 dark:hover:bg-dark-800"
-                          }`}>
+                          }`}
+                        >
                           <span className="font-semibold tracking-wide">
                             {button.buttonLabel}
                           </span>
@@ -3383,27 +1449,26 @@ export default function ClientDetail() {
                   <button
                     onClick={handleDownloadContactsTemplate}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-dark-800 border border-zinc-200 dark:border-dark-700 hover:bg-zinc-50 dark:hover:bg-dark-700 transition-colors whitespace-nowrap"
-                    title="Descargar plantilla de carga masiva de contactos"> 
+                    title="Descargar plantilla de carga masiva de contactos"
+                  > 
                     <FileSpreadsheet size={13} /> Descargar plantilla excel
                   </button>
                 </div>
               </div>
 
-              {/* Modal de edición inline removido */}
-
               {/* Tabla TanStack */}
               <div
                 className={`bg-white dark:bg-dark-900 overflow-x-auto border border-zinc-200 dark:border-dark-700 border-t-0 rounded-b-md ${
-                  shouldEnableContactTableScroll ?
-                    "h-[65vh] overflow-y-scroll"
-                  : ""
-                }`}>
+                  shouldEnableContactTableScroll ? "h-[65vh] overflow-y-scroll" : ""
+                }`}
+              >
                 <table className="w-full text-sm">
                   <thead>
                     {contactsTable.getHeaderGroups().map((hg) => (
                       <tr
                         key={hg.id}
-                        className="bg-zinc-50 dark:bg-dark-800 border-b border-zinc-200 dark:border-dark-700">
+                        className="bg-zinc-50 dark:bg-dark-800 border-b border-zinc-200 dark:border-dark-700"
+                      >
                         {hg.headers.map((header) => (
                           <th
                             key={header.id}
@@ -3413,14 +1478,13 @@ export default function ClientDetail() {
                               : undefined
                             }
                             className={`px-4 py-3 text-left text-xs font-semibold text-[#2277B4] dark:text-blue-400 uppercase tracking-wider transition-colors ${
-                              shouldEnableContactTableScroll ?
-                                "sticky top-0 z-20 bg-zinc-50 dark:bg-dark-800"
-                              : ""
+                              shouldEnableContactTableScroll ? "sticky top-0 z-20 bg-zinc-50 dark:bg-dark-800" : ""
                             } ${
                               header.column.getCanSort() ?
                                 "cursor-pointer hover:bg-zinc-100 dark:hover:bg-dark-700"
                               : "cursor-default"
-                            } ${header.column.id === "expander" ? "w-12" : ""}`}>
+                            } ${header.column.id === "expander" ? "w-12" : ""}`}
+                          >
                             <div className="flex items-center gap-2">
                               {flexRender(
                                 header.column.columnDef.header,
@@ -3438,7 +1502,7 @@ export default function ClientDetail() {
                       </tr>
                     ))}
                   </thead>
-                  <tbody className="divide-y divide-zinc-100">
+                  <tbody className="divide-y divide-zinc-100 dark:divide-dark-700">
                     {visibleContactRows.map((row) => {
                       const isExpanded = !!expandedContactRows[row.original.id];
                       const rowDetailColumns = contactDetailColumns.filter(
@@ -3465,7 +1529,7 @@ export default function ClientDetail() {
 
                       return (
                         <Fragment key={row.id}>
-                          <tr className="hover:bg-zinc-50 transition-colors">
+                          <tr className="hover:bg-zinc-50 dark:hover:bg-dark-800 transition-colors">
                             {row.getVisibleCells().map((cell) => (
                               <td key={cell.id} className="px-4 py-3 align-top">
                                 {flexRender(
@@ -3486,7 +1550,8 @@ export default function ClientDetail() {
                                 return (
                                   <td
                                     key={`${cell.id}__detail`}
-                                    className="px-4 py-4 align-top">
+                                    className="px-4 py-4 align-top"
+                                  >
                                     {alignedDetails.length > 0 && (
                                       <div className="space-y-3">
                                         {alignedDetails.map((column) => {
@@ -3500,7 +1565,8 @@ export default function ClientDetail() {
                                           return (
                                             <div
                                               key={`${row.id}_${column.name}`}
-                                              className="min-w-0">
+                                              className="min-w-0"
+                                            >
                                               <p className="text-[10px] font-semibold uppercase text-[#2277B4] dark:text-blue-400 tracking-wider">
                                                 {column.label}
                                               </p>
@@ -3550,7 +1616,8 @@ export default function ClientDetail() {
                       onChange={(e) =>
                         contactsTable.setPageSize(Number(e.target.value))
                       }
-                      className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500 bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700">
+                      className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500 bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700"
+                    >
                       {[10, 25, 50, 100].map((size) => (
                         <option key={size} value={size} className="dark:bg-dark-900 dark:text-zinc-100">
                           {size}
@@ -3563,19 +1630,22 @@ export default function ClientDetail() {
                     <button
                       onClick={() => contactsTable.setPageIndex(0)}
                       disabled={!contactsTable.getCanPreviousPage()}
-                      className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                      className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
                       ««
                     </button>
                     <button
                       onClick={() => contactsTable.previousPage()}
                       disabled={!contactsTable.getCanPreviousPage()}
-                      className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                      className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
                       Anterior
                     </button>
                     <button
                       onClick={() => contactsTable.nextPage()}
                       disabled={!contactsTable.getCanNextPage()}
-                      className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                      className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
                       Siguiente
                     </button>
                     <button
@@ -3585,7 +1655,8 @@ export default function ClientDetail() {
                         )
                       }
                       disabled={!contactsTable.getCanNextPage()}
-                      className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                      className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
                       »»
                     </button>
                   </div>
@@ -3597,7 +1668,8 @@ export default function ClientDetail() {
                 <div className="mt-3">
                   <button
                     onClick={() => setShowDisabled((v) => !v)}
-                    className="flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-600 transition-colors select-none group px-1 py-1">
+                    className="flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors select-none group px-1 py-1"
+                  >
                     <ChevronRight
                       size={14}
                       className={`transition-transform duration-200 ${
@@ -3615,29 +1687,26 @@ export default function ClientDetail() {
                   {showDisabled && (
                     <>
                       <div
-                        className={`mt-2 overflow-x-auto rounded-md border border-zinc-200 animate-fade-in ${
-                          shouldEnableDisabledContactsTableScroll ?
-                            "max-h-[12rem] overflow-y-auto"
-                          : ""
-                        }`}>
-                        <table className="w-full text-sm">
+                        className={`mt-2 overflow-x-auto rounded-md border border-zinc-200 dark:border-dark-700 animate-fade-in ${
+                          shouldEnableDisabledContactsTableScroll ? "max-h-[12rem] overflow-y-auto" : ""
+                        }`}
+                      >
+                        <table className="w-full text-sm bg-white dark:bg-dark-900">
                           <thead>
                             {disabledContactsTable
                               .getHeaderGroups()
                               .map((hg) => (
                                 <tr
                                   key={hg.id}
-                                  className="bg-zinc-100 border-b border-zinc-200">
+                                  className="bg-zinc-100 dark:bg-dark-800 border-b border-zinc-200 dark:border-dark-700"
+                                >
                                   {hg.headers.map((header) => (
                                     <th
                                       key={header.id}
-                                      className={`px-4 py-2 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider ${
-                                        (
-                                          shouldEnableDisabledContactsTableScroll
-                                        ) ?
-                                          "sticky top-0 z-20 bg-zinc-100"
-                                        : ""
-                                      }`}>
+                                      className={`px-4 py-2 text-left text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider ${
+                                        shouldEnableDisabledContactsTableScroll ? "sticky top-0 z-20 bg-zinc-100 dark:bg-dark-800" : ""
+                                      }`}
+                                    >
                                       {flexRender(
                                         header.column.columnDef.header,
                                         header.getContext(),
@@ -3647,11 +1716,12 @@ export default function ClientDetail() {
                                 </tr>
                               ))}
                           </thead>
-                          <tbody className="divide-y divide-zinc-100">
+                          <tbody className="divide-y divide-zinc-100 dark:divide-dark-700">
                             {visibleDisabledContactRows.map((row) => (
                               <tr
                                 key={row.id}
-                                className="bg-zinc-50 opacity-50">
+                                className="bg-zinc-50 dark:bg-dark-900 opacity-50"
+                              >
                                 {row.getVisibleCells().map((cell) => (
                                   <td key={cell.id} className="px-4 py-2.5">
                                     {flexRender(
@@ -3668,7 +1738,7 @@ export default function ClientDetail() {
 
                       <div className="mt-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-zinc-500">Mostrar</span>
+                          <span className="text-sm text-zinc-500 dark:text-zinc-400">Mostrar</span>
                           <select
                             value={
                               disabledContactsTable.getState().pagination
@@ -3679,14 +1749,15 @@ export default function ClientDetail() {
                                 Number(e.target.value),
                               )
                             }
-                            className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] focus:outline-none focus:ring-2 focus:ring-[#153465] bg-white border border-zinc-200">
+                            className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500 bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700"
+                          >
                             {[3, 10, 25, 50, 100].map((size) => (
-                              <option key={size} value={size}>
+                              <option key={size} value={size} className="dark:bg-dark-900 dark:text-zinc-100">
                                 {size}
                               </option>
                             ))}
                           </select>
-                          <span className="text-sm text-zinc-500">
+                          <span className="text-sm text-zinc-500 dark:text-zinc-400">
                             por página
                           </span>
                         </div>
@@ -3699,7 +1770,8 @@ export default function ClientDetail() {
                             disabled={
                               !disabledContactsTable.getCanPreviousPage()
                             }
-                            className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
                             ««
                           </button>
                           <button
@@ -3707,13 +1779,15 @@ export default function ClientDetail() {
                             disabled={
                               !disabledContactsTable.getCanPreviousPage()
                             }
-                            className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
                             Anterior
                           </button>
                           <button
                             onClick={() => disabledContactsTable.nextPage()}
                             disabled={!disabledContactsTable.getCanNextPage()}
-                            className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
                             Siguiente
                           </button>
                           <button
@@ -3723,7 +1797,8 @@ export default function ClientDetail() {
                               )
                             }
                             disabled={!disabledContactsTable.getCanNextPage()}
-                            className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                            className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
                             »»
                           </button>
                         </div>
@@ -3746,260 +1821,33 @@ export default function ClientDetail() {
       )}
 
       {/* Modal de edición de contacto */}
-      {editingContactId &&
-        createPortal(
-          <div
-            style={{ zIndex: 9999 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"
-            onClick={() => setEditingContactId(null)}>
-            <div
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col"
-              onClick={(e) => e.stopPropagation()}>
-              <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-[#1a2b4c]">
-                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                  Editar Contacto
-                </h2>
-                <button
-                  onClick={() => setEditingContactId(null)}
-                  className="p-2 rounded-full text-white transition-colors">
-                  <X size={18} />
-                </button>
-              </div>
-              <div className="px-6 py-4 overflow-y-auto max-h-[70vh]">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {contactEditableColumns.map((column) => (
-                    <div key={column.name} className="min-w-0">
-                      <Input
-                        label={column.label}
-                        type={getContactFieldInputType(column.name)}
-                        value={contactForm[column.name] || ""}
-                        onChange={(e) =>
-                          setContactForm((prev) => ({
-                            ...prev,
-                            [column.name]: e.target.value,
-                          }))
-                        }
-                        required={column.name === "full_name"}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="px-6 py-4 border-t border-zinc-100 flex gap-2">
-                <button
-                  className="flex-1 py-3 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors"
-                  onClick={() => setEditingContactId(null)}>
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleUpdateContact}
-                  className="flex-1 py-3 bg-[#2277B4] hover:bg-[#125280] text-white font-bold rounded-xl shadow-lg shadow-[#2277B450] transition-all duration-150 backdrop-blur-sm active:scale-95 active:translate-y-px">
-                  Guardar Cambios
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+      <ContactEditModal
+        isOpen={!!editingContactId}
+        onClose={() => setEditingContactId(null)}
+        contactEditableColumns={contactEditableColumns}
+        contactForm={contactForm}
+        setContactForm={setContactForm}
+        handleUpdateContact={handleUpdateContact}
+        getContactFieldInputType={getContactFieldInputType}
+      />
 
       {/* Modal de Carga Masiva de Contactos */}
-      {showBulkContactModal &&
-        createPortal(
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
-                <h3 className="text-white text-lg font-semibold flex items-center gap-2">
-                  <FileSpreadsheet size={20} />
-                  Carga de Contactos
-                </h3>
-              </div>
-
-              <div className="p-6 overflow-y-auto flex-1 space-y-5">
-                {/* Instrucciones */}
-                <div className="bg-[#2277B412] border border-blue-200 rounded-xl p-4">
-                  <p className="text-sm font-semibold text-[#2277B4] mb-2 flex items-center gap-1">
-                    <Lightbulb size={15} /> Ayuda
-                  </p>
-                  <ul className="text-xs text-[#2277B4] space-y-1 mb-3 list-disc pl-5">
-                    <li>
-                      Los contactos se asignarán automáticamente a:{" "}
-                      <b>{client?.business_name}</b>
-                    </li>
-                    <li>
-                      También puedes pegar la URL del archivo de Google Drive.
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Importar desde Drive */}
-                <div className="space-y-2 rounded-xl border border-zinc-200 p-4 bg-white">
-                  <p className="text-xs font-semibold text-zinc-600 tracking-wide">
-                    Importar desde Google Drive
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="url"
-                      value={bulkContactDriveUrl}
-                      onChange={(e) => setBulkContactDriveUrl(e.target.value)}
-                      placeholder="Pega la URL del archivo de Drive…"
-                      className="flex-1 px-3 py-2 rounded-lg border border-zinc-300 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4] bg-white"
-                    />
-                    <button
-                      onClick={executeBulkContactDriveImport}
-                      disabled={bulkContactDriveImporting}
-                      className="px-4 py-2 rounded-lg bg-[#2277B4] text-white text-sm font-semibold hover:bg-[#125280] transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap">
-                      {bulkContactDriveImporting ? "Importando…" : "Importar"}
-                    </button>
-                  </div>
-                </div>
-
-                {bulkContactResult?.success &&
-                  bulkContactResult?.details?.ignoredHeaders?.length > 0 && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
-                      <p className="font-semibold mb-1">
-                        Columnas ignoradas del Excel
-                      </p>
-                      <p>
-                        {bulkContactResult.details.ignoredHeaders.join(", ")}
-                      </p>
-                    </div>
-                  )}
-
-                {bulkContactResult?.success &&
-                  bulkContactResult?.details?.createdColumns?.length > 0 && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-800">
-                      <p className="font-semibold mb-1">
-                        Columnas nuevas creadas en contactos
-                      </p>
-                      <p>
-                        {bulkContactResult.details.createdColumns
-                          .map((item) => `${item.header} -> ${item.columnName}`)
-                          .join(", ")}
-                      </p>
-                    </div>
-                  )}
-
-                {/* Subir archivo */}
-                <div>
-                  <input
-                    ref={bulkContactFileRef}
-                    type="file"
-                    accept=".xlsx,.xls,.csv"
-                    onChange={handleBulkContactFile}
-                    className="hidden"
-                  />
-                  <button
-                    onClick={() => bulkContactFileRef.current?.click()}
-                    className="w-full py-8 border-2 border-dashed border-zinc-300 rounded-xl flex flex-col items-center gap-2 text-zinc-500 hover:border-[#2277B4] hover:text-[#2277B4] transition-colors cursor-pointer">
-                    <Upload size={28} />
-                    <span className="text-sm font-semibold">
-                      Haz clic para seleccionar el archivo Excel
-                    </span>
-                    <span className="text-[11px] text-zinc-400">
-                      O usa la plantilla descargada
-                    </span>
-                  </button>
-                </div>
-
-                {/* Errores */}
-                {bulkContactErrors.length > 0 && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                    <p className="text-sm font-semibold text-amber-800 mb-2 flex items-center gap-1">
-                      <AlertCircle size={15} /> Advertencias
-                    </p>
-                    <ul className="text-xs text-amber-700 space-y-1 max-h-32 overflow-y-auto">
-                      {bulkContactErrors.map((err, i) => (
-                        <li key={i}>• {err}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Vista previa */}
-                {bulkContactData.length > 0 && (
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-700 mb-2">
-                      Vista previa ({bulkContactData.length} contactos listos
-                      para importar)
-                    </p>
-                    <div className="border border-zinc-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
-                      <table className="w-full text-xs">
-                        <thead className="bg-zinc-50 sticky top-0">
-                          <tr>
-                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
-                              #
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
-                              Nombre
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
-                              Correo
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
-                              Teléfono
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
-                              Puesto
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-100">
-                          {bulkContactData.map((r, i) => (
-                            <tr key={i} className="hover:bg-zinc-50">
-                              <td className="px-3 py-2 text-zinc-400">
-                                {i + 1}
-                              </td>
-                              <td className="px-3 py-2 font-medium text-zinc-800">
-                                {r.full_name}
-                              </td>
-                              <td className="px-3 py-2 text-zinc-600">
-                                {r.email || "—"}
-                              </td>
-                              <td className="px-3 py-2 text-zinc-600">
-                                {r.phone || "—"}
-                              </td>
-                              <td className="px-3 py-2 text-zinc-600">
-                                {r.position_title || "—"}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-3">
-                {bulkContactData.length > 0 && (
-                  <button
-                    onClick={executeBulkContactUpload}
-                    disabled={bulkContactUploading}
-                    className="px-6 py-2.5 bg-[#2277B4] text-white font-bold rounded-xl hover:bg-[#125280] transition-colors shadow-lg shadow-[#2277B450] disabled:opacity-50 flex items-center gap-2">
-                    {bulkContactUploading ?
-                      <>
-                        <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Importando…
-                      </>
-                    : <>
-                        <CheckCircle2 size={16} />
-                        Importar {bulkContactData.length} Contactos
-                      </>
-                    }
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowBulkContactModal(false)}
-                  className="px-5 py-2.5 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors">
-                  Cerrar
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+      <ContactBulkModal
+        isOpen={showBulkContactModal}
+        onClose={() => setShowBulkContactModal(false)}
+        clientBusinessName={clientBusinessName}
+        bulkContactDriveUrl={bulkContactDriveUrl}
+        setBulkContactDriveUrl={setBulkContactDriveUrl}
+        executeBulkContactDriveImport={executeBulkContactDriveImport}
+        bulkContactDriveImporting={bulkContactDriveImporting}
+        bulkContactResult={bulkContactResult}
+        bulkContactFileRef={bulkContactFileRef}
+        handleBulkContactFile={handleBulkContactFile}
+        executeBulkContactUpload={executeBulkContactUpload}
+        bulkContactUploading={bulkContactUploading}
+        bulkContactErrors={bulkContactErrors}
+        bulkContactData={bulkContactData}
+      />
     </div>
   );
 }

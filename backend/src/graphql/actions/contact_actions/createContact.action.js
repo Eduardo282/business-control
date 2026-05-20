@@ -1,20 +1,16 @@
-import { pool } from '../../../config/db.js';
+import { createContact } from "../../../repositories/contact.repository.js";
 
 export async function createContactAction({ client_id, full_name, email, phone, position_title }) {
-  const [result] = await pool.query(
-    `INSERT INTO client_contacts (client_id, full_name, email, phone, position_title)
-     VALUES (:client_id, :full_name, :email, :phone, :position_title)`,
-    {
-      client_id,
-      full_name,
-      email: email || null,
-      phone: phone || null,
-      position_title: position_title || null,
-    }
-  );
+  const insertId = await createContact({
+    client_id,
+    full_name,
+    email,
+    phone,
+    position_title,
+  });
 
   return {
-    id: result.insertId,
+    id: insertId,
     client_id,
     full_name,
     email: email || null,

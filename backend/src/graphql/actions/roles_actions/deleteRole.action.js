@@ -1,17 +1,15 @@
-import { pool } from "../../../config/db.js";
+import { deleteRole } from "../../../repositories/role.repository.js";
+import { findUserByRoleId } from "../../../repositories/user.repository.js";
 
 export async function deleteRoleAction({ id }) {
   // Check if role has users assigned
-  const [users] = await pool.query(
-    `SELECT COUNT(*) as count FROM users WHERE role_id = :id`,
-    { id },
-  );
+  const hasUser = await findUserByRoleId(id);
 
-  if (users[0].count > 0) {
+  if (hasUser) {
     throw new Error("No se puede eliminar un rol que tiene usuarios asignados");
   }
 
-  const [result] = await pool.query(`DELETE FROM roles WHERE id = :id`, { id });
+  await deleteRole(id);
 
-  return result.affectedRows > 0;
+  return true;
 }

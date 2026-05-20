@@ -1,9 +1,5 @@
-import { pool } from "../../../config/db.js";
+import { findContactById } from "../../../repositories/contact.repository.js";
 
 export async function getContactAction(id) {
-  const [rows] = await pool.query(
-    "SELECT * FROM client_contacts WHERE id = :id",
-    { id }
-  );
-  return rows[0];
+  return findContactById(id);
 }

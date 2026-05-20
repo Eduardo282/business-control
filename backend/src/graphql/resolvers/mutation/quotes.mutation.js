@@ -8,6 +8,9 @@ import { markQuoteNotificationReadAction } from "../../actions/quote_actions/mar
 import { resolveQuoteRequestAction } from "../../actions/quote_actions/resolveQuoteRequest.action.js";
 import { deletePortalQuoteAction } from "../../actions/quote_actions/deletePortalQuote.action.js";
 import { updatePortalQuoteRequestAction } from "../../actions/quote_actions/updatePortalQuoteRequest.action.js";
+import { rejectPortalQuoteAction } from "../../actions/quote_actions/rejectPortalQuote.action.js";
+import { rejectQuoteAction } from "../../actions/quote_actions/rejectQuote.action.js";
+import { updateQuoteStatusAction } from "../../actions/quote_actions/updateQuoteStatus.action.js";
 
 export const createQuote = async (_parent, { input }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
@@ -75,4 +78,21 @@ export const updatePortalQuoteRequest = async (_parent, { id, input }, ctx) => {
     throw new Error("Access denied");
   }
   return updatePortalQuoteRequestAction(id, input, ctx.user);
+};
+
+export const rejectPortalQuote = async (_parent, { id }, ctx) => {
+  if (ctx.user?.role !== "CONTACT_PORTAL") {
+    throw new Error("Access denied");
+  }
+  return rejectPortalQuoteAction(id, ctx.user);
+};
+
+export const rejectQuote = async (_parent, { id }, ctx) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  return rejectQuoteAction(id);
+};
+
+export const updateQuoteStatus = async (_parent, { id, status }, ctx) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  return updateQuoteStatusAction(id, status);
 };

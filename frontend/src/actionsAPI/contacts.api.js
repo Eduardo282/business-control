@@ -135,20 +135,21 @@ export async function deleteContactProductApi(id) {
   return data.data.deleteContactProduct;
 }
 
-export async function updateContactProductDatesApi(id, { start_date, expiration_date, status }) {
+export async function updateContactProductDatesApi(id, { start_date, expiration_date, status, license_key }) {
   const query = `
-    mutation UpdateContactProductDates($id: ID!, $start_date: String, $expiration_date: String, $status: String) {
-      updateContactProductDates(id: $id, start_date: $start_date, expiration_date: $expiration_date, status: $status) {
+    mutation UpdateContactProductDates($id: ID!, $start_date: String, $expiration_date: String, $status: String, $license_key: String) {
+      updateContactProductDates(id: $id, start_date: $start_date, expiration_date: $expiration_date, status: $status, license_key: $license_key) {
         id
         start_date
         expiration_date
         status
+        license_key
       }
     }
   `;
   const { data } = await axiosClient.post("", {
     query,
-    variables: { id, start_date, expiration_date, status },
+    variables: { id, start_date, expiration_date, status, license_key },
   });
   if (data.errors?.length) throw new Error(data.errors[0].message);
   return data.data.updateContactProductDates;

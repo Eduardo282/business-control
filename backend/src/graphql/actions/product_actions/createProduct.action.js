@@ -1,19 +1,5 @@
 import { pool } from "../../../config/db.js";
-
-let columnEnsured = false;
-
-async function ensureProductTypeColumn(conn) {
-  if (columnEnsured) return;
-  try {
-    await conn.query(
-      `ALTER TABLE products ADD COLUMN product_type VARCHAR(20) DEFAULT 'PRODUCT'`
-    );
-  } catch (e) {
-    // Column already exists — ignore
-    if (!e.message.includes("Duplicate column")) throw e;
-  }
-  columnEnsured = true;
-}
+import { insertPriceHistory, insertProduct } from "../../../repositories/product.repository.js";
 
 export async function createProductAction({
   name,
@@ -26,30 +12,24 @@ export async function createProductAction({
 }) {
   const conn = await pool.getConnection();
   try {
-    await ensureProductTypeColumn(conn);
     await conn.beginTransaction();
 
     const safeType = ["SERVICE", "POLICY"].includes(product_type) ? product_type : "PRODUCT";
 
-    const [res] = await conn.query(
-      `INSERT INTO products (name, category, current_price, description, users_count, client_id, product_type)
-       VALUES (:name, :category, :price, :description, :users_count, :client_id, :product_type)`,
+    const productId = await insertProduct(
       {
         name,
         category,
-        price,
+        current_price: price,
         description: description || null,
         users_count: users_count || 0,
         client_id: client_id || null,
         product_type: safeType,
       },
+      conn,
     );
-    const productId = res.insertId;
 
-    await conn.query(
-      `INSERT INTO product_price_history (product_id, price) VALUES (:id, :price)`,
-      { id: productId, price },
-    );
+    await insertPriceHistory({ product_id: productId, price }, conn);
 
     await conn.commit();
     return {

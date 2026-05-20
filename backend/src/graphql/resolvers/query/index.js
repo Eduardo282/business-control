@@ -5,6 +5,7 @@ import * as contacts from "./contacts.query.js";
 import * as products from "./products.query.js";
 import * as quotes from "./quotes.query.js";
 import * as policies from "./policies.query.js";
+import * as categories from "./categories.query.js";
 
 export default {
   ...auth,
@@ -14,4 +15,5 @@ export default {
   ...products,
   ...quotes,
   ...policies,
+  ...categories,
 };

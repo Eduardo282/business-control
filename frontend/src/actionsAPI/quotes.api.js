@@ -15,6 +15,9 @@ export const listQuotesApi = async () => {
         user {
           full_name
         }
+        contact {
+          full_name
+        }
       }
     }
   `;
@@ -31,6 +34,9 @@ export const listQuotesByClientApi = async (client_id) => {
         total
         status
         user {
+          full_name
+        }
+        contact {
           full_name
         }
       }
@@ -147,6 +153,37 @@ export const deleteQuoteApi = async (id) => {
   return res.data.data.deleteQuote;
 };
 
+export const rejectQuoteApi = async (id) => {
+  const query = `
+    mutation RejectQuote($id: ID!) {
+      rejectQuote(id: $id)
+    }
+  `;
+  const res = await axiosClient.post("/", {
+    query,
+    variables: { id },
+  });
+  if (res.data.errors) throw new Error(res.data.errors[0].message);
+  return res.data.data.rejectQuote;
+};
+
+export const updateQuoteStatusApi = async (id, status) => {
+  const query = `
+    mutation UpdateQuoteStatus($id: ID!, $status: String!) {
+      updateQuoteStatus(id: $id, status: $status) {
+        id
+        status
+      }
+    }
+  `;
+  const res = await axiosClient.post("/", {
+    query,
+    variables: { id, status },
+  });
+  if (res.data.errors) throw new Error(res.data.errors[0].message);
+  return res.data.data.updateQuoteStatus;
+};
+
 export const getPendingQuoteRequestsCountApi = async () => {
   const query = `
     query {
@@ -164,6 +201,7 @@ export const getUnreadQuoteRequestsApi = async () => {
       unreadQuoteRequests {
         id
         created_at
+        notification_read
         contact {
           id
           full_name

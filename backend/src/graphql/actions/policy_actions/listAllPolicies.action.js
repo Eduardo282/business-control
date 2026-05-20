@@ -1,21 +1,8 @@
-import { pool } from "../../../config/db.js";
-
-let productTypeColumnEnsured = false;
-
-async function ensureProductTypeColumn() {
-  if (productTypeColumnEnsured) return;
-  try {
-    const [columns] = await pool.query("SHOW COLUMNS FROM products LIKE 'product_type'");
-    if (columns.length === 0) {
-      await pool.query(
-        "ALTER TABLE products ADD COLUMN product_type VARCHAR(20) DEFAULT 'PRODUCT'"
-      );
-    }
-  } catch (e) {
-    console.error("Error ensuring product_type column:", e);
-  }
-  productTypeColumnEnsured = true;
-}
+import {
+  getAssignedPolicies,
+  getStandalonePolicies,
+  getLegacyAssignedPolicies,
+} from "../../../repositories/policy.repository.js";
 
 function determineStatus(storedStatus, expirationDate) {
   const normalizedStatus = String(storedStatus || "")
@@ -74,10 +61,6 @@ function mapPolicyRows(rows) {
   }));
 }
 
-/**
- * Mapea productos "sueltos" (sin contact_product) de tipo servicio/póliza.
- * Se les asigna un id prefijado con "product-" para distinguirlos.
- */
 function mapStandaloneProducts(rows) {
   const now = new Date();
   const oneYearLater = new Date(now);
@@ -107,143 +90,24 @@ function mapStandaloneProducts(rows) {
 }
 
 export async function listAllPoliciesAction() {
-  await ensureProductTypeColumn();
   try {
-    // 1) Traer los contact_products que son servicios/pólizas (flujo existente)
-    const [cpRows] = await pool.query(`
-      SELECT
-        cp.id AS contact_product_id,
-        cp.contact_id,
-        cp.client_id,
-        cp.license_key,
-        cp.start_date,
-        cp.expiration_date,
-        cp.status,
-        p.id AS product_id,
-        p.name AS product_name,
-        p.category AS product_category,
-        p.current_price,
-        p.product_type,
-        cc.full_name AS contact_name,
-        cc.email AS contact_email,
-        c.business_name
-      FROM (
-        SELECT contact_product_id FROM services
-        UNION
-        SELECT contact_product_id FROM policies
-        UNION
-        SELECT cp.id AS contact_product_id
-        FROM contact_products cp
-        JOIN products p ON cp.product_id = p.id
-        WHERE p.product_type IN ('SERVICE', 'POLICY')
-           OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-           OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
-           OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-           OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
-      ) sp
-      JOIN contact_products cp ON cp.id = sp.contact_product_id
-      JOIN products p ON cp.product_id = p.id
-      JOIN client_contacts cc ON cp.contact_id = cc.id
-      JOIN clients c ON cc.client_id = c.id
-      ORDER BY cp.id DESC
-    `);
-
+    const cpRows = await getAssignedPolicies();
     const assignedResults = mapPolicyRows(cpRows);
 
-    // 2) Traer productos tipo servicio/póliza que NO tienen ningún contact_product
-    const [standaloneRows] = await pool.query(`
-      SELECT
-        p.id AS product_id,
-        p.name AS product_name,
-        p.category AS product_category,
-        p.current_price,
-        p.product_type,
-        p.client_id,
-        c.business_name
-      FROM products p
-      LEFT JOIN clients c ON p.client_id = c.id
-      WHERE (
-        p.product_type IN ('SERVICE', 'POLICY')
-        OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-        OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
-        OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-        OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
-      )
-      AND p.name NOT LIKE '%CONTPAQi%'
-      AND p.name NOT LIKE '%CONTPAQI%'
-      AND p.id NOT IN (
-        SELECT DISTINCT cp.product_id FROM contact_products cp
-      )
-      ORDER BY p.id DESC
-    `);
-
+    const standaloneRows = await getStandalonePolicies();
     const standaloneResults = mapStandaloneProducts(standaloneRows);
 
     return [...assignedResults, ...standaloneResults];
   } catch (error) {
-    // Fallback para ambientes sin migracion de tablas dedicadas.
     if (error.code !== "ER_NO_SUCH_TABLE") {
       throw error;
     }
 
-    const [legacyRows] = await pool.query(`
-      SELECT
-        cp.id AS contact_product_id,
-        cp.contact_id,
-        cp.client_id,
-        cp.license_key,
-        cp.start_date,
-        cp.expiration_date,
-        cp.status,
-        p.id AS product_id,
-        p.name AS product_name,
-        p.category AS product_category,
-        p.current_price,
-        p.product_type,
-        cc.full_name AS contact_name,
-        cc.email AS contact_email,
-        c.business_name
-      FROM contact_products cp
-      JOIN products p ON cp.product_id = p.id
-      JOIN client_contacts cc ON cp.contact_id = cc.id
-      JOIN clients c ON cc.client_id = c.id
-      WHERE p.product_type IN ('SERVICE', 'POLICY')
-         OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-         OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
-         OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-         OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
-      ORDER BY cp.id DESC
-    `);
-
+    const legacyRows = await getLegacyAssignedPolicies();
     const assignedResults = mapPolicyRows(legacyRows);
 
-    // Also try standalone products in legacy mode
     try {
-      const [standaloneRows] = await pool.query(`
-        SELECT
-          p.id AS product_id,
-          p.name AS product_name,
-          p.category AS product_category,
-          p.current_price,
-          p.product_type,
-          p.client_id,
-          c.business_name
-        FROM products p
-        LEFT JOIN clients c ON p.client_id = c.id
-        WHERE (
-          p.product_type IN ('SERVICE', 'POLICY')
-          OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-          OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
-          OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-          OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
-        )
-        AND p.name NOT LIKE '%CONTPAQi%'
-        AND p.name NOT LIKE '%CONTPAQI%'
-        AND p.id NOT IN (
-          SELECT DISTINCT cp.product_id FROM contact_products cp
-        )
-        ORDER BY p.id DESC
-      `);
+      const standaloneRows = await getStandalonePolicies();
       const standaloneResults = mapStandaloneProducts(standaloneRows);
       return [...assignedResults, ...standaloneResults];
     } catch {

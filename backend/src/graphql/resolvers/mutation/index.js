@@ -4,6 +4,7 @@ import * as contacts from "./contacts.mutation.js";
 import * as products from "./products.mutation.js";
 import * as quotes from "./quotes.mutation.js";
 import * as roles from "./roles.mutation.js";
+import * as categories from "./categories.mutation.js";
 
 export default {
   ...auth,
@@ -12,4 +13,5 @@ export default {
   ...products,
   ...quotes,
   ...roles,
+  ...categories,
 };

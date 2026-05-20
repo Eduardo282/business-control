@@ -464,15 +464,19 @@ export default function ProductDetail() {
                   placeholder="Nombre"
                   className="text-light-text-primary dark:text-white bg-light-bg dark:!bg-black/30 border-light-border dark:border-white/10"
                 />
-                <Input
-                  label="CATEGORÍA"
-                  value={editForm.category}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, category: e.target.value })
-                  }
-                  placeholder="Categoría"
-                  className="text-light-text-primary dark:text-white bg-light-bg dark:!bg-black/30 border-light-border dark:border-white/10"
-                />
+                <div className="w-full space-y-1.5">
+                  <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 ml-1 uppercase tracking-wider">
+                    CATEGORÍA
+                  </label>
+                  <input
+                    value={editForm.category}
+                    readOnly
+                    placeholder="Categoría"
+                    className="w-full rounded-xl px-4 py-3 text-sm bg-zinc-100 dark:bg-dark-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-dark-700 cursor-not-allowed outline-none transition-colors"
+                  />
+                </div>
+
+
                 <Input
                   label={
                     inferProductType(editForm) === "SERVICE" || inferProductType(editForm) === "POLICY"

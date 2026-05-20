@@ -11,6 +11,12 @@ USE business_control;
 SET SQL_SAFE_UPDATES = 0;
 SET FOREIGN_KEY_CHECKS = 0;
 
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL UNIQUE,
+  applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(30) NOT NULL UNIQUE,
@@ -80,6 +86,7 @@ CREATE TABLE IF NOT EXISTS products (
   client_id INT NULL,
   name VARCHAR(180) NOT NULL,
   category VARCHAR(80) NOT NULL,
+  product_type VARCHAR(20) NULL DEFAULT 'PRODUCT',
   current_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   users_count INT DEFAULT 0,
   description TEXT NULL,
@@ -183,6 +190,7 @@ CREATE TABLE IF NOT EXISTS quotes (
   notes TEXT NULL,
   is_sent_to_client_portal TINYINT DEFAULT 0,
   notification_read TINYINT DEFAULT 0,
+  is_deleted_admin TINYINT DEFAULT 0,
   INDEX idx_quotes_client_id (client_id),
   INDEX idx_quotes_user_id (user_id),
   INDEX idx_quotes_contact_id (contact_id),
@@ -235,7 +243,14 @@ CREATE TABLE IF NOT EXISTS support_messages (
     REFERENCES support_conversations(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS product_categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
+
 
 -- Compatibilidad si ya tenias una BD creada con un init.sql anterior.
 DELIMITER $$
@@ -274,6 +289,7 @@ CALL bc_add_column_if_missing('clients', 'portal_password_hash', '`portal_passwo
 CALL bc_add_column_if_missing('client_contacts', 'has_portal_access', '`has_portal_access` TINYINT DEFAULT 0 AFTER `position_title`');
 CALL bc_add_column_if_missing('client_contacts', 'portal_password_hash', '`portal_password_hash` VARCHAR(255) NULL AFTER `has_portal_access`');
 CALL bc_add_column_if_missing('products', 'client_id', '`client_id` INT NULL AFTER `id`');
+CALL bc_add_column_if_missing('products', 'product_type', '`product_type` VARCHAR(20) NULL DEFAULT \'PRODUCT\' AFTER `category`');
 CALL bc_add_column_if_missing('products', 'users_count', '`users_count` INT DEFAULT 0 AFTER `current_price`');
 CALL bc_add_column_if_missing('products', 'expires_at', '`expires_at` DATETIME NULL AFTER `description`');
 CALL bc_add_column_if_missing('contact_products', 'client_id', '`client_id` INT NULL AFTER `id`');
@@ -281,6 +297,7 @@ CALL bc_add_column_if_missing('quotes', 'folio', '`folio` VARCHAR(30) NULL AFTER
 CALL bc_add_column_if_missing('quotes', 'contact_id', '`contact_id` INT NULL AFTER `client_id`');
 CALL bc_add_column_if_missing('quotes', 'is_sent_to_client_portal', '`is_sent_to_client_portal` TINYINT DEFAULT 0 AFTER `notes`');
 CALL bc_add_column_if_missing('quotes', 'notification_read', '`notification_read` TINYINT DEFAULT 0 AFTER `is_sent_to_client_portal`');
+CALL bc_add_column_if_missing('quotes', 'is_deleted_admin', '`is_deleted_admin` TINYINT DEFAULT 0 AFTER `notification_read`');
 CALL bc_add_column_if_missing('quote_items', 'base_unit_price', '`base_unit_price` DECIMAL(10,2) NULL AFTER `quantity`');
 CALL bc_add_column_if_missing('quote_items', 'discount', '`discount` DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER `unit_price`');
 

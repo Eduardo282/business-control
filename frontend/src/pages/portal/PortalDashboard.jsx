@@ -190,7 +190,7 @@ export default function PortalDashboard() {
               }
               .reel-window {
                   width: 280px;
-                  height: 300px;
+                  height: 400px;
                   background: #fff;
                   border-radius: 15px;
                   position: relative;
@@ -198,7 +198,7 @@ export default function PortalDashboard() {
               }
               .reel-drum {
                   width: 100%;
-                  height: 300px;
+                  height: 400px;
                   position: absolute;
                   top: 0; 
                   transform-style: preserve-3d;
@@ -208,7 +208,7 @@ export default function PortalDashboard() {
               .symbol-face {
                   position: absolute;
                   width: 100%;
-                  height: 300px;
+                  height: 400px;
                   backface-visibility: hidden;
                   background: white;
                   box-sizing: border-box;
@@ -550,13 +550,13 @@ function ServiceReel({ service, spinCount, index }) {
         className="reel-drum"
         style={{ transform: `rotateX(-${rotation}deg)` }}>
         {faces.map((item, fIdx) => (
-          <div
-            key={fIdx}
-            className="symbol-face"
-            style={{ transform: `rotateX(${fIdx * 30}deg) translateZ(525px)` }}>
+            <div
+              key={fIdx}
+              className="symbol-face"
+              style={{ transform: `rotateX(${fIdx * 30}deg) translateZ(746px)` }}>
             {item ?
               <div
-                className={`p-5 flex flex-col h-[280px] bg-white overflow-hidden shadow-sm mx-2 my-2.5 rounded-xl ${
+                className={`p-5 flex flex-col h-[380px] bg-white overflow-hidden shadow-sm mx-2 my-2.5 rounded-xl ${
                   item.status === "CANCELLED" ?
                     "opacity-50 grayscale"
                   : ""
@@ -619,7 +619,7 @@ function ServiceReel({ service, spinCount, index }) {
                   </div>
                 </div>
               </div>
-            : <div className="flex flex-col items-center justify-center bg-white border-2 border-dashed border-zinc-200 h-[280px] mx-2 my-2.5 rounded-xl">
+            : <div className="flex flex-col items-center justify-center bg-white border-2 border-dashed border-zinc-200 h-[380px] mx-2 my-2.5 rounded-xl">
               </div>
             }
           </div>

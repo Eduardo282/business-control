@@ -1,17 +1,14 @@
-import { pool } from "../../../config/db.js";
+import { insertRole } from "../../../repositories/role.repository.js";
 
 export async function createRoleAction({ name }) {
   const roleName = name?.trim().toUpperCase();
   if (!roleName) throw new Error("Nombre de rol requerido");
 
   try {
-    const [result] = await pool.query(
-      `INSERT INTO roles (name) VALUES (:name)`,
-      { name: roleName },
-    );
+    const insertId = await insertRole(roleName);
 
     return {
-      id: result.insertId,
+      id: insertId,
       name: roleName,
     };
   } catch (e) {

@@ -1,15 +1,9 @@
-import React, { useEffect, useState, useContext, useMemo, useRef } from "react";
-import { createPortal, flushSync } from "react-dom";
+import React, { useEffect, useState, useContext, useMemo } from "react";
 import { Link } from "react-router-dom";
-import Swal from "sweetalert2";
 import { AuthContext } from "../../context/AuthContext";
 import {
-  createClientApi,
   deleteClientApi,
-  updateClientApi,
-  bulkCreateClientsApi,
   listClientsDynamicApi,
-  importClientsFromDriveApi,
 } from "../../actionsAPI/clients.api";
 import {
   useReactTable,
@@ -33,11 +27,20 @@ import {
   Upload,
   FileSpreadsheet,
   FileText,
-  CheckCircle2,
-  AlertCircle,
 } from "@icons";
 
-import Input from "../../components/ui/Input";
+import { normalizeSearchText } from "../../utils/formatters";
+import {
+  exportRowsToExcel,
+  exportTemplateToExcel,
+} from "../../utils/excelExport";
+import { notificationService } from "../../services/notificationService";
+
+// Subcomponentes modularizados
+import ClientCreateModal from "./clients/ClientCreateModal";
+import ClientEditModal from "./clients/ClientEditModal";
+import ClientBulkModal from "./clients/ClientBulkModal";
+import ClientFilterPicker from "./clients/ClientFilterPicker";
 
 const EXCEL_VIEW_STORAGE_KEY = "clients_excel_view_config";
 const DEFAULT_VISIBLE_CLIENT_COLUMNS = [
@@ -76,62 +79,24 @@ const CLIENT_TEMPLATE_COLUMNS = [
   "CÓDIGO POSTAL",
 ];
 
-function normalizeExcelHeader(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function hasValue(value) {
   return value !== null && value !== undefined && String(value).trim() !== "";
 }
 
-function normalizeSearchText(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
-function tokenizeColumnTerms(value) {
-  return Array.from(
-    new Set(
-      normalizeSearchText(value)
-        .split(" ")
-        .map((token) => token.replace(/[0-9]+/g, ""))
-        .filter((token) => token.length > 1),
-    ),
-  );
-}
-
 function scoreColumnAffinity(detailColumn, primaryColumn) {
-  const detailTokens = tokenizeColumnTerms(
-    `${detailColumn?.name || ""} ${detailColumn?.label || ""}`,
-  );
-  if (!detailTokens.length) return 0;
-
-  const primaryTokens = new Set(
-    tokenizeColumnTerms(
-      `${primaryColumn?.name || ""} ${primaryColumn?.label || ""}`,
-    ),
-  );
-
-  return detailTokens.reduce(
-    (score, token) => (primaryTokens.has(token) ? score + 1 : score),
-    0,
-  );
+  const tokensDetail = String(detailColumn?.name || "")
+    .toLowerCase()
+    .split(/[_\s]+/);
+  const tokensPrimary = String(primaryColumn?.name || "")
+    .toLowerCase()
+    .split(/[_\s]+/);
+  return tokensDetail.filter((t) => tokensPrimary.includes(t)).length;
 }
 
 function resolveDetailHostColumn(
   detailColumn,
   primaryColumns = [],
-  detailColumnsByPrimary = {},
+  detailColumnsByPrimary = {}
 ) {
   if (!primaryColumns.length) return null;
 
@@ -165,334 +130,21 @@ export default function Clients() {
   const [error, setError] = useState("");
   const [sorting, setSorting] = useState([]);
   const [expandedRows, setExpandedRows] = useState({});
+
+  // Modales
   const [showModal, setShowModal] = useState(false);
-
-  // Formulario de creación/edición
-  const [business_name, setBusinessName] = useState("");
-  const [rfc, setRfc] = useState("");
-  const [email1, setEmail1] = useState("");
-  const [email2, setEmail2] = useState("");
-  const [celular, setCelular] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [codigo_postal, setCodigoPostal] = useState("");
-  const [ciudad, setCiudad] = useState("");
-
-  // Estado para edición
-  const [editingClient, setEditingClient] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-
-  // Estado para carga masiva
+  const [editingClient, setEditingClient] = useState(null);
   const [showBulkModal, setShowBulkModal] = useState(false);
-  const [bulkData, setBulkData] = useState([]);
-  const [bulkErrors, setBulkErrors] = useState([]);
-  const [bulkUploading, setBulkUploading] = useState(false);
-  const [bulkResult, setBulkResult] = useState(null);
-  const [driveUrl, setDriveUrl] = useState("");
-  const [driveImporting, setDriveImporting] = useState(false);
+
+  // Columnas personalizadas / Excel view
   const [columnLabelOverrides, setColumnLabelOverrides] = useState({});
   const [excelViewColumns, setExcelViewColumns] = useState(null);
+
+  // Filter Picker States
   const [activeFilterPickerField, setActiveFilterPickerField] = useState(null);
   const [filterPickerSearch, setFilterPickerSearch] = useState("");
   const [filterPickerPage, setFilterPickerPage] = useState(0);
-  const FILTER_PAGE_SIZE = 50;
-  const bulkFileRef = useRef(null);
-
-  // Mapeo de columnas Excel → campo DB
-  const COLUMN_MAP = {
-    "razon social": "business_name",
-    business_name: "business_name",
-    "business name": "business_name",
-    empresa: "business_name",
-    nombre: "business_name",
-    rfc: "rfc",
-    "correo principal": "email1",
-    email1: "email1",
-    correo: "email1",
-    email: "email1",
-    "correo secundario": "email2",
-    "email secundario": "email2",
-    email2: "email2",
-    celular: "celular",
-    movil: "celular",
-    telefono: "telefono",
-    tel: "telefono",
-    "codigo postal": "codigo_postal",
-    codigo_postal: "codigo_postal",
-    cp: "codigo_postal",
-    ciudad: "ciudad",
-    city: "ciudad",
-  };
-
-  const handleBulkFile = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setBulkResult(null);
-    setBulkErrors([]);
-
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      try {
-        const XLSX = await import("xlsx");
-        const wb = XLSX.read(evt.target.result, { type: "array" });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(ws, {
-          header: 1,
-          defval: "",
-          blankrows: false,
-        });
-
-        if (!rows.length) {
-          setBulkData([]);
-          setBulkErrors(["El archivo está vacío o no contiene encabezados."]);
-          return;
-        }
-
-        const [headerRow = [], ...sheetRows] = rows;
-        const normalizedHeaders = headerRow.map((header) =>
-          normalizeExcelHeader(header),
-        );
-        const mappedFields = normalizedHeaders.map(
-          (header) => COLUMN_MAP[header] || null,
-        );
-
-        if (!mappedFields.some(Boolean)) {
-          setBulkData([]);
-          setBulkErrors([
-            "No se reconocieron columnas válidas. Usa la plantilla 'Descargar plantilla'.",
-          ]);
-          return;
-        }
-
-        const missingTemplateHeaders = CLIENT_TEMPLATE_COLUMNS.filter(
-          (header) => !normalizedHeaders.includes(normalizeExcelHeader(header)),
-        );
-
-        // Mapear columnas
-        const mapped = [];
-        sheetRows.forEach((row, idx) => {
-          const cells = Array.isArray(row) ? row : [];
-          const isEmptyRow = cells.every(
-            (cell) => String(cell ?? "").trim() === "",
-          );
-          if (isEmptyRow) return;
-
-          const mapped_row = {};
-          cells.forEach((value, columnIndex) => {
-            const field = mappedFields[columnIndex];
-            if (!field) return;
-
-            const parsedValue = String(value ?? "").trim();
-            if (parsedValue !== "") {
-              mapped_row[field] = parsedValue;
-            }
-          });
-
-          mapped_row._row = idx + 2; // fila Excel (1=header)
-          mapped.push(mapped_row);
-        });
-
-        if (!mapped.length) {
-          setBulkData([]);
-          setBulkErrors([
-            "El archivo no contiene filas con datos para importar.",
-          ]);
-          return;
-        }
-
-        // Validar
-        const errors = [];
-
-        if (missingTemplateHeaders.length) {
-          errors.push(
-            `Faltan columnas de la plantilla: ${missingTemplateHeaders.join(", ")}.`,
-          );
-        }
-
-        mapped.forEach((r) => {
-          if (!r.business_name) {
-            errors.push(`Fila ${r._row}: Falta "Razón Social" (obligatorio).`);
-          }
-        });
-
-        const valid = mapped.filter((r) => r.business_name);
-
-        if (!valid.length) {
-          errors.push("No hay filas válidas para importar.");
-        }
-
-        setBulkData(valid);
-        setBulkErrors(errors);
-      } catch {
-        setBulkData([]);
-        setBulkErrors([
-          "No se pudo leer el archivo. Verifica que sea un Excel válido (.xlsx / .xls).",
-        ]);
-      }
-    };
-    reader.readAsArrayBuffer(file);
-    // Reset para poder seleccionar el mismo archivo otra vez
-    e.target.value = "";
-  };
-
-  const fireBulkModalAlert = (options) =>
-    Swal.fire({
-      ...options,
-      didOpen: () => {
-        const container = Swal.getContainer();
-        if (container) {
-          container.style.zIndex = "11000";
-        }
-
-        if (typeof options.didOpen === "function") {
-          options.didOpen();
-        }
-      },
-    });
-
-  const executeBulkUpload = async () => {
-    setBulkUploading(true);
-    setBulkResult(null);
-    try {
-      const inputs = bulkData.map(({ _row, ...rest }) => ({
-        business_name: rest.business_name,
-        rfc: rest.rfc || null,
-        email1: rest.email1 || null,
-        email2: rest.email2 || null,
-        celular: rest.celular || null,
-        telefono: rest.telefono || null,
-        codigo_postal: rest.codigo_postal || null,
-        ciudad: rest.ciudad || null,
-      }));
-
-      // Enviar en lotes de 200 para evitar error 413
-      const CHUNK = 200;
-      let totalCreated = 0;
-      for (let i = 0; i < inputs.length; i += CHUNK) {
-        const chunk = inputs.slice(i, i + CHUNK);
-        const created = await bulkCreateClientsApi(chunk);
-        totalCreated += created.length;
-      }
-
-      setBulkResult({ success: true, count: totalCreated });
-      flushSync(() => {
-        setShowBulkModal(false);
-      });
-      await fireBulkModalAlert({
-        title: "Importacion completada",
-        text: `Se importaron ${totalCreated} clientes exitosamente.`,
-        icon: "success",
-        confirmButtonColor: "#2277B4",
-        timer: 2200,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        allowOutsideClick: false,
-      });
-      setBulkData([]);
-      await load();
-    } catch (err) {
-      setBulkResult({
-        success: false,
-        message: err.message || "Error en la carga masiva.",
-      });
-      fireBulkModalAlert({
-        title: "Error",
-        text: err.message || "Error en la carga masiva.",
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
-    } finally {
-      setBulkUploading(false);
-    }
-  };
-
-  const executeDriveImport = async () => {
-    const url = driveUrl.trim();
-    if (!url) {
-      setBulkResult({
-        success: false,
-        message: "Debes ingresar la URL del archivo en Google Drive.",
-      });
-      fireBulkModalAlert({
-        title: "Falta la URL",
-        text: "Debes ingresar la URL del archivo en Google Drive.",
-        icon: "warning",
-        confirmButtonColor: "#2277B4",
-      });
-      return;
-    }
-
-    setDriveImporting(true);
-    setBulkResult(null);
-    try {
-      const report = await importClientsFromDriveApi(url);
-
-      const mappedHeadersByColumn = report.mappedHeadersByColumn || {};
-      const preferredViewColumns =
-        (
-          Array.isArray(report.preferredViewColumns) &&
-          report.preferredViewColumns.length
-        ) ?
-          report.preferredViewColumns
-          : Object.keys(mappedHeadersByColumn);
-
-      if (preferredViewColumns.length) {
-        setExcelViewColumns(preferredViewColumns);
-        setColumnLabelOverrides((prev) => {
-          const nextOverrides = {
-            ...prev,
-            ...mappedHeadersByColumn,
-          };
-
-          localStorage.setItem(
-            EXCEL_VIEW_STORAGE_KEY,
-            JSON.stringify({
-              columnLabelOverrides: nextOverrides,
-              excelViewColumns: preferredViewColumns,
-            }),
-          );
-
-          return nextOverrides;
-        });
-      }
-
-      setBulkResult({
-        success: true,
-        count: report.importedCount,
-        skippedCount: report.skippedCount,
-        details: report,
-      });
-      flushSync(() => {
-        setShowBulkModal(false);
-      });
-      await fireBulkModalAlert({
-        title: "Importacion completada",
-        text:
-          report.skippedCount > 0 ?
-            `Se importaron ${report.importedCount} clientes. Se omitieron ${report.skippedCount} filas.`
-            : `Se importaron ${report.importedCount} clientes exitosamente.`,
-        icon: "success",
-        confirmButtonColor: "#2277B4",
-        timer: 2200,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        allowOutsideClick: false,
-      });
-      await load();
-    } catch (err) {
-      setBulkResult({
-        success: false,
-        message: err.message || "Error importando archivo desde Drive.",
-      });
-      fireBulkModalAlert({
-        title: "Error",
-        text: err.message || "Error importando archivo desde Drive.",
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
-    } finally {
-      setDriveImporting(false);
-    }
-  };
 
   const load = async () => {
     setError("");
@@ -520,156 +172,6 @@ export default function Clients() {
       setLoading(false);
     }
   };
-
-  const filterableColumns = useMemo(
-    () =>
-      dynamicColumns.filter(
-        (column) => column.name && column.name !== "portal_password_hash",
-      ),
-    [dynamicColumns],
-  );
-
-  const quickFilterButtons = useMemo(() => {
-    const availableColumns = new Set(
-      filterableColumns.map((column) => column.name),
-    );
-    const columnsByName = new Map(
-      filterableColumns.map((column) => [column.name, column]),
-    );
-
-    return QUICK_FILTER_FIELDS.map((config) => {
-      const resolvedFieldName =
-        config.aliases.find((name) => availableColumns.has(name)) || config.id;
-      const column = columnsByName.get(resolvedFieldName);
-
-      return {
-        ...config,
-        fieldName: resolvedFieldName,
-        modalLabel:
-          columnLabelOverrides[resolvedFieldName] ||
-          column?.label ||
-          config.buttonLabel,
-      };
-    });
-  }, [filterableColumns, columnLabelOverrides]);
-
-  const activeFilterPickerConfig = useMemo(
-    () =>
-      quickFilterButtons.find(
-        (button) => button.fieldName === activeFilterPickerField,
-      ) || null,
-    [quickFilterButtons, activeFilterPickerField],
-  );
-
-  const filterPickerOptions = useMemo(() => {
-    if (!activeFilterPickerField) return [];
-
-    const uniqueValues = new Map();
-    allClients.forEach((client) => {
-      const rawValue = client?.[activeFilterPickerField];
-      if (!hasValue(rawValue)) return;
-
-      const value = String(rawValue).trim();
-      const normalized = normalizeSearchText(value);
-      if (!normalized || uniqueValues.has(normalized)) return;
-
-      uniqueValues.set(normalized, value);
-    });
-
-    return Array.from(uniqueValues.values()).sort((a, b) =>
-      a.localeCompare(b, "es", { sensitivity: "base" }),
-    );
-  }, [allClients, activeFilterPickerField]);
-
-  const visibleFilterPickerOptions = useMemo(() => {
-    const normalizedPickerSearch = normalizeSearchText(filterPickerSearch);
-    if (!normalizedPickerSearch) return filterPickerOptions;
-
-    return filterPickerOptions.filter((value) =>
-      normalizeSearchText(value).includes(normalizedPickerSearch),
-    );
-  }, [filterPickerSearch, filterPickerOptions]);
-
-  const fixedMainColumnNames = useMemo(() => {
-    if (Array.isArray(excelViewColumns) && excelViewColumns.length) {
-      const excelOrdered = excelViewColumns.filter(
-        (name, index, arr) =>
-          !!name &&
-          name !== "portal_password_hash" &&
-          arr.indexOf(name) === index,
-      );
-      if (excelOrdered.length) {
-        return excelOrdered.slice(0, FIXED_MAIN_COLUMNS_COUNT);
-      }
-    }
-
-    return DEFAULT_VISIBLE_CLIENT_COLUMNS.slice(0, FIXED_MAIN_COLUMNS_COUNT);
-  }, [excelViewColumns]);
-
-  const tableColumnsFromView = useMemo(() => {
-    let nextColumns = filterableColumns;
-
-    if (Array.isArray(excelViewColumns) && excelViewColumns.length) {
-      const columnsByName = new Map(
-        filterableColumns.map((column) => [column.name, column]),
-      );
-      const fixedColumns = fixedMainColumnNames
-        .map((columnName) => columnsByName.get(columnName))
-        .filter(Boolean);
-      const fixedColumnsSet = new Set(
-        fixedColumns.map((column) => column.name),
-      );
-
-      const excelSubset = excelViewColumns
-        .map((columnName) => columnsByName.get(columnName))
-        .filter((column) => !!column)
-        .filter((column) => !fixedColumnsSet.has(column.name));
-
-      const mergedColumns = [...fixedColumns, ...excelSubset];
-      if (mergedColumns.length) nextColumns = mergedColumns;
-    }
-
-    return nextColumns.map((column) => ({
-      ...column,
-      label: columnLabelOverrides[column.name] || column.label,
-    }));
-  }, [
-    filterableColumns,
-    excelViewColumns,
-    columnLabelOverrides,
-    fixedMainColumnNames,
-  ]);
-
-  const primaryTableColumns = useMemo(() => {
-    const columnsByName = new Map(
-      tableColumnsFromView.map((column) => [column.name, column]),
-    );
-
-    let orderedColumns = fixedMainColumnNames
-      .map((columnName) => columnsByName.get(columnName))
-      .filter(Boolean);
-
-    if (orderedColumns.length < FIXED_MAIN_COLUMNS_COUNT) {
-      const orderedSet = new Set(orderedColumns.map((column) => column.name));
-      const needed = FIXED_MAIN_COLUMNS_COUNT - orderedColumns.length;
-      const fallbackColumns = tableColumnsFromView
-        .filter((column) => !orderedSet.has(column.name))
-        .slice(0, needed);
-
-      orderedColumns = [...orderedColumns, ...fallbackColumns];
-    }
-
-    return orderedColumns.slice(0, FIXED_MAIN_COLUMNS_COUNT);
-  }, [tableColumnsFromView, fixedMainColumnNames]);
-
-  const detailColumns = useMemo(() => {
-    const primarySet = new Set(
-      primaryTableColumns.map((column) => column.name),
-    );
-    return tableColumnsFromView.filter(
-      (column) => !primarySet.has(column.name),
-    );
-  }, [tableColumnsFromView, primaryTableColumns]);
 
   useEffect(() => {
     try {
@@ -699,10 +201,11 @@ export default function Clients() {
     }
   }, [showFilters]);
 
+  // Filtrado reactivo en el frontend
   useEffect(() => {
     const normalizedQuery = normalizeSearchText(q);
     const activeFilters = Object.entries(filters).filter(
-      ([, value]) => String(value || "").trim() !== "",
+      ([, value]) => String(value || "").trim() !== ""
     );
     const hasFilters = activeFilters.length > 0;
 
@@ -718,40 +221,169 @@ export default function Clients() {
       const globalMatch =
         !normalizedQuery ||
         searchableColumns.some((column) =>
-          normalizeSearchText(client[column.name]).includes(normalizedQuery),
+          normalizeSearchText(client[column.name]).includes(normalizedQuery)
         );
 
       const fieldFiltersMatch = activeFilters.every(
         ([key, value]) =>
-          normalizeSearchText(client[key]) === normalizeSearchText(value),
+          normalizeSearchText(client[key]) === normalizeSearchText(value)
       );
 
       return globalMatch && fieldFiltersMatch;
     });
 
     setClients(filtered);
-  }, [q, filters, allClients, filterableColumns, tableColumnsFromView]);
+  }, [q, filters, allClients]);
 
-  const openFilterPicker = (fieldName) => {
-    setActiveFilterPickerField(fieldName);
-    setFilterPickerSearch("");
-    setFilterPickerPage(0);
-  };
+  const filterableColumns = useMemo(
+    () =>
+      dynamicColumns.filter(
+        (column) => column.name && column.name !== "portal_password_hash"
+      ),
+    [dynamicColumns]
+  );
 
-  const closeFilterPicker = () => {
-    setActiveFilterPickerField(null);
-    setFilterPickerSearch("");
-  };
+  const quickFilterButtons = useMemo(() => {
+    const availableColumns = new Set(
+      filterableColumns.map((column) => column.name)
+    );
+    const columnsByName = new Map(
+      filterableColumns.map((column) => [column.name, column])
+    );
 
-  const applyFilterValue = (value) => {
-    if (!activeFilterPickerField) return;
+    return QUICK_FILTER_FIELDS.map((config) => {
+      const resolvedFieldName =
+        config.aliases.find((name) => availableColumns.has(name)) || config.id;
+      const column = columnsByName.get(resolvedFieldName);
 
-    setFilters((prev) => ({
-      ...prev,
-      [activeFilterPickerField]: value,
+      return {
+        ...config,
+        fieldName: resolvedFieldName,
+        modalLabel:
+          columnLabelOverrides[resolvedFieldName] ||
+          column?.label ||
+          config.buttonLabel,
+      };
+    });
+  }, [filterableColumns, columnLabelOverrides]);
+
+  const activeFilterPickerConfig = useMemo(
+    () =>
+      quickFilterButtons.find(
+        (button) => button.fieldName === activeFilterPickerField
+      ) || null,
+    [quickFilterButtons, activeFilterPickerField]
+  );
+
+  const filterPickerOptions = useMemo(() => {
+    if (!activeFilterPickerField) return [];
+
+    const uniqueValues = new Map();
+    allClients.forEach((client) => {
+      const rawValue = client?.[activeFilterPickerField];
+      if (!hasValue(rawValue)) return;
+
+      const value = String(rawValue).trim();
+      const normalized = normalizeSearchText(value);
+      if (!normalized || uniqueValues.has(normalized)) return;
+
+      uniqueValues.set(normalized, value);
+    });
+
+    return Array.from(uniqueValues.values()).sort((a, b) =>
+      a.localeCompare(b, "es", { sensitivity: "base" })
+    );
+  }, [allClients, activeFilterPickerField]);
+
+  const visibleFilterPickerOptions = useMemo(() => {
+    const normalizedPickerSearch = normalizeSearchText(filterPickerSearch);
+    if (!normalizedPickerSearch) return filterPickerOptions;
+
+    return filterPickerOptions.filter((value) =>
+      normalizeSearchText(value).includes(normalizedPickerSearch)
+    );
+  }, [filterPickerSearch, filterPickerOptions]);
+
+  const fixedMainColumnNames = useMemo(() => {
+    if (Array.isArray(excelViewColumns) && excelViewColumns.length) {
+      const excelOrdered = excelViewColumns.filter(
+        (name, index, arr) =>
+          !!name &&
+          name !== "portal_password_hash" &&
+          arr.indexOf(name) === index
+      );
+      if (excelOrdered.length) {
+        return excelOrdered.slice(0, FIXED_MAIN_COLUMNS_COUNT);
+      }
+    }
+
+    return DEFAULT_VISIBLE_CLIENT_COLUMNS.slice(0, FIXED_MAIN_COLUMNS_COUNT);
+  }, [excelViewColumns]);
+
+  const tableColumnsFromView = useMemo(() => {
+    let nextColumns = filterableColumns;
+
+    if (Array.isArray(excelViewColumns) && excelViewColumns.length) {
+      const columnsByName = new Map(
+        filterableColumns.map((column) => [column.name, column])
+      );
+      const fixedColumns = fixedMainColumnNames
+        .map((columnName) => columnsByName.get(columnName))
+        .filter(Boolean);
+      const fixedColumnsSet = new Set(
+        fixedColumns.map((column) => column.name)
+      );
+
+      const excelSubset = excelViewColumns
+        .map((columnName) => columnsByName.get(columnName))
+        .filter((column) => !!column)
+        .filter((column) => !fixedColumnsSet.has(column.name));
+
+      const mergedColumns = [...fixedColumns, ...excelSubset];
+      if (mergedColumns.length) nextColumns = mergedColumns;
+    }
+
+    return nextColumns.map((column) => ({
+      ...column,
+      label: columnLabelOverrides[column.name] || column.label,
     }));
-    closeFilterPicker();
-  };
+  }, [
+    filterableColumns,
+    excelViewColumns,
+    columnLabelOverrides,
+    fixedMainColumnNames,
+  ]);
+
+  const primaryTableColumns = useMemo(() => {
+    const columnsByName = new Map(
+      tableColumnsFromView.map((column) => [column.name, column])
+    );
+
+    let orderedColumns = fixedMainColumnNames
+      .map((columnName) => columnsByName.get(columnName))
+      .filter(Boolean);
+
+    if (orderedColumns.length < FIXED_MAIN_COLUMNS_COUNT) {
+      const orderedSet = new Set(orderedColumns.map((column) => column.name));
+      const needed = FIXED_MAIN_COLUMNS_COUNT - orderedColumns.length;
+      const fallbackColumns = tableColumnsFromView
+        .filter((column) => !orderedSet.has(column.name))
+        .slice(0, needed);
+
+      orderedColumns = [...orderedColumns, ...fallbackColumns];
+    }
+
+    return orderedColumns.slice(0, FIXED_MAIN_COLUMNS_COUNT);
+  }, [tableColumnsFromView, fixedMainColumnNames]);
+
+  const detailColumns = useMemo(() => {
+    const primarySet = new Set(
+      primaryTableColumns.map((column) => column.name)
+    );
+    return tableColumnsFromView.filter(
+      (column) => !primarySet.has(column.name)
+    );
+  }, [tableColumnsFromView, primaryTableColumns]);
 
   const clearFilters = () => {
     setQ("");
@@ -764,130 +396,85 @@ export default function Clients() {
     Object.values(filters).filter((v) => String(v || "").trim() !== "").length +
     (q.trim() ? 1 : 0);
 
-  const isValuePresent = hasValue;
-
   const getRowDetailColumns = (row) =>
-    detailColumns.filter((column) => isValuePresent(row?.[column.name]));
-
-  const resetForm = () => {
-    setBusinessName("");
-    setRfc("");
-    setEmail1("");
-    setEmail2("");
-    setCelular("");
-    setTelefono("");
-    setCodigoPostal("");
-    setCiudad("");
-  };
-
-  const create = async (e) => {
-    e.preventDefault();
-    setError("");
-    try {
-      await createClientApi({
-        business_name,
-        rfc: rfc || null,
-        email1: email1 || null,
-        email2: email2 || null,
-        celular: celular || null,
-        telefono: telefono || null,
-        codigo_postal: codigo_postal || null,
-        ciudad: ciudad || null,
-      });
-      resetForm();
-      setShowModal(false);
-      await load();
-    } catch (e2) {
-      setError(e2.message || "Error creando cliente");
-    }
-  };
+    detailColumns.filter((column) => hasValue(row?.[column.name]));
 
   const remove = async (id) => {
-    const result = await Swal.fire({
+    const isConfirmed = await notificationService.confirm({
       title: "¿Estás seguro?",
       text: "Se eliminarán también sus cotizaciones y contactos.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#ef4444",
-      cancelButtonColor: "#2277B4",
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
     });
 
-    if (!result.isConfirmed) return;
+    if (!isConfirmed) return;
 
     try {
       await deleteClientApi(id);
       await load();
-      Swal.fire({
-        title: "¡Eliminado!",
-        text: "El cliente ha sido eliminado.",
-        icon: "success",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      notificationService.toast({ title: "El cliente ha sido eliminado", icon: "success" });
     } catch (e) {
-      Swal.fire("Error", e.message || "Error eliminando cliente", "error");
+      notificationService.error("Error", e.message || "Error eliminando cliente");
     }
   };
 
   const openEditModal = (client) => {
     setEditingClient(client);
-    setBusinessName(client.business_name || "");
-    setRfc(client.rfc || "");
-    setEmail1(client.email1 || "");
-    setEmail2(client.email2 || "");
-    setCelular(client.celular || "");
-    setTelefono(client.telefono || "");
-    setCodigoPostal(client.codigo_postal || "");
-    setCiudad(client.ciudad || "");
     setShowEditModal(true);
   };
 
-  const updateClient = async (e) => {
-    e.preventDefault();
-    setError("");
-    try {
-      await updateClientApi(editingClient.id, {
-        business_name,
-        rfc: rfc || null,
-        email1: email1 || null,
-        email2: email2 || null,
-        celular: celular || null,
-        telefono: telefono || null,
-        codigo_postal: codigo_postal || null,
-        ciudad: ciudad || null,
-      });
-      resetForm();
-      setEditingClient(null);
-      setShowEditModal(false);
-      await load();
-    } catch (e2) {
-      setError(e2.message || "Error actualizando cliente");
+  // Callback del importador masivo
+  const handleBulkSuccess = (data) => {
+    if (data.type === "drive" && data.report) {
+      const report = data.report;
+      const mappedHeadersByColumn = report.mappedHeadersByColumn || {};
+      const preferredViewColumns =
+        (Array.isArray(report.preferredViewColumns) && report.preferredViewColumns.length)
+          ? report.preferredViewColumns
+          : Object.keys(mappedHeadersByColumn);
+
+      if (preferredViewColumns.length) {
+        setExcelViewColumns(preferredViewColumns);
+        setColumnLabelOverrides((prev) => {
+          const nextOverrides = {
+            ...prev,
+            ...mappedHeadersByColumn,
+          };
+          localStorage.setItem(
+            EXCEL_VIEW_STORAGE_KEY,
+            JSON.stringify({
+              columnLabelOverrides: nextOverrides,
+              excelViewColumns: preferredViewColumns,
+            })
+          );
+          return nextOverrides;
+        });
+      }
     }
+    load();
   };
 
-  // Definición de columnas para TanStack Table
+  // Columnas para TanStack Table
   const columns = useMemo(() => {
     const dynamicDataColumns = primaryTableColumns.map((column) => ({
       accessorKey: column.name,
       header: column.label,
       size: column.name === "business_name" ? 240 : 180,
-      cell: ({ row, getValue }) => {
+      cell: ({ getValue }) => {
         const rawValue = getValue();
         const value =
-          rawValue === null || rawValue === undefined || rawValue === "" ?
-            "—"
+          rawValue === null || rawValue === undefined || rawValue === ""
+            ? "—"
             : String(rawValue);
 
         if (column.name === "business_name") {
           const normalizedBusinessName =
-            value !== "—" ?
-              `${value.charAt(0).toUpperCase()}${value.slice(1)}`
+            value !== "—"
+              ? `${value.charAt(0).toUpperCase()}${value.slice(1)}`
               : value;
           const firstChar =
-            normalizedBusinessName !== "—" ?
-              normalizedBusinessName.charAt(0)
+            normalizedBusinessName !== "—"
+              ? normalizedBusinessName.charAt(0)
               : "•";
 
           return (
@@ -901,7 +488,8 @@ export default function Clients() {
                   whiteSpace: "normal",
                   overflowWrap: "anywhere",
                   wordBreak: "break-word",
-                }}>
+                }}
+              >
                 {normalizedBusinessName}
               </span>
             </div>
@@ -915,7 +503,8 @@ export default function Clients() {
               whiteSpace: "normal",
               overflowWrap: "anywhere",
               wordBreak: "break-word",
-            }}>
+            }}
+          >
             {value}
           </span>
         );
@@ -928,8 +517,9 @@ export default function Clients() {
         header: () => (
           <button
             onClick={() => setShowModal(true)}
-            title="Registrar nuevo cliente">
-            <span className="inline-flex items-center gap-1 text-[#000] no-underline text-sm">
+            title="Registrar nuevo cliente"
+          >
+            <span className="inline-flex items-center gap-1 text-[#000] no-underline text-sm font-bold">
               <Plus size={18} strokeWidth={3} />
               <span>Nuevo</span>
             </span>
@@ -951,10 +541,9 @@ export default function Clients() {
                 }))
               }
               className="size-7 inline-flex items-center justify-center rounded-lg hover:bg-zinc-100 transition-colors text-zinc-500"
-              title={isOpen ? "Ocultar más detalles" : "Ver más detalles"}>
-              {isOpen ?
-                <ChevronDown size={16} />
-                : <ChevronRight size={16} />}
+              title={isOpen ? "Ocultar más detalles" : "Ver más detalles"}
+            >
+              {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </button>
           );
         },
@@ -972,27 +561,30 @@ export default function Clients() {
               <button
                 className="px-4 py-1.5 text-sm font-semibold text-[#2277B4] bg-white rounded-xl
                            border border-[#CBD5E1] hover:bg-[#F8FAFC] hover:border-[#B8C6D8]
-                           shadow-sm transition-colors duration-150">
+                           shadow-sm transition-colors duration-150"
+              >
                 Gestionar
               </button>
             </Link>
             {(user?.role?.name === "ADMIN" ||
               user?.role?.name === "VENTAS") && (
-                <>
-                  <button
-                    onClick={() => openEditModal(row.original)}
-                    className="size-8 flex items-center justify-center rounded-lg text-amber-800 hover:scale-75 transition-colors"
-                    title="Editar">
-                    <Edit2 size={16} />
-                  </button>
-                  <button
-                    onClick={() => remove(row.original.id)}
-                    className="size-8 flex items-center justify-center rounded-lg text-red-700 hover:scale-75 transition-colors"
-                    title="Eliminar">
-                    <Trash2 size={16} />
-                  </button>
-                </>
-              )}
+              <>
+                <button
+                  onClick={() => openEditModal(row.original)}
+                  className="size-8 flex items-center justify-center rounded-lg text-amber-800 hover:scale-75 transition-colors"
+                  title="Editar"
+                >
+                  <Edit2 size={16} />
+                </button>
+                <button
+                  onClick={() => remove(row.original.id)}
+                  className="size-8 flex items-center justify-center rounded-lg text-red-700 hover:scale-75 transition-colors"
+                  title="Eliminar"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </>
+            )}
           </div>
         ),
       },
@@ -1005,9 +597,7 @@ export default function Clients() {
     const hasExcelValue = (row) =>
       excelViewColumns.some((columnName) => {
         const value = row?.[columnName];
-        return (
-          value !== null && value !== undefined && String(value).trim() !== ""
-        );
+        return value !== null && value !== undefined && String(value).trim() !== "";
       });
 
     const withIndex = clients.map((row, index) => ({
@@ -1079,12 +669,7 @@ export default function Clients() {
     const { exportColumns, exportRows } = getExportContext();
 
     if (!exportRows.length) {
-      Swal.fire({
-        title: "Sin datos",
-        text: "No hay clientes para exportar.",
-        icon: "info",
-        confirmButtonColor: "#2277B4",
-      });
+      notificationService.info("Sin datos", "No hay clientes para exportar.");
       return;
     }
 
@@ -1110,8 +695,8 @@ export default function Clients() {
         body: exportRows.map((row) =>
           exportColumns.map((column) => {
             const rawValue = row?.[column.name];
-            return isValuePresent(rawValue) ? String(rawValue) : "—";
-          }),
+            return hasValue(rawValue) ? String(rawValue) : "—";
+          })
         ),
         theme: "grid",
         headStyles: { fillColor: [34, 119, 180] },
@@ -1120,12 +705,7 @@ export default function Clients() {
 
       doc.save(`Clientes_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message || "No se pudo generar el PDF.",
-        icon: "error",
-        confirmButtonColor: "#d33",
-      });
+      notificationService.error("Error", e.message || "No se pudo generar el PDF.");
     }
   };
 
@@ -1133,73 +713,50 @@ export default function Clients() {
     const { exportColumns, exportRows } = getExportContext();
 
     if (!exportRows.length) {
-      Swal.fire({
-        title: "Sin datos",
-        text: "No hay clientes para exportar.",
-        icon: "info",
-        confirmButtonColor: "#2277B4",
-      });
+      notificationService.info("Sin datos", "No hay clientes para exportar.");
       return;
     }
 
     try {
-      const XLSX = await import("xlsx");
-
       const rows = exportRows.map((row) => {
         const nextRow = {};
 
         exportColumns.forEach((column) => {
           const rawValue = row?.[column.name];
-          nextRow[column.label] = isValuePresent(rawValue) ? rawValue : "";
+          nextRow[column.label] = hasValue(rawValue) ? rawValue : "";
         });
 
         return nextRow;
       });
 
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Clientes");
-      XLSX.writeFile(
-        wb,
-        `Clientes_${new Date().toISOString().slice(0, 10)}.xlsx`,
-      );
-    } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message || "No se pudo generar el Excel.",
-        icon: "error",
-        confirmButtonColor: "#d33",
+      await exportRowsToExcel({
+        rows,
+        sheetName: "Clientes",
+        fileName: `Clientes_${new Date().toISOString().slice(0, 10)}.xlsx`,
       });
+    } catch (e) {
+      notificationService.error("Error", e.message || "No se pudo generar el Excel.");
     }
   };
 
   const handleDownloadTemplate = async () => {
     try {
-      const XLSX = await import("xlsx");
-
-      const ws = XLSX.utils.aoa_to_sheet([CLIENT_TEMPLATE_COLUMNS]);
-      ws["!cols"] = [
-        { wch: 34 },
-        { wch: 18 },
-        { wch: 30 },
-        { wch: 18 },
-        { wch: 20 },
-        { wch: 30 },
-        { wch: 18 },
-        { wch: 18 },
-      ];
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Plantilla Clientes");
-      XLSX.writeFile(wb, "Plantilla_Clientes.xlsx");
-    } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message || "No se pudo generar la plantilla de Excel.",
-        icon: "error",
-        confirmButtonColor: "#d33",
+      await exportTemplateToExcel({
+        columns: CLIENT_TEMPLATE_COLUMNS,
+        sheetName: "Plantilla Clientes",
+        fileName: "Plantilla_Clientes.xlsx",
+        widths: [34, 18, 30, 18, 20, 30, 18, 18],
       });
+    } catch (e) {
+      notificationService.error("Error", e.message || "No se pudo generar la plantilla de Excel.");
     }
+  };
+
+  const applyFilterValue = (field, val) => {
+    setFilters((prev) => ({
+      ...prev,
+      [field]: val,
+    }));
   };
 
   return (
@@ -1211,7 +768,7 @@ export default function Clients() {
             Clientes Registrados
           </h2>
           <p className="text-sm text-zinc-500 mt-1">
-            Gestiónes y permisos al portal del cliente
+            Gestiones y permisos al portal del cliente
           </p>
         </div>
       </div>
@@ -1251,14 +808,16 @@ export default function Clients() {
               <button
                 onClick={handleExportPDF}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 bg-white text-red-700 hover:bg-red-50 transition-colors whitespace-nowrap"
-                title="Exportar a PDF">
+                title="Exportar a PDF"
+              >
                 <FileText size={14} /> Exportar a PDF
               </button>
 
               <button
                 onClick={handleExportExcel}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
-                title="Exportar a Excel">
+                title="Exportar a Excel"
+              >
                 <FileSpreadsheet size={14} /> Exportar a Excel
               </button>
             </div>
@@ -1266,10 +825,12 @@ export default function Clients() {
             {/* Botón filtros */}
             <button
               onClick={() => setShowFilters((v) => !v)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${showFilters || activeFilterCount > 0 ?
-                  "bg-[#2277B4] text-white border-[#2277B4]"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                showFilters || activeFilterCount > 0
+                  ? "bg-[#2277B4] text-white border-[#2277B4]"
                   : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50"
-                }`}>
+              }`}
+            >
               <SlidersHorizontal size={15} />
               Filtros
               {activeFilterCount > 0 && (
@@ -1282,25 +843,21 @@ export default function Clients() {
             {/* Botón carga masiva */}
             {(user?.role?.name === "ADMIN" ||
               user?.role?.name === "VENTAS") && (
-                <button
-                  onClick={() => {
-                    setShowBulkModal(true);
-                    setBulkData([]);
-                    setBulkErrors([]);
-                    setBulkResult(null);
-                    setDriveUrl("");
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#1a2b4c] transition-colors">
-                  <Upload size={15} />
-                  Cargar clientes
-                </button>
-              )}
+              <button
+                onClick={() => setShowBulkModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#1a2b4c] transition-colors"
+              >
+                <Upload size={15} />
+                Cargar clientes
+              </button>
+            )}
 
             {/* Limpiar filtros */}
             {activeFilterCount > 0 && (
               <button
                 onClick={clearFilters}
-                className="flex items-center gap-1 px-2 py-2 rounded-lg text-xs text-red-500 hover:bg-red-50 transition-colors">
+                className="flex items-center gap-1 px-2 py-2 rounded-lg text-xs text-red-500 hover:bg-red-50 transition-colors"
+              >
                 <X size={14} /> Limpiar
               </button>
             )}
@@ -1312,100 +869,6 @@ export default function Clients() {
           </div>
         </div>
 
-        {activeFilterPickerField &&
-          showFilters &&
-          createPortal(
-            <div
-              className="fixed inset-0 z-[9999] bg-black/45 flex items-center justify-center p-4"
-              onClick={closeFilterPicker}>
-              <div
-                className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
-                onClick={(e) => e.stopPropagation()}>
-                <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
-                  <div>
-                    <h3 className="text-white font-semibold text-base">
-                      Filtrar por{" "}
-                      {activeFilterPickerConfig?.buttonLabel || "campo"}
-                    </h3>
-                    <p className="text-[11px] text-zinc-300 mt-1">
-                      Selecciona o busca un valor
-                    </p>
-                  </div>
-                  <button
-                    onClick={closeFilterPicker}
-                    className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
-                    <X size={16} />
-                  </button>
-                </div>
-
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
-                    <Search size={15} className="text-zinc-500" />
-                    <input
-                      value={filterPickerSearch}
-                      onChange={(e) => {
-                        setFilterPickerSearch(e.target.value);
-                        setFilterPickerPage(0);
-                      }}
-                      placeholder="Buscar valor…"
-                      className="w-full bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
-                    />
-                  </div>
-
-                  <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 divide-y divide-zinc-100">
-                    {visibleFilterPickerOptions.length > 0 ?
-                      visibleFilterPickerOptions
-                        .slice(filterPickerPage * FILTER_PAGE_SIZE, (filterPickerPage + 1) * FILTER_PAGE_SIZE)
-                        .map((value) => {
-                          const isSelected =
-                            normalizeSearchText(
-                              filters[activeFilterPickerField],
-                            ) === normalizeSearchText(value);
-
-                          return (
-                            <button
-                              key={`${activeFilterPickerField}_${value}`}
-                              onClick={() => applyFilterValue(value)}
-                              className={`w-full px-3 py-2 text-left text-sm transition-colors ${isSelected ?
-                                  "bg-[#2277B4]/10 text-[#125280] font-semibold"
-                                  : "text-zinc-700 hover:bg-zinc-50"
-                                }`}>
-                              {value}
-                            </button>
-                          );
-                        })
-                      : <div className="px-3 py-4 text-sm text-zinc-500 text-center">
-                        No hay valores para mostrar.
-                      </div>
-                    }
-                  </div>
-                  {visibleFilterPickerOptions.length > FILTER_PAGE_SIZE && (
-                    <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
-                      <span className="text-xs text-zinc-500">
-                        {filterPickerPage * FILTER_PAGE_SIZE + 1} - {Math.min((filterPickerPage + 1) * FILTER_PAGE_SIZE, visibleFilterPickerOptions.length)} de {visibleFilterPickerOptions.length}
-                      </span>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => setFilterPickerPage(p => Math.max(0, p - 1))}
-                          disabled={filterPickerPage === 0}
-                          className="px-2 py-1 text-xs font-medium text-zinc-600 bg-zinc-100 rounded hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                          Anterior
-                        </button>
-                        <button
-                          onClick={() => setFilterPickerPage(p => p + 1)}
-                          disabled={(filterPickerPage + 1) * FILTER_PAGE_SIZE >= visibleFilterPickerOptions.length}
-                          className="px-2 py-1 text-xs font-medium text-zinc-600 bg-zinc-100 rounded hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                          Siguiente
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>,
-            document.body,
-          )}
-
         {detailColumns.length > 0 && (
           <div className="px-4 py-2 min-h-10 bg-blue-50 border-b border-blue-100 text-xs text-[#2277B4] flex items-center justify-between gap-3">
             <div className="flex items-center gap-1 shrink-0">
@@ -1415,18 +878,22 @@ export default function Clients() {
 
             <div className="flex items-center gap-3">
               <div
-                className={`flex items-center gap-2 transition-opacity duration-150 ${showFilters ? "opacity-100" : "opacity-0 pointer-events-none"
-                  }`}>
+                className={`flex items-center gap-2 transition-opacity duration-150 ${
+                  showFilters ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+              >
                 {quickFilterButtons.map((button) => {
                   const selectedValue = String(filters[button.fieldName] || "");
                   return (
                     <button
                       key={button.id}
-                      onClick={() => openFilterPicker(button.fieldName)}
-                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${selectedValue ?
-                          "bg-[#2277B4] text-white border-[#2277B4]"
+                      onClick={() => setActiveFilterPickerField(button.fieldName)}
+                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${
+                        selectedValue
+                          ? "bg-[#2277B4] text-white border-[#2277B4]"
                           : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
-                        }`}>
+                      }`}
+                    >
                       <span className="uppercase font-bold tracking-wide">
                         {button.buttonLabel}
                       </span>
@@ -1438,7 +905,8 @@ export default function Clients() {
               <button
                 onClick={handleDownloadTemplate}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 bg-white transition-colors whitespace-nowrap"
-                title="Descargar plantilla de carga masiva">
+                title="Descargar plantilla de carga masiva"
+              >
                 <FileSpreadsheet size={13} /> Descargar plantilla excel
               </button>
             </div>
@@ -1447,26 +915,39 @@ export default function Clients() {
 
         {/* Tabla */}
         <div
-          className={`overflow-x-auto ${isTableScrollable ? "max-h-[65vh] overflow-y-auto" : ""}`}>
+          className={`overflow-x-auto ${
+            isTableScrollable ? "max-h-[65vh] overflow-y-auto" : ""
+          }`}
+        >
           <table className="w-full table-fixed">
             <thead
-              className={`bg-zinc-50 border-b border-zinc-100 ${isTableScrollable ? "sticky top-0 z-20" : ""}`}>
+              className={`bg-zinc-50 border-b border-zinc-100 ${
+                isTableScrollable ? "sticky top-0 z-20" : ""
+              }`}
+            >
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
                       style={{ width: header.getSize() }}
-                      className={`${header.column.id === "expander" ? "glass-flash " : ""}px-4 py-3 text-left text-xs font-semibold text-[#2277B4] uppercase tracking-wider transition-colors ${header.column.getCanSort() ? "cursor-pointer hover:bg-zinc-100" : "cursor-default"}`}
+                      className={`${
+                        header.column.id === "expander" ? "glass-flash " : ""
+                      }px-4 py-3 text-left text-xs font-semibold text-[#2277B4] uppercase tracking-wider transition-colors ${
+                        header.column.getCanSort()
+                          ? "cursor-pointer hover:bg-zinc-100"
+                          : "cursor-default"
+                      }`}
                       onClick={
-                        header.column.getCanSort() ?
-                          header.column.getToggleSortingHandler()
+                        header.column.getCanSort()
+                          ? header.column.getToggleSortingHandler()
                           : undefined
-                      }>
+                      }
+                    >
                       <div className="flex items-center gap-1">
                         {flexRender(
                           header.column.columnDef.header,
-                          header.getContext(),
+                          header.getContext()
                         )}
                         {{
                           asc: <ChevronUp size={14} />,
@@ -1479,7 +960,7 @@ export default function Clients() {
               ))}
             </thead>
             <tbody className="divide-y divide-zinc-100">
-              {table.getRowModel().rows.length > 0 ?
+              {table.getRowModel().rows.length > 0 ? (
                 table.getRowModel().rows.map((row) => {
                   const rowDetailColumns = getRowDetailColumns(row.original);
                   const isExpanded = !!expandedRows[row.original.id];
@@ -1488,7 +969,7 @@ export default function Clients() {
                       acc[primaryColumn.name] = [];
                       return acc;
                     },
-                    {},
+                    {}
                   );
 
                   rowDetailColumns.forEach((column) => {
@@ -1496,7 +977,7 @@ export default function Clients() {
                       resolveDetailHostColumn(
                         column,
                         primaryTableColumns,
-                        detailColumnsByPrimary,
+                        detailColumnsByPrimary
                       ) || primaryTableColumns[0]?.name;
 
                     if (hostColumn && detailColumnsByPrimary[hostColumn]) {
@@ -1510,10 +991,11 @@ export default function Clients() {
                         {row.getVisibleCells().map((cell) => (
                           <td
                             key={cell.id}
-                            className="px-4 py-3 text-sm align-top">
+                            className="px-4 py-3 text-sm align-top"
+                          >
                             {flexRender(
                               cell.column.columnDef.cell,
-                              cell.getContext(),
+                              cell.getContext()
                             )}
                           </td>
                         ))}
@@ -1529,21 +1011,22 @@ export default function Clients() {
                             return (
                               <td
                                 key={`${cell.id}__detail`}
-                                className="px-4 py-4 align-top">
+                                className="px-4 py-4 align-top"
+                              >
                                 {alignedDetails.length > 0 && (
                                   <div className="space-y-3">
                                     {alignedDetails.map((column) => {
                                       const rawValue =
                                         row.original?.[column.name];
-                                      const value =
-                                        isValuePresent(rawValue) ?
-                                          String(rawValue)
-                                          : "—";
+                                      const value = hasValue(rawValue)
+                                        ? String(rawValue)
+                                        : "—";
 
                                       return (
                                         <div
                                           key={`${row.id}_${column.name}`}
-                                          className="min-w-0">
+                                          className="min-w-0"
+                                        >
                                           <p className="text-[10px] font-semibold uppercase text-[#2277B4] dark:text-blue-400 tracking-wider">
                                             {column.label}
                                           </p>
@@ -1563,21 +1046,21 @@ export default function Clients() {
                     </React.Fragment>
                   );
                 })
-                : <tr>
+              ) : (
+                <tr>
                   <td
                     colSpan={columns.length}
-                    className="px-4 py-12 text-center">
+                    className="px-4 py-12 text-center"
+                  >
                     <div className="flex justify-center mb-3 opacity-50">
                       <FolderOpen size={36} />
                     </div>
                     <p className="text-zinc-500">
-                      {loading ?
-                        "Cargando clientes..."
-                        : "No se encontraron clientes"}
+                      {loading ? "Cargando clientes..." : "No se encontraron clientes"}
                     </p>
                   </td>
                 </tr>
-              }
+              )}
             </tbody>
           </table>
         </div>
@@ -1590,7 +1073,8 @@ export default function Clients() {
               <select
                 value={table.getState().pagination.pageSize}
                 onChange={(e) => table.setPageSize(Number(e.target.value))}
-                className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500 bg-[#fff] dark:bg-dark-900 border border-zinc-200 dark:border-dark-700">
+                className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500 bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700"
+              >
                 {[10, 25, 50, 100].map((size) => (
                   <option key={size} value={size} className="dark:bg-dark-900 dark:text-zinc-100">
                     {size}
@@ -1604,25 +1088,29 @@ export default function Clients() {
               <button
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
-                className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
                 ««
               </button>
               <button
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
-                className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
                 Anterior
               </button>
               <button
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
-                className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
                 Siguiente
               </button>
               <button
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
-                className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
                 »»
               </button>
             </div>
@@ -1630,534 +1118,52 @@ export default function Clients() {
         )}
       </div>
 
-      {/* Modal para Nuevo Cliente */}
-      {showModal &&
-        createPortal(
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
-              {/* Header del modal */}
-              <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-[#1a2b4c]">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                  Nuevo Cliente
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    resetForm();
-                  }}
-                  className="size-8 flex items-center justify-center rounded-lg text-[#fff] transition-colors">
-                  <X size={16} />
-                </button>
-              </div>
+      {/* Modal para Crear Cliente */}
+      <ClientCreateModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSuccess={() => {
+          setShowModal(false);
+          load();
+        }}
+      />
 
-              {/* Formulario */}
-              <form onSubmit={create} className="p-6 space-y-4 overflow-y-auto">
-                {/* Razón Social */}
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2 ">
-                    Razón Social *
-                  </label>
-                  <input
-                    type="text"
-                    value={business_name}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="Ej. Empresa SA de CV"
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
-                    required
-                    autoFocus
-                  />
-                </div>
+      {/* Modal para Editar Cliente */}
+      <ClientEditModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingClient(null);
+        }}
+        client={editingClient}
+        onSuccess={() => {
+          setShowEditModal(false);
+          setEditingClient(null);
+          load();
+        }}
+      />
 
-                {/* RFC y Correo Principal */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      RFC
-                    </label>
-                    <input
-                      type="text"
-                      value={rfc}
-                      onChange={(e) => setRfc(e.target.value)}
-                      placeholder="XAXX010101000"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      Correo Principal
-                    </label>
-                    <input
-                      type="email"
-                      value={email1}
-                      onChange={(e) => setEmail1(e.target.value)}
-                      placeholder="contacto@empresa.com"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
-                    />
-                  </div>
-                </div>
+      {/* Modal para Carga Masiva */}
+      <ClientBulkModal
+        isOpen={showBulkModal}
+        onClose={() => setShowBulkModal(false)}
+        onSuccess={handleBulkSuccess}
+      />
 
-                {/* Correo Secundario */}
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">
-                    Correo Secundario
-                  </label>
-                  <input
-                    type="email"
-                    value={email2}
-                    onChange={(e) => setEmail2(e.target.value)}
-                    placeholder="ventas@empresa.com"
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
-                  />
-                </div>
-
-                {/* Celular y Teléfono */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      Celular
-                    </label>
-                    <input
-                      type="tel"
-                      value={celular}
-                      onChange={(e) => setCelular(e.target.value)}
-                      placeholder="55 1234 5678"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      Teléfono
-                    </label>
-                    <input
-                      type="tel"
-                      value={telefono}
-                      onChange={(e) => setTelefono(e.target.value)}
-                      placeholder="55 9876 5432"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
-                    />
-                  </div>
-                </div>
-
-                {/* Código Postal y Ciudad */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      Código Postal
-                    </label>
-                    <input
-                      type="text"
-                      value={codigo_postal}
-                      onChange={(e) => setCodigoPostal(e.target.value)}
-                      placeholder="06600"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      Ciudad
-                    </label>
-                    <input
-                      type="text"
-                      value={ciudad}
-                      onChange={(e) => setCiudad(e.target.value)}
-                      placeholder="Ciudad de México"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
-                    />
-                  </div>
-                </div>
-
-                {/* Botones del modal */}
-                <div className="flex gap-3 pt-4 border-t border-zinc-100">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowModal(false);
-                      resetForm();
-                    }}
-                    className="flex-1 py-3 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-50 transition-colors">
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-3 bg-[#2277B4] text-white font-semibold rounded-xl hover:bg-[#125280] transition-colors shadow-lg shadow-[#2277B4]/30">
-                    Registrar Cliente
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>,
-          document.body,
-        )}
-
-      {/* Modal de Edición */}
-      {showEditModal &&
-        createPortal(
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-              <div className="px-6 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
-                <h3 className="text-white text-xl font-semibold flex items-center gap-2">
-                  Editar Cliente
-                </h3>
-                <X
-                  className="cursor-pointer text-white"
-                  onClick={() => setShowEditModal(false)}></X>
-              </div>
-              <form onSubmit={updateClient} className="p-6 space-y-4">
-                {/* Razón Social */}
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2 ">
-                    Razón Social *
-                  </label>
-                  <Input
-                    type="text"
-                    required
-                    value={business_name}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="Nombre de la empresa"
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
-                  />
-                </div>
-
-                {/* RFC y Correo Principal */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      RFC
-                    </label>
-                    <Input
-                      type="text"
-                      value={rfc}
-                      onChange={(e) => setRfc(e.target.value)}
-                      placeholder="XAXX010101000"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      Correo Principal
-                    </label>
-                    <Input
-                      type="email"
-                      value={email1}
-                      onChange={(e) => setEmail1(e.target.value)}
-                      placeholder="contacto@empresa.com"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
-                    />
-                  </div>
-                </div>
-
-                {/* Correo Secundario */}
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">
-                    Correo Secundario
-                  </label>
-                  <Input
-                    type="email"
-                    value={email2}
-                    onChange={(e) => setEmail2(e.target.value)}
-                    placeholder="ventas@empresa.com"
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
-                  />
-                </div>
-
-                {/* Celular y Teléfono */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      Celular
-                    </label>
-                    <Input
-                      type="tel"
-                      value={celular}
-                      onChange={(e) => setCelular(e.target.value)}
-                      placeholder="55 1234 5678"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      Teléfono
-                    </label>
-                    <Input
-                      type="tel"
-                      value={telefono}
-                      onChange={(e) => setTelefono(e.target.value)}
-                      placeholder="55 9876 5432"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
-                    />
-                  </div>
-                </div>
-
-                {/* Código Postal y Ciudad */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      Código Postal
-                    </label>
-                    <Input
-                      type="text"
-                      value={codigo_postal}
-                      onChange={(e) => setCodigoPostal(e.target.value)}
-                      placeholder="06600"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-2">
-                      Ciudad
-                    </label>
-                    <Input
-                      type="text"
-                      value={ciudad}
-                      onChange={(e) => setCiudad(e.target.value)}
-                      placeholder="Ciudad de México"
-                      className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4EAF1]                   "
-                    />
-                  </div>
-                </div>
-
-                {/* Botones */}
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setEditingClient(null);
-                      resetForm();
-                    }}
-                    className="flex-1 py-3 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors">
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-3 bg-[#2277B4] text-white font-bold rounded-xl transition-colors shadow-lg shadow-[#12528050] hover:bg-[#125280]">
-                    Guardar Cambios
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>,
-          document.body,
-        )}
-
-      {/* Modal de Carga Masiva de Clientes */}
-      {showBulkModal &&
-        createPortal(
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
-                <h3 className="text-white text-lg font-semibold flex items-center gap-2">
-                  Carga de Clientes
-                </h3>
-              </div>
-
-              <div className="p-6 overflow-y-auto flex-1 space-y-5">
-                {bulkResult?.success &&
-                  bulkResult?.details?.ignoredHeaders?.length > 0 && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
-                      <p className="font-semibold mb-1">
-                        Columnas ignoradas del Excel
-                      </p>
-                      <p>{bulkResult.details.ignoredHeaders.join(", ")}</p>
-                    </div>
-                  )}
-
-                {bulkResult?.success &&
-                  bulkResult?.details?.createdColumns?.length > 0 && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-800">
-                      <p className="font-semibold mb-1">
-                        Columnas nuevas creadas en MySQL
-                      </p>
-                      <p>
-                        {bulkResult.details.createdColumns
-                          .map((item) => `${item.header} -> ${item.columnName}`)
-                          .join(", ")}
-                      </p>
-                    </div>
-                  )}
-
-                {bulkResult?.success &&
-                  bulkResult?.details?.backfillReports?.length > 0 && (
-                    <div className="bg-cyan-50 border border-cyan-200 rounded-xl p-4 text-xs text-cyan-800">
-                      <p className="font-semibold mb-1">
-                        Autocompletado histórico aplicado
-                      </p>
-                      <p>
-                        {bulkResult.details.backfillReports
-                          .map(
-                            (item) =>
-                              `${item.columnName} <- ${item.sourceColumn} (${item.affectedRows})`,
-                          )
-                          .join(", ")}
-                      </p>
-                    </div>
-                  )}
-
-                {/* Step 1: Descargar plantilla e instrucciones */}
-                <div className="bg-[#2277B412] border border-blue-200 rounded-xl p-4">
-                  <p className="text-sm font-semibold text-[#2277B4] mb-2 flex items-center gap-1">
-                    <Lightbulb size={15} /> Ayuda
-                  </p>
-                  <ul className="text-xs text-[#2277B4] space-y-1 mb-3 list-disc pl-5">
-                    <li>Los clientes se asignarán automáticamente.</li>
-                    <li>
-                      También puedes pegar la URL del archivo de Google Drive.
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Step 2: Importar desde Drive */}
-                <div className="border border-zinc-200 rounded-xl p-4 space-y-3">
-                  <p className="text-sm font-semibold text-zinc-700">
-                    Importar desde Google Drive
-                  </p>
-                  <input
-                    type="url"
-                    value={driveUrl}
-                    onChange={(e) => setDriveUrl(e.target.value)}
-                    placeholder="https://drive.google.com/file/d/.../view"
-                    className="w-full px-3 py-2.5 text-sm rounded-lg border border-zinc-300 bg-white text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4]"
-                  />
-                  <button
-                    onClick={executeDriveImport}
-                    disabled={driveImporting}
-                    className="px-4 py-2 bg-[#1a2b4c] text-white text-sm font-semibold rounded-lg hover:bg-[#16233f] transition-colors disabled:opacity-50 flex items-center gap-2">
-                    {driveImporting ?
-                      <>
-                        <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Importando…
-                      </>
-                      : "Importar"}
-                  </button>
-                </div>
-
-                {/* Step 3: Subir archivo local */}
-                <div>
-                  <input
-                    ref={bulkFileRef}
-                    type="file"
-                    accept=".xlsx,.xls,.csv"
-                    onChange={handleBulkFile}
-                    className="hidden"
-                  />
-                  <button
-                    onClick={() => bulkFileRef.current?.click()}
-                    className="w-full py-8 border-2 border-dashed border-zinc-300 rounded-xl flex flex-col items-center gap-2 text-zinc-500 hover:border-[#2277B4] hover:text-[#2277B4] transition-colors cursor-pointer">
-                    <Upload size={28} />
-                    <span className="text-sm font-semibold">
-                      Haz clic para seleccionar el archivo Excel
-                    </span>
-                    <span className="text-[11px] text-zinc-400">
-                      O usa la plantilla descargada
-                    </span>
-                  </button>
-                </div>
-
-                {/* Errores de validación */}
-                {bulkErrors.length > 0 && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                    <p className="text-sm font-semibold text-amber-800 mb-2 flex items-center gap-1">
-                      <AlertCircle size={15} /> Advertencias
-                    </p>
-                    <ul className="text-xs text-amber-700 space-y-1 max-h-32 overflow-y-auto">
-                      {bulkErrors.map((err, i) => (
-                        <li key={i}>• {err}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Step 3: Vista previa */}
-                {bulkData.length > 0 && (
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-700 mb-2">
-                      Vista previa ({bulkData.length} clientes listos para
-                      importar)
-                    </p>
-                    <div className="border border-zinc-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
-                      <table className="w-full text-xs">
-                        <thead className="bg-zinc-50 sticky top-0">
-                          <tr>
-                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
-                              #
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
-                              Razón Social
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
-                              RFC
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
-                              Correo
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
-                              Celular
-                            </th>
-                            <th className="px-3 py-2 text-left font-semibold text-zinc-600">
-                              Ciudad
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-100">
-                          {bulkData.map((r, i) => (
-                            <tr key={i} className="hover:bg-zinc-50">
-                              <td className="px-3 py-2 text-zinc-400">
-                                {i + 1}
-                              </td>
-                              <td className="px-3 py-2 font-medium text-zinc-800">
-                                {r.business_name}
-                              </td>
-                              <td className="px-3 py-2 text-zinc-600">
-                                {r.rfc || "—"}
-                              </td>
-                              <td className="px-3 py-2 text-zinc-600">
-                                {r.email1 || "—"}
-                              </td>
-                              <td className="px-3 py-2 text-zinc-600">
-                                {r.celular || "—"}
-                              </td>
-                              <td className="px-3 py-2 text-zinc-600">
-                                {r.ciudad || "—"}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Footer con botones */}
-              <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-3">
-                {bulkData.length > 0 && (
-                  <button
-                    onClick={executeBulkUpload}
-                    disabled={bulkUploading}
-                    className="px-6 py-2.5 bg-[#2277B4] text-white font-bold rounded-xl hover:bg-[#125280] transition-colors shadow-lg shadow-[#12528050] disabled:opacity-50 flex items-center gap-2">
-                    {bulkUploading ?
-                      <>
-                        <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Importando…
-                      </>
-                      : <>
-                        <CheckCircle2 size={16} />
-                        Importar {bulkData.length} Clientes
-                      </>
-                    }
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowBulkModal(false)}
-                  className="px-5 py-2.5 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors">
-                  Cerrar
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
+      {/* Selector de Filtros */}
+      <ClientFilterPicker
+        isOpen={!!activeFilterPickerField && showFilters}
+        onClose={() => setActiveFilterPickerField(null)}
+        fieldName={activeFilterPickerField}
+        fieldConfig={activeFilterPickerConfig}
+        filters={filters}
+        options={visibleFilterPickerOptions}
+        filterPickerSearch={filterPickerSearch}
+        setFilterPickerSearch={setFilterPickerSearch}
+        filterPickerPage={filterPickerPage}
+        setFilterPickerPage={setFilterPickerPage}
+        onApplyFilter={applyFilterValue}
+      />
     </div>
   );
 }

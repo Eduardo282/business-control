@@ -91,6 +91,7 @@ export async function listPortalProductsApi() {
         id
         name
         category
+        product_type
         description
       }
     }

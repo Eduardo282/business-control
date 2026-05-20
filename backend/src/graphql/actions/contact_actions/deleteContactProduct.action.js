@@ -1,6 +1,6 @@
-import { pool } from "../../../config/db.js";
+import { deleteContactProduct } from "../../../repositories/contact.repository.js";
 
 export async function deleteContactProductAction(id) {
-  await pool.query("DELETE FROM contact_products WHERE id = :id", { id });
+  await deleteContactProduct(id);
   return true;
 }

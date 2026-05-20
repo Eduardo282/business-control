@@ -1,5 +1,5 @@
 import "dotenv/config";
-// Server entry point
+// Server entry point (Updated schema)
 import express from "express";
 import cors from "cors";
 import { createServer as createHttpServer } from "node:http";
@@ -15,11 +15,18 @@ import resolvers from "./graphql/resolvers/index.js";
 import { authMiddleware } from "./middlewares/auth.middleware.js";
 import clientsRoutes from "./routes/clients.routes.js";
 import contactsRoutes from "./routes/contacts.routes.js";
-import { env } from "./config/env.js";
+import { env, validateEnv } from "./config/env.js";
 import { initSocketIO } from "./chat/chat.gateway.js";
 import helmet from "helmet";
+import { logger } from "./utils/logger.js";
+import { runMigrations } from "./migrations/runMigrations.js";
 
 const app = express();
+validateEnv();
+
+if (process.env.RUN_MIGRATIONS === "true") {
+  await runMigrations();
+}
 
 // Opciones de certificados SSL
 const sslKeyPath = process.env.SSL_KEY_PATH || "";
@@ -34,19 +41,19 @@ if (useHttps) {
     cert: readFileSync(sslCertPath, "utf8"),
   };
   httpServer = createHttpsServer(httpsOptions, app);
-  console.log("🔒 Configurando servidor HTTPS seguro...");
+  logger.info("Configurando servidor HTTPS seguro...");
 } else {
   if (process.env.NODE_ENV === "production" && process.env.ALLOW_UNSECURE_HTTP !== "true") {
     // Si un analizador de seguridad estático revisa el código, ver esto garantiza
     // que la aplicación NO correrá en HTTP inseguro en producción por error.
-    console.error("🚨 ERROR DE SEGURIDAD: Ejecución en HTTP de texto plano interceptada.");
-    console.error("Provee 'SSL_KEY_PATH' y 'SSL_CERT_PATH' en tu .env para cifrar la conexión.");
-    console.error("Si estás detrás de un proxy inverso que ya maneja HTTPS (Nginx, AWS, Vercel), agrega ALLOW_UNSECURE_HTTP=\"true\" al .env");
+    logger.error("ERROR DE SEGURIDAD: Ejecucion en HTTP de texto plano interceptada.");
+    logger.error("Provee 'SSL_KEY_PATH' y 'SSL_CERT_PATH' en tu .env para cifrar la conexion.");
+    logger.error("Si estas detras de un proxy inverso que ya maneja HTTPS (Nginx, AWS, Vercel), agrega ALLOW_UNSECURE_HTTP=\"true\" al .env");
     process.exit(1); 
   }
   
   httpServer = createHttpServer(app);
-  console.warn("⚠️ ADVERTENCIA: Ejecutando servidor local en HTTP (Texto plano).");
+  logger.warn("ADVERTENCIA: Ejecutando servidor local en HTTP (texto plano).");
 }
 
 // Configurar Strict-Transport-Security (HSTS) para forzar HTTPS puro en navegadores
@@ -127,7 +134,7 @@ initSocketIO(httpServer, env.CORS_ORIGIN);
 httpServer.listen(env.PORT, () => {
   const protocol = useHttps ? "https" : "http";
   const wsProtocol = useHttps ? "wss" : "ws";
-  console.log(`✅ API GraphQL en ${protocol}://localhost:${env.PORT}/graphql`);
-  console.log(`🔌 Socket.IO en ${wsProtocol}://localhost:${env.PORT}`);
-  console.log(`🚀 Servidor iniciado a las ${new Date().toISOString()}`);
+  logger.info(`API GraphQL en ${protocol}://localhost:${env.PORT}/graphql`);
+  logger.info(`Socket.IO en ${wsProtocol}://localhost:${env.PORT}`);
+  logger.info(`Servidor iniciado a las ${new Date().toISOString()}`);
 });

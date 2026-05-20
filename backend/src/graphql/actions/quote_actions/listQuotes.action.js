@@ -1,24 +1,17 @@
-import { pool } from "../../../config/db.js";
+import {
+  listAllNonRequestedQuotes,
+  listQuotesByClientId,
+  listQuotesByUserId,
+} from "../../../repositories/quote.repository.js";
 
 export const listQuotesAction = async () => {
-  const [rows] = await pool.query(
-    "SELECT * FROM quotes WHERE status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC",
-  );
-  return rows;
+  return await listAllNonRequestedQuotes();
 };
 
 export const listQuotesByClientAction = async (client_id) => {
-  const [rows] = await pool.query(
-    "SELECT * FROM quotes WHERE client_id = ? AND status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC",
-    [client_id],
-  );
-  return rows;
+  return await listQuotesByClientId(client_id);
 };
 
 export const listQuotesByUserAction = async (user_id) => {
-  const [rows] = await pool.query(
-    "SELECT * FROM quotes WHERE user_id = ? AND status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC",
-    [user_id],
-  );
-  return rows;
+  return await listQuotesByUserId(user_id);
 };

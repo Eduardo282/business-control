@@ -3,7 +3,8 @@ import { listContactsByClientAction } from "../actions/contact_actions/listConta
 import { getClientAction } from "../actions/client_actions/getClient.action.js";
 import { listContactProductsAction } from "../actions/contact_actions/listContactProducts.action.js";
 import { getContactAction } from "../actions/contact_actions/getContact.action.js";
-import { pool } from "../../config/db.js";
+import { findUserWithRole } from "../../repositories/user.repository.js";
+import { findProductByIdLean } from "../../repositories/product.repository.js";
 import { getQuoteItemsAction } from "../actions/quote_actions/getQuoteItems.action.js";
 
 export const Client = {
@@ -63,19 +64,8 @@ export const Quote = {
     return getContactAction(parent.contact_id);
   },
   user: async (parent) => {
-    // Consulta directa simple para el usuario
-    const [rows] = await pool.query(
-      "SELECT id, full_name, email, role_id FROM users WHERE id = ?",
-      [parent.user_id],
-    );
-    if (rows.length === 0) return null;
-    // Mapear role_id al objeto de rol (el esquema espera user.role)
-    const user = rows[0];
-    const [roles] = await pool.query(
-      "SELECT id, name FROM roles WHERE id = ?",
-      [user.role_id],
-    );
-    return { ...user, role: roles[0] };
+    // Usa el repositorio en lugar de pool directamente
+    return findUserWithRole(parent.user_id);
   },
   items: async (parent) => {
     return getQuoteItemsAction(parent.id);
@@ -84,12 +74,8 @@ export const Quote = {
 
 export const QuoteItem = {
   product: async (parent) => {
-    // Consulta directa simple para el producto
-    // O reutilizar getProductAction si existe (asumiendo que podría crearse más tarde o en línea)
-    const [rows] = await pool.query("SELECT * FROM products WHERE id = ?", [
-      parent.product_id,
-    ]);
-    return rows[0];
+    // Usa el repositorio en lugar de pool directamente
+    return findProductByIdLean(parent.product_id);
   },
 };
 

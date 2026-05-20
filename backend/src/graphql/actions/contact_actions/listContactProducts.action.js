@@ -1,31 +1,46 @@
-import { pool } from "../../../config/db.js";
+import { listContactProducts } from "../../../repositories/contact.repository.js";
 
 export async function listContactProductsAction(contact_id) {
-  const [rows] = await pool.query(
-    `SELECT cp.*, 
-            p.id as product_id, p.name as product_name, p.category as product_category, p.description as product_description, p.current_price, p.is_active 
-     FROM contact_products cp
-     JOIN products p ON cp.product_id = p.id
-     WHERE cp.contact_id = :contact_id`,
-    { contact_id },
-  );
+  const rows = await listContactProducts(contact_id);
 
-  return rows.map((row) => ({
-    id: row.id,
-    contact_id: row.contact_id,
-    license_key: row.license_key,
-    start_date: new Date(row.start_date).toISOString(),
-    expiration_date: new Date(row.expiration_date).toISOString(),
-    status: determineStatus(row.status, row.expiration_date),
-    product: {
-      id: row.product_id,
-      name: row.product_name,
-      category: row.product_category,
-      description: row.product_description,
-      current_price: row.current_price,
-      is_active: Boolean(row.is_active),
-    },
-  }));
+  return rows
+    .filter((row) => isServiceOrPolicy(row))
+    .map((row) => ({
+      id: row.id,
+      contact_id: row.contact_id,
+      license_key: row.license_key,
+      start_date: new Date(row.start_date).toISOString(),
+      expiration_date: new Date(row.expiration_date).toISOString(),
+      status: determineStatus(row.status, row.expiration_date),
+      product: {
+        id: row.product_id,
+        name: row.product_name,
+        category: row.product_category,
+        description: row.product_description,
+        current_price: row.current_price,
+        is_active: Boolean(row.is_active),
+        product_type: normalizeProductType(row),
+      },
+    }));
+}
+
+function normalizeProductType(row) {
+  const raw = String(row.product_type || "").trim().toUpperCase();
+  if (raw === "SERVICE" || raw === "POLICY") return raw;
+
+  const source = `${row.product_name || ""} ${row.product_category || ""}`
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (source.includes("poliza")) return "POLICY";
+  if (source.includes("servicio")) return "SERVICE";
+  return "PRODUCT";
+}
+
+function isServiceOrPolicy(row) {
+  const normalized = normalizeProductType(row);
+  return normalized === "SERVICE" || normalized === "POLICY";
 }
 
 function determineStatus(storedStatus, expirationDate) {

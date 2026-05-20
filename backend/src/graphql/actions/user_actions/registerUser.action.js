@@ -1,5 +1,10 @@
-import { pool } from "../../../config/db.js";
 import { hashPassword } from "../../../utils/password.js";
+import { findRoleByName } from "../../../repositories/role.repository.js";
+import {
+  findUserByRoleId,
+  insertUser,
+  updateUserCredentials,
+} from "../../../repositories/user.repository.js";
 
 export async function registerUserAction({
   full_name,
@@ -24,11 +29,7 @@ export async function registerUserAction({
   }
 
   // El rol debe existir en la tabla de roles
-  const [roleRows] = await pool.query(
-    `SELECT id, name FROM roles WHERE name = :role LIMIT 1`,
-    { role },
-  );
-  const foundRole = roleRows?.[0];
+  const foundRole = await findRoleByName(role);
 
   if (!foundRole) {
     throw new Error("El rol seleccionado no existe");
@@ -37,26 +38,17 @@ export async function registerUserAction({
   const password_hash = await hashPassword(password);
 
   // Buscar usuario existente con ese rol
-  const [userRows] = await pool.query(
-    `SELECT id FROM users WHERE role_id = :role_id LIMIT 1`,
-    { role_id: foundRole.id },
-  );
-  const existingUser = userRows?.[0];
+  const existingUser = await findUserByRoleId(foundRole.id);
 
   if (existingUser) {
     // Actualizar credenciales del usuario existente
-    await pool.query(
-      `UPDATE users 
-       SET full_name = :full_name, email = :email, telefono = :telefono, password_hash = :password_hash, updated_at = NOW()
-       WHERE id = :user_id`,
-      {
-        user_id: existingUser.id,
-        full_name,
-        email,
-        telefono: phone,
-        password_hash,
-      },
-    );
+    await updateUserCredentials({
+      user_id: existingUser.id,
+      full_name,
+      email,
+      telefono: phone,
+      password_hash,
+    });
 
     return {
       id: existingUser.id,
@@ -67,20 +59,16 @@ export async function registerUserAction({
     };
   } else {
     // Crear nuevo usuario con el rol
-    const [insertUser] = await pool.query(
-      `INSERT INTO users (full_name, email, telefono, password_hash, role_id, created_at, updated_at)
-       VALUES (:full_name, :email, :telefono, :password_hash, :role_id, NOW(), NOW())`,
-      {
-        full_name,
-        email,
-        telefono: phone,
-        password_hash,
-        role_id: foundRole.id,
-      },
-    );
+    const userId = await insertUser({
+      full_name,
+      email,
+      telefono: phone,
+      password_hash,
+      role_id: foundRole.id,
+    });
 
     return {
-      id: insertUser.insertId,
+      id: userId,
       full_name,
       email,
       telefono: phone,

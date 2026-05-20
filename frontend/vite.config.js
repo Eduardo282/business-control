@@ -9,6 +9,7 @@ export default defineConfig({
       "@icons": fileURLToPath(
         new URL("./src/components/ui/FlatIcons.jsx", import.meta.url),
       ),
+      "@shared": fileURLToPath(new URL("../shared", import.meta.url)),
     },
   },
 });

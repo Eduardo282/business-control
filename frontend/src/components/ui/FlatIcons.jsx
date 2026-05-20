@@ -160,6 +160,14 @@ export const AlertTriangle = createIcon(() => (
   </>
 ));
 
+export const XCircle = createIcon(() => (
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m15 9-6 6" />
+    <path d="m9 9 6 6" />
+  </>
+));
+
 export const CircleHelp = createIcon(() => (
   <>
     <circle cx="12" cy="12" r="9" />
@@ -640,4 +648,5 @@ export default {
   UserPlus,
   Users,
   X,
+  XCircle,
 };

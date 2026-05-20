@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { io } from "socket.io-client";
 import logo from "./assets/logo.png";
 import { getPendingQuoteRequestsCountApi } from "../../actionsAPI/quotes.api";
 import {
@@ -11,6 +12,11 @@ import {
   FileText,
   Headphones,
 } from "@icons";
+
+const API_URL =
+  import.meta.env.VITE_API_URL?.replace("/graphql", "") ||
+  "http://localhost:4000";
+const SUPPORT_ROLES = ["ADMIN", "VENTAS", "SOPORTE"];
 
 function Item({
   to,
@@ -50,6 +56,7 @@ function Item({
 
 export default function Sidebar({ role }) {
   const [pendingCount, setPendingCount] = useState(0);
+  const [supportWaitingCount, setSupportWaitingCount] = useState(0);
   const roleLabel = role === "ADMIN" ? "Administrador" : role;
 
   useEffect(() => {
@@ -61,10 +68,40 @@ export default function Sidebar({ role }) {
         } catch (e) {}
       };
       fetchCount();
-      // Poll every 30 seconds
-      const interval = setInterval(fetchCount, 30000);
+      // Poll every 2 seconds
+      const interval = setInterval(fetchCount, 2000);
       return () => clearInterval(interval);
     }
+  }, [role]);
+
+  useEffect(() => {
+    if (!SUPPORT_ROLES.includes(role)) return;
+    const token = localStorage.getItem("bc_token");
+    if (!token) return;
+
+    const socket = io(API_URL, {
+      auth: { token },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+    });
+
+    socket.on("connect", () => {
+      socket.emit("queue:list");
+    });
+
+    socket.on("queue:update", (queue) => {
+      setSupportWaitingCount(Array.isArray(queue) ? queue.length : 0);
+    });
+
+    socket.on("disconnect", () => {
+      setSupportWaitingCount(0);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [role]);
 
   return (
@@ -114,7 +151,7 @@ export default function Sidebar({ role }) {
               badge={pendingCount}>
               Historial de Cotizaciones
             </Item>
-            <Item to="/soporte" icon={Headphones}>
+            <Item to="/soporte" icon={Headphones} badge={supportWaitingCount}>
               Soporte
             </Item>
           </>
