@@ -96,7 +96,7 @@ export async function fetchProductsForQuote(productIds, queryRunner = pool) {
  */
 export async function findPortalQuote({ quoteId, contactId, queryRunner = pool }) {
   const [rows] = await queryRunner.query(
-    "SELECT id, status FROM quotes WHERE id = ? AND contact_id = ? AND is_deleted_admin = 0",
+    "SELECT id, status FROM quotes WHERE id = ? AND contact_id = ? AND is_deleted_portal = 0",
     [quoteId, contactId],
   );
   return rows?.[0] || null;
@@ -112,6 +112,21 @@ export async function findPortalQuote({ quoteId, contactId, queryRunner = pool }
 export async function softDeleteQuote({ quoteId, queryRunner = pool }) {
   const [result] = await queryRunner.query(
     "UPDATE quotes SET is_deleted_admin = 1 WHERE id = ?",
+    [quoteId],
+  );
+  return result.affectedRows || 0;
+}
+
+/**
+ * Marca una cotizacion como eliminada solo para el portal del contacto.
+ * @param {object} params
+ * @param {number|string} params.quoteId
+ * @param {object} [params.queryRunner]
+ * @returns {Promise<number>} Filas afectadas
+ */
+export async function softDeletePortalQuote({ quoteId, queryRunner = pool }) {
+  const [result] = await queryRunner.query(
+    "UPDATE quotes SET is_deleted_portal = 1 WHERE id = ?",
     [quoteId],
   );
   return result.affectedRows || 0;
@@ -224,13 +239,16 @@ export async function findQuoteById(id, queryRunner = pool) {
 }
 
 /**
- * Obtiene las cotizaciones con estado REQUESTED y no leídas.
+ * Obtiene las cotizaciones activas o rechazadas para la cola de notificaciones.
  * @param {object} [queryRunner]
  * @returns {Promise<object[]>}
  */
 export async function findUnreadQuoteRequests(queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    "SELECT * FROM quotes WHERE status = 'REQUESTED' AND is_read = 0"
+    `SELECT *
+     FROM quotes
+     WHERE status IN ('REQUESTED', 'REJECTED') AND is_deleted_admin = 0
+     ORDER BY CASE WHEN status = 'REQUESTED' THEN 0 ELSE 1 END, created_at DESC`
   );
   return rows;
 }
@@ -242,7 +260,7 @@ export async function findUnreadQuoteRequests(queryRunner = pool) {
  */
 export async function countPendingQuoteRequests(queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    "SELECT COUNT(*) as count FROM quotes WHERE status = 'REQUESTED'"
+    "SELECT COUNT(*) as count FROM quotes WHERE status = 'REQUESTED' AND is_deleted_admin = 0"
   );
   return rows?.[0]?.count || 0;
 }
@@ -314,7 +332,7 @@ export async function updateQuotePortalStatus({ quoteId, isSentToClientPortal, c
  */
 export async function markQuoteAsRead(quoteId, queryRunner = pool) {
   const [result] = await queryRunner.query(
-    "UPDATE quotes SET is_read = 1 WHERE id = ?",
+    "UPDATE quotes SET notification_read = 1 WHERE id = ?",
     [quoteId]
   );
   return result.affectedRows || 0;
@@ -328,7 +346,7 @@ export async function markQuoteAsRead(quoteId, queryRunner = pool) {
  */
 export async function listPortalQuotesByContact(contactId, queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    "SELECT * FROM quotes WHERE contact_id = ? AND is_sent_to_client_portal = 1 AND is_deleted_admin = 0 ORDER BY created_at DESC",
+    "SELECT * FROM quotes WHERE contact_id = ? AND is_sent_to_client_portal = 1 AND is_deleted_portal = 0 ORDER BY created_at DESC",
     [contactId]
   );
   return rows;
@@ -415,13 +433,9 @@ export async function listPortalQuotesByClientId(clientId, queryRunner = pool) {
     `SELECT * FROM quotes 
      WHERE client_id = ? 
      AND is_sent_to_client_portal = 1 
-     AND is_deleted_admin = 0
+     AND is_deleted_portal = 0
      ORDER BY created_at DESC`,
     [clientId]
   );
   return rows;
 }
-
-
-
-

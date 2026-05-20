@@ -191,6 +191,7 @@ CREATE TABLE IF NOT EXISTS quotes (
   is_sent_to_client_portal TINYINT DEFAULT 0,
   notification_read TINYINT DEFAULT 0,
   is_deleted_admin TINYINT DEFAULT 0,
+  is_deleted_portal TINYINT DEFAULT 0,
   INDEX idx_quotes_client_id (client_id),
   INDEX idx_quotes_user_id (user_id),
   INDEX idx_quotes_contact_id (contact_id),
@@ -298,6 +299,7 @@ CALL bc_add_column_if_missing('quotes', 'contact_id', '`contact_id` INT NULL AFT
 CALL bc_add_column_if_missing('quotes', 'is_sent_to_client_portal', '`is_sent_to_client_portal` TINYINT DEFAULT 0 AFTER `notes`');
 CALL bc_add_column_if_missing('quotes', 'notification_read', '`notification_read` TINYINT DEFAULT 0 AFTER `is_sent_to_client_portal`');
 CALL bc_add_column_if_missing('quotes', 'is_deleted_admin', '`is_deleted_admin` TINYINT DEFAULT 0 AFTER `notification_read`');
+CALL bc_add_column_if_missing('quotes', 'is_deleted_portal', '`is_deleted_portal` TINYINT DEFAULT 0 AFTER `is_deleted_admin`');
 CALL bc_add_column_if_missing('quote_items', 'base_unit_price', '`base_unit_price` DECIMAL(10,2) NULL AFTER `quantity`');
 CALL bc_add_column_if_missing('quote_items', 'discount', '`discount` DECIMAL(5,2) NOT NULL DEFAULT 0.00 AFTER `unit_price`');
 

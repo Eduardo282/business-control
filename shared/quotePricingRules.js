@@ -92,10 +92,12 @@ export function calculateItemTotal(price, quantity, discount = 0) {
 export function calculateQuotePricing({ items = [], products = [] }) {
   let subtotal = 0;
   const hasProductCatalog = products.length > 0;
-  const productMap = new Map(products.map((product) => [product.id, product]));
+  const productMap = new Map(
+    products.map((product) => [String(product.id), product]),
+  );
 
   const pricedItems = items.map((item) => {
-    const product = productMap.get(item.product_id);
+    const product = productMap.get(String(item.product_id));
 
     if (hasProductCatalog && !product) {
       throw new Error(`Producto con ID ${item.product_id} no encontrado`);

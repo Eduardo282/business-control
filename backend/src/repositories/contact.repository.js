@@ -4,6 +4,25 @@
  */
 import { pool } from "../config/db.js";
 
+const VISIBLE_CONTACT_PRODUCT_CONDITION = `
+  (
+    cp.license_key IS NULL
+    OR NOT (
+      cp.license_key REGEXP '^[A-Z0-9]{6}-[0-9]{4}(-[0-9]+)?$'
+      AND EXISTS (
+        SELECT 1
+        FROM quotes q
+        JOIN quote_items qi ON qi.quote_id = q.id
+        WHERE q.status = 'ACCEPTED'
+          AND q.client_id = cp.client_id
+          AND q.contact_id = cp.contact_id
+          AND qi.product_id = cp.product_id
+          AND ABS(TIMESTAMPDIFF(SECOND, q.created_at, cp.created_at)) <= 10
+      )
+    )
+  )
+`;
+
 /**
  * Busca un contacto por su ID.
  * @param {number|string} id
@@ -156,6 +175,7 @@ export async function listContactProducts(contactId, queryRunner = pool) {
      FROM contact_products cp
      JOIN products p ON cp.product_id = p.id
      WHERE cp.contact_id = ?
+       AND ${VISIBLE_CONTACT_PRODUCT_CONDITION}
      ORDER BY cp.created_at DESC`,
     [contactId],
   );
@@ -440,4 +460,3 @@ export async function findContactDynamicById(id, visibleColumnNames, queryRunner
   );
   return rows?.[0] || null;
 }
-

@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import Card from "../../components/ui/Card";
 import Swal from "sweetalert2";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { deleteQuoteApi, listQuotesApi, updateQuoteStatusApi } from "../../actionsAPI/quotes.api";
 import { AuthContext } from "../../context/AuthContext";
 import {
@@ -250,12 +252,6 @@ export default function QuoteHistory() {
     }
 
     try {
-      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
-        import("jspdf"),
-        import("jspdf-autotable"),
-      ]);
-      const autoTable = autoTableModule.default || autoTableModule.autoTable;
-
       const doc = new jsPDF({ orientation: "landscape" });
       doc.setFontSize(16);
       doc.setTextColor(26, 43, 76);

@@ -3,10 +3,11 @@ import { Link, useLocation, matchPath, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../context/AuthContext";
 import ThemeToggle from "./ThemeToggle";
-import { Bell, X, XCircle, Check } from "@icons";
+import { Bell, Trash2, Check, XCircle } from "@icons";
 import {
   getUnreadQuoteRequestsApi,
   markQuoteNotificationReadApi,
+  deleteQuoteApi,
   rejectQuoteApi,
 } from "../../actionsAPI/quotes.api";
 
@@ -76,14 +77,45 @@ export default function Topbar() {
     }
   };
 
-  const handleReject = async (id, e) => {
+  const handleDeleteRequest = async (id, e) => {
+    e.stopPropagation();
+    const result = await Swal.fire({
+      title: "¿Eliminar solicitud?",
+      text: "Esta acción quitará la solicitud de la cola de notificaciones.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteQuoteApi(id);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      Swal.fire({
+        title: "Eliminada",
+        text: "La solicitud se eliminó de la cola.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (e) {
+      console.error(e);
+      Swal.fire("Error", e.message || "No se pudo eliminar la solicitud", "error");
+    }
+  };
+
+  const handleRejectRequest = async (id, e) => {
     e.stopPropagation();
     const result = await Swal.fire({
       title: "¿Rechazar solicitud?",
-      text: "Esta acción marcará la solicitud como rechazada y la eliminará de las notificaciones.",
+      text: "La solicitud se marcará como rechazada y después podrás eliminarla de la cola.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#f59e0b",
+      confirmButtonColor: "#ef4444",
       cancelButtonColor: "#6b7280",
       confirmButtonText: "Sí, rechazar",
       cancelButtonText: "Cancelar",
@@ -94,10 +126,14 @@ export default function Topbar() {
     try {
       await rejectQuoteApi(id);
       await markQuoteNotificationReadApi(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === id ? { ...n, status: "REJECTED", notification_read: true } : n
+        )
+      );
       Swal.fire({
         title: "Rechazada",
-        text: "La solicitud ha sido rechazada.",
+        text: "La solicitud quedó rechazada. Ahora puedes eliminarla de la cola.",
         icon: "success",
         timer: 1500,
         showConfirmButton: false,
@@ -108,17 +144,21 @@ export default function Topbar() {
     }
   };
 
-  const handleNavigate = async (id) => {
+  const handleNavigate = async (notif) => {
     setShowNotifications(false);
-    try {
-      await markQuoteNotificationReadApi(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, notification_read: true } : n))
-      );
-    } catch (e) {
-      console.error(e);
+    if (notif.status === "REQUESTED") {
+      try {
+        await markQuoteNotificationReadApi(notif.id);
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === notif.id ? { ...n, notification_read: true } : n))
+        );
+      } catch (e) {
+        console.error(e);
+      }
+      navigate(`/cotizaciones/nueva?request_id=${notif.id}`);
+      return;
     }
-    navigate(`/cotizaciones/nueva?request_id=${id}`);
+    navigate(`/cotizaciones/${notif.id}`);
   };
 
   // Verificar si estamos en detalle de cliente
@@ -175,7 +215,9 @@ export default function Topbar() {
               className="relative p-2 rounded-xl bg-white dark:bg-white/5 border border-white/60 dark:border-white/10 shadow-sm hover:bg-zinc-50 dark:hover:bg-white/10 transition-colors text-zinc-600 dark:text-zinc-300"
             >
               {(() => {
-                const unreadCount = notifications.filter((n) => !n.notification_read).length;
+                const unreadCount = notifications.filter(
+                  (n) => n.status === "REQUESTED" && !n.notification_read
+                ).length;
                 return (
                   <>
                     <Bell size={20} className={unreadCount > 0 ? "animate-pulse text-[#2277B4]" : ""} />
@@ -193,9 +235,9 @@ export default function Topbar() {
             {showNotifications && (
               <div className="absolute right-0 mt-3 w-80 md:w-96 max-w-[calc(100vw-2rem)] bg-[#ffffff] dark:bg-dark-900 rounded-2xl shadow-2xl dark:shadow-[0_8px_30px_rgba(0,0,0,0.8)] border border-zinc-200 dark:border-dark-700 overflow-hidden z-[100] animate-fade-in-down opacity-100">
                 <div className="px-4 py-3 border-b border-zinc-200 dark:border-dark-700 flex items-center justify-between bg-zinc-50 dark:bg-dark-800">
-                  <h3 className="font-semibold text-zinc-800 dark:text-zinc-100">Notificaciones</h3>
+                  <h3 className="font-semibold text-zinc-800 dark:text-zinc-100">Solicitudes de cotización</h3>
                   <span className="text-xs text-[#2277B4] dark:text-blue-400 px-2.5 py-1 rounded-full font-bold bg-blue-50 dark:bg-blue-950/30">
-                    {notifications.filter((n) => !n.notification_read).length} Nuevas
+                    {notifications.filter((n) => n.status === "REQUESTED" && !n.notification_read).length} Nuevas
                   </span>
                 </div>
                 
@@ -206,47 +248,72 @@ export default function Topbar() {
                         <Bell size={24} />
                       </div>
                       <span className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">
-                        No hay notificaciones nuevas
+                        No hay solicitudes en cola
                       </span>
                     </div>
                   ) : (
                     <div className="divide-y divide-zinc-100 dark:divide-white/5">
                       {notifications.map((notif) => {
-                        const isUnread = !notif.notification_read;
+                        const isRejected = notif.status === "REJECTED";
+                        const isUnread = notif.status === "REQUESTED" && !notif.notification_read;
                         return (
                           <div
                             key={notif.id}
-                            onClick={() => handleNavigate(notif.id)}
+                            onClick={() => handleNavigate(notif)}
                             className={`p-4 hover:bg-zinc-50 dark:hover:bg-white/5 transition-all cursor-pointer flex flex-col gap-2.5 border-l-4 ${
-                              isUnread
-                                ? "bg-blue-50/40 dark:bg-blue-950/10 border-[#2277B4]"
-                                : "bg-white dark:bg-dark-900 border-transparent"
+                              isRejected
+                                ? "bg-red-50/30 dark:bg-red-950/10 border-red-400"
+                                : isUnread
+                                  ? "bg-blue-50/40 dark:bg-blue-950/10 border-[#2277B4]"
+                                  : "bg-white dark:bg-dark-900 border-transparent"
                             }`}
                           >
                             {/* Contenido Superior */}
                             <div className="flex items-start gap-3 w-full">
-                              <div className={`${isUnread ? "bg-blue-100 dark:bg-blue-500/20" : "bg-zinc-100 dark:bg-dark-700"} p-2 rounded-lg shrink-0 transition-colors`}>
-                                <Bell size={16} className={isUnread ? "text-[#2277B4] dark:text-blue-400" : "text-zinc-400 dark:text-zinc-500"} />
+                              <div className={`${isRejected ? "bg-red-100 dark:bg-red-500/20" : isUnread ? "bg-blue-100 dark:bg-blue-500/20" : "bg-zinc-100 dark:bg-dark-700"} p-2 rounded-lg shrink-0 transition-colors`}>
+                                {isRejected ? (
+                                  <XCircle size={16} className="text-red-500 dark:text-red-400" />
+                                ) : (
+                                  <Bell size={16} className={isUnread ? "text-[#2277B4] dark:text-blue-400" : "text-zinc-400 dark:text-zinc-500"} />
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className={`text-sm leading-snug transition-colors ${isUnread ? "text-zinc-900 dark:text-white font-medium" : "text-zinc-500 dark:text-zinc-400"}`}>
-                                  <span className={`font-semibold ${isUnread ? "text-zinc-950 dark:text-white" : "text-zinc-700 dark:text-zinc-300"}`}>{notif.contact?.full_name || "Desconocido"}</span> requiere cotización.
+                                  <span className={`font-semibold ${isUnread ? "text-zinc-950 dark:text-white" : "text-zinc-700 dark:text-zinc-300"}`}>{notif.contact?.full_name || "Desconocido"}</span>{" "}
+                                  {isRejected ? "tiene solicitud rechazada." : "requiere cotización."}
                                 </p>
-                                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
-                                  Cotización #{notif.id} • {notif.client?.business_name}
-                                </p>
+                                <div className="flex flex-wrap items-center gap-2 mt-1">
+                                  <p className="text-xs text-zinc-400 dark:text-zinc-500">
+                                    Cotización #{notif.id} • {notif.client?.business_name}
+                                  </p>
+                                  {isRejected && (
+                                    <span className="text-[10px] font-bold text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-500/10 px-2 py-0.5 rounded-full">
+                                      RECHAZADA
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
                             {/* Fila de Acciones Inferior */}
                             <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-100 dark:border-white/5 w-full">
-                              <button
-                                onClick={(e) => handleReject(notif.id, e)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-red-600 dark:text-red-400 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 border border-red-200/50 dark:border-red-500/30 rounded-xl transition-all duration-150 cursor-pointer shadow-sm"
-                                title="Rechazar solicitud de cotización"
-                              >
-                                <XCircle size={12} /> Rechazar
-                              </button>
+                              {isRejected ? (
+                                <button
+                                  onClick={(e) => handleDeleteRequest(notif.id, e)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-red-600 dark:text-red-400 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 border border-red-200/50 dark:border-red-500/30 rounded-xl transition-all duration-150 cursor-pointer shadow-sm"
+                                  title="Eliminar solicitud rechazada de la cola"
+                                >
+                                  <Trash2 size={12} /> Eliminar
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={(e) => handleRejectRequest(notif.id, e)}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-red-600 dark:text-red-400 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 border border-red-200/50 dark:border-red-500/30 rounded-xl transition-all duration-150 cursor-pointer shadow-sm"
+                                  title="Rechazar solicitud de cotización"
+                                >
+                                  <XCircle size={12} /> Rechazar
+                                </button>
+                              )}
                               {isUnread && (
                                 <button
                                   onClick={(e) => handleDismiss(notif.id, e)}

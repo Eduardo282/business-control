@@ -4,6 +4,25 @@
  */
 import { pool } from "../config/db.js";
 
+const VISIBLE_CONTACT_PRODUCT_CONDITION = `
+  (
+    cp.license_key IS NULL
+    OR NOT (
+      cp.license_key REGEXP '^[A-Z0-9]{6}-[0-9]{4}(-[0-9]+)?$'
+      AND EXISTS (
+        SELECT 1
+        FROM quotes q
+        JOIN quote_items qi ON qi.quote_id = q.id
+        WHERE q.status = 'ACCEPTED'
+          AND q.client_id = cp.client_id
+          AND q.contact_id = cp.contact_id
+          AND qi.product_id = cp.product_id
+          AND ABS(TIMESTAMPDIFF(SECOND, q.created_at, cp.created_at)) <= 10
+      )
+    )
+  )
+`;
+
 /**
  * Obtiene los contact_products que son servicios/pólizas.
  * @param {object} [queryRunner]
@@ -45,6 +64,7 @@ export async function getAssignedPolicies(queryRunner = pool) {
     JOIN products p ON cp.product_id = p.id
     JOIN client_contacts cc ON cp.contact_id = cc.id
     JOIN clients c ON cc.client_id = c.id
+    WHERE ${VISIBLE_CONTACT_PRODUCT_CONDITION}
     ORDER BY cp.id DESC
   `);
   return rows;
@@ -77,7 +97,9 @@ export async function getStandalonePolicies(queryRunner = pool) {
     AND p.name NOT LIKE '%CONTPAQi%'
     AND p.name NOT LIKE '%CONTPAQI%'
     AND p.id NOT IN (
-      SELECT DISTINCT cp.product_id FROM contact_products cp
+      SELECT DISTINCT cp.product_id
+      FROM contact_products cp
+      WHERE ${VISIBLE_CONTACT_PRODUCT_CONDITION}
     )
     ORDER BY p.id DESC
   `);
@@ -111,11 +133,14 @@ export async function getLegacyAssignedPolicies(queryRunner = pool) {
     JOIN products p ON cp.product_id = p.id
     JOIN client_contacts cc ON cp.contact_id = cc.id
     JOIN clients c ON cc.client_id = c.id
-    WHERE p.product_type IN ('SERVICE', 'POLICY')
-       OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-       OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
-       OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-       OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
+    WHERE (
+      p.product_type IN ('SERVICE', 'POLICY')
+      OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
+      OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
+      OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
+      OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
+    )
+    AND ${VISIBLE_CONTACT_PRODUCT_CONDITION}
     ORDER BY cp.id DESC
   `);
   return rows;
@@ -292,4 +317,3 @@ export async function updateContactProductDatesTx(id, { start_date, expiration_d
     connection.release();
   }
 }
-

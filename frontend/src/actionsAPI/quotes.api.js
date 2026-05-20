@@ -201,6 +201,7 @@ export const getUnreadQuoteRequestsApi = async () => {
       unreadQuoteRequests {
         id
         created_at
+        status
         notification_read
         contact {
           id

@@ -100,13 +100,29 @@ const CONTACT_READONLY_FIELDS = new Set([
 ]);
 const CONTACT_DEFAULT_MAIN_COLUMNS = ["full_name", "email"];
 const CONTACT_FIXED_MAIN_COLUMNS_COUNT = 2;
+const CONTACT_FIELD_LABELS = {
+  full_name: "Nombre completo",
+  email: "Correo electrónico",
+  phone: "Teléfono",
+  position_title: "Puesto",
+  has_portal_access: "Acceso al portal",
+  is_active: "Activo",
+};
 const CONTACT_FALLBACK_COLUMNS = [
-  { name: "full_name", label: "Nombre Completo", type: "varchar" },
-  { name: "email", label: "Correo Electrónico", type: "varchar" },
-  { name: "phone", label: "Teléfono", type: "varchar" },
-  { name: "position_title", label: "Puesto", type: "varchar" },
-  { name: "has_portal_access", label: "Acceso Portal", type: "tinyint" },
-  { name: "is_active", label: "Activo", type: "tinyint" },
+  { name: "full_name", label: CONTACT_FIELD_LABELS.full_name, type: "varchar" },
+  { name: "email", label: CONTACT_FIELD_LABELS.email, type: "varchar" },
+  { name: "phone", label: CONTACT_FIELD_LABELS.phone, type: "varchar" },
+  {
+    name: "position_title",
+    label: CONTACT_FIELD_LABELS.position_title,
+    type: "varchar",
+  },
+  {
+    name: "has_portal_access",
+    label: CONTACT_FIELD_LABELS.has_portal_access,
+    type: "tinyint",
+  },
+  { name: "is_active", label: CONTACT_FIELD_LABELS.is_active, type: "tinyint" },
 ];
 const CLIENT_DETAIL_HIDDEN_FIELDS = new Set([
   "id",
@@ -536,7 +552,10 @@ export default function ClientDetail() {
 
     return orderedColumns.map((column) => ({
       ...column,
-      label: contactColumnLabelOverrides[column.name] || column.label,
+      label:
+        CONTACT_FIELD_LABELS[column.name] ||
+        contactColumnLabelOverrides[column.name] ||
+        column.label,
     }));
   }, [
     contactDynamicColumns,
@@ -601,13 +620,10 @@ export default function ClientDetail() {
       return {
         ...config,
         fieldName: resolvedFieldName,
-        modalLabel:
-          contactColumnLabelOverrides[resolvedFieldName] ||
-          column?.label ||
-          config.modalLabel,
+        modalLabel: column?.label || config.modalLabel,
       };
     });
-  }, [contactColumnsFromView, contactColumnLabelOverrides]);
+  }, [contactColumnsFromView]);
 
   const openEditClientModal = () => {
     if (!client) return;
@@ -868,7 +884,7 @@ export default function ClientDetail() {
     () => [
       {
         accessorKey: "full_name",
-        header: "Nombre",
+        header: CONTACT_FIELD_LABELS.full_name,
         enableSorting: false,
         cell: ({ getValue }) => {
           const value = getValue();
@@ -881,7 +897,7 @@ export default function ClientDetail() {
       },
       {
         accessorKey: "position_title",
-        header: "Puesto",
+        header: CONTACT_FIELD_LABELS.position_title,
         enableSorting: false,
         cell: ({ getValue }) => {
           const value = getValue();
@@ -894,7 +910,7 @@ export default function ClientDetail() {
       },
       {
         accessorKey: "email",
-        header: "Correo",
+        header: CONTACT_FIELD_LABELS.email,
         enableSorting: false,
         cell: ({ getValue }) => {
           const value = getValue();
@@ -907,7 +923,7 @@ export default function ClientDetail() {
       },
       {
         accessorKey: "phone",
-        header: "Teléfono",
+        header: CONTACT_FIELD_LABELS.phone,
         enableSorting: false,
         cell: ({ getValue }) => {
           const value = getValue();

@@ -62,6 +62,7 @@ export default function CreateQuote() {
   const {
     clientSearch,
     setClientSearch,
+    clientResults,
     selectedClient,
     setSelectedClient,
     selectedContactId,

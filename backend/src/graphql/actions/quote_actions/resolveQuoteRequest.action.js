@@ -1,9 +1,4 @@
 import { pool } from "../../../config/db.js";
-import { insertContactProduct } from "../../../repositories/contact.repository.js";
-import {
-  insertProductFulfillmentRecord,
-  resolveProductFulfillmentTarget,
-} from "../../../services/productFulfillmentRegistry.service.js";
 import {
   fetchProductsForQuote,
   findQuoteByStatus,
@@ -55,48 +50,6 @@ export const resolveQuoteRequestAction = async (requestId, input, user) => {
       quoteId: requestId,
       items: finalItems,
     });
-
-    // 5. Borrar productos (polizas) activos de prueba si se generaron en request (opcional, pero requestQuote no genera polizas)
-    //    Sin embargo, createQuoteAction sí genera pólizas AUTOMÁTICAS. Aquí DEBERÍAMOS generarlas también.
-
-    // Generar Pólizas automáticas si hay contacto
-    if (contact_id) {
-      const startDate = new Date();
-
-      for (const item of finalItems) {
-        const expirationDate = new Date(startDate);
-        expirationDate.setFullYear(expirationDate.getFullYear() + 1);
-
-        for (let i = 0; i < item.quantity; i++) {
-          const licenseKey =
-            Math.random().toString(36).substring(2, 8).toUpperCase() +
-            "-" +
-            Date.now().toString().substring(9) +
-            (i > 0 ? `-${i}` : "");
-
-          const contactProductId = await insertContactProduct({
-            client_id,
-            contact_id,
-            product_id: item.product_id,
-            license_key: licenseKey,
-            start_date: startDate,
-            expiration_date: expirationDate,
-            status: "ACTIVE",
-          }, connection);
-
-          const target = resolveProductFulfillmentTarget(item);
-          await insertProductFulfillmentRecord(connection, target, {
-            contact_product_id: contactProductId,
-            client_id,
-            contact_id,
-            product_id: item.product_id,
-            folio: licenseKey,
-            start_date: startDate,
-            expiration_date: expirationDate,
-          });
-        }
-      }
-    }
 
     await connection.commit();
 

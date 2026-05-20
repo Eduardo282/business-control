@@ -82,11 +82,11 @@ export async function searchProducts(q, client_id) {
  * @returns {Promise<number>} ID del producto insertado
  */
 export async function insertProduct(data, queryRunner = pool) {
-  const { name, description, current_price, category, client_id, product_type, image_url, users_count } = data;
+  const { name, description, current_price, category, client_id, product_type, users_count } = data;
   const [result] = await queryRunner.query(
-    `INSERT INTO products (name, description, current_price, category, client_id, product_type, image_url, users_count)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [name, description || null, current_price, category || null, client_id || null, product_type || "SERVICE", image_url || null, users_count || 0],
+    `INSERT INTO products (name, description, current_price, category, client_id, product_type, users_count)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [name, description || null, current_price, category || null, client_id || null, product_type || "SERVICE", users_count || 0],
   );
   return result.insertId;
 }
@@ -131,13 +131,13 @@ export async function deleteProduct(id, queryRunner = pool) {
 
 /**
  * Inserta un registro en el historial de precios.
- * @param {object} data — { product_id, price, changed_by_user_id }
+ * @param {object} data — { product_id, price }
  * @returns {Promise<void>}
  */
-export async function insertPriceHistory({ product_id, price, changed_by_user_id }, queryRunner = pool) {
+export async function insertPriceHistory({ product_id, price }, queryRunner = pool) {
   await queryRunner.query(
-    "INSERT INTO product_price_history (product_id, price, changed_by_user_id) VALUES (?, ?, ?)",
-    [product_id, price, changed_by_user_id || null],
+    "INSERT INTO product_price_history (product_id, price) VALUES (?, ?)",
+    [product_id, price],
   );
 }
 
@@ -236,4 +236,3 @@ export async function deleteProductCategory(id, queryRunner = pool) {
   );
   return res.affectedRows || 0;
 }
-

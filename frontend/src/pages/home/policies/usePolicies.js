@@ -336,12 +336,35 @@ export function usePolicies() {
     return filteredGroups.map((group) => ({
       servicioPoliza: group.product?.name || "—",
       tipo: inferPolicyType(group.product) === "POLICY" ? "Póliza" : "Servicio",
+      cantidad: group.count || group.items?.length || 1,
+      folios: (group.licenseKeys || []).join(", ") || "—",
       cliente: group.client?.business_name || "Sin cliente",
       inicio: formatPolicyDate(group.start_date),
       vence: formatPolicyDate(group.expiration_date),
       estado: getPolicyStatusLabel(group.status),
     }));
   }, [filteredGroups]);
+
+  const exportSummary = useMemo(() => {
+    const totalRegistros = exportableGroups.length;
+    const totalFolios = exportableGroups.reduce(
+      (sum, row) => sum + (Number(row.cantidad) || 0),
+      0,
+    );
+    const totalServicios = exportableGroups
+      .filter((row) => row.tipo === "Servicio")
+      .reduce((sum, row) => sum + (Number(row.cantidad) || 0), 0);
+    const totalPolizas = exportableGroups
+      .filter((row) => row.tipo === "Póliza")
+      .reduce((sum, row) => sum + (Number(row.cantidad) || 0), 0);
+
+    return {
+      totalRegistros,
+      totalFolios,
+      totalServicios,
+      totalPolizas,
+    };
+  }, [exportableGroups]);
 
   useEffect(() => {
     setPagination((prev) => ({
@@ -384,13 +407,20 @@ export function usePolicies() {
       doc.setFontSize(10);
       doc.setTextColor(90, 90, 90);
       doc.text(`Exportado: ${new Date().toLocaleString("es-MX")}`, 14, 23);
+      doc.text(
+        `Resumen: ${exportSummary.totalFolios} folio(s) en ${exportSummary.totalRegistros} grupo(s) · ${exportSummary.totalServicios} servicio(s) · ${exportSummary.totalPolizas} póliza(s)`,
+        14,
+        29,
+      );
 
       autoTable(doc, {
-        startY: 28,
+        startY: 34,
         head: [
           [
             "SERVICIO/PÓLIZA",
             "TIPO",
+            "CANTIDAD",
+            "FOLIOS",
             "CLIENTE",
             "INICIO",
             "VENCE",
@@ -400,6 +430,8 @@ export function usePolicies() {
         body: exportableGroups.map((row) => [
           row.servicioPoliza,
           row.tipo,
+          row.cantidad,
+          row.folios,
           row.cliente,
           row.inicio,
           row.vence,
@@ -409,9 +441,11 @@ export function usePolicies() {
         headStyles: { fillColor: [34, 119, 180] },
         styles: { fontSize: 8, cellPadding: 2.5 },
         columnStyles: {
-          0: { cellWidth: 45 },
-          1: { cellWidth: 20 },
-          2: { cellWidth: 45 },
+          0: { cellWidth: 42 },
+          1: { cellWidth: 18 },
+          2: { cellWidth: 18, halign: "center" },
+          3: { cellWidth: 48 },
+          4: { cellWidth: 38 },
         },
       });
 
@@ -433,6 +467,8 @@ export function usePolicies() {
       const rows = exportableGroups.map((row) => ({
         "Servicio/Póliza": row.servicioPoliza,
         Tipo: row.tipo,
+        Cantidad: row.cantidad,
+        Folios: row.folios,
         Cliente: row.cliente,
         Inicio: row.inicio,
         Vence: row.vence,

@@ -22,6 +22,10 @@ import {
   roundMoney,
 } from "@shared/quotePricingRules.js";
 import { notificationService } from "../../../../services/notificationService";
+import {
+  formatCurrency,
+  normalizeSearchText,
+} from "../../../../utils/formatters";
 
 const MAX_CLIENT_RESULTS_IN_MODAL = 80;
 const roundCurrency = roundMoney;
@@ -97,6 +101,34 @@ export function useCreateQuote(navigate) {
     setTableFilters({ product: "", discount: "", price: "" });
     closeTableFilterPicker();
   };
+
+  const tableFilterPickerOptions = useMemo(() => {
+    if (!activeTableFilterPickerField) return [];
+
+    const values = items
+      .map((item) => {
+        if (activeTableFilterPickerField === "product") return item.name || "";
+        if (activeTableFilterPickerField === "discount") {
+          return `${Number(item.discount || 0).toFixed(2)}%`;
+        }
+        if (activeTableFilterPickerField === "price") {
+          return `$${formatCurrency(item.price)}`;
+        }
+        return "";
+      })
+      .filter((value) => String(value).trim() !== "");
+
+    return Array.from(new Set(values));
+  }, [activeTableFilterPickerField, items]);
+
+  const visibleTableFilterPickerOptions = useMemo(() => {
+    const search = normalizeSearchText(tableFilterPickerSearch);
+    if (!search) return tableFilterPickerOptions;
+
+    return tableFilterPickerOptions.filter((value) =>
+      normalizeSearchText(value).includes(search),
+    );
+  }, [tableFilterPickerOptions, tableFilterPickerSearch]);
 
   const loadRequest = async (id) => {
     try {
