@@ -5,6 +5,22 @@ export default {
   theme: {
     extend: {
       colors: {
+        surface: {
+          DEFAULT: "var(--color-surface)",
+          muted: "var(--color-surface-muted)",
+          elevated: "var(--color-surface-elevated)",
+        },
+        content: {
+          primary: "var(--color-text-primary)",
+          secondary: "var(--color-text-secondary)",
+          muted: "var(--color-text-muted)",
+        },
+        border: {
+          semantic: "var(--color-border)",
+        },
+        brand: {
+          DEFAULT: "var(--color-brand)",
+        },
         dark: {
           900: "#050511",
           800: "#0f111a",

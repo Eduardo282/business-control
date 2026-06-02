@@ -1,11 +1,11 @@
-import { useEffect, useState, useContext, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import Swal from "sweetalert2";
+import { notificationService } from "../../services/notificationService";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import {
   getProductApi,
   updateProductApi,
@@ -13,7 +13,6 @@ import {
   updateProductPriceApi,
   clearProductPriceHistoryApi,
 } from "../../actionsAPI/products.api";
-import { CATALOG } from "./RegistrarProducts";
 import {
   Users,
   ArrowLeft,
@@ -27,6 +26,7 @@ import {
   ChevronsRight,
   X,
 } from "@icons";
+import { CATALOG } from "./RegistrarProducts";
 import {
   useReactTable,
   getCoreRowModel,
@@ -52,21 +52,6 @@ function getAvatarColors(str = "") {
     h = (h * 31 + str.charCodeAt(i)) & 0xffff;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
-function getProductKeyword(name) {
-  const n = String(name)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-  if (n.includes("taco")) return "tacos,mexican-food";
-  if (n.includes("comida") || n.includes("restaurante")) return "food,restaurant";
-  if (n.includes("nube") || n.includes("cloud")) return "cloud,technology";
-  if (n.includes("banco") || n.includes("finanza")) return "finance,business";
-  if (n.includes("factura") || n.includes("venta") || n.includes("comercial")) return "sales,business";
-  if (n.includes("nomina") || n.includes("rrhh")) return "office,team";
-  if (n.includes("contabilidad") || n.includes("conta")) return "accounting,business";
-  if (n.includes("seguro") || n.includes("poliza")) return "insurance,business";
-  return "business,product";
-}
 
 function normalizeCategory(category = "") {
   return String(category)
@@ -86,8 +71,6 @@ function inferProductType(product) {
 }
 
 function ProductAvatar({ name = "", category = "", size = "md" }) {
-  const [imgError, setImgError] = useState(false);
-
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -102,30 +85,11 @@ function ProductAvatar({ name = "", category = "", size = "md" }) {
     lg: "size-20 text-[28px] rounded-3xl",
   };
 
-  if (!imgError && name) {
-    let h = 0;
-    for (let i = 0; i < name.length; i++) {
-      h = (h * 31 + name.charCodeAt(i)) & 0xffff;
-    }
-    const keyword = getProductKeyword(name + " " + category);
-    const imgUrl = `https://loremflickr.com/100/100/${keyword}?lock=${(h % 1000) + 1}`;
-    
-    return (
-      <div className={`flex-shrink-0 overflow-hidden bg-white border border-zinc-100 shadow-sm ${sizeClasses[size] || sizeClasses.md}`}>
-        <img 
-          src={imgUrl} 
-          alt={name} 
-          onError={() => setImgError(true)} 
-          className="size-full object-cover"
-        />
-      </div>
-    );
-  }
-
   return (
     <div
       className={`flex-shrink-0 flex items-center justify-center font-extrabold tracking-tight select-none shadow-sm ${sizeClasses[size] || sizeClasses.md}`}
-      style={{ backgroundColor: bg, color: fg }}>
+      style={{ backgroundColor: bg, color: fg }}
+    >
       {initials || "?"}
     </div>
   );
@@ -134,7 +98,8 @@ function ProductAvatar({ name = "", category = "", size = "md" }) {
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -307,35 +272,21 @@ export default function ProductDetail() {
   };
 
   const handleDelete = async () => {
-    const result = await Swal.fire({
+    const confirmed = await notificationService.confirm({
       title: "¿Estás seguro?",
       text: "Se eliminará este producto permanentemente.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
     });
 
-    if (!result.isConfirmed) return;
+    if (!confirmed) return;
 
     try {
       await deleteProductApi(id);
-      Swal.fire({
-        title: "¡Eliminado!",
-        text: "El producto ha sido eliminado exitosamente.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      notificationService.toast({ title: "¡Producto eliminado exitosamente!", icon: "success" });
       navigate("/productos");
     } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message || "Error al eliminar producto.",
-        icon: "error",
-      });
+      notificationService.error("Error", e.message || "Error al eliminar producto.");
     }
   };
 

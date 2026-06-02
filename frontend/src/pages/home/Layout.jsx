@@ -1,11 +1,10 @@
-import { useContext } from "react";
 import { Outlet } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import Topbar from "../../components/layout/Topbar";
 import Sidebar from "../../components/layout/Sidebar";
 
 export default function Layout() {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen flex bg-zinc-50 dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 font-sans transition-colors duration-300">

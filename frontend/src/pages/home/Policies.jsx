@@ -1,5 +1,5 @@
-import { useContext, useMemo } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import { useMemo } from "react";
+import { useAuth } from "../../hooks/useAuth";
 import {
   usePolicies,
   inferPolicyType,
@@ -34,7 +34,7 @@ import {
 } from "@tanstack/react-table";
 
 export default function Policies() {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
 
   const {
     policies,

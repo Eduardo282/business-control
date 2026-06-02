@@ -2,7 +2,6 @@ import {
   Fragment,
   useEffect,
   useState,
-  useContext,
   useMemo,
 } from "react";
 import { createPortal } from "react-dom";
@@ -14,7 +13,7 @@ import {
   getPaginationRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import {
@@ -30,6 +29,7 @@ import {
   listContactsDynamicByClientApi,
 } from "../../actionsAPI/contacts.api";
 import { listProductsApi } from "../../actionsAPI/products.api";
+import { logger } from "../../services/logger";
 import {
   ClipboardList,
   MapPin,
@@ -230,7 +230,7 @@ function getContactFieldInputType(fieldName) {
 export default function ClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [client, setClient] = useState(null);
   const [clientDynamicColumns, setClientDynamicColumns] = useState([]);
   const [excelViewColumns, setExcelViewColumns] = useState(null);
@@ -368,7 +368,7 @@ export default function ClientDetail() {
         .then((all) => {
           setProductsList(all.filter((p) => p.client_id == id));
         })
-        .catch(console.error);
+        .catch((error) => logger.error("Error loading client products", error));
     } catch (e) {
       setError(e.message || "Error cargando cliente");
     } finally {

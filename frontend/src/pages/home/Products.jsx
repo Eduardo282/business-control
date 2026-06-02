@@ -1,8 +1,8 @@
-import { useEffect, useState, useContext, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
-import Swal from "sweetalert2";
-import { AuthContext } from "../../context/AuthContext";
+import { notificationService } from "../../services/notificationService";
+import { useAuth } from "../../hooks/useAuth";
 import {
   listProductsApi,
   deleteProductApi,
@@ -30,7 +30,6 @@ import {
 } from "@tanstack/react-table";
 import { exportRowsToExcel } from "../../utils/excelExport";
 
-// ── Avatar de producto: iniciales + color semideterminista ──────────────────
 const AVATAR_COLORS = [
   ["#1a2b4c", "#e8edf5"],
   ["#2277B4", "#e3f0fb"],
@@ -41,75 +40,9 @@ const AVATAR_COLORS = [
   ["#1d4ed8", "#dbeafe"],
   ["#15803d", "#dcfce7"],
 ];
-function getAvatarColors(str = "") {
-  let h = 0;
-  for (let i = 0; i < str.length; i++)
-    h = (h * 31 + str.charCodeAt(i)) & 0xffff;
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
-function getProductKeyword(name) {
-  const n = String(name)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-  if (n.includes("taco")) return "tacos,mexican-food";
-  if (n.includes("comida") || n.includes("restaurante"))
-    return "food,restaurant";
-  if (n.includes("nube") || n.includes("cloud")) return "cloud,technology";
-  if (n.includes("banco") || n.includes("finanza")) return "finance,business";
-  if (n.includes("factura") || n.includes("venta") || n.includes("comercial"))
-    return "sales,business";
-  if (n.includes("nomina") || n.includes("rrhh")) return "office,team";
-  if (n.includes("contabilidad") || n.includes("conta"))
-    return "accounting,business";
-  if (n.includes("seguro") || n.includes("poliza")) return "insurance,business";
-  return "business,product";
-}
 
-function ProductAvatar({ name = "", category = "" }) {
-  const [imgError, setImgError] = useState(false);
-
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join("");
-  const [bg, fg] = getAvatarColors(category + name);
-
-  if (!imgError && name) {
-    let h = 0;
-    for (let i = 0; i < name.length; i++) {
-      h = (h * 31 + name.charCodeAt(i)) & 0xffff;
-    }
-    const keyword = getProductKeyword(name + " " + category);
-    const imgUrl = `https://loremflickr.com/100/100/${keyword}?lock=${(h % 1000) + 1}`;
-
-    return (
-      <div className="flex-shrink-0 size-9 rounded-lg overflow-hidden bg-white border border-zinc-100 shadow-sm">
-        <img
-          src={imgUrl}
-          alt={name}
-          onError={() => setImgError(true)}
-          className="size-full object-cover"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="flex-shrink-0 size-9 rounded-lg flex items-center justify-center text-[11px] font-extrabold tracking-tight select-none"
-      style={{ backgroundColor: bg, color: fg }}
-    >
-      {initials || "?"}
-    </div>
-  );
-}
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-function formatPrice(val) {
-  return (parseFloat(val) || 0).toLocaleString("es-MX", {
+function formatPrice(value) {
+  return (Number.parseFloat(value) || 0).toLocaleString("es-MX", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -121,6 +54,34 @@ function normalizeCategory(category = "") {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
+
+function getAvatarColors(seed = "") {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) & 0xffff;
+  }
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
+
+function ProductAvatar({ name = "", category = "" }) {
+  const initials = String(name)
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase())
+    .join("");
+  const [backgroundColor, color] = getAvatarColors(`${category}${name}`);
+
+  return (
+    <div
+      className="flex-shrink-0 size-9 rounded-lg flex items-center justify-center text-[11px] font-extrabold tracking-tight select-none"
+      style={{ backgroundColor, color }}
+      aria-hidden="true"
+    >
+      {initials || "?"}
+    </div>
+  );
 }
 
 function inferProductType(product) {
@@ -141,7 +102,7 @@ function getTypeFilterLabel(type) {
 
 // ── Componente principal ─────────────────────────────────────────────────────
 export default function Products({ categoryFilter }) {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [allProducts, setAllProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -293,35 +254,21 @@ export default function Products({ categoryFilter }) {
   };
 
   const remove = async (id) => {
-    const result = await Swal.fire({
+    const confirmed = await notificationService.confirm({
       title: "¿Estás seguro de eliminar el producto?",
       text: "Esta acción no se puede deshacer.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
     });
 
-    if (!result.isConfirmed) return;
+    if (!confirmed) return;
 
     try {
       await deleteProductApi(id);
       setAllProducts((prev) => prev.filter((p) => p.id !== id));
-      Swal.fire({
-        title: "¡Eliminado!",
-        text: "El producto ha sido eliminado exitosamente.",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      notificationService.toast({ title: "¡Producto eliminado exitosamente!", icon: "success" });
     } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message || "Error eliminando producto.",
-        icon: "error",
-      });
+      notificationService.error("Error", e.message || "Error eliminando producto.");
     }
   };
 
@@ -514,11 +461,7 @@ export default function Products({ categoryFilter }) {
 
       doc.save("Productos_BusinessControl.pdf");
     } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message || "No se pudo generar el PDF.",
-        icon: "error",
-      });
+      notificationService.error("Error", e.message || "No se pudo generar el PDF.");
     }
   };
 
@@ -538,11 +481,7 @@ export default function Products({ categoryFilter }) {
         fileName: "Productos_BusinessControl.xlsx",
       });
     } catch (e) {
-      Swal.fire({
-        title: "Error",
-        text: e.message || "No se pudo generar el Excel.",
-        icon: "error",
-      });
+      notificationService.error("Error", e.message || "No se pudo generar el Excel.");
     }
   };
 

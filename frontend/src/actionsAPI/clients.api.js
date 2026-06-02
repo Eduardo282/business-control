@@ -1,4 +1,5 @@
 import { axiosClient } from "./axiosClient";
+import { gql } from "../utils/graphqlClient";
 
 const graphQlBaseUrl =
   import.meta.env.VITE_API_URL || "http://localhost:4000/graphql";
@@ -24,9 +25,8 @@ export async function listClientsApi() {
       }
     }
   `;
-  const { data } = await axiosClient.post("", { query });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.clients;
+  const data = await gql(query);
+  return data.clients;
 }
 
 export async function getClientApi(id) {
@@ -55,9 +55,8 @@ export async function getClientApi(id) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { id } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.client;
+  const data = await gql(query, { id });
+  return data.client;
 }
 
 export async function listClientActiveServicesApi(client_id) {
@@ -80,15 +79,10 @@ export async function listClientActiveServicesApi(client_id) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { client_id },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
+  const data = await gql(query, { client_id });
 
-  // Aplanar los resultados para facilitar la visualización: contacto -> servicios
   const allServices = [];
-  data.data.contactsByClient.forEach((contact) => {
+  data.contactsByClient.forEach((contact) => {
     contact.active_services.forEach((service) => {
       allServices.push({ ...service, contact_name: contact.full_name });
     });
@@ -112,9 +106,8 @@ export async function searchClientsApi(q) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { q } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.searchClients;
+  const data = await gql(query, { q });
+  return data.searchClients;
 }
 
 export async function createClientApi(input) {
@@ -133,9 +126,8 @@ export async function createClientApi(input) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { input } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.createClient;
+  const data = await gql(query, { input });
+  return data.createClient;
 }
 
 export async function updateClientApi(id, input) {
@@ -163,12 +155,8 @@ export async function updateClientApi(id, input) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { id, input },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.updateClient;
+  const data = await gql(query, { id, input });
+  return data.updateClient;
 }
 
 export async function deleteClientApi(id) {
@@ -177,9 +165,8 @@ export async function deleteClientApi(id) {
       deleteClient(id: $id)
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { id } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.deleteClient;
+  const data = await gql(query, { id });
+  return data.deleteClient;
 }
 
 export async function bulkCreateClientsApi(inputs) {
@@ -198,9 +185,8 @@ export async function bulkCreateClientsApi(inputs) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { inputs } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.bulkCreateClients;
+  const data = await gql(query, { inputs });
+  return data.bulkCreateClients;
 }
 
 export async function listClientsDynamicApi() {

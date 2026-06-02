@@ -1,10 +1,9 @@
-import { useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import Clients from "./Clients";
 import { Construction } from "@icons";
 
 export default function Home() {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
 
   // Para ADMIN y VENTAS, mostrar directamente la sección de clientes
   if (user?.role?.name === "ADMIN" || user?.role?.name === "VENTAS") {

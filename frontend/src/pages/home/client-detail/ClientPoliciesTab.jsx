@@ -21,6 +21,7 @@ import {
 } from "@icons";
 import { normalizeSearchText } from "./utils";
 import { notificationService } from "../../../services/notificationService";
+import { logger } from "../../../services/logger";
 
 const STATUS_LABELS = {
   ACTIVE: "ACTIVO",
@@ -116,7 +117,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
         ),
       )
       .catch((e) => {
-        console.error(e);
+        logger.error("Error loading policies", e);
       });
   };
 

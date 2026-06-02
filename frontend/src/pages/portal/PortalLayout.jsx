@@ -6,11 +6,12 @@ import {
   NavLink,
   useLocation,
 } from "react-router-dom";
-import Swal from "sweetalert2";
 import { Clock, History, LayoutDashboard, BookOpen, Headphones } from "@icons";
 import logo from "../../components/layout/assets/logo.png";
 import ThemeToggle from "../../components/layout/ThemeToggle";
 import { getContactDataApi } from "../../actionsAPI/portal.api";
+import { notificationService } from "../../services/notificationService";
+import { logger } from "../../services/logger";
 
 function PortalItem({ to, children, icon: Icon, matchFilter }) {
   const location = useLocation();
@@ -69,7 +70,7 @@ export default function PortalLayout() {
       })
       .catch((error) => {
         if (canceled) return;
-        console.error("Error refreshing contact data", error);
+        logger.error("Error refreshing contact data", error);
       });
 
     return () => {
@@ -81,14 +82,7 @@ export default function PortalLayout() {
   if (!contact && !loading) return <Navigate to="/portal/login" />;
 
   const handleLogout = () => {
-    const Toast = Swal.mixin({
-      toast: true,
-      position: "top-end",
-      showConfirmButton: false,
-      timer: 2000,
-      timerProgressBar: true,
-    });
-    Toast.fire({ icon: "success", title: "Sesión cerrada correctamente" });
+    notificationService.toast({ title: "Session closed successfully" });
     sessionStorage.removeItem("bc_portal_token");
     sessionStorage.removeItem("bc_portal_contact");
     navigate("/portal/login");

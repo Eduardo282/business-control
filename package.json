@@ -5,11 +5,21 @@
   "scripts": {
     "dev:frontend": "pnpm --dir frontend dev",
     "dev:backend": "pnpm --dir backend dev",
-    "test:unit": "node --test shared/tests/quotePricingRules.test.js",
-    "test:integration": "node --test backend/tests",
-    "test:e2e": "playwright test"
+    "test:unit": "node --test shared/tests/quotePricingRules.test.js shared/tests/quoteItems.test.js",
+    "test:integration": "pnpm --dir backend test",
+    "test:e2e": "playwright test",
+    "test": "pnpm run test:unit && pnpm run test:integration",
+    "build:frontend": "pnpm --dir frontend build",
+    "build": "pnpm run build:frontend",
+    "lint": "echo \"Configure ESLint or Biome for linting\"",
+    "format": "echo \"Configure Prettier or Biome for formatting\"",
+    "scan:front": "nuclei -u http://192.168.100.4:5173",
+    "scan:back": "nuclei -u http://127.0.0.1:4000",
+    "scan:all": "nuclei -u http://192.168.100.4:5173 -u http://127.0.0.1:4000",
+    "scan:graphql": "nuclei -u http://127.0.0.1:4000/graphql -tags graphql"
   },
-  "devDependencies": {
+
+  "devDependencies": { 
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.7.0"
   }

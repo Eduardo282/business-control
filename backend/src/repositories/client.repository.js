@@ -3,6 +3,7 @@
  * Centraliza las consultas, inserciones y actualizaciones de clientes en MySQL.
  */
 import { pool } from "../config/db.js";
+import { normalizePagination } from "./pagination.js";
 
 /**
  * Busca un cliente por su ID.
@@ -20,14 +21,18 @@ export async function findClientById(id, queryRunner = pool) {
 
 /**
  * Lista todos los clientes ordenados por razón social.
+ * @param {{ limit?: number, offset?: number }} [pagination]
  * @param {object} [queryRunner]
  * @returns {Promise<object[]>}
  */
-export async function listClients(queryRunner = pool) {
+export async function listClients(pagination = {}, queryRunner = pool) {
+  const { limit, offset } = normalizePagination(pagination);
   const [rows] = await queryRunner.query(
     `SELECT id, business_name, rfc, email1, email2, celular, telefono, codigo_postal, ciudad
      FROM clients
-     ORDER BY business_name ASC`,
+     ORDER BY business_name ASC
+     LIMIT ? OFFSET ?`,
+    [limit, offset],
   );
   return rows;
 }
@@ -78,11 +83,22 @@ export async function createClient(data, queryRunner = pool) {
  * @returns {Promise<void>}
  */
 export async function updateClient(id, data, queryRunner = pool) {
+  const allowedColumns = new Set([
+    "business_name",
+    "rfc",
+    "email1",
+    "email2",
+    "celular",
+    "telefono",
+    "codigo_postal",
+    "ciudad",
+  ]);
   const setClauses = [];
   const params = [];
 
   for (const [key, value] of Object.entries(data)) {
-    setClauses.push(`${key} = ?`);
+    if (!allowedColumns.has(key)) continue;
+    setClauses.push(`${escapeIdentifier(key)} = ?`);
     params.push(value);
   }
 
@@ -533,4 +549,3 @@ export async function findClientDynamicById(id, visibleColumnNames, queryRunner 
   );
   return rows?.[0] || null;
 }
-

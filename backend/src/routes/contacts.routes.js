@@ -4,21 +4,9 @@ import {
   listContactsDynamicByClientAction,
   updateContactDynamicAction,
 } from "../services/contactsDynamic.service.js";
+import { requireBackofficeRole } from "../middlewares/requireBackofficeRole.middleware.js";
 
 const router = Router();
-
-function requireBackofficeRole(req, res, next) {
-  if (!req.user) {
-    return res.status(401).json({ message: "No autenticado" });
-  }
-
-  const allowedRoles = new Set(["ADMIN", "VENTAS"]);
-  if (!allowedRoles.has(req.user.role)) {
-    return res.status(403).json({ message: "No autorizado" });
-  }
-
-  return next();
-}
 
 router.get(
   "/client/:clientId/dynamic",

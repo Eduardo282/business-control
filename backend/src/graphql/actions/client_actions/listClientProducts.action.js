@@ -1,4 +1,5 @@
 import { listClientProducts } from "../../../repositories/client.repository.js";
+import { determineStatus } from "../../../utils/policyStatus.js";
 
 export async function listClientProductsAction(client_id) {
   const rows = await listClientProducts(client_id);
@@ -17,30 +18,4 @@ export async function listClientProductsAction(client_id) {
       description: row.product_description,
     },
   }));
-}
-
-function determineStatus(storedStatus, expirationDate) {
-  const normalizedStatus = String(storedStatus || "")
-    .trim()
-    .toUpperCase();
-
-  if (normalizedStatus === "CANCELLED") {
-    return "CANCELLED";
-  }
-
-  if (normalizedStatus === "EXPIRED") {
-    return "EXPIRED";
-  }
-
-  const now = new Date();
-  const exp = new Date(expirationDate);
-  if (exp < now) {
-    return "EXPIRED";
-  }
-  const diffTime = Math.abs(exp - now);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  if (diffDays <= 5) {
-    return "EXPIRING_SOON";
-  }
-  return "ACTIVE";
 }

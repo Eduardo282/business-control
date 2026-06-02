@@ -94,9 +94,11 @@ export function registerConversationHandlers(io, socket, context) {
   // ── Rate conversation ──
   socket.on("conversation:rate", async ({ conversationId, rating }) => {
     try {
-      if (rating < 1 || rating > 5) return;
-      await chatService.closeConversation(conversationId, rating);
-      socket.emit("conversation:rated", { conversationId, rating });
+      const numericRating = Number(rating);
+      if (!Number.isFinite(numericRating) || !Number.isInteger(numericRating)) return;
+      if (numericRating < 1 || numericRating > 5) return;
+      await chatService.closeConversation(conversationId, numericRating);
+      socket.emit("conversation:rated", { conversationId, rating: numericRating });
     } catch (err) {
       logger.error("conversation:rate error:", err);
     }

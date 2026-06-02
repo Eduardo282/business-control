@@ -1,4 +1,4 @@
-import { axiosClient } from "./axiosClient";
+import { gql } from "../utils/graphqlClient";
 
 export async function getRolesApi() {
   const query = `
@@ -7,9 +7,8 @@ export async function getRolesApi() {
     }
   `;
 
-  const { data } = await axiosClient.post("", { query });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.roles;
+  const data = await gql(query);
+  return data.roles;
 }
 
 export async function createRoleApi(name) {
@@ -19,13 +18,8 @@ export async function createRoleApi(name) {
     }
   `;
 
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { name },
-  });
-
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.createRole;
+  const data = await gql(query, { name });
+  return data.createRole;
 }
 
 export async function deleteRoleApi(id) {
@@ -35,11 +29,6 @@ export async function deleteRoleApi(id) {
     }
   `;
 
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { id },
-  });
-
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.deleteRole;
+  const data = await gql(query, { id });
+  return data.deleteRole;
 }

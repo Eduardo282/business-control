@@ -15,6 +15,7 @@ import {
   resolveQuoteRequestApi,
   toggleQuotePortalApi,
 } from "../../../../actionsAPI/quotes.api";
+import { logger } from "../../../../services/logger";
 import {
   normalizeDiscount,
   calculateItemTotal,
@@ -26,8 +27,13 @@ import {
   formatCurrency,
   normalizeSearchText,
 } from "../../../../utils/formatters";
+import {
+  createQuoteItemId,
+  updateQuoteItemDraft,
+  upsertQuoteItem,
+} from "../../../../features/quotes/domain/quoteItems.js";
 
-const MAX_CLIENT_RESULTS_IN_MODAL = 80;
+const MAX_CLIENT_RESULTS_IN_MODAL = 50;
 const roundCurrency = roundMoney;
 const clampDiscount = normalizeDiscount;
 
@@ -156,7 +162,7 @@ export function useCreateQuote(navigate) {
             const quantity = Number(item.quantity) || 1;
 
             return {
-              tempId: Date.now() + Math.random(),
+              tempId: createQuoteItemId(),
               product_id: item.product.id,
               name: item.product.name,
               price: baseUnitPrice,
@@ -322,32 +328,7 @@ export function useCreateQuote(navigate) {
   };
 
   const addItemDirectly = (p) => {
-    setItems((prev) => {
-      const existing = prev.find((i) => i.product_id === p.id);
-      if (existing) {
-        return prev.map((i) =>
-          i.product_id === p.id ?
-            {
-              ...i,
-              quantity: i.quantity + 1,
-              total: calculateItemTotal(i.price, i.quantity + 1, i.discount),
-            }
-          : i,
-        );
-      }
-      return [
-        ...prev,
-        {
-          tempId: Date.now() + Math.random(),
-          product_id: p.id,
-          name: p.name,
-          price: Number(p.current_price),
-          discount: 0,
-          quantity: 1,
-          total: calculateItemTotal(Number(p.current_price), 1, 0),
-        },
-      ];
-    });
+    setItems((prev) => upsertQuoteItem(prev, p, 1));
     setJustAdded(p.id);
     setTimeout(() => setJustAdded(null), 1200);
   };
@@ -382,38 +363,7 @@ export function useCreateQuote(navigate) {
   const addItem = () => {
     if (!selectedProductToAdd) return;
     const qty = Math.max(1, Number(qtyToAdd) || 1);
-    setItems((prev) => {
-      const existing = prev.find(
-        (i) => i.product_id === selectedProductToAdd.id,
-      );
-      if (existing) {
-        return prev.map((i) =>
-          i.product_id === selectedProductToAdd.id ?
-            {
-              ...i,
-              quantity: i.quantity + qty,
-              total: calculateItemTotal(i.price, i.quantity + qty, i.discount),
-            }
-          : i,
-        );
-      }
-      return [
-        ...prev,
-        {
-          tempId: Date.now(),
-          product_id: selectedProductToAdd.id,
-          name: selectedProductToAdd.name,
-          price: Number(selectedProductToAdd.current_price),
-          discount: 0,
-          quantity: qty,
-          total: calculateItemTotal(
-            Number(selectedProductToAdd.current_price),
-            qty,
-            0,
-          ),
-        },
-      ];
-    });
+    setItems((prev) => upsertQuoteItem(prev, selectedProductToAdd, qty));
     setSelectedProductToAdd(null);
     setProdSearch("");
     setQtyToAdd(1);
@@ -472,15 +422,9 @@ export function useCreateQuote(navigate) {
 
     setItems((prev) =>
       prev.map((item) =>
-        item.tempId === editingItemDraft.tempId ?
-          {
-            ...item,
-            quantity,
-            price,
-            discount,
-            total: calculateItemTotal(price, quantity, discount),
-          }
-        : item,
+        item.tempId === editingItemDraft.tempId
+          ? updateQuoteItemDraft(item, { quantity, price, discount })
+          : item,
       ),
     );
 
@@ -534,7 +478,7 @@ export function useCreateQuote(navigate) {
               portalAutoContactId,
             );
           } catch (portalError) {
-            console.error(
+            logger.error(
               "No se pudo enviar automaticamente al portal:",
               portalError,
             );

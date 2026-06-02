@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
 import { User, Mail, Phone, Lock, Shield, CircleHelp } from "@icons";
-import { registerUserApi } from "../../actionsAPI/auth.api";
+import { registerUserApi, verifyMasterPasswordApi } from "../../actionsAPI/auth.api";
+import { notificationService } from "../../services/notificationService";
+import {
+  PASSWORD_REQUIREMENTS_MESSAGE,
+  isStrongPassword,
+} from "../../../../shared/validation";
+import AuthDecorativePanel from "../../components/ui/AuthDecorativePanel";
 import logo from "../../assets/logo.png";
 
 export default function Register() {
@@ -32,7 +37,7 @@ export default function Register() {
   }, [selectedRoleFromRoles]);
 
   const goToRolesRegister = async () => {
-    const result = await Swal.fire({
+    const result = await notificationService.passwordPrompt({
       title:
         '<span style="color:#162A42;font-size:1.25rem;font-weight:700">🔒 Acceso a Roles</span>',
       html: `
@@ -58,18 +63,16 @@ export default function Register() {
     });
 
     if (result.isConfirmed) {
-      if (result.value === "Tc3@N360!") {
+      const isCorrect = await verifyMasterPasswordApi(result.value);
+      if (isCorrect) {
         const token = Date.now() + "_" + Math.random();
         sessionStorage.setItem("roles_access_key", token);
         navigate("/roles", { state: { roles_access_key: token } });
       } else {
-        Swal.fire({
-          icon: "error",
-          title: "Contraseña incorrecta",
-          text: "No tienes permiso para acceder a esta sección.",
-          confirmButtonText: "Entendido",
-          confirmButtonColor: "#162A42",
-        });
+        notificationService.error(
+          "Incorrect password",
+          "You do not have permission to access this section.",
+        );
       }
     }
   };
@@ -79,12 +82,8 @@ export default function Register() {
     setError("");
     setSuccess("");
 
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\+\-=\[\]{}|;:,.<>?/]).{8,}$/;
-    if (!passwordRegex.test(password)) {
-      setError(
-        "La contraseña debe tener mínimo 8 caracteres, incluyendo mayúsculas, minúsculas, números y símbolos (!@#$%^&*...).",
-      );
+    if (!isStrongPassword(password)) {
+      setError(PASSWORD_REQUIREMENTS_MESSAGE);
       return;
     }
 
@@ -114,46 +113,10 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex bg-white">
-      {/* Lado izquierdo - Imagen corporativa */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#4A6B8A] to-[#162A42] relative overflow-hidden z-20 shadow-[15px_0_30px_-5px_rgba(0,0,0,0.5)]">
-        <div className="flex flex-col items-center justify-center w-full px-12 relative z-10">
-          <img
-            src={logo}
-            alt="Business Control"
-            className="w-80 mb-8 drop-shadow-[0_20px_25px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-500"
-          />
-          <h2 className="text-white text-3xl font-semibold text-center mb-4">
-            Configuración de Usuarios
-          </h2>
-          <p className="text-blue-100 text-center text-lg max-w-md leading-relaxed">
-            Modulo de Actualizacion de credenciales de acceso de cada rol del
-            sistema.
-          </p>
-        </div>
-
-        {/* Decoración - Burbujas 3D Reflejadas (Esquinas) */}
-        {/* Burbuja Esquina Superior Derecha */}
-        <div
-          className="absolute top-0 right-0 w-[16rem] h-[16rem] rounded-full mix-blend-overlay pointer-events-none translate-x-[10%] -translate-y-[10%]"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4), rgba(255,255,255,0.1) 40%, transparent 70%)",
-            boxShadow:
-              "inset -20px -20px 40px rgba(0,0,0,0.5), inset 20px 20px 40px rgba(255,255,255,0.2)",
-            filter: "drop-shadow(0 25px 25px rgba(0,0,0,0.4))",
-          }}></div>
-
-        {/* Burbuja Esquina Inferior Izquierda */}
-        <div
-          className="absolute bottom-0 left-0 w-[16rem] h-[16rem] rounded-full mix-blend-overlay pointer-events-none -translate-x-[10%] translate-y-[10%]"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(255,255,255,0.05) 50%, transparent 70%)",
-            boxShadow:
-              "inset -20px -20px 40px rgba(0,0,0,0.5), inset 20px 20px 40px rgba(255,255,255,0.2)",
-            filter: "drop-shadow(0 25px 35px rgba(0,0,0,0.5))",
-          }}></div>
-      </div>
+      <AuthDecorativePanel
+        title="Configuración de Usuarios"
+        description="Modulo de Actualizacion de credenciales de acceso de cada rol del sistema."
+      />
 
       {/* Lado derecho - Formulario */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#F1F4F8] relative">
@@ -297,7 +260,7 @@ export default function Register() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm text-center">
+              <div role="alert" className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm text-center">
                 {error}
               </div>
             )}

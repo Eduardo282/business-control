@@ -18,6 +18,7 @@ import {
 import { ServicesSection } from "./ServicesSection";
 import { IVA_RATE } from "@shared/quotePricingRules.js";
 import { notificationService } from "../../../services/notificationService";
+import { logger } from "../../../services/logger";
 
 export const ClientProductsTab = ({ clientId, contacts, productsList }) => {
   const [products, setProducts] = useState([]);
@@ -40,7 +41,7 @@ export const ClientProductsTab = ({ clientId, contacts, productsList }) => {
         setLoading(false);
       })
       .catch((e) => {
-        console.error(e);
+        logger.error("Error loading products", e);
         setLoading(false);
       });
   };

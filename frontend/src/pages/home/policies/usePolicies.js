@@ -223,9 +223,7 @@ export function usePolicies() {
 
     const ids = group.policyIds || [];
     try {
-      for (const id of ids) {
-        await deleteContactProductApi(id);
-      }
+      await Promise.all(ids.map((id) => deleteContactProductApi(id)));
       setPolicies((prev) => prev.filter((p) => !ids.includes(p.id)));
       notificationService.toast({ title: `${count} póliza(s) eliminadas correctamente.`, icon: "success" });
     } catch (e) {
@@ -276,7 +274,7 @@ export function usePolicies() {
     const hasFieldFilters = Object.values(filters).some((v) => v.trim() !== "");
     if (!s && !hasFieldFilters) return groupedPolicies;
 
-    return groupedPolicies.filter((g) => {
+    return groupedPolicies.reduce((acc, g) => {
       const productName = g.product?.name || "";
       const productCategory = g.product?.category || "";
       const clientName = g.client?.business_name || "";
@@ -285,6 +283,11 @@ export function usePolicies() {
 
       const statusRaw = g.status || "";
       const statusLabel = getPolicyStatusLabel(statusRaw).toLowerCase();
+      const items = g.items || [];
+      const itemStatusLabels = items.map((item) =>
+        getPolicyStatusLabel(item.status).toLowerCase(),
+      );
+      const statusLabels = [statusLabel, ...itemStatusLabels];
 
       const locale = "es";
       const startDate =
@@ -303,7 +306,7 @@ export function usePolicies() {
             productCategory,
             clientName,
             policyType,
-            statusLabel,
+            statusLabels.join(" "),
             startDate,
             expDate,
             folios
@@ -325,11 +328,35 @@ export function usePolicies() {
               normalizeSearchText(filters.vigencia),
             )) &&
           (!filters.status ||
-            normalizeSearchText(statusLabel) ===
-              normalizeSearchText(filters.status)));
+            statusLabels.some(
+              (label) =>
+                normalizeSearchText(label) === normalizeSearchText(filters.status),
+            )));
 
-      return matchQ && matchFilters;
-    });
+      if (!matchQ || !matchFilters) return acc;
+
+      if (filters.status) {
+        const selectedStatus = normalizeSearchText(filters.status);
+        const matchedItem = items.find(
+          (item) =>
+            normalizeSearchText(getPolicyStatusLabel(item.status)) === selectedStatus,
+        );
+
+        if (matchedItem) {
+          acc.push({
+            ...g,
+            start_date: matchedItem.start_date || g.start_date,
+            expiration_date: matchedItem.expiration_date || g.expiration_date,
+            status: matchedItem.status || g.status,
+            items: [matchedItem, ...items.filter((item) => item.id !== matchedItem.id)],
+          });
+          return acc;
+        }
+      }
+
+      acc.push(g);
+      return acc;
+    }, []);
   }, [groupedPolicies, q, filters]);
 
   const exportableGroups = useMemo(() => {

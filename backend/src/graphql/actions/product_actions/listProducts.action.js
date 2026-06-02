@@ -1,7 +1,7 @@
 import { listProducts, searchProducts } from "../../../repositories/product.repository.js";
 
-export async function listProductsAction({ client_id } = {}) {
-  return listProducts({ client_id });
+export async function listProductsAction({ client_id, limit, offset } = {}) {
+  return listProducts({ client_id, limit, offset });
 }
 
 export async function searchProductsAction(q, client_id) {

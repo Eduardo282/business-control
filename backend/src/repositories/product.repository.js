@@ -6,8 +6,12 @@
  * no del motor de base de datos concreto.
  */
 import { pool } from "../config/db.js";
+import { normalizePagination } from "./pagination.js";
 
 // ─── Productos ──────────────────────────────────────────────────────────────
+
+const PRODUCT_COLUMNS =
+  "id, client_id, name, category, product_type, current_price, users_count, description";
 
 /**
  * Busca un producto por su ID con historial de precios.
@@ -15,11 +19,14 @@ import { pool } from "../config/db.js";
  * @returns {Promise<object|null>}
  */
 export async function findProductById(id) {
-  const [rows] = await pool.query("SELECT * FROM products WHERE id = :id", { id });
+  const [rows] = await pool.query(
+    `SELECT ${PRODUCT_COLUMNS} FROM products WHERE id = :id`,
+    { id },
+  );
   if (!rows.length) return null;
 
   const [hist] = await pool.query(
-    "SELECT * FROM product_price_history WHERE product_id = :id ORDER BY changed_at DESC",
+    "SELECT id, product_id, price, changed_at FROM product_price_history WHERE product_id = :id ORDER BY changed_at DESC",
     { id },
   );
   return { ...rows[0], price_history: hist };
@@ -32,7 +39,10 @@ export async function findProductById(id) {
  * @returns {Promise<object|null>}
  */
 export async function findProductByIdLean(id, queryRunner = pool) {
-  const [rows] = await queryRunner.query("SELECT * FROM products WHERE id = ?", [id]);
+  const [rows] = await queryRunner.query(
+    `SELECT ${PRODUCT_COLUMNS} FROM products WHERE id = ?`,
+    [id],
+  );
   return rows?.[0] || null;
 }
 
@@ -40,10 +50,13 @@ export async function findProductByIdLean(id, queryRunner = pool) {
  * Lista todos los productos, opcionalmente filtrados por client_id.
  * @param {object} [options]
  * @param {number|string} [options.client_id]
+ * @param {number} [options.limit]
+ * @param {number} [options.offset]
  * @returns {Promise<object[]>}
  */
-export async function listProducts({ client_id } = {}) {
-  let query = "SELECT * FROM products";
+export async function listProducts({ client_id, limit, offset } = {}) {
+  const page = normalizePagination({ limit, offset });
+  let query = `SELECT ${PRODUCT_COLUMNS} FROM products`;
   const params = {};
 
   if (client_id) {
@@ -51,7 +64,9 @@ export async function listProducts({ client_id } = {}) {
     params.client_id = client_id;
   }
 
-  query += " ORDER BY name ASC";
+  query += " ORDER BY name ASC LIMIT :limit OFFSET :offset";
+  params.limit = page.limit;
+  params.offset = page.offset;
 
   const [rows] = await pool.query(query, params);
   return rows.map((r) => ({ ...r, price_history: [] }));
@@ -64,7 +79,7 @@ export async function listProducts({ client_id } = {}) {
  * @returns {Promise<object[]>}
  */
 export async function searchProducts(q, client_id) {
-  let query = "SELECT * FROM products WHERE (name LIKE :q OR category LIKE :q)";
+  let query = `SELECT ${PRODUCT_COLUMNS} FROM products WHERE (name LIKE :q OR category LIKE :q)`;
   const params = { q: `%${q}%` };
 
   if (client_id) {

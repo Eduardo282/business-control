@@ -14,6 +14,7 @@ import {
   X,
 } from "@icons";
 import { listPortalQuotesApi } from "../../actionsAPI/portal.api";
+import { logger } from "../../services/logger";
 
 export default function PortalDashboard() {
   const { contact } = useOutletContext();
@@ -75,7 +76,7 @@ export default function PortalDashboard() {
         const data = await listPortalQuotesApi();
         setQuotes(data);
       } catch (e) {
-        console.error("Error fetching quotes", e);
+        logger.error("Error fetching quotes", e);
       } finally {
         setLoadingQuotes(false);
       }

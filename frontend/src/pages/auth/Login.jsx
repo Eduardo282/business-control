@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Mail,
@@ -7,9 +7,14 @@ import {
   Building2,
   ArrowRight,
 } from "@icons";
-import Swal from "sweetalert2";
 import { loginApi } from "../../actionsAPI/auth.api";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
+import { notificationService } from "../../services/notificationService";
+import {
+  PASSWORD_REQUIREMENTS_MESSAGE,
+  isStrongPassword,
+} from "../../../../shared/validation";
+import AuthDecorativePanel from "../../components/ui/AuthDecorativePanel";
 import logo from "../../assets/logo.png";
 
 export default function Login() {
@@ -18,19 +23,15 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { setUser } = useContext(AuthContext);
+  const { setUser } = useAuth();
   const navigate = useNavigate();
 
   const submit = async (e) => {
     e.preventDefault();
     setError("");
 
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\+\-=\[\]{}|;:,.<>?/]).{8,}$/;
-    if (!passwordRegex.test(password)) {
-      setError(
-        "La contraseña debe tener mínimo 8 caracteres, incluyendo mayúsculas, minúsculas, números y símbolos (!@#$%^&*...).",
-      );
+    if (!isStrongPassword(password)) {
+      setError(PASSWORD_REQUIREMENTS_MESSAGE);
       return;
     }
 
@@ -40,22 +41,7 @@ export default function Login() {
       const res = await loginApi(email, password);
       localStorage.setItem("bc_token", res.token);
 
-      const Toast = Swal.mixin({
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.onmouseenter = Swal.stopTimer;
-          toast.onmouseleave = Swal.resumeTimer;
-        },
-      });
-
-      Toast.fire({
-        icon: "success",
-        title: `Bienvenido, ${res.user.full_name}`,
-      });
+      notificationService.toast({ title: `Welcome, ${res.user.full_name}` });
 
       setUser(res.user);
       navigate("/", { replace: true });
@@ -68,46 +54,10 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex bg-white dark:bg-dark-900">
-      {/* Lado izquierdo - Imagen corporativa */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#4A6B8A] to-[#162A42] relative overflow-hidden z-20 shadow-[15px_0_30px_-5px_rgba(0,0,0,0.5)]">
-        {/* Logo grande centrado */}
-        <div className="flex flex-col items-center justify-center w-full px-12 relative z-10">
-          <img
-            src={logo}
-            alt="Business Control"
-            className="w-80 mb-8 drop-shadow-[0_20px_25px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-500"
-          />
-          <h2 className="text-white text-3xl font-semibold text-center mb-4">
-            Sistema Empresarial
-          </h2>
-          <p className="text-blue-100 text-center text-lg max-w-md leading-relaxed">
-            Modulo de administracion
-          </p>
-        </div>
-
-        {/* Decoración - Burbujas 3D Reflejadas (Esquinas) */}
-        {/* Burbuja Esquina Superior Derecha */}
-        <div
-          className="absolute top-0 right-0 w-[16rem] h-[16rem] rounded-full mix-blend-overlay pointer-events-none translate-x-[10%] -translate-y-[10%]"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4), rgba(255,255,255,0.1) 40%, transparent 70%)",
-            boxShadow:
-              "inset -20px -20px 40px rgba(0,0,0,0.5), inset 20px 20px 40px rgba(255,255,255,0.2)",
-            filter: "drop-shadow(0 25px 25px rgba(0,0,0,0.4))",
-          }}></div>
-
-        {/* Burbuja Esquina Inferior Izquierda */}
-        <div
-          className="absolute bottom-0 left-0 w-[16rem] h-[16rem] rounded-full mix-blend-overlay pointer-events-none -translate-x-[10%] translate-y-[10%]"
-          style={{
-            background:
-              "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(255,255,255,0.05) 50%, transparent 70%)",
-            boxShadow:
-              "inset -20px -20px 40px rgba(0,0,0,0.5), inset 20px 20px 40px rgba(255,255,255,0.2)",
-            filter: "drop-shadow(0 25px 35px rgba(0,0,0,0.5))",
-          }}></div>
-      </div>
+      <AuthDecorativePanel
+        title="Sistema Empresarial"
+        description="Modulo de administracion"
+      />
 
       {/* Lado derecho - Formulario */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#F1F4F8] dark:bg-dark-800 relative">
@@ -174,7 +124,7 @@ export default function Login() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm text-center">
+              <div role="alert" className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm text-center">
                 {error}
               </div>
             )}

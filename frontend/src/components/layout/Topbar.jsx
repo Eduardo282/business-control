@@ -1,7 +1,8 @@
-import { useContext, useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useLocation, matchPath, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
+import { logger } from "../../services/logger";
 import ThemeToggle from "./ThemeToggle";
 import { Bell, Trash2, Check, XCircle } from "@icons";
 import {
@@ -27,7 +28,7 @@ function getSectionLabel(pathname = "") {
 }
 
 export default function Topbar() {
-  const { user, setUser } = useContext(AuthContext);
+  const { user, setUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const isHome = location.pathname === "/";
@@ -45,7 +46,7 @@ export default function Topbar() {
           const res = await getUnreadQuoteRequestsApi();
           setNotifications(res || []);
         } catch (e) {
-          console.error("Error fetching notifications", e);
+          logger.error("Error fetching notifications", e);
         }
       };
       fetchNotifs();
@@ -73,7 +74,7 @@ export default function Topbar() {
         prev.map((n) => (n.id === id ? { ...n, notification_read: true } : n))
       );
     } catch (e) {
-      console.error(e);
+      logger.error("Error dismissing notification", e);
     }
   };
 
@@ -103,7 +104,7 @@ export default function Topbar() {
         showConfirmButton: false,
       });
     } catch (e) {
-      console.error(e);
+      logger.error("Error deleting quote request", e);
       Swal.fire("Error", e.message || "No se pudo eliminar la solicitud", "error");
     }
   };
@@ -139,7 +140,7 @@ export default function Topbar() {
         showConfirmButton: false,
       });
     } catch (e) {
-      console.error(e);
+      logger.error("Error rejecting quote request", e);
       Swal.fire("Error", e.message || "No se pudo rechazar la solicitud", "error");
     }
   };
@@ -153,7 +154,7 @@ export default function Topbar() {
           prev.map((n) => (n.id === notif.id ? { ...n, notification_read: true } : n))
         );
       } catch (e) {
-        console.error(e);
+        logger.error("Error navigating to quote request", e);
       }
       navigate(`/cotizaciones/nueva?request_id=${notif.id}`);
       return;

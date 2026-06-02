@@ -1,9 +1,8 @@
 import { useParams, Link, useLocation } from "react-router-dom";
 import Button from "../../components/ui/Button";
-import { Mail, ArrowLeft, Printer, Globe } from "@icons";
+import { Mail, ArrowLeft, Printer } from "@icons";
 import { useQuoteDetail, getQuoteFolio } from "./quotes/useQuoteDetail";
 import EmailQuoteModal from "./quotes/EmailQuoteModal";
-import SendToPortalModal from "./quotes/SendToPortalModal";
 import QuotePreview from "./quotes/QuotePreview";
 
 export default function QuoteDetail() {
@@ -20,19 +19,12 @@ export default function QuoteDetail() {
     sendingEmail,
     emailError,
     emailSuccess,
-    showPortalModal,
-    setShowPortalModal,
-    portalError,
-    setPortalError,
-    toggleLoading,
     sendingToContact,
     quickNotice,
     quotePreviewRef,
     load,
     handlePrint,
     handleSendEmail,
-    handleTogglePortalTrigger,
-    confirmSendToPortal,
     handleSendToQuoteContact,
     handleExportWord,
   } = useQuoteDetail(id, isPortal);
@@ -88,17 +80,6 @@ export default function QuoteDetail() {
         success={emailSuccess}
       />
 
-      {/* Send to Portal Modal */}
-      <SendToPortalModal
-        isOpen={showPortalModal}
-        onClose={() => setShowPortalModal(false)}
-        quote={quote}
-        onSubmit={(contactId, contact) => confirmSendToPortal(contactId, contact)}
-        toggleLoading={toggleLoading}
-        portalError={portalError}
-        setPortalError={setPortalError}
-      />
-
       {/* Action Toolbar */}
       <div className="glass-panel p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden sticky top-6 z-40 backdrop-blur-xl shadow-xl">
         <div>
@@ -147,27 +128,15 @@ export default function QuoteDetail() {
 
         <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:justify-end">
           {!isPortal && (
-            <>
-              <Button
-                variant="ghost"
-                onClick={handleTogglePortalTrigger}
-                disabled={toggleLoading}
-                className="flex-1 sm:flex-none !px-3 !py-1.5 !rounded-md !text-[13px] !font-semibold !border !border-zinc-200 dark:!border-dark-700 !text-light-text-secondary dark:!text-zinc-300 hover:!bg-zinc-50 hover:dark:!bg-dark-800 !flex !items-center !gap-2 !justify-center"
-              >
-                <Globe size={16} />
-                {quote.is_sent_to_client_portal ? "Quitar del portal" : "Enviar a portal"}
-              </Button>
-
-              <Button
-                variant="ghost"
-                onClick={handleSendToQuoteContact}
-                disabled={sendingToContact || !preferredContactEmail}
-                className="flex-1 sm:flex-none !px-3 !py-1.5 !rounded-md !text-[13px] !font-semibold !border !border-[#1B4733]/30 dark:!border-dark-700 !text-light-text-secondary dark:!text-zinc-300 !transition-all !duration-150 disabled:!opacity-50 disabled:!cursor-not-allowed disabled:!bg-white disabled:dark:!bg-dark-900 disabled:!text-emerald-700 disabled:!border-emerald-200 !flex !items-center !gap-2 !justify-center hover:!bg-[#1B4733]/15 hover:dark:!bg-dark-800"
-              >
-                <Mail size={16} />
-                {sendingToContact ? "Enviando…" : "Enviar al contacto"}
-              </Button>
-            </>
+            <Button
+              variant="ghost"
+              onClick={handleSendToQuoteContact}
+              disabled={sendingToContact || !preferredContactEmail}
+              className="flex-1 sm:flex-none !px-3 !py-1.5 !rounded-md !text-[13px] !font-semibold !border !border-[#1B4733]/30 dark:!border-dark-700 !text-light-text-secondary dark:!text-zinc-300 !transition-all !duration-150 disabled:!opacity-50 disabled:!cursor-not-allowed disabled:!bg-white disabled:dark:!bg-dark-900 disabled:!text-emerald-700 disabled:!border-emerald-200 !flex !items-center !gap-2 !justify-center hover:!bg-[#1B4733]/15 hover:dark:!bg-dark-800"
+            >
+              <Mail size={16} />
+              {sendingToContact ? "Enviando…" : "Enviar al contacto"}
+            </Button>
           )}
           <Button
             variant="ghost"

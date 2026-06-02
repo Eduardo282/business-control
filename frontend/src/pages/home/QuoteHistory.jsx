@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import Card from "../../components/ui/Card";
@@ -6,7 +6,7 @@ import Swal from "sweetalert2";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { deleteQuoteApi, listQuotesApi, updateQuoteStatusApi } from "../../actionsAPI/quotes.api";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import {
   BadgeDollarSign,
   ChevronDown,
@@ -172,7 +172,7 @@ function StatusCell({ row, handleStatusChange }) {
 }
 
 export default function QuoteHistory() {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [data, dispatchData] = useReducer(dataReducer, { quotes: [], loading: true, error: "" });
   const { quotes, loading, error } = data;
   const [fState, dispatchFilter] = useReducer(filterReducer, {

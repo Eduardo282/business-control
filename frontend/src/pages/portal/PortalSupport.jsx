@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
 import { io } from "socket.io-client";
+import { logger } from "../../services/logger";
 import {
   Send,
   MessageCircle,
@@ -159,7 +160,7 @@ export default function PortalSupport() {
     });
 
     s.on("error", ({ message }) => {
-      console.error("Socket error:", message);
+      logger.error("Socket error", message);
       setChatState((prev) => ["connecting", "waiting"].includes(prev) ? "idle" : prev);
     });
 

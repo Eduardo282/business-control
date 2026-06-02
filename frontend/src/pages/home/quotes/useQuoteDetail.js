@@ -2,7 +2,6 @@ import { useRef } from "react";
 import { useQuoteStatus } from "./hooks/useQuoteStatus.js";
 import { useQuotePdf, getQuoteFolio, getQuoteFileToken } from "./hooks/useQuotePdf.js";
 import { useQuoteEmail } from "./hooks/useQuoteEmail.js";
-import { useQuotePortal } from "./hooks/useQuotePortal.js";
 
 export { getQuoteFolio, getQuoteFileToken };
 
@@ -18,7 +17,6 @@ export function useQuoteDetail(id, isPortal) {
   // 1. Status & Base Loading Hook
   const {
     quote,
-    setQuote,
     loading,
     error,
     load,
@@ -45,25 +43,7 @@ export function useQuoteDetail(id, isPortal) {
     setQuickNotice,
     handleSendEmail,
     handleSendToQuoteContact,
-    buildContactEmailMessage,
   } = useQuoteEmail(quote, buildPdfFromSnapshot);
-
-  // 4. Portal Configuration Hook
-  const {
-    showPortalModal,
-    setShowPortalModal,
-    portalError,
-    setPortalError,
-    toggleLoading,
-    handleTogglePortalTrigger,
-    confirmSendToPortal,
-  } = useQuotePortal(
-    quote,
-    setQuote,
-    buildPdfFromSnapshot,
-    buildContactEmailMessage,
-    setQuickNotice
-  );
 
   return {
     quote,
@@ -74,11 +54,6 @@ export function useQuoteDetail(id, isPortal) {
     sendingEmail,
     emailError,
     emailSuccess,
-    showPortalModal,
-    setShowPortalModal,
-    portalError,
-    setPortalError,
-    toggleLoading,
     sendingToContact,
     quickNotice,
     setQuickNotice,
@@ -86,8 +61,6 @@ export function useQuoteDetail(id, isPortal) {
     load,
     handlePrint,
     handleSendEmail,
-    handleTogglePortalTrigger,
-    confirmSendToPortal,
     handleSendToQuoteContact,
     handleExportWord,
   };

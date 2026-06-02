@@ -15,10 +15,16 @@ jobs:
         node-version: lts/*
     - name: Install dependencies
       run: npm install -g pnpm && pnpm install
+    - name: Run unit tests
+      run: pnpm test:unit
     - name: Install Playwright Browsers
       run: pnpm exec playwright install --with-deps
     - name: Run Playwright tests
       run: pnpm exec playwright test
+      env:
+        VITE_API_URL: http://127.0.0.1:4000/graphql
+        CORS_ORIGIN: http://127.0.0.1:5173
+        NODE_ENV: test
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:

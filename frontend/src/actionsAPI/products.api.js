@@ -1,4 +1,4 @@
-import { axiosClient } from "./axiosClient.js";
+import { gql } from "../utils/graphqlClient";
 
 export async function listProductsApi(client_id = null) {
   const query = `
@@ -11,9 +11,8 @@ export async function listProductsApi(client_id = null) {
     }
   `;
   const variables = client_id ? { clientId: client_id } : {};
-  const { data } = await axiosClient.post("", { query, variables });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.products;
+  const data = await gql(query, variables);
+  return data.products;
 }
 
 export async function getProductApi(id) {
@@ -28,9 +27,8 @@ export async function getProductApi(id) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { id } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.product;
+  const data = await gql(query, { id });
+  return data.product;
 }
 
 export async function createProductApi(input) {
@@ -39,9 +37,8 @@ export async function createProductApi(input) {
       createProduct(input: $input) { id name product_type }
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { input } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.createProduct;
+  const data = await gql(query, { input });
+  return data.createProduct;
 }
 
 export async function updateProductApi(id, input) {
@@ -50,12 +47,8 @@ export async function updateProductApi(id, input) {
       updateProduct(id: $id, input: $input) { id name }
     }
   `;
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { id, input },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.updateProduct;
+  const data = await gql(query, { id, input });
+  return data.updateProduct;
 }
 
 export async function updateProductPriceApi(id, price) {
@@ -67,12 +60,8 @@ export async function updateProductPriceApi(id, price) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { id, price: parseFloat(price) },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.updateProductPrice;
+  const data = await gql(query, { id, price: parseFloat(price) });
+  return data.updateProductPrice;
 }
 
 export async function searchProductsApi(q, client_id = null) {
@@ -85,29 +74,20 @@ export async function searchProductsApi(q, client_id = null) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { q, client_id },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.searchProducts;
+  const data = await gql(query, { q, client_id });
+  return data.searchProducts;
 }
 
 export async function deleteProductApi(id) {
   const query = `mutation DeleteProduct($id: ID!) { deleteProduct(id: $id) }`;
-  const { data } = await axiosClient.post("", { query, variables: { id } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.deleteProduct;
+  const data = await gql(query, { id });
+  return data.deleteProduct;
 }
 
 export async function clearProductPriceHistoryApi(product_id) {
   const query = `mutation ClearProductPriceHistory($product_id: ID!) { clearProductPriceHistory(product_id: $product_id) }`;
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { product_id },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.clearProductPriceHistory;
+  const data = await gql(query, { product_id });
+  return data.clearProductPriceHistory;
 }
 
 // ─── Category API ──────────────────────────────────────────────────────────────
@@ -118,9 +98,8 @@ export async function listCategoriesApi() {
       productCategories { id name }
     }
   `;
-  const { data } = await axiosClient.post("", { query });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.productCategories; // [{ id, name }]
+  const data = await gql(query);
+  return data.productCategories;
 }
 
 export async function createCategoryApi(name) {
@@ -129,9 +108,8 @@ export async function createCategoryApi(name) {
       createCategory(name: $name) { id name }
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { name } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.createCategory; // { id, name }
+  const data = await gql(query, { name });
+  return data.createCategory;
 }
 
 export async function deleteCategoryApi(id) {
@@ -140,7 +118,6 @@ export async function deleteCategoryApi(id) {
       deleteCategory(id: $id)
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { id } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.deleteCategory; // Boolean
+  const data = await gql(query, { id });
+  return data.deleteCategory;
 }

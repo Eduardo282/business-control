@@ -1,4 +1,9 @@
 import { listContactProducts } from "../../../repositories/contact.repository.js";
+import {
+  determineStatus,
+  isServiceOrPolicy,
+  normalizeProductType,
+} from "../../../utils/policyStatus.js";
 
 export async function listContactProductsAction(contact_id) {
   const rows = await listContactProducts(contact_id);
@@ -22,49 +27,4 @@ export async function listContactProductsAction(contact_id) {
         product_type: normalizeProductType(row),
       },
     }));
-}
-
-function normalizeProductType(row) {
-  const raw = String(row.product_type || "").trim().toUpperCase();
-  if (raw === "SERVICE" || raw === "POLICY") return raw;
-
-  const source = `${row.product_name || ""} ${row.product_category || ""}`
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
-  if (source.includes("poliza")) return "POLICY";
-  if (source.includes("servicio")) return "SERVICE";
-  return "PRODUCT";
-}
-
-function isServiceOrPolicy(row) {
-  const normalized = normalizeProductType(row);
-  return normalized === "SERVICE" || normalized === "POLICY";
-}
-
-function determineStatus(storedStatus, expirationDate) {
-  const normalizedStatus = String(storedStatus || "")
-    .trim()
-    .toUpperCase();
-
-  if (normalizedStatus === "CANCELLED") {
-    return "CANCELLED";
-  }
-
-  if (normalizedStatus === "EXPIRED") {
-    return "EXPIRED";
-  }
-
-  const now = new Date();
-  const exp = new Date(expirationDate);
-  if (exp < now) {
-    return "EXPIRED";
-  }
-  const diffTime = Math.abs(exp - now);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  if (diffDays <= 5) {
-    return "EXPIRING_SOON";
-  }
-  return "ACTIVE";
 }

@@ -7,6 +7,7 @@ import {
   deleteContactProductApi,
 } from "../../../actionsAPI/contacts.api";
 import { notificationService } from "../../../services/notificationService";
+import { logger } from "../../../services/logger";
 
 export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) => {
   const [services, setServices] = useState([]);
@@ -26,7 +27,7 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
         setLoading(false);
       })
       .catch((e) => {
-        console.error(e);
+        logger.error("Error loading services", e);
         setLoading(false);
       });
   };

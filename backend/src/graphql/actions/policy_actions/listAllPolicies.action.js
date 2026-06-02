@@ -3,34 +3,7 @@ import {
   getStandalonePolicies,
   getLegacyAssignedPolicies,
 } from "../../../repositories/policy.repository.js";
-
-function determineStatus(storedStatus, expirationDate) {
-  const normalizedStatus = String(storedStatus || "")
-    .trim()
-    .toUpperCase();
-
-  if (normalizedStatus === "CANCELLED") {
-    return "CANCELLED";
-  }
-
-  if (normalizedStatus === "EXPIRED") {
-    return "EXPIRED";
-  }
-
-  if (!expirationDate) return normalizedStatus || "ACTIVE";
-
-  const now = new Date();
-  const exp = new Date(expirationDate);
-  if (exp < now) {
-    return "EXPIRED";
-  }
-  const diffTime = Math.abs(exp - now);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  if (diffDays <= 5) {
-    return "EXPIRING_SOON";
-  }
-  return "ACTIVE";
-}
+import { determineStatus } from "../../../utils/policyStatus.js";
 
 function mapPolicyRows(rows) {
   return rows.map((row) => ({

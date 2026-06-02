@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
 import { verifyMasterPasswordApi } from "../../actionsAPI/auth.api";
+import { notificationService } from "../../services/notificationService";
 
 const Login = lazy(() => import("../../pages/auth/Login"));
 const PortalLogin = lazy(() => import("../../pages/portal/PortalLogin"));
@@ -52,7 +52,7 @@ export default function MasterPasswordGate({ children }) {
     let isMounted = true;
 
     const askPassword = async () => {
-      const result = await Swal.fire({
+      const result = await notificationService.passwordPrompt({
         title:
           '<span style="color:#162A42;font-size:1.25rem;font-weight:700">🔒 Acceso Restringido</span>',
         html: `
@@ -102,35 +102,26 @@ export default function MasterPasswordGate({ children }) {
         if (isCorrect) {
           _masterGranted = true;
           setGranted(true);
-          await Swal.fire({
-            icon: "success",
-            title: "Acceso concedido",
-            text: "Bienvenido, Tecno360.",
-            timer: 1500,
-            showConfirmButton: false,
-            confirmButtonColor: "#162A42",
-          });
+          await notificationService.success(
+            "Access granted",
+            "Welcome, Tecno360.",
+          );
+          notificationService.close();
         } else {
-          await Swal.fire({
-            icon: "error",
-            title: "Contraseña incorrecta",
-            text: "No tienes permiso para acceder a esta sección.",
-            confirmButtonText: "Entendido",
-            confirmButtonColor: "#162A42",
-          });
+          await notificationService.error(
+            "Incorrect password",
+            "You do not have permission to access this section.",
+          );
           if (isMounted) {
             const back = safelyGetLastRoute();
             navigate(back, { replace: true });
           }
         }
       } catch (error) {
-        await Swal.fire({
-          icon: "error",
-          title: "Error de conexión",
-          text: error.message || "No se pudo verificar la contraseña.",
-          confirmButtonText: "Entendido",
-          confirmButtonColor: "#162A42",
-        });
+        await notificationService.error(
+          "Connection error",
+          error.message || "The password could not be verified.",
+        );
         if (isMounted) {
           const back = safelyGetLastRoute();
           navigate(back, { replace: true });
@@ -142,8 +133,7 @@ export default function MasterPasswordGate({ children }) {
 
     return () => {
       isMounted = false;
-      // Cerrar Swal si sigue abierto al desmontar (evita dialogs huérfanos)
-      Swal.close();
+      notificationService.close();
     };
   }, [navigate, granted]);
 

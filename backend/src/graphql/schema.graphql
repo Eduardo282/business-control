@@ -130,20 +130,20 @@ type Query {
   roles: [Role!]!
   productCategories: [ProductCategory!]!
 
-  clients: [Client!]!
+  clients(limit: Int, offset: Int): [Client!]!
   client(id: ID!): Client
   searchClients(q: String!): [Client!]!
   contactsByClient(client_id: ID!): [Contact!]!
   contact(id: ID!): Contact
 
-  products(client_id: ID): [Product!]!
+  products(client_id: ID, limit: Int, offset: Int): [Product!]!
   portalProducts: [PortalProduct!]!
   product(id: ID!): Product
   searchProducts(q: String!, client_id: ID): [Product!]!
 
   policies: [ContactProduct!]!
 
-  quotes: [Quote!]!
+  quotes(limit: Int, offset: Int): [Quote!]!
   quote(id: ID!): Quote
   quotesByClient(client_id: ID!): [Quote!]!
   pendingQuoteRequestsCount: Int!

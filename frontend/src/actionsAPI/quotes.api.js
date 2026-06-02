@@ -1,4 +1,4 @@
-import { axiosClient } from "./axiosClient";
+import { gql } from "../utils/graphqlClient";
 
 export const listQuotesApi = async () => {
   const query = `
@@ -21,9 +21,8 @@ export const listQuotesApi = async () => {
       }
     }
   `;
-  const res = await axiosClient.post("/", { query });
-  if (res.data.errors) throw new Error(res.data.errors[0].message);
-  return res.data.data.quotes;
+  const data = await gql(query);
+  return data.quotes;
 };
 export const listQuotesByClientApi = async (client_id) => {
   const query = `
@@ -42,9 +41,8 @@ export const listQuotesByClientApi = async (client_id) => {
       }
     }
   `;
-  const res = await axiosClient.post("/", { query, variables: { client_id } });
-  if (res.data.errors?.length) throw new Error(res.data.errors[0].message);
-  return res.data.data.quotesByClient;
+  const data = await gql(query, { client_id });
+  return data.quotesByClient;
 };
 export const getQuoteApi = async (id) => {
   const query = `
@@ -98,9 +96,8 @@ export const getQuoteApi = async (id) => {
       }
     }
   `;
-  const res = await axiosClient.post("/", { query, variables: { id } });
-  if (res.data.errors) throw new Error(res.data.errors[0].message);
-  return res.data.data.quote;
+  const data = await gql(query, { id });
+  return data.quote;
 };
 
 export const createQuoteApi = async (input) => {
@@ -114,12 +111,8 @@ export const createQuoteApi = async (input) => {
       }
     }
   `;
-  const res = await axiosClient.post("/", {
-    query,
-    variables: { input },
-  });
-  if (res.data.errors) throw new Error(res.data.errors[0].message);
-  return res.data.data.createQuote;
+  const data = await gql(query, { input });
+  return data.createQuote;
 };
 export const resolveQuoteRequestApi = async (requestId, input) => {
   const query = `
@@ -132,12 +125,8 @@ export const resolveQuoteRequestApi = async (requestId, input) => {
       }
     }
   `;
-  const res = await axiosClient.post("/", {
-    query,
-    variables: { requestId, input },
-  });
-  if (res.data.errors) throw new Error(res.data.errors[0].message);
-  return res.data.data.resolveQuoteRequest;
+  const data = await gql(query, { requestId, input });
+  return data.resolveQuoteRequest;
 };
 export const deleteQuoteApi = async (id) => {
   const query = `
@@ -145,12 +134,8 @@ export const deleteQuoteApi = async (id) => {
       deleteQuote(id: $id)
     }
   `;
-  const res = await axiosClient.post("/", {
-    query,
-    variables: { id },
-  });
-  if (res.data.errors) throw new Error(res.data.errors[0].message);
-  return res.data.data.deleteQuote;
+  const data = await gql(query, { id });
+  return data.deleteQuote;
 };
 
 export const rejectQuoteApi = async (id) => {
@@ -159,12 +144,8 @@ export const rejectQuoteApi = async (id) => {
       rejectQuote(id: $id)
     }
   `;
-  const res = await axiosClient.post("/", {
-    query,
-    variables: { id },
-  });
-  if (res.data.errors) throw new Error(res.data.errors[0].message);
-  return res.data.data.rejectQuote;
+  const data = await gql(query, { id });
+  return data.rejectQuote;
 };
 
 export const updateQuoteStatusApi = async (id, status) => {
@@ -176,12 +157,8 @@ export const updateQuoteStatusApi = async (id, status) => {
       }
     }
   `;
-  const res = await axiosClient.post("/", {
-    query,
-    variables: { id, status },
-  });
-  if (res.data.errors) throw new Error(res.data.errors[0].message);
-  return res.data.data.updateQuoteStatus;
+  const data = await gql(query, { id, status });
+  return data.updateQuoteStatus;
 };
 
 export const getPendingQuoteRequestsCountApi = async () => {
@@ -190,9 +167,12 @@ export const getPendingQuoteRequestsCountApi = async () => {
       pendingQuoteRequestsCount
     }
   `;
-  const res = await axiosClient.post("/", { query });
-  // suppress errors for notifications
-  return res.data?.data?.pendingQuoteRequestsCount || 0;
+  try {
+    const data = await gql(query);
+    return data?.pendingQuoteRequestsCount || 0;
+  } catch {
+    return 0;
+  }
 };
 
 export const getUnreadQuoteRequestsApi = async () => {
@@ -213,9 +193,8 @@ export const getUnreadQuoteRequestsApi = async () => {
       }
     }
   `;
-  const res = await axiosClient.post("/", { query });
-  if (res.data.errors) throw new Error(res.data.errors[0].message);
-  return res.data.data.unreadQuoteRequests;
+  const data = await gql(query);
+  return data.unreadQuoteRequests;
 };
 
 export const markQuoteNotificationReadApi = async (id) => {
@@ -224,9 +203,8 @@ export const markQuoteNotificationReadApi = async (id) => {
       markQuoteNotificationRead(id: $id)
     }
   `;
-  const res = await axiosClient.post("/", { query, variables: { id } });
-  if (res.data.errors) throw new Error(res.data.errors[0].message);
-  return res.data.data.markQuoteNotificationRead;
+  const data = await gql(query, { id });
+  return data.markQuoteNotificationRead;
 };
 
 export const sendQuoteEmailApi = async ({
@@ -243,12 +221,8 @@ export const sendQuoteEmailApi = async ({
       }
     }
   `;
-  const res = await axiosClient.post("/", {
-    query,
-    variables: { quote_id, contact_email, message, pdf_base64 },
-  });
-  if (res.data.errors) throw new Error(res.data.errors[0].message);
-  return res.data.data.sendQuoteEmail;
+  const data = await gql(query, { quote_id, contact_email, message, pdf_base64 });
+  return data.sendQuoteEmail;
 };
 
 export const toggleQuotePortalApi = async (id, access, contact_id) => {
@@ -257,10 +231,6 @@ export const toggleQuotePortalApi = async (id, access, contact_id) => {
       toggleQuotePortal(id: $id, access: $access, contact_id: $contact_id)
     }
   `;
-  const res = await axiosClient.post("/", {
-    query,
-    variables: { id, access, contact_id },
-  });
-  if (res.data.errors) throw new Error(res.data.errors[0].message);
-  return res.data.data.toggleQuotePortal;
+  const data = await gql(query, { id, access, contact_id });
+  return data.toggleQuotePortal;
 };

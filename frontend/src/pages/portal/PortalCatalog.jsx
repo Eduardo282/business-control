@@ -31,6 +31,7 @@ import {
   listPortalProductsApi,
   requestQuoteApi,
 } from "../../actionsAPI/portal.api";
+import { logger } from "../../services/logger";
 import Swal from "sweetalert2";
 import {
   PRODUCT_TYPE_FILTER_OPTIONS,
@@ -61,7 +62,7 @@ export default function PortalCatalog() {
       const resp = await listPortalProductsApi();
       setProducts(resp);
     } catch (e) {
-      console.error(e);
+      logger.error("Error loading portal catalog", e);
       Swal.fire("Error", "No se pudieron cargar los productos", "error");
     } finally {
       setLoading(false);

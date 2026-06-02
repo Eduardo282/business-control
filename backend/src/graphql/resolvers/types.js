@@ -1,4 +1,5 @@
 import { requireRoles } from "../../middlewares/role.middleware.js";
+import { forbidden } from "../../errors/appErrors.js";
 import { listContactsByClientAction } from "../actions/contact_actions/listContactsByClient.action.js";
 import { getClientAction } from "../actions/client_actions/getClient.action.js";
 import { listContactProductsAction } from "../actions/contact_actions/listContactProducts.action.js";
@@ -11,7 +12,7 @@ export const Client = {
   contacts: async (parent, _args, ctx) => {
     requireRoles(ctx.user, ["ADMIN", "VENTAS", "CONTACT_PORTAL"]);
     if (ctx.user.role === "CONTACT_PORTAL" && String(parent.id) !== String(ctx.user.clientId)) {
-      throw new Error("No autorizado");
+      throw forbidden();
     }
     return listContactsByClientAction(parent.id);
   },
@@ -39,49 +40,48 @@ export const Contact = {
 
 export const ContactProduct = {
   product: (parent) => parent.product,
-  contact: async (parent) => {
+  contact: async (parent, _args, ctx) => {
     if (parent.contact) return parent.contact;
     if (!parent.contact_id) return null;
-    return getContactAction(parent.contact_id);
+    return ctx.loaders?.contactById?.load(parent.contact_id) || getContactAction(parent.contact_id);
   },
-  client: async (parent) => {
+  client: async (parent, _args, ctx) => {
     if (parent.client) return parent.client;
-    if (parent.client_id) return getClientAction(parent.client_id);
-    // Fallback: get client via contact
+    if (parent.client_id) {
+      return ctx.loaders?.clientById?.load(parent.client_id) || getClientAction(parent.client_id);
+    }
     if (!parent.contact_id) return null;
-    const c = await getContactAction(parent.contact_id);
+    const c = await (ctx.loaders?.contactById?.load(parent.contact_id) || getContactAction(parent.contact_id));
     if (!c) return null;
-    return getClientAction(c.client_id);
+    return ctx.loaders?.clientById?.load(c.client_id) || getClientAction(c.client_id);
   },
 };
 
 export const Quote = {
-  client: async (parent) => {
-    return getClientAction(parent.client_id);
+  client: async (parent, _args, ctx) => {
+    return ctx.loaders?.clientById?.load(parent.client_id) || getClientAction(parent.client_id);
   },
-  contact: async (parent) => {
+  contact: async (parent, _args, ctx) => {
     if (!parent.contact_id) return null;
-    return getContactAction(parent.contact_id);
+    return ctx.loaders?.contactById?.load(parent.contact_id) || getContactAction(parent.contact_id);
   },
-  user: async (parent) => {
-    // Usa el repositorio en lugar de pool directamente
-    return findUserWithRole(parent.user_id);
+  user: async (parent, _args, ctx) => {
+    return ctx.loaders?.userById?.load(parent.user_id) || findUserWithRole(parent.user_id);
   },
-  items: async (parent) => {
-    return getQuoteItemsAction(parent.id);
+  items: async (parent, _args, ctx) => {
+    return ctx.loaders?.quoteItemsByQuoteId?.load(parent.id) || getQuoteItemsAction(parent.id);
   },
 };
 
 export const QuoteItem = {
-  product: async (parent) => {
-    // Usa el repositorio en lugar de pool directamente
-    return findProductByIdLean(parent.product_id);
+  product: async (parent, _args, ctx) => {
+    return ctx.loaders?.productById?.load(parent.product_id) || findProductByIdLean(parent.product_id);
   },
 };
 
 export const Product = {
-  client: async (parent) => {
+  client: async (parent, _args, ctx) => {
     if (!parent.client_id) return null;
-    return getClientAction(parent.client_id);
+    return ctx.loaders?.clientById?.load(parent.client_id) || getClientAction(parent.client_id);
   },
 };

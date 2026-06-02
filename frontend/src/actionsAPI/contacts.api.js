@@ -1,4 +1,5 @@
 import { axiosClient } from "./axiosClient";
+import { gql } from "../utils/graphqlClient";
 
 const graphQlBaseUrl =
   import.meta.env.VITE_API_URL || "http://localhost:4000/graphql";
@@ -23,9 +24,8 @@ export async function createContactApi(input) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { input } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.createContact;
+  const data = await gql(query, { input });
+  return data.createContact;
 }
 
 export async function updateContactApi(id, input) {
@@ -43,12 +43,8 @@ export async function updateContactApi(id, input) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { id, input },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.updateContact;
+  const data = await gql(query, { id, input });
+  return data.updateContact;
 }
 
 export async function deleteContactApi(id) {
@@ -57,9 +53,8 @@ export async function deleteContactApi(id) {
       deleteContact(id: $id)
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { id } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.deleteContact;
+  const data = await gql(query, { id });
+  return data.deleteContact;
 }
 
 export async function listContactProductsApi(contactId) {
@@ -81,12 +76,8 @@ export async function listContactProductsApi(contactId) {
         }
       }
     `;
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { contactId },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.contact ? data.data.contact.active_services : [];
+  const data = await gql(query, { contactId });
+  return data.contact ? data.contact.active_services : [];
 }
 
 export async function listContactsByClientApi(client_id) {
@@ -99,12 +90,8 @@ export async function listContactsByClientApi(client_id) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { client_id },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.contactsByClient || [];
+  const data = await gql(query, { client_id });
+  return data.contactsByClient || [];
 }
 
 export async function createContactProductApi(input) {
@@ -119,9 +106,8 @@ export async function createContactProductApi(input) {
         }
       }
     `;
-  const { data } = await axiosClient.post("", { query, variables: { input } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.createContactProduct;
+  const data = await gql(query, { input });
+  return data.createContactProduct;
 }
 
 export async function deleteContactProductApi(id) {
@@ -130,9 +116,8 @@ export async function deleteContactProductApi(id) {
         deleteContactProduct(id: $id)
       }
     `;
-  const { data } = await axiosClient.post("", { query, variables: { id } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.deleteContactProduct;
+  const data = await gql(query, { id });
+  return data.deleteContactProduct;
 }
 
 export async function updateContactProductDatesApi(id, { start_date, expiration_date, status, license_key }) {
@@ -147,12 +132,14 @@ export async function updateContactProductDatesApi(id, { start_date, expiration_
       }
     }
   `;
-  const { data } = await axiosClient.post("", {
-    query,
-    variables: { id, start_date, expiration_date, status, license_key },
+  const data = await gql(query, {
+    id,
+    start_date,
+    expiration_date,
+    status,
+    license_key,
   });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.updateContactProductDates;
+  return data.updateContactProductDates;
 }
 
 export async function bulkCreateContactsApi(inputs) {
@@ -168,9 +155,8 @@ export async function bulkCreateContactsApi(inputs) {
       }
     }
   `;
-  const { data } = await axiosClient.post("", { query, variables: { inputs } });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.bulkCreateContacts;
+  const data = await gql(query, { inputs });
+  return data.bulkCreateContacts;
 }
 
 export async function listContactsDynamicByClientApi(clientId) {

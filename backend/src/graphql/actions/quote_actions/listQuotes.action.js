@@ -4,8 +4,8 @@ import {
   listQuotesByUserId,
 } from "../../../repositories/quote.repository.js";
 
-export const listQuotesAction = async () => {
-  return await listAllNonRequestedQuotes();
+export const listQuotesAction = async ({ limit, offset } = {}) => {
+  return await listAllNonRequestedQuotes({ limit, offset });
 };
 
 export const listQuotesByClientAction = async (client_id) => {

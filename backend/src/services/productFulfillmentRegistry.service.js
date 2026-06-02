@@ -1,3 +1,5 @@
+import { normalizeProductType } from "../utils/policyStatus.js";
+
 const PRODUCT_FULFILLMENT_TARGETS = [
   {
     type: "SERVICE",
@@ -22,15 +24,8 @@ function normalizeText(value = "") {
     .trim();
 }
 
-function normalizeProductType(productType = "") {
-  return String(productType || "")
-    .trim()
-    .toUpperCase();
-}
-
-
 export function resolveProductFulfillmentTarget(product = {}) {
-  const normalizedType = normalizeProductType(product.product_type);
+  const normalizedType = normalizeProductType(product);
   const typeTarget = PRODUCT_FULFILLMENT_TARGETS.find(
     (target) => target.type === normalizedType,
   );

@@ -61,6 +61,21 @@ export const notificationService = {
     });
   },
 
+  passwordPrompt(options) {
+    return Swal.fire({
+      input: "password",
+      showCancelButton: true,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      confirmButtonColor: "#162A42",
+      cancelButtonColor: "#9ca3af",
+      inputValidator: (value) => {
+        if (!value) return "Please enter the master password.";
+      },
+      ...options,
+    });
+  },
+
   /**
    * Muestra un cuadro de confirmación (Modal).
    * @param {object} options
@@ -115,5 +130,9 @@ export const notificationService = {
       icon,
       title,
     });
+  },
+
+  close() {
+    Swal.close();
   },
 };

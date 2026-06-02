@@ -1,4 +1,5 @@
 import { requireRoles } from "../../../middlewares/role.middleware.js";
+import { unauthenticated, forbidden } from "../../../errors/appErrors.js";
 import { createQuoteAction } from "../../actions/quote_actions/createQuote.action.js";
 import { deleteQuoteAction } from "../../actions/quote_actions/deleteQuote.action.js";
 import { sendQuoteEmailAction } from "../../actions/quote_actions/sendQuoteEmail.action.js";
@@ -18,9 +19,8 @@ export const createQuote = async (_parent, { input }, ctx) => {
 };
 
 export const requestQuote = async (_parent, { input }, ctx) => {
-  if (ctx.user?.role !== "CONTACT_PORTAL") {
-    throw new Error("Access denied");
-  }
+  if (!ctx.user) throw unauthenticated();
+  if (ctx.user.role !== "CONTACT_PORTAL") throw forbidden();
   return requestQuoteAction(input, ctx.user);
 };
 
@@ -67,23 +67,20 @@ export const resolveQuoteRequest = async (
 };
 
 export const deletePortalQuote = async (_parent, { id }, ctx) => {
-  if (ctx.user?.role !== "CONTACT_PORTAL") {
-    throw new Error("Access denied");
-  }
+  if (!ctx.user) throw unauthenticated();
+  if (ctx.user.role !== "CONTACT_PORTAL") throw forbidden();
   return deletePortalQuoteAction(id, ctx.user);
 };
 
 export const updatePortalQuoteRequest = async (_parent, { id, input }, ctx) => {
-  if (ctx.user?.role !== "CONTACT_PORTAL") {
-    throw new Error("Access denied");
-  }
+  if (!ctx.user) throw unauthenticated();
+  if (ctx.user.role !== "CONTACT_PORTAL") throw forbidden();
   return updatePortalQuoteRequestAction(id, input, ctx.user);
 };
 
 export const rejectPortalQuote = async (_parent, { id }, ctx) => {
-  if (ctx.user?.role !== "CONTACT_PORTAL") {
-    throw new Error("Access denied");
-  }
+  if (!ctx.user) throw unauthenticated();
+  if (ctx.user.role !== "CONTACT_PORTAL") throw forbidden();
   return rejectPortalQuoteAction(id, ctx.user);
 };
 

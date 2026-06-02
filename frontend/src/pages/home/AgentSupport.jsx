@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef, useContext, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
+import { logger } from "../../services/logger";
 import { Headphones, MessageCircle, Send, Clock, User, X, CheckCircle, Inbox, Mail, Trash2, AlertCircle } from "@icons";
 
 const API_URL = import.meta.env.VITE_API_URL?.replace("/graphql", "") || "http://localhost:4000";
 
 export default function AgentSupport() {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
   const [waitingQueue, setWaitingQueue] = useState([]);
@@ -103,7 +104,7 @@ export default function AgentSupport() {
     s.on("user:disconnected", ({ isAgent: a }) => { if (!a) { setClientOnline(false); addToast("El cliente se ha desconectado", "warn"); } });
     s.on("user:reconnected", ({ isAgent: a }) => { if (!a) { setClientOnline(true); addToast("El cliente se ha reconectado", "success"); } });
     s.on("messages:seen", ({ seenBy }) => { if (seenBy === "CLIENT") setSeen(true); });
-    s.on("error", ({ message }) => console.error("Socket error:", message));
+    s.on("error", ({ message }) => logger.error("Socket error", message));
 
     setSocket(s);
     return () => s.disconnect();

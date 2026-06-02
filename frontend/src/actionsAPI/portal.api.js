@@ -1,4 +1,5 @@
 import { portalAxiosClient } from "./portalAxiosClient";
+import { gql } from "../utils/graphqlClient";
 
 export async function loginContactApi(email, password) {
   const query = `
@@ -15,13 +16,8 @@ export async function loginContactApi(email, password) {
     }
   `;
 
-  const { data } = await portalAxiosClient.post("", {
-    query,
-    variables: { email, password },
-  });
-
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.loginContact;
+  const data = await gql(query, { email, password }, portalAxiosClient);
+  return data.loginContact;
 }
 
 export async function getContactDataApi(contactId) {
@@ -49,13 +45,8 @@ export async function getContactDataApi(contactId) {
       }
     `;
 
-  const { data } = await portalAxiosClient.post("", {
-    query,
-    variables: { id: contactId },
-  });
-
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.contact;
+  const data = await gql(query, { id: contactId }, portalAxiosClient);
+  return data.contact;
 }
 
 export async function listPortalQuotesApi() {
@@ -79,9 +70,8 @@ export async function listPortalQuotesApi() {
       }
     }
   `;
-  const { data } = await portalAxiosClient.post("", { query });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.quotes;
+  const data = await gql(query, {}, portalAxiosClient);
+  return data.quotes;
 }
 
 export async function listPortalProductsApi() {
@@ -96,9 +86,8 @@ export async function listPortalProductsApi() {
       }
     }
   `;
-  const { data } = await portalAxiosClient.post("", { query });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.portalProducts;
+  const data = await gql(query, {}, portalAxiosClient);
+  return data.portalProducts;
 }
 
 export async function requestQuoteApi(items) {
@@ -111,12 +100,8 @@ export async function requestQuoteApi(items) {
       }
     }
   `;
-  const { data } = await portalAxiosClient.post("", {
-    query,
-    variables: { input: { items } },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.requestQuote;
+  const data = await gql(query, { input: { items } }, portalAxiosClient);
+  return data.requestQuote;
 }
 
 export async function deletePortalQuoteApi(id) {
@@ -125,12 +110,8 @@ export async function deletePortalQuoteApi(id) {
       deletePortalQuote(id: $id)
     }
   `;
-  const { data } = await portalAxiosClient.post("", {
-    query,
-    variables: { id },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.deletePortalQuote;
+  const data = await gql(query, { id }, portalAxiosClient);
+  return data.deletePortalQuote;
 }
 
 export async function updatePortalQuoteRequestApi(id, items) {
@@ -143,10 +124,6 @@ export async function updatePortalQuoteRequestApi(id, items) {
       }
     }
   `;
-  const { data } = await portalAxiosClient.post("", {
-    query,
-    variables: { id, input: { items } },
-  });
-  if (data.errors?.length) throw new Error(data.errors[0].message);
-  return data.data.updatePortalQuoteRequest;
+  const data = await gql(query, { id, input: { items } }, portalAxiosClient);
+  return data.updatePortalQuoteRequest;
 }

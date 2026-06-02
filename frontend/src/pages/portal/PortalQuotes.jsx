@@ -3,6 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, FileText, FolderOpen, Clock, History, ExternalLink, Trash2, Edit2, X, Plus, Minus, Search, FileSpreadsheet, Building2, Globe, BadgeDollarSign, Package, Users, User, ClipboardList, Download, Shield, LayoutDashboard, ShoppingBag, ShoppingCart } from "@icons";
 import { listPortalQuotesApi, deletePortalQuoteApi, updatePortalQuoteRequestApi } from "../../actionsAPI/portal.api";
 import Swal from "sweetalert2";
+import { logger } from "../../services/logger";
 
 /* ── Reducer ─────────────────────────────────────────────── */
 
@@ -380,7 +381,7 @@ export default function PortalQuotes() {
       const data = await listPortalQuotesApi();
       dispatch({ type: "FETCH_SUCCESS", payload: data });
     } catch (e) {
-      console.error(e);
+      logger.error("Error loading portal quotes", e);
       const msg = e.response?.data?.errors?.[0]?.message || e.message || "Error al cargar cotizaciones";
       dispatch({ type: "FETCH_ERROR", payload: msg });
     }

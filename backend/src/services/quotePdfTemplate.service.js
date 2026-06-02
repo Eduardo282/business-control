@@ -3,6 +3,7 @@
  * No sabe nada de base de datos, correos ni Puppeteer.
  */
 import { calculateQuotePricing } from "../../../shared/quotePricingRules.js";
+import { escapeHtml } from "../utils/htmlEscape.js";
 
 const currencyFormatter = new Intl.NumberFormat("es-MX", {
   style: "currency",
@@ -23,13 +24,17 @@ export function buildQuotePdfHtml(quote) {
       const discount = Number(item.discount) || 0;
       const discountedUnitPrice = Number(item.unit_price) || 0;
       const lineTotal = Number(item.total) || discountedUnitPrice * quantity;
+      const productName = escapeHtml(item.product_name);
+      const productDescription = escapeHtml(
+        item.product_desc || item.product_category || "",
+      );
 
       return `
     <tr style="border-bottom: 1px solid #f1f5f9;">
       <td style="padding: 16px 16px 16px 0; vertical-align: top;">
-        <div style="font-weight: bold; color: #1e293b; font-size: 16px;">${item.product_name}</div>
+        <div style="font-weight: bold; color: #1e293b; font-size: 16px;">${productName}</div>
         <div style="font-size: 12px; color: #64748b; margin-top: 2px; line-height: 1.5;">
-          ${item.product_desc || item.product_category || ""}
+          ${productDescription}
           ${
             item.product_users_count > 0
               ? `<span style="display: inline-block; margin-left: 8px; font-size: 10px; background-color: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #64748b; border: 1px solid #e2e8f0; vertical-align: middle;">${item.product_users_count} Usuario(s)</span>`
@@ -51,15 +56,24 @@ export function buildQuotePdfHtml(quote) {
   const totalDiscountAmount = pricing.totalDiscount;
   const iva = pricing.iva;
   const total = pricing.total;
+  const safeFolio = escapeHtml(quote.folio || "#" + quote.id);
+  const safeClientName = escapeHtml(quote.client?.business_name || "");
+  const safeClientAddress = escapeHtml(
+    quote.client?.address || "Domicilio no registrado",
+  );
+  const safeClientRfc = escapeHtml(quote.client?.rfc || "XAXX010101000");
+  const safeUserName = escapeHtml(quote.user?.full_name || "");
+  const safeUserEmail = escapeHtml(quote.user?.email || "");
+  const safeNotes = escapeHtml(quote.notes || "");
 
   const contactInfoHtml =
     quote.contact
       ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
            <div class="info-title" style="margin-bottom: 8px; border-bottom: none; padding-bottom: 0;">Contacto</div>
-           <div class="info-detail" style="font-weight: 600; color: #0f172a;">${quote.contact.full_name || "Sin nombre"}</div>
-           <div class="info-detail">${quote.contact.position_title || "Sin puesto"}</div>
-           <div class="info-detail">${quote.contact.email || "Sin correo"}</div>
-           <div class="info-detail">${quote.contact.phone || "Sin teléfono"}</div>
+           <div class="info-detail" style="font-weight: 600; color: #0f172a;">${escapeHtml(quote.contact.full_name || "Sin nombre")}</div>
+           <div class="info-detail">${escapeHtml(quote.contact.position_title || "Sin puesto")}</div>
+           <div class="info-detail">${escapeHtml(quote.contact.email || "Sin correo")}</div>
+           <div class="info-detail">${escapeHtml(quote.contact.phone || "Sin teléfono")}</div>
          </div>`
       : `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0;" class="info-detail">Sin contacto asignado</div>`;
 
@@ -118,7 +132,7 @@ export function buildQuotePdfHtml(quote) {
             <div>
               <h1 class="title">COTIZACIÓN</h1>
               <div class="header-meta">
-                <div class="header-row"><span class="header-label">Folio:</span> <span style="font-family: monospace; color: #0f172a;">${quote.folio || "#" + quote.id}</span></div>
+                <div class="header-row"><span class="header-label">Folio:</span> <span style="font-family: monospace; color: #0f172a;">${safeFolio}</span></div>
                 <div class="header-row"><span class="header-label">Fecha:</span> <span>${new Date(quote.created_at).toLocaleDateString()}</span></div>
                 <div class="header-row"><span class="header-label">Vigencia:</span> <span>15 días naturales</span></div>
               </div>
@@ -136,15 +150,15 @@ export function buildQuotePdfHtml(quote) {
           <div class="info-grid">
             <div>
               <div class="info-title">Cliente</div>
-              <div class="info-name">${quote.client.business_name}</div>
-              <div class="info-detail">${quote.client.address || "Domicilio no registrado"}</div>
-              <div class="info-mono">RFC: ${quote.client.rfc || "XAXX010101000"}</div>
+              <div class="info-name">${safeClientName}</div>
+              <div class="info-detail">${safeClientAddress}</div>
+              <div class="info-mono">RFC: ${safeClientRfc}</div>
               ${contactInfoHtml}
             </div>
             <div style="text-align: right;">
                <div class="info-title">Ejecutivo de Ventas</div>
-               <div class="info-name">${quote.user.full_name}</div>
-               <div class="info-detail">${quote.user.email}</div>
+               <div class="info-name">${safeUserName}</div>
+               <div class="info-detail">${safeUserEmail}</div>
             </div>
           </div>
 
@@ -180,7 +194,7 @@ export function buildQuotePdfHtml(quote) {
             quote.notes
               ? `<div class="notes">
                    <div class="notes-title">Notas Adicionales</div>
-                   <div class="notes-content">${quote.notes}</div>
+                   <div class="notes-content">${safeNotes}</div>
                  </div>`
               : ""
           }
@@ -222,8 +236,8 @@ export function buildQuotePdfHtml(quote) {
  * @returns {string} HTML del email
  */
 export function buildQuoteEmailHtml(quote, message) {
-  const htmlMessage = message.replace(/\n/g, "<br>");
-  const folio = quote.folio || "#" + quote.id;
+  const htmlMessage = escapeHtml(message).replace(/\n/g, "<br>");
+  const folio = escapeHtml(quote.folio || "#" + quote.id);
 
   return `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">

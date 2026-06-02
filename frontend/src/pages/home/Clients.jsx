@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useContext, useMemo } from "react";
+import React, { memo, useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import {
   deleteClientApi,
   listClientsDynamicApi,
@@ -118,8 +118,8 @@ function resolveDetailHostColumn(
   return bestColumn?.name || primaryColumns[0]?.name || null;
 }
 
-export default function Clients() {
-  const { user } = useContext(AuthContext);
+function Clients() {
+  const { user } = useAuth();
   const [clients, setClients] = useState([]);
   const [allClients, setAllClients] = useState([]);
   const [dynamicColumns, setDynamicColumns] = useState([]);
@@ -1167,3 +1167,5 @@ export default function Clients() {
     </div>
   );
 }
+
+export default memo(Clients);

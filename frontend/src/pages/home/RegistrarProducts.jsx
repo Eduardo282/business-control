@@ -29,6 +29,7 @@ import {
   deleteCategoryApi,
 } from "../../actionsAPI/products.api";
 import { notificationService } from "../../services/notificationService";
+import { logger } from "../../services/logger";
 
 // Modularized components
 import SourceSelectionModal from "./registrar-products/SourceSelectionModal";
@@ -390,7 +391,7 @@ export default function RegistrarProducts() {
       ]);
       setCustomCategories((prev) => uniqueByNormalizedValue([...prev, ...allCategories]));
     } catch (e) {
-      console.error("Failed to load categories from API", e);
+      logger.error("Failed to load categories from API", e);
     }
   };
 

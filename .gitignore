@@ -13,7 +13,6 @@ backend/node_modules/
 # --- DEPENDENCIAS ---
 node_modules/
 jspm_packages/
-pnpm-lock.yaml
 # (Nota: a veces se sube el lockfile, pero node_modules NUNCA debe subirse)
 
 # --- ARCHIVOS DE COMPILACIÓN / PRODUCCIÓN ---

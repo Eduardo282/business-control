@@ -485,14 +485,7 @@ export default function CreateQuote() {
                     )
                   }`}>
                   {selectedClient ?
-                    <div
-                      onClick={() => {
-                        setSelectedClient(null);
-                        setClientSearch("");
-                      }}
-                      className="w-full px-3 py-2 text-left cursor-pointer text-[#1B4733] dark:text-emerald-400 font-medium">
-                      {selectedClient.business_name}
-                    </div>
+                   ""
                   : <div className="relative">
                       <Input
                         value={clientSearch}
@@ -916,18 +909,16 @@ export default function CreateQuote() {
                     ))
                   : <tr>
                       <td colSpan="8" className="py-16 text-center">
-                        <div className="flex justify-center mb-3 opacity-20">
+                        {/* <div className="flex justify-center mb-3 opacity-20">
                           <ShoppingCart size={40} />
-                        </div>
+                        </div> */}
                         <p className="text-light-text-secondary text-sm font-medium">
                           {items.length === 0 ?
-                            "No se han agregado productos a la cotización."
+                            ""
                           : "Sin resultados para el filtro aplicado."}
                         </p>
                         {items.length === 0 && (
-                          <p className="text-light-text-secondary text-xs mt-1">
-                            Utiliza el formulario de arriba para añadir items.
-                          </p>
+                          ""
                         )}
                       </td>
                     </tr>

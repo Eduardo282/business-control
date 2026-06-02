@@ -23,6 +23,7 @@ export const sendQuoteEmailAction = async ({
   message,
   pdf_base64,
 }) => {
+  const trackingId = `quote-email-${quote_id}-${Date.now()}`;
   // 1. Repositorio: obtener la cotización completa de la BD
   const quote = await fetchFullQuote(quote_id);
 
@@ -32,13 +33,12 @@ export const sendQuoteEmailAction = async ({
     providedPdfBuffer = decodePdfBase64(pdf_base64);
   }
 
-  // 3. Lanzar el proceso pesado en segundo plano (no bloquea al frontend)
-  (async () => {
+  const sendTask = (async () => {
     try {
       // a) Validador de correo
       const { valid, reason } = await validateEmailDeliverability(contact_email);
       if (!valid) {
-        logger.warn(`[Segundo Plano] Envío bloqueado a ${contact_email}: ${reason}`);
+        logger.warn(`[${trackingId}] Send blocked for ${contact_email}: ${reason}`);
         return;
       }
 
@@ -64,12 +64,15 @@ export const sendQuoteEmailAction = async ({
         pdfFilename,
       });
 
-      logger.info(`[Segundo Plano] Correo enviado exitosamente a ${contact_email} para cotización ${quote_id}`);
+      logger.info(`[${trackingId}] Quote email sent to ${contact_email}`);
     } catch (err) {
-      logger.error(`[Segundo Plano] Error al procesar y enviar el correo de cotización ${quote_id}:`, err);
+      logger.error(`[${trackingId}] Quote email delivery failed:`, err);
     }
   })();
 
-  // Retornar éxito inmediato al cliente sin hacerle esperar
-  return { success: true, message: "El proceso de envío de correo se ha iniciado." };
+  sendTask.catch((error) => {
+    logger.error(`[${trackingId}] Unhandled quote email task failure:`, error);
+  });
+
+  return { success: true, message: `Email delivery started. Tracking ID: ${trackingId}` };
 };

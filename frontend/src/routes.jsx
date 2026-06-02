@@ -14,6 +14,7 @@ import MasterPasswordGate, {
 import RolesAccessGate from "./components/auth/RolesAccessGate";
 import { Helmet } from "react-helmet-async";
 import { ThemeProvider } from "./context/ThemeContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const PageMeta = ({ title, desc, children }) => (
   <>
@@ -67,13 +68,14 @@ export default function AppRoutes() {
     <BrowserRouter>
       <ThemeProvider>
         <LocationTracker />
-        <Suspense
-          fallback={
-            <div className="min-h-screen w-full flex items-center justify-center text-zinc-600 text-sm">
-              Cargando…
-            </div>
-          }>
-          <Routes>
+        <ErrorBoundary>
+          <Suspense
+            fallback={
+              <div className="min-h-screen w-full flex items-center justify-center text-zinc-600 text-sm">
+                Cargando…
+              </div>
+            }>
+            <Routes>
             <Route path="/login" element={<PageMeta title="Iniciar Sesión" desc="Acceso al sistema de gestión empresarial."><Login /></PageMeta>} />
             <Route
               path="/register"
@@ -137,8 +139,9 @@ export default function AppRoutes() {
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </ThemeProvider>
     </BrowserRouter>
   );

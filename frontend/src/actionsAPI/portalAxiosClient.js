@@ -1,12 +1,9 @@
-import axios from "axios";
+import { createApiClient } from "../services/createApiClient";
 
-export const portalAxiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/graphql",
-  headers: { "Content-Type": "application/json" },
-});
-
-portalAxiosClient.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem("bc_portal_token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
+/**
+ * Dedicated API client for portal context.
+ * Always reads token from sessionStorage.
+ */
+export const portalAxiosClient = createApiClient({
+  getToken: () => sessionStorage.getItem("bc_portal_token"),
 });

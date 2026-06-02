@@ -4,6 +4,13 @@
  * Las acciones de negocio dependen de esta abstracción, cumpliendo con DIP.
  */
 import { pool } from "../config/db.js";
+import { normalizePagination } from "./pagination.js";
+
+const QUOTE_COLUMNS =
+  "id, folio, client_id, contact_id, user_id, created_at, total, notes, status, is_sent_to_client_portal, notification_read, is_deleted_admin, is_deleted_portal";
+
+const QUOTE_ITEM_COLUMNS =
+  "id, quote_id, product_id, quantity, base_unit_price, unit_price, discount, total";
 
 /**
  * Inserta una cotización y sus ítems asociados dentro de una transacción.
@@ -234,7 +241,10 @@ export async function createQuote(data, queryRunner = pool) {
  * @returns {Promise<object|null>}
  */
 export async function findQuoteById(id, queryRunner = pool) {
-  const [rows] = await queryRunner.query("SELECT * FROM quotes WHERE id = ?", [id]);
+  const [rows] = await queryRunner.query(
+    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE id = ?`,
+    [id],
+  );
   return rows?.[0] || null;
 }
 
@@ -245,7 +255,7 @@ export async function findQuoteById(id, queryRunner = pool) {
  */
 export async function findUnreadQuoteRequests(queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    `SELECT *
+    `SELECT ${QUOTE_COLUMNS}
      FROM quotes
      WHERE status IN ('REQUESTED', 'REJECTED') AND is_deleted_admin = 0
      ORDER BY CASE WHEN status = 'REQUESTED' THEN 0 ELSE 1 END, created_at DESC`
@@ -273,7 +283,7 @@ export async function countPendingQuoteRequests(queryRunner = pool) {
  */
 export async function findQuoteItemsByQuoteId(quoteId, queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    "SELECT * FROM quote_items WHERE quote_id = ?",
+    `SELECT ${QUOTE_ITEM_COLUMNS} FROM quote_items WHERE quote_id = ?`,
     [quoteId]
   );
   return rows;
@@ -289,7 +299,7 @@ export async function findQuoteItemsByQuoteId(quoteId, queryRunner = pool) {
  * @returns {Promise<object[]>}
  */
 export async function listQuotesFiltered({ status, user_id, is_deleted_admin = 0 } = {}, queryRunner = pool) {
-  let query = "SELECT * FROM quotes WHERE is_deleted_admin = ?";
+  let query = `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE is_deleted_admin = ?`;
   const params = [is_deleted_admin];
 
   if (status) {
@@ -346,7 +356,7 @@ export async function markQuoteAsRead(quoteId, queryRunner = pool) {
  */
 export async function listPortalQuotesByContact(contactId, queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    "SELECT * FROM quotes WHERE contact_id = ? AND is_sent_to_client_portal = 1 AND is_deleted_portal = 0 ORDER BY created_at DESC",
+    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE contact_id = ? AND is_sent_to_client_portal = 1 AND is_deleted_portal = 0 ORDER BY created_at DESC`,
     [contactId]
   );
   return rows;
@@ -370,12 +380,15 @@ export async function updateQuoteStatus({ quoteId, status }, queryRunner = pool)
 
 /**
  * Lista todas las cotizaciones excluyendo las que tienen estado REQUESTED y que no estén eliminadas.
+ * @param {{ limit?: number, offset?: number }} [pagination]
  * @param {object} [queryRunner]
  * @returns {Promise<object[]>}
  */
-export async function listAllNonRequestedQuotes(queryRunner = pool) {
+export async function listAllNonRequestedQuotes(pagination = {}, queryRunner = pool) {
+  const { limit, offset } = normalizePagination(pagination);
   const [rows] = await queryRunner.query(
-    "SELECT * FROM quotes WHERE status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC"
+    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [limit, offset],
   );
   return rows;
 }
@@ -388,7 +401,7 @@ export async function listAllNonRequestedQuotes(queryRunner = pool) {
  */
 export async function listQuotesByClientId(clientId, queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    "SELECT * FROM quotes WHERE client_id = ? AND status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC",
+    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE client_id = ? AND status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC`,
     [clientId]
   );
   return rows;
@@ -402,7 +415,7 @@ export async function listQuotesByClientId(clientId, queryRunner = pool) {
  */
 export async function listQuotesByUserId(userId, queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    "SELECT * FROM quotes WHERE user_id = ? AND status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC",
+    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE user_id = ? AND status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC`,
     [userId]
   );
   return rows;
@@ -430,7 +443,7 @@ export async function markQuoteNotificationAsRead(quoteId, queryRunner = pool) {
  */
 export async function listPortalQuotesByClientId(clientId, queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    `SELECT * FROM quotes 
+    `SELECT ${QUOTE_COLUMNS} FROM quotes 
      WHERE client_id = ? 
      AND is_sent_to_client_portal = 1 
      AND is_deleted_portal = 0

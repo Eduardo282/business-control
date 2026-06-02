@@ -2,6 +2,7 @@ import { loginAction } from "../../actions/user_actions/login.action.js";
 import { registerUserAction } from "../../actions/user_actions/registerUser.action.js";
 import { loginContactAction } from "../../actions/contact_actions/loginContact.action.js";
 import { env } from "../../../config/env.js";
+import { timingSafeEqual } from "node:crypto";
 
 export const login = async (_parent, { input }) => {
   return loginAction(input);
@@ -23,6 +24,9 @@ export const verifyMasterPassword = async (_parent, { password }) => {
     throw new Error("Error de configuración: MASTER_PASSWORD no está definida en el servidor.");
   }
 
-  return password === MASTER_PASSWORD;
-};
+  const provided = Buffer.from(String(password || ""));
+  const expected = Buffer.from(String(MASTER_PASSWORD));
 
+  if (provided.length !== expected.length) return false;
+  return timingSafeEqual(provided, expected);
+};
