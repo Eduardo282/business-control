@@ -122,7 +122,7 @@ export function createLoaders() {
       const ids = uniqueKeys(keys);
       if (!ids.length) return keys.map(() => null);
       const [rows] = await pool.query(
-        "SELECT id, client_id, name, category, product_type, current_price, users_count, description FROM products WHERE id IN (?)",
+        "SELECT id, folio, client_id, name, category, product_type, current_price, users_count, description FROM products WHERE id IN (?)",
         [ids],
       );
       const byId = mapRowsById(rows);

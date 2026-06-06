@@ -9,14 +9,32 @@ export const listQuotesApi = async () => {
         created_at
         total
         status
+        is_registered
+        registered_at
+        is_sent_to_client_portal
         client {
+          id
           business_name
         }
         user {
           full_name
         }
         contact {
+          id
           full_name
+          email
+        }
+        items {
+          id
+          quantity
+          total
+          product {
+            id
+            folio
+            name
+            category
+            product_type
+          }
         }
       }
     }
@@ -29,9 +47,12 @@ export const listQuotesByClientApi = async (client_id) => {
     query($client_id: ID!) {
       quotesByClient(client_id: $client_id) {
         id
+        folio
         created_at
         total
         status
+        is_registered
+        registered_at
         user {
           full_name
         }
@@ -53,6 +74,8 @@ export const getQuoteApi = async (id) => {
         created_at
         total
         status
+        is_registered
+        registered_at
         notes
         is_sent_to_client_portal
         client {
@@ -88,7 +111,9 @@ export const getQuoteApi = async (id) => {
           total
           product {
             id
+            folio
             name
+            category
             description
             users_count
           }
@@ -108,6 +133,8 @@ export const createQuoteApi = async (input) => {
         folio
         total
         status
+        is_registered
+        registered_at
       }
     }
   `;
@@ -122,6 +149,8 @@ export const resolveQuoteRequestApi = async (requestId, input) => {
         folio
         total
         status
+        is_registered
+        registered_at
       }
     }
   `;
@@ -159,6 +188,22 @@ export const updateQuoteStatusApi = async (id, status) => {
   `;
   const data = await gql(query, { id, status });
   return data.updateQuoteStatus;
+};
+
+export const registerQuoteApi = async (id) => {
+  const query = `
+    mutation RegisterQuote($id: ID!) {
+      registerQuote(id: $id) {
+        id
+        status
+        is_registered
+        registered_at
+        is_sent_to_client_portal
+      }
+    }
+  `;
+  const data = await gql(query, { id });
+  return data.registerQuote;
 };
 
 export const getPendingQuoteRequestsCountApi = async () => {

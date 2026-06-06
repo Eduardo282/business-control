@@ -17,7 +17,7 @@ function getSectionLabel(pathname = "") {
   if (pathname.startsWith("/clientes")) return "CONTACTOS";
   if (pathname.startsWith("/registrar-productos")) return "REGISTRAR PRODUCTOS";
   if (pathname.startsWith("/productos")) return "PRODUCTOS";
-  if (pathname.startsWith("/polizas")) return "SERVICIOS Y POLIZAS";
+  if (pathname.startsWith("/polizas")) return "VENTAS";
   if (pathname.startsWith("/cotizaciones/historial")) {
     return "HISTORIAL DE COTIZACIONES";
   }
@@ -100,12 +100,20 @@ export default function Topbar() {
         title: "Eliminada",
         text: "La solicitud se eliminó de la cola.",
         icon: "success",
-        timer: 1500,
+        timer: 2000,
         showConfirmButton: false,
+        timerProgressBar: true,
       });
     } catch (e) {
       logger.error("Error deleting quote request", e);
-      Swal.fire("Error", e.message || "No se pudo eliminar la solicitud", "error");
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo eliminar la solicitud",
+        icon: "error",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
     }
   };
 
@@ -136,12 +144,20 @@ export default function Topbar() {
         title: "Rechazada",
         text: "La solicitud quedó rechazada. Ahora puedes eliminarla de la cola.",
         icon: "success",
-        timer: 1500,
+        timer: 2000,
         showConfirmButton: false,
+        timerProgressBar: true,
       });
     } catch (e) {
       logger.error("Error rejecting quote request", e);
-      Swal.fire("Error", e.message || "No se pudo rechazar la solicitud", "error");
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo rechazar la solicitud",
+        icon: "error",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
     }
   };
 
@@ -260,13 +276,13 @@ export default function Topbar() {
                         return (
                           <div
                             key={notif.id}
-                            onClick={() => handleNavigate(notif)}
-                            className={`p-4 hover:bg-zinc-50 dark:hover:bg-white/5 transition-all cursor-pointer flex flex-col gap-2.5 border-l-4 ${
+                            onClick={() => !isRejected && handleNavigate(notif)}
+                            className={`p-4 transition-all flex flex-col gap-2.5 border-l-4 ${
                               isRejected
-                                ? "bg-red-50/30 dark:bg-red-950/10 border-red-400"
+                                ? "bg-red-50/30 dark:bg-red-950/10 border-red-400 cursor-default opacity-80"
                                 : isUnread
-                                  ? "bg-blue-50/40 dark:bg-blue-950/10 border-[#2277B4]"
-                                  : "bg-white dark:bg-dark-900 border-transparent"
+                                  ? "bg-blue-50/40 dark:bg-blue-950/10 border-[#2277B4] cursor-pointer hover:bg-zinc-50 dark:hover:bg-white/5"
+                                  : "bg-white dark:bg-dark-900 border-transparent cursor-pointer hover:bg-zinc-50 dark:hover:bg-white/5"
                             }`}
                           >
                             {/* Contenido Superior */}

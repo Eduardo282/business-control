@@ -16,7 +16,7 @@ export const quotes = async (_parent, { limit, offset }, ctx) => {
     return listQuotesByUserAction(ctx.user.userId || ctx.user.id);
   }
   if (ctx.user.role === "CONTACT_PORTAL") {
-    return listPortalQuotesAction(ctx.user.clientId);
+    return listPortalQuotesAction(ctx.user.contactId);
   }
   return listQuotesAction({ limit, offset });
 };
@@ -26,8 +26,16 @@ export const quote = async (_parent, { id }, ctx) => {
   const found = await getQuoteAction(id);
   if (!found) throw notFound("Cotización no encontrada");
 
-  if (ctx.user.role === "CONTACT_PORTAL" && String(found.client_id) !== String(ctx.user.clientId)) {
-    throw forbidden();
+  if (ctx.user.role === "CONTACT_PORTAL") {
+    const canAccessPortalQuote =
+      String(found.contact_id) === String(ctx.user.contactId) &&
+      Boolean(found.is_registered) &&
+      Boolean(found.is_sent_to_client_portal) &&
+      !Boolean(found.is_deleted_portal);
+
+    if (!canAccessPortalQuote) {
+      throw forbidden();
+    }
   }
 
   return found;

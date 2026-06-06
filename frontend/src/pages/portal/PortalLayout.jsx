@@ -6,7 +6,7 @@ import {
   NavLink,
   useLocation,
 } from "react-router-dom";
-import { Clock, History, LayoutDashboard, BookOpen, Headphones } from "@icons";
+import { Clock, History, LayoutDashboard, BookOpen, Headphones, Settings } from "@icons";
 import logo from "../../components/layout/assets/logo.png";
 import ThemeToggle from "../../components/layout/ThemeToggle";
 import { getContactDataApi } from "../../actionsAPI/portal.api";
@@ -124,6 +124,9 @@ export default function PortalLayout() {
           </PortalItem>
           <PortalItem to="/portal/support" icon={Headphones}>
             Soporte
+          </PortalItem>
+          <PortalItem to="/portal/settings" icon={Settings}>
+            Ajustes
           </PortalItem>
         </nav>
 

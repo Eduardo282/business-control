@@ -63,7 +63,14 @@ export default function PortalCatalog() {
       setProducts(resp);
     } catch (e) {
       logger.error("Error loading portal catalog", e);
-      Swal.fire("Error", "No se pudieron cargar los productos", "error");
+      Swal.fire({
+        title: "Error",
+        text: "No se pudieron cargar los productos",
+        icon: "error",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
     } finally {
       setLoading(false);
     }
@@ -182,13 +189,20 @@ export default function PortalCatalog() {
         text: "Hemos recibido tu solicitud. Pronto recibirás la cotización en tu correo y en este portal.",
         icon: "success",
         showConfirmButton: false,
-        timer: 3500,
+        timer: 2000,
         timerProgressBar: true,
       });
       setCart({});
       navigate("/portal/quotes?filter=recent");
     } catch (e) {
-      Swal.fire("Error", e.message || "Error al enviar solicitud", "error");
+      Swal.fire({
+        title: "Error",
+        text: e.message || "Error al enviar solicitud",
+        icon: "error",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -263,7 +277,14 @@ export default function PortalCatalog() {
                   </span>
                 )}
               </div>
-              <span className="font-semibold text-zinc-800">{name}</span>
+              <div className="flex flex-col">
+                <span className="font-semibold text-zinc-800">{name}</span>
+                {row.original.folio && (
+                  <span className="text-[10px] text-zinc-400 font-mono tracking-wider uppercase">
+                    {row.original.folio}
+                  </span>
+                )}
+              </div>
             </div>
           );
         },
@@ -736,6 +757,11 @@ export default function PortalCatalog() {
                       <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md border ${getProductTypePresentation(selectedProduct.product_type).badgeClass}`}>
                         {getProductTypePresentation(selectedProduct.product_type).label}
                       </span>
+                      {selectedProduct.folio && (
+                        <span className="text-[10px] uppercase font-bold tracking-wider font-mono text-zinc-500 bg-zinc-100 dark:bg-dark-800 dark:text-zinc-400 px-2 py-0.5 rounded-md border border-zinc-200 dark:border-dark-700">
+                          {selectedProduct.folio}
+                        </span>
+                      )}
                     </div>
                     <h3 className="text-xl font-bold text-zinc-900 dark:text-white">
                       {selectedProduct.name}

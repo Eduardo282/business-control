@@ -5,7 +5,7 @@ import logo from "./assets/logo.png";
 import { getPendingQuoteRequestsCountApi } from "../../actionsAPI/quotes.api";
 import {
   LayoutDashboard,
-  FileCheck,
+  BadgeDollarSign,
   Package,
   PackagePlus,
   History,
@@ -142,8 +142,8 @@ export default function Sidebar({ role }) {
               disableWhenQuery={["client_id"]}>
               Generar Cotización
             </Item>
-            <Item to="/polizas" icon={FileCheck}>
-              Servicios y Pólizas
+            <Item to="/polizas" icon={BadgeDollarSign}>
+              Ventas
             </Item>
             <Item
               to="/cotizaciones/historial"

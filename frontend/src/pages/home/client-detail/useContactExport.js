@@ -11,7 +11,9 @@ function warnNoExportRows() {
     title: "Sin datos",
     text: "No hay contactos para exportar.",
     icon: "info",
-    confirmButtonColor: "#2277B4",
+    showConfirmButton: false,
+    timer: 2000,
+    timerProgressBar: true,
   });
 }
 
@@ -20,7 +22,9 @@ function showExportError(message) {
     title: "Error",
     text: message,
     icon: "error",
-    confirmButtonColor: "#d33",
+    showConfirmButton: false,
+    timer: 2000,
+    timerProgressBar: true,
   });
 }
 

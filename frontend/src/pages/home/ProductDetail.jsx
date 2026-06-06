@@ -62,11 +62,19 @@ function normalizeCategory(category = "") {
 }
 
 function inferProductType(product) {
+  const explicitType = String(product?.product_type || "")
+    .trim()
+    .toUpperCase();
+  if (["PRODUCT", "CONTPAQI", "SERVICE", "POLICY"].includes(explicitType)) {
+    return explicitType;
+  }
+
   const source = `${product?.name || ""} ${product?.category || ""}`;
   const normalized = normalizeCategory(source);
 
   if (normalized.includes("poliza")) return "POLICY";
   if (normalized.includes("servicio")) return "SERVICE";
+  if (normalized.includes("contpaqi")) return "CONTPAQI";
   return "PRODUCT";
 }
 
@@ -145,6 +153,7 @@ export default function ProductDetail() {
   const [globalFilter, setGlobalFilter] = useState("");
   const [selectedHistoryDate, setSelectedHistoryDate] = useState(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 3 });
+  const [updatePagination, setUpdatePagination] = useState({ pageIndex: 0, pageSize: 3 });
 
   const handleHistoryDateChange = (date) => {
     setSelectedHistoryDate(date);
@@ -373,7 +382,7 @@ export default function ProductDetail() {
                   </div>
                 </div>
 
-                {inferProductType(product) === "PRODUCT" && product.users_count > 0 && (
+                {!["SERVICE", "POLICY"].includes(inferProductType(product)) && product.users_count > 0 && (
                   <div className="flex items-center gap-3 px-4 py-3 w-fit">
                     <div className="p-2 rounded-lg">
                       <Users size={20} className="text-black dark:text-zinc-400" />
@@ -388,19 +397,41 @@ export default function ProductDetail() {
                     </div>
                   </div>
                 )}
+
+                <div className="flex items-center gap-3 px-4 py-3 w-fit border-l border-light-border dark:border-white/5 ml-4">
+                  <div>
+                    <div className="text-xs text-light-text-secondary dark:text-zinc-500 mb-1">
+                      Folio
+                    </div>
+                    <div className="text-sm font-bold text-[#2277B4]">
+                      PRD-{String(product.id || 1).padStart(6, '0')}
+                    </div>
+                  </div>
+                </div>
               </div>
               {user?.role?.name !== "SOPORTE" && (
-                <div className="mt-8 flex gap-3 border-t border-light-border dark:border-white/5 pt-6">
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2 bg-[#2277B4] hover:bg-[#125280] shadow-lg shadow-[#2277B450] text-white rounded-xl px-4 py-2">
-                    <Edit2 size={16} /> Editar
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="text-red-800 flex items-center gap-2">
-                    <Trash2 size={16} /> Eliminar
-                  </button>
+                <div className="mt-8 flex justify-between items-end border-t border-light-border dark:border-white/5 pt-6">
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="flex items-center gap-2 bg-[#2277B4] hover:bg-[#125280] shadow-lg shadow-[#2277B450] text-white rounded-xl px-4 py-2">
+                      <Edit2 size={16} /> Editar
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      className="text-red-800 flex items-center gap-2 px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors">
+                      <Trash2 size={16} /> Eliminar
+                    </button>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-[9px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">
+                      Última actualización
+                    </div>
+                    <div className="font-mono text-[11px] font-bold text-light-text-primary dark:text-zinc-100">
+                      {new Date(product.updated_at || product.created_at).toLocaleDateString()} {new Date(product.updated_at || product.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -438,8 +469,8 @@ export default function ProductDetail() {
                   min="1"
                   max={currentMaxUsers.toString()}
                   value={
-                    inferProductType(editForm) === "SERVICE" || inferProductType(editForm) === "POLICY" 
-                      ? 1 
+                    inferProductType(editForm) === "SERVICE" || inferProductType(editForm) === "POLICY"
+                      ? 1
                       : editForm.users_count
                   }
                   disabled={inferProductType(editForm) === "SERVICE" || inferProductType(editForm) === "POLICY"}
@@ -682,6 +713,90 @@ export default function ProductDetail() {
               </div>
             )}
           </div>
+
+          {/* Historial de actualizaciones */}
+          {(() => {
+            const editHistory = (product.update_history || []).filter(e => e.change_type !== "PRICE");
+            const totalPages = Math.max(1, Math.ceil(editHistory.length / updatePagination.pageSize));
+            const paged = editHistory.slice(
+              updatePagination.pageIndex * updatePagination.pageSize,
+              (updatePagination.pageIndex + 1) * updatePagination.pageSize
+            );
+            return (
+              <div className="rounded-md overflow-hidden bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 shadow-sm mt-6">
+                <div className="flex items-center justify-between border-b border-[#eef3f8] bg-[#fbfdff] px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Actualizaciones
+                  </span>
+                  <span className="text-[9px] font-bold text-[#2277B4] dark:text-blue-400">
+                    {editHistory.length} movimiento{editHistory.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+
+                {paged.length > 0 ? (
+                  <div className="divide-y divide-[#eef3f8] dark:divide-white/10">
+                    {paged.map((entry, idx) => {
+                      const date = new Date(entry.changed_at);
+                      return (
+                        <div
+                          key={entry.id || idx}
+                          className="grid grid-cols-[44px_minmax(0,1fr)_118px] items-center gap-2 px-3 py-2 text-[11px] hover:bg-[#f8fbff] dark:hover:bg-white/5">
+                          <span className="font-mono font-black text-[#2277B4] dark:text-blue-400">
+                            #{Math.max(1, Number(entry.update_version) || 1)}
+                          </span>
+                          <span className="font-semibold text-light-text-primary dark:text-zinc-100">
+                            {entry.summary || "Producto editado"}
+                          </span>
+                          <span className="text-right font-mono text-[10px] font-semibold leading-tight text-zinc-500 dark:text-zinc-400">
+                            {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="px-3 py-3 text-xs text-zinc-500 dark:text-zinc-400">
+                    Aún no hay ediciones registradas para este producto.
+                  </div>
+                )}
+
+                {editHistory.length > 0 && (
+                  <div className="px-4 py-3 border-t border-zinc-100 dark:border-dark-700 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setUpdatePagination(prev => ({ ...prev, pageIndex: Math.max(0, prev.pageIndex - 1) }))}
+                        disabled={updatePagination.pageIndex === 0}
+                        className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-dark-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-black dark:text-zinc-100">
+                        <ChevronLeft size={16} />
+                      </button>
+                      <span className="text-[11px] font-medium text-black dark:text-zinc-100 min-w-max">
+                        Pág {updatePagination.pageIndex + 1} de{" "}
+                        {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setUpdatePagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))}
+                        disabled={(updatePagination.pageIndex + 1) * updatePagination.pageSize >= editHistory.length}
+                        className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-dark-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-black dark:text-zinc-100">
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                    <select
+                      value={updatePagination.pageSize}
+                      onChange={(e) => {
+                        setUpdatePagination({ pageIndex: 0, pageSize: Number(e.target.value) });
+                      }}
+                      className="text-[11px] bg-zinc-50 dark:bg-dark-800 border border-zinc-200 dark:border-dark-700 rounded px-1.5 py-1 text-zinc-600 dark:text-zinc-300 outline-none">
+                      {[3, 5, 10, 20].map((pageSize) => (
+                        <option key={pageSize} value={pageSize}>
+                          Mostrar {pageSize}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

@@ -39,6 +39,7 @@ export async function getAssignedPolicies(queryRunner = pool) {
       cp.expiration_date,
       cp.status,
       p.id AS product_id,
+      p.folio AS product_folio,
       p.name AS product_name,
       p.category AS product_category,
       p.current_price,
@@ -79,6 +80,7 @@ export async function getStandalonePolicies(queryRunner = pool) {
   const [rows] = await queryRunner.query(`
     SELECT
       p.id AS product_id,
+      p.folio AS product_folio,
       p.name AS product_name,
       p.category AS product_category,
       p.current_price,
@@ -122,6 +124,7 @@ export async function getLegacyAssignedPolicies(queryRunner = pool) {
       cp.expiration_date,
       cp.status,
       p.id AS product_id,
+      p.folio AS product_folio,
       p.name AS product_name,
       p.category AS product_category,
       p.current_price,

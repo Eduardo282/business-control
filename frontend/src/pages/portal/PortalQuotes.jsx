@@ -154,6 +154,11 @@ function QuoteRow({ quote, onEdit, onDelete }) {
   const createdDate = new Date(quote.created_at);
   const expirationDate = new Date(createdDate.getTime() + 15 * 24 * 60 * 60 * 1000);
 
+  let computedStatus = quote.status || "PENDING";
+  if (computedStatus !== "REJECTED" && computedStatus !== "REQUESTED") {
+    computedStatus = quote.is_registered ? "ACCEPTED" : "PENDING";
+  }
+
   return (
     <tr className="hover:bg-zinc-50 transition-colors">
       <td className="p-4">
@@ -186,7 +191,7 @@ function QuoteRow({ quote, onEdit, onDelete }) {
         </div>
       </td>
       <td className="p-4 text-center">
-        <StatusBadge status={quote.status} />
+        <StatusBadge status={computedStatus} />
       </td>
       <td className="p-4 text-right">
         <div className="flex items-center justify-end gap-2">
@@ -315,6 +320,11 @@ function EditQuoteModal({ editingQuote, editItems, savingEdit, dispatch, onSave 
                       <h4 className="font-semibold text-zinc-800 text-sm truncate" title={name}>
                         {name}
                       </h4>
+                      {item.product?.folio && (
+                        <div className="text-[11px] font-mono font-semibold text-[#2277B4] mt-0.5">
+                          {item.product.folio}
+                        </div>
+                      )}
                       <div className="text-xs text-zinc-500 mt-0.5">
                         Precio Unitario (aprox): ${Number(item.total / item.quantity || 0).toLocaleString('es-MX')}
                       </div>
@@ -414,14 +424,18 @@ export default function PortalQuotes() {
         title: "¡Eliminada!",
         text: "La solicitud fue eliminada correctamente.",
         icon: "success",
-        timer: 1500,
+        timer: 2000,
         showConfirmButton: false,
+        timerProgressBar: true,
       });
     } catch (e) {
       Swal.fire({
         title: "Error",
         text: e.message || "No se pudo eliminar.",
         icon: "error",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
     }
   };
@@ -446,14 +460,18 @@ export default function PortalQuotes() {
         title: "¡Actualizada!",
         text: "La solicitud fue actualizada.",
         icon: "success",
-        timer: 1500,
+        timer: 2000,
         showConfirmButton: false,
+        timerProgressBar: true,
       });
     } catch (e) {
       Swal.fire({
         title: "Error",
         text: e.message || "No se pudo actualizar.",
         icon: "error",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
     } finally {
       dispatch({ type: "SET_SAVING_EDIT", payload: false });
@@ -465,7 +483,12 @@ export default function PortalQuotes() {
   const displayedQuotes = useMemo(() => {
     const now = Date.now();
     return quotes.filter((q) => {
-      if (statusFilter && q.status !== statusFilter) return false;
+      let computedStatus = q.status || "PENDING";
+      if (computedStatus !== "REJECTED" && computedStatus !== "REQUESTED") {
+        computedStatus = q.is_registered ? "ACCEPTED" : "PENDING";
+      }
+
+      if (statusFilter && computedStatus !== statusFilter) return false;
       const isRecent = now - new Date(q.created_at).getTime() <= WEEK_MS;
       if (filter === "recent" && !isRecent) return false;
       if (filter !== "recent" && isRecent) return false;

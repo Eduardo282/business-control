@@ -204,7 +204,7 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
         text: `Se importaron ${totalCreated} clientes exitosamente.`,
         icon: "success",
         confirmButtonColor: "#2277B4",
-        timer: 2200,
+        timer: 2000,
         timerProgressBar: true,
         showConfirmButton: false,
         allowOutsideClick: false,
@@ -219,6 +219,9 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
         text: err.message || "Error en la carga masiva.",
         icon: "error",
         confirmButtonColor: "#d33",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
     } finally {
       setBulkUploading(false);
@@ -237,6 +240,9 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
         text: "Debes ingresar la URL del archivo en Google Drive.",
         icon: "warning",
         confirmButtonColor: "#2277B4",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
       return;
     }
@@ -263,7 +269,7 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
             : `Se importaron ${report.importedCount} clientes exitosamente.`,
         icon: "success",
         confirmButtonColor: "#2277B4",
-        timer: 2200,
+        timer: 2000,
         timerProgressBar: true,
         showConfirmButton: false,
         allowOutsideClick: false,
@@ -278,6 +284,9 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
         text: err.message || "Error importando archivo desde Drive.",
         icon: "error",
         confirmButtonColor: "#d33",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
     } finally {
       setDriveImporting(false);

@@ -5,6 +5,7 @@ import {
   createQuote,
 } from "../../../repositories/quote.repository.js";
 import { quotePricingService } from "../../../services/quotePricing.service.js";
+import { resolveQuoteFolio } from "./quoteFolio.js";
 
 export const requestQuoteAction = async (input, user) => {
   // User is the contact here
@@ -27,13 +28,16 @@ export const requestQuoteAction = async (input, user) => {
       })),
       products,
     });
+    const folio = await resolveQuoteFolio({ queryRunner: connection });
 
     const quoteId = await createQuote({
+      folio,
       client_id,
       contact_id,
       total: pricing.total,
       notes: "Solicitud de cotización desde Portal de Contacto",
       status: "REQUESTED",
+      is_registered: 1,
       is_sent_to_client_portal: 1,
     }, connection);
 
@@ -43,6 +47,7 @@ export const requestQuoteAction = async (input, user) => {
 
     return {
       id: quoteId,
+      folio,
       client_id,
       contact_id,
       user_id: null,
@@ -50,6 +55,7 @@ export const requestQuoteAction = async (input, user) => {
       subtotal: pricing.subtotal,
       iva: pricing.iva,
       status: "REQUESTED",
+      is_registered: true,
       notes: "Solicitud desde portal",
       created_at: new Date(),
       items: pricing.items,

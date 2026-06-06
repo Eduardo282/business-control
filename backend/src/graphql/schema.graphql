@@ -123,6 +123,7 @@ type SendEmailResponse {
 type ProductCategory {
   id: ID!
   name: String!
+  product_type: String
 }
 
 type Query {
@@ -200,10 +201,12 @@ type Mutation {
 
   createQuote(input: CreateQuoteInput!): Quote!
   resolveQuoteRequest(requestId: ID!, input: CreateQuoteInput!): Quote!
+  registerQuote(id: ID!): Quote!
   deleteQuote(id: ID!): Boolean!
   markQuoteNotificationRead(id: ID!): Boolean!
 
   createCategory(name: String!): ProductCategory!
+  assignCategoryType(name: String!, product_type: String!): ProductCategory!
   deleteCategory(id: ID!): Boolean!
 
   createRole(name: String!): Role!
@@ -215,10 +218,19 @@ type Mutation {
   rejectPortalQuote(id: ID!): Boolean!
   rejectQuote(id: ID!): Boolean!
   updateQuoteStatus(id: ID!, status: String!): Quote!
+
+  changePortalPassword(
+    contactId: ID!
+    currentPassword: String!
+    newPassword: String!
+  ): Boolean!
+  requestPortalPasswordReset(email: String!): Boolean!
+  resetPortalPassword(token: String!, newPassword: String!): Boolean!
 }
 
 type PortalProduct {
   id: ID!
+  folio: String
   name: String!
   category: String!
   product_type: String
@@ -231,6 +243,7 @@ input RequestQuoteInput {
 
 type Product {
   id: ID!
+  folio: String
   client_id: ID
   client: Client
   name: String!
@@ -239,12 +252,25 @@ type Product {
   current_price: Float!
   users_count: Int
   description: String
+  update_version: Int
+  created_at: DateTime
+  updated_at: DateTime
   price_history: [PriceHistory!]!
+  update_history: [ProductUpdateHistory!]!
 }
 
 type PriceHistory {
   id: ID!
   price: Float!
+  changed_at: DateTime!
+}
+
+type ProductUpdateHistory {
+  id: ID!
+  product_id: ID!
+  update_version: Int!
+  change_type: String
+  summary: String
   changed_at: DateTime!
 }
 
@@ -274,6 +300,8 @@ type Quote {
   created_at: DateTime!
   total: Float!
   status: String!
+  is_registered: Boolean!
+  registered_at: DateTime
   notes: String
   is_sent_to_client_portal: Boolean
   notification_read: Boolean

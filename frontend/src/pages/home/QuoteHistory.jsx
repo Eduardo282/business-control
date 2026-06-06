@@ -19,6 +19,7 @@ import {
   FileText,
   FileSpreadsheet,
   FolderOpen,
+  XCircle,
 } from "@icons";
 import {
   flexRender,
@@ -80,11 +81,11 @@ function filterReducer(state, action) {
   }
 }
 
-function StatusCell({ row, handleStatusChange }) {
-  const currentStatus = row.original.status || "PENDING";
-  const [isOpen, setIsOpen] = useState(false);
-  const buttonRef = useRef(null);
-  const [coords, setCoords] = useState({ top: 0, left: 0 });
+function StatusCell({ row }) {
+  let currentStatus = row.original.status || "PENDING";
+  if (currentStatus !== "REJECTED" && currentStatus !== "REQUESTED") {
+    currentStatus = row.original.is_registered ? "ACCEPTED" : "PENDING";
+  }
 
   const statusOptions = [
     { value: "REQUESTED", label: "SOLICITADA", color: "text-blue-600 border-blue-600/30 bg-blue-50 dark:bg-blue-500/10" },
@@ -96,76 +97,12 @@ function StatusCell({ row, handleStatusChange }) {
 
   const currentOption = statusOptions.find((o) => o.value === currentStatus);
 
-  const updateCoords = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setCoords({
-        top: rect.bottom + window.scrollY,
-        left: rect.right + window.scrollX - 128, // alignment to match trigger (w-32 is 128px)
-      });
-    }
-  };
-
-  const handleToggle = () => {
-    updateCoords();
-    setIsOpen(!isOpen);
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      window.addEventListener("scroll", updateCoords, true);
-      window.addEventListener("resize", updateCoords);
-    }
-    return () => {
-      window.removeEventListener("scroll", updateCoords, true);
-      window.removeEventListener("resize", updateCoords);
-    };
-  }, [isOpen]);
-
   return (
     <div className="text-right flex justify-end">
-      <div className="relative">
-        <button
-          ref={buttonRef}
-          onClick={handleToggle}
-          className={`text-[10px] uppercase font-bold tracking-wider pl-2 pr-6 py-1 rounded bg-transparent border focus:outline-none transition-colors cursor-pointer text-center min-w-[110px] relative ${currentOption?.color}`}
-        >
-          {currentOption?.label}
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60">
-            <ChevronDown size={10} className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-          </div>
-        </button>
-
-        {isOpen &&
-          createPortal(
-            <>
-              <div className="fixed inset-0 z-[9999]" onClick={() => setIsOpen(false)} />
-              <div
-                style={{
-                  position: "absolute",
-                  top: `${coords.top}px`,
-                  left: `${coords.left}px`,
-                }}
-                className="mt-1 w-32 bg-white dark:bg-dark-900 rounded-lg shadow-xl border border-zinc-200 dark:border-white/10 z-[10000] overflow-hidden animate-fade-in-down"
-              >
-                {statusOptions
-                  .filter((opt) => opt.value !== currentStatus && opt.value !== "SENT")
-                  .map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => {
-                        handleStatusChange(row.original.id, opt.value);
-                        setIsOpen(false);
-                      }}
-                      className={`w-full px-3 py-2 text-[10px] font-bold text-left hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors border-l-2 border-transparent ${opt.color.split(" ")[0]}`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-              </div>
-            </>,
-            document.body,
-          )}
+      <div
+        className={`text-[10px] uppercase font-bold tracking-wider px-4 py-1 rounded bg-transparent border text-center min-w-[110px] ${currentOption?.color}`}
+      >
+        {currentOption?.label}
       </div>
     </div>
   );
@@ -223,8 +160,9 @@ export default function QuoteHistory() {
         title: "¡Eliminada!",
         text: "La cotización se eliminó correctamente de la base de datos.",
         icon: "success",
-        timer: 1500,
+        timer: 2000,
         showConfirmButton: false,
+        timerProgressBar: true,
       });
     } catch (e) {
       const message =
@@ -236,6 +174,9 @@ export default function QuoteHistory() {
         title: "Error",
         text: message,
         icon: "error",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
     }
   }, []);
@@ -246,7 +187,9 @@ export default function QuoteHistory() {
         title: "Sin datos",
         text: "No hay cotizaciones para exportar.",
         icon: "info",
-        confirmButtonColor: "#2277B4",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
       return;
     }
@@ -310,7 +253,9 @@ export default function QuoteHistory() {
         title: "Error",
         text: e.message || "No se pudo generar el PDF.",
         icon: "error",
-        confirmButtonColor: "#2277B4",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
     }
   };
@@ -321,7 +266,9 @@ export default function QuoteHistory() {
         title: "Sin datos",
         text: "No hay cotizaciones para exportar.",
         icon: "info",
-        confirmButtonColor: "#2277B4",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
       return;
     }
@@ -358,12 +305,14 @@ export default function QuoteHistory() {
         title: "Error",
         text: e.message || "No se pudo generar el Excel.",
         icon: "error",
-        confirmButtonColor: "#2277B4",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
     }
   };
 
-  const handleStatusChange = async (id, newStatus) => {
+  const handleStatusChange = useCallback(async (id, newStatus) => {
     try {
       await updateQuoteStatusApi(id, newStatus);
       dispatchData({ type: "UPDATE_QUOTE_STATUS", payload: { id, status: newStatus } });
@@ -381,9 +330,16 @@ export default function QuoteHistory() {
         title: `Estado actualizado a ${newStatus}`,
       });
     } catch (e) {
-      Swal.fire("Error", e.message || "No se pudo actualizar el estado", "error");
+      Swal.fire({
+        title: "Error",
+        text: e.message || "No se pudo actualizar el estado",
+        icon: "error",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
     }
-  };
+  }, [dispatchData]);
 
   const filterFieldLabels = {
     client: "Cliente",
@@ -429,7 +385,11 @@ export default function QuoteHistory() {
       if (activeFilterPickerField === "client") {
         value = quote?.client?.business_name || "";
       } else if (activeFilterPickerField === "status") {
-        value = quote?.status || "";
+        let st = quote?.status || "PENDING";
+        if (st !== "REJECTED" && st !== "REQUESTED") {
+          st = quote?.is_registered ? "ACCEPTED" : "PENDING";
+        }
+        value = st;
       } else if (activeFilterPickerField === "folio") {
         value = quote?.folio || "";
       }
@@ -533,18 +493,31 @@ export default function QuoteHistory() {
               <ExternalLink size={14} /> Ver
             </Link>
             {user?.role?.name !== "SOPORTE" && (
-              <button
-                onClick={() => handleDeleteQuote(row.original.id)}
-                className="size-8 inline-flex items-center justify-center rounded-lg text-red-700 hover:bg-red-50 transition-colors"
-                title="Eliminar cotización">
-                <Trash2 size={14} />
-              </button>
+              <>
+                <button
+                  onClick={() => handleStatusChange(row.original.id, "REJECTED")}
+                  disabled={row.original.status === "REJECTED"}
+                  className={`size-8 inline-flex items-center justify-center rounded-lg transition-colors ${
+                    row.original.status === "REJECTED"
+                      ? "text-zinc-400 bg-zinc-100 cursor-not-allowed"
+                      : "text-orange-600 hover:bg-orange-50"
+                  }`}
+                  title="Rechazar cotización">
+                  <XCircle size={14} />
+                </button>
+                <button
+                  onClick={() => handleDeleteQuote(row.original.id)}
+                  className="size-8 inline-flex items-center justify-center rounded-lg text-red-700 hover:bg-red-50 transition-colors"
+                  title="Eliminar cotización">
+                  <Trash2 size={14} />
+                </button>
+              </>
             )}
           </div>
         ),
       },
     ],
-    [handleDeleteQuote, user?.role?.name],
+    [handleDeleteQuote, handleStatusChange, user?.role?.name],
   );
 
   const filteredQuotes = useMemo(() => {
@@ -557,7 +530,11 @@ export default function QuoteHistory() {
       const folio = quote?.folio || "";
       const client = quote?.client?.business_name || "";
       const seller = quote?.user?.full_name || quote?.contact?.full_name || "";
-      const status = quote?.status || "";
+      let status = quote?.status || "";
+      if (status !== "REJECTED" && status !== "REQUESTED") {
+        status = quote?.is_registered ? "ACCEPTED" : "PENDING";
+      }
+      
       const total =
         quote?.total != null ?
           String(Number(quote.total).toFixed(2))

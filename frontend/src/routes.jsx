@@ -48,6 +48,9 @@ const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
 const PortalQuotes = lazy(() => import("./pages/portal/PortalQuotes"));
 const PortalCatalog = lazy(() => import("./pages/portal/PortalCatalog"));
 const PortalSupport = lazy(() => import("./pages/portal/PortalSupport"));
+const PortalSettings = lazy(() => import("./pages/portal/PortalSettings"));
+const PortalForgotPassword = lazy(() => import("./pages/portal/PortalForgotPassword"));
+const PortalResetPassword = lazy(() => import("./pages/portal/PortalResetPassword"));
 
 // Guarda la última ruta visitada (excepto /register y /roles) para que MasterPasswordGate
 // pueda renderizar el fondo correcto al pedir la contraseña maestra.
@@ -107,7 +110,11 @@ export default function AppRoutes() {
               <Route path="quotes/:id" element={<PageMeta title="Portal — Detalle Cotización" desc="Detalle de cotización en el portal."><QuoteDetail /></PageMeta>} />
               <Route path="catalog" element={<PageMeta title="Portal — Catálogo" desc="Catálogo de productos disponibles para clientes."><PortalCatalog /></PageMeta>} />
               <Route path="support" element={<PageMeta title="Portal — Soporte" desc="Chat de soporte en tiempo real para clientes."><PortalSupport /></PageMeta>} />
+              <Route path="settings" element={<PageMeta title="Portal — Ajustes" desc="Ajustes de cuenta y contraseña."><PortalSettings /></PageMeta>} />
             </Route>
+
+            <Route path="/portal/forgot-password" element={<PageMeta title="Portal — Recuperar Contraseña" desc="Recuperación de cuenta."><PortalForgotPassword /></PageMeta>} />
+            <Route path="/portal/reset-password" element={<PageMeta title="Portal — Nueva Contraseña" desc="Crear nueva contraseña."><PortalResetPassword /></PageMeta>} />
 
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
@@ -125,7 +132,7 @@ export default function AppRoutes() {
                     path="/registrar-productos"
                     element={<PageMeta title="Registrar Productos" desc="Registro de nuevos productos y servicios al catálogo."><RegistrarProducts /></PageMeta>}
                   />
-                  <Route path="/polizas" element={<PageMeta title="Servicios y Pólizas" desc="Gestión de pólizas y servicios activos."><Policies /></PageMeta>} />
+                  <Route path="/polizas" element={<PageMeta title="Ventas" desc="Ventas generadas desde cotizaciones registradas."><Policies /></PageMeta>} />
                   <Route path="/productos/:id" element={<PageMeta title="Detalle de Producto" desc="Información detallada, precios e historial del producto."><ProductDetail /></PageMeta>} />
                   <Route
                     path="/cotizaciones/historial"

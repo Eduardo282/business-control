@@ -171,7 +171,7 @@ export async function insertContactProduct(data, queryRunner = pool) {
 export async function listContactProducts(contactId, queryRunner = pool) {
   const [rows] = await queryRunner.query(
     `SELECT cp.id, cp.client_id, cp.contact_id, cp.product_id, cp.license_key, cp.start_date, cp.expiration_date, cp.status,
-            p.name as product_name, p.category as product_category, p.description as product_description, p.current_price, p.is_active, p.product_type
+            p.folio as product_folio, p.name as product_name, p.category as product_category, p.description as product_description, p.current_price, p.is_active, p.product_type
      FROM contact_products cp
      JOIN products p ON cp.product_id = p.id
      WHERE cp.contact_id = ?

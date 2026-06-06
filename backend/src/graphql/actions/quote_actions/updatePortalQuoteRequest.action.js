@@ -6,6 +6,7 @@ import {
   updateQuoteTotal,
 } from "../../../repositories/quote.repository.js";
 import { quotePricingService } from "../../../services/quotePricing.service.js";
+import { resolveQuoteFolio } from "./quoteFolio.js";
 
 export const updatePortalQuoteRequestAction = async (quoteId, input, user) => {
   const { items } = input;
@@ -38,6 +39,11 @@ export const updatePortalQuoteRequestAction = async (quoteId, input, user) => {
       })),
       products,
     });
+    const folio = await resolveQuoteFolio({
+      explicitFolio: quote.folio,
+      queryRunner: connection,
+      excludeQuoteId: quoteId,
+    });
 
     await replaceQuoteItems(connection, {
       quoteId,
@@ -45,16 +51,23 @@ export const updatePortalQuoteRequestAction = async (quoteId, input, user) => {
     });
 
     // 5. Update quote total
-    await updateQuoteTotal({ quoteId, total: pricing.total, queryRunner: connection });
+    await updateQuoteTotal({
+      quoteId,
+      total: pricing.total,
+      folio,
+      queryRunner: connection,
+    });
 
     await connection.commit();
 
     return {
       id: quoteId,
       total: pricing.total,
+      folio,
       subtotal: pricing.subtotal,
       iva: pricing.iva,
       status: quote.status,
+      is_registered: Boolean(quote.is_registered),
     };
   } catch (error) {
     await connection.rollback();

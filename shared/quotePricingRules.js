@@ -114,6 +114,7 @@ export function calculateQuotePricing({ items = [], products = [] }) {
     return {
       ...item,
       product_id: product?.id ?? item.product_id,
+      product_folio: product?.folio ?? item.product_folio,
       product_name: product?.name ?? item.product_name,
       product_category: product?.category ?? item.product_category,
       product_type: product?.product_type ?? item.product_type,

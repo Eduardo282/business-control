@@ -72,6 +72,7 @@ export async function listClientActiveServicesApi(client_id) {
           expiration_date
           status
           product {
+            folio
             name
             category
           }

@@ -170,6 +170,11 @@ export default function QuotePreview({
                     <div className="font-bold text-zinc-800 dark:text-zinc-100 text-base leading-tight">
                       {item.product?.name || "Producto eliminado"}
                     </div>
+                    {item.product?.folio && (
+                      <div className="text-[11px] font-mono font-semibold text-[#2277B4] dark:text-blue-400 mt-1">
+                        {item.product.folio}
+                      </div>
+                    )}
                     <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
                       {item.product?.description || item.product?.category}
                       {item.product?.users_count > 0 && (
@@ -295,51 +300,53 @@ export default function QuotePreview({
         </div>
       )}
 
-      <div className="px-8 md:px-12 pb-8 grid md:grid-cols-2 gap-6 text-sm text-zinc-600 dark:text-zinc-300">
-        <div className="rounded-xl border border-zinc-200 dark:border-dark-700 p-4">
-          <p className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold mb-8">
-            Aceptación del Cliente
-          </p>
-          <div className="border-t border-zinc-400 dark:border-zinc-600 pt-2 text-xs text-zinc-500 dark:text-zinc-400">
-            Nombre y firma
-          </div>
-        </div>
-        <div className="rounded-xl border border-zinc-200 dark:border-dark-700 p-4">
-          <p className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold mb-8">
-            Ejecutivo Responsable
-          </p>
-          <div className="border-t border-zinc-400 dark:border-zinc-600 pt-2 text-xs text-zinc-500 dark:text-zinc-400">
-            {quote.user?.full_name || "Sin asignar"}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-zinc-900 text-white p-8 md:p-12 text-xs border-t border-zinc-100 print:bg-white print:text-black print:border-t-2 print:border-black">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-4">
-          <div>
-            <h4 className="font-bold mb-1 uppercase text-emerald-400 print:text-black">
-              Información de Pago
-            </h4>
-            <p className="leading-relaxed text-zinc-400 print:text-zinc-600">
-              Banco: BBVA Bancomer
-              <br />
-              Cuenta: 0123456789
-              <br />
-              CLABE: 012000001234567890
-              <br />
-              Beneficiario: Business Control S.A. de C.V.
+      <div className="break-inside-avoid">
+        <div className="px-8 md:px-12 pb-8 grid md:grid-cols-2 gap-6 text-sm text-zinc-600 dark:text-zinc-300">
+          <div className="rounded-xl border border-zinc-200 dark:border-dark-700 p-4">
+            <p className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold mb-8">
+              Aceptación del Cliente
             </p>
+            <div className="border-t border-zinc-400 dark:border-zinc-600 pt-2 text-xs text-zinc-500 dark:text-zinc-400">
+              Nombre y firma
+            </div>
           </div>
-          <div className="text-right">
-            <p className="max-w-xs leading-relaxed text-zinc-500 print:text-zinc-600">
-              * Precios sujetos a cambio sin previo aviso.
-              <br />* Tiempo de entrega sujeto a disponibilidad.
+          <div className="rounded-xl border border-zinc-200 dark:border-dark-700 p-4">
+            <p className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400 font-semibold mb-8">
+              Ejecutivo Responsable
             </p>
+            <div className="border-t border-zinc-400 dark:border-zinc-600 pt-2 text-xs text-zinc-500 dark:text-zinc-400">
+              {quote.user?.full_name || "Sin asignar"}
+            </div>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-zinc-800 flex justify-between items-center text-zinc-600 print:border-zinc-200">
-          <div>Business Control System</div>
+        <div className="bg-zinc-900 text-white p-8 md:p-12 text-xs border-t border-zinc-100 print:bg-white print:text-black print:border-t-2 print:border-black">
+          <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+            <div>
+              <h4 className="font-bold mb-1 uppercase text-emerald-400 print:text-black">
+                Información de Pago
+              </h4>
+              <p className="leading-relaxed text-zinc-400 print:text-zinc-600">
+                Banco: BBVA Bancomer
+                <br />
+                Cuenta: 0123456789
+                <br />
+                CLABE: 012000001234567890
+                <br />
+                Beneficiario: Business Control S.A. de C.V.
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="max-w-xs leading-relaxed text-zinc-500 print:text-zinc-600">
+                * Precios sujetos a cambio sin previo aviso.
+                <br />* Tiempo de entrega sujeto a disponibilidad.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-8 pt-8 border-t border-zinc-800 flex justify-between items-center text-zinc-600 print:border-zinc-200">
+            <div>Business Control System</div>
+          </div>
         </div>
       </div>
     </div>

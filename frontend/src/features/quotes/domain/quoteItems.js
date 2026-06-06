@@ -31,6 +31,7 @@ export function createQuoteItem(product, quantity = 1, idFactory = createQuoteIt
   return {
     tempId: idFactory(),
     product_id: product.id,
+    folio: product.folio || "",
     name: product.name,
     price,
     discount: 0,

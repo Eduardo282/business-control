@@ -1,142 +1,118 @@
-import { useEffect, useMemo, useState } from "react";
-import { axiosClient } from "../../../actionsAPI/axiosClient";
-import { deleteContactProductApi } from "../../../actionsAPI/contacts.api";
+﻿import { useEffect, useMemo, useState } from "react";
+import { deleteQuoteApi, listQuotesApi } from "../../../actionsAPI/quotes.api";
 import { notificationService } from "../../../services/notificationService";
 import { exportRowsToExcel } from "../../../utils/excelExport";
 import { normalizeSearchText } from "../../../utils/formatters";
-import { usePolicyAssignment } from "./hooks/usePolicyAssignment.js";
-import { usePolicyDates } from "./hooks/usePolicyDates.js";
 
 const PAGE_SIZE = 5;
+const CURRENCY_FORMATTER = new Intl.NumberFormat("es-MX", {
+  style: "currency",
+  currency: "MXN",
+});
 
-export function inferPolicyType(product) {
-  if (product?.product_type === "POLICY") return "POLICY";
-  if (product?.product_type === "SERVICE") return "SERVICE";
-
-  const source = `${product?.name || ""} ${product?.category || ""}`
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-  return source.includes("poliza") ? "POLICY" : "SERVICE";
+export function formatSaleMoney(value) {
+  return CURRENCY_FORMATTER.format(Number(value) || 0);
 }
 
-export function getPolicyStatusLabel(status) {
-  const normalized = String(status || "")
-    .trim()
-    .toUpperCase();
-
-  if (normalized === "ACTIVE") return "ACTIVO";
-  if (normalized === "EXPIRING_SOON") return "Por Vencer";
-  if (normalized === "CANCELLED") return "Inactivo";
-  return "Vencido";
-}
-
-export function getPolicyStatusClass(status) {
-  const normalized = String(status || "")
-    .trim()
-    .toUpperCase();
-
-  if (normalized === "ACTIVE") {
-    return "text-emerald-700 dark:text-emerald-400";
-  }
-  if (normalized === "EXPIRING_SOON") {
-    return "text-amber-600 dark:text-amber-400";
-  }
-  if (normalized === "CANCELLED") {
-    return "text-zinc-600 dark:text-zinc-400";
-  }
-  return "text-red-600 dark:text-red-400";
-}
-
-export function formatPolicyDate(value) {
+export function formatSaleDate(value, options = {}) {
   if (!value) return "—";
-  return new Date(value).toLocaleDateString("es-MX");
+  return new Date(value).toLocaleDateString("es-MX", options);
 }
 
-function listAllPoliciesApi() {
-  return axiosClient
-    .post("", {
-      query: `
-      query {
-        policies {
-          id
-          license_key
-          start_date
-          expiration_date
-          status
-          product {
-            id
-            name
-            category
-            product_type
-          }
-          client {
-            id
-            business_name
-          }
-          contact {
-            id
-            full_name
-            email
-          }
-        }
-      }
-    `,
-    })
-    .then((res) => {
-      if (res.data.errors) throw new Error(res.data.errors[0].message);
-      return res.data.data.policies;
-    });
+export function formatSaleDateTime(value) {
+  if (!value) return "—";
+  return new Date(value).toLocaleString("es-MX", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}
+
+function getSaleDate(quote) {
+  return quote?.registered_at || quote?.created_at || null;
+}
+
+function getSaleItemsCount(quote) {
+  return (quote?.items || []).reduce((sum, item) => {
+    const quantity = Number(item?.quantity);
+    return sum + (Number.isFinite(quantity) && quantity > 0 ? quantity : 1);
+  }, 0);
+}
+
+export function getSaleProductsSummary(quote) {
+  const items = quote?.items || [];
+  const names = Array.from(
+    new Set(items.map((item) => item?.product?.name).filter(Boolean)),
+  );
+  const count = getSaleItemsCount(quote);
+
+  if (!names.length) {
+    return {
+      count,
+      title: "Sin productos",
+      detail: "Sin detalle de productos",
+    };
+  }
+
+  const visibleNames = names.slice(0, 2).join(", ");
+  const hiddenCount = Math.max(0, names.length - 2);
+
+  return {
+    count,
+    title: hiddenCount > 0 ? `${visibleNames} +${hiddenCount}` : visibleNames,
+    detail: `${count || names.length} producto(s) cotizado(s)`,
+  };
+}
+
+function isRegisteredPortalSale(quote) {
+  return (
+    Boolean(quote?.is_registered) &&
+    Boolean(quote?.is_sent_to_client_portal) &&
+    Boolean(quote?.contact)
+  );
+}
+
+function buildExportRows(sales) {
+  return sales.map((sale) => {
+    const productsSummary = getSaleProductsSummary(sale);
+    return {
+      venta: `Venta #${sale.id}`,
+      folio: sale.folio || "—",
+      cliente: sale.client?.business_name || "Sin cliente",
+      contacto: sale.contact?.full_name || "Sin contacto",
+      correo: sale.contact?.email || "—",
+      productos: productsSummary.title,
+      cantidad: productsSummary.count,
+      total: Number(sale.total) || 0,
+      fechaVenta: formatSaleDateTime(getSaleDate(sale)),
+    };
+  });
 }
 
 export function usePolicies() {
-  const [policies, setPolicies] = useState([]);
+  const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [activeFilterPickerField, setActiveFilterPickerField] = useState(null);
   const [filters, setFilters] = useState({
-    product: "",
     client: "",
-    vigencia: "",
-    status: "",
+    contact: "",
   });
+  const [selectedSale, setSelectedSale] = useState(null);
   const [sorting, setSorting] = useState([]);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
 
-  const [viewingFoliosGroup, setViewingFoliosGroup] = useState(null);
-  const [selectedFoliosByGroup, setSelectedFoliosByGroup] = useState({});
-
-  // 1. Assignment Hook
-  const {
-    assignModalOpen,
-    setAssignModalOpen,
-    assignTarget,
-    setAssignTarget,
-    assignFormInitial,
-    setAssignFormInitial,
-    openAssignModal,
-    closeAssignModal,
-  } = usePolicyAssignment();
-
-  // 2. Dates Hook
-  const {
-    editingRow,
-    setEditingRow,
-    startEditRow,
-  } = usePolicyDates(selectedFoliosByGroup);
-
   const load = async () => {
     setLoading(true);
+    setError("");
     try {
-      const data = await listAllPoliciesApi();
-      setPolicies(data);
+      const data = await listQuotesApi();
+      setSales((data || []).filter(isRegisteredPortalSale));
     } catch (e) {
-      setError(e.message);
+      setError(e.message || "No se pudieron cargar las ventas.");
     } finally {
       setLoading(false);
     }
@@ -148,275 +124,108 @@ export function usePolicies() {
 
   const clearFilters = () => {
     setQ("");
-    setFilters({
-      product: "",
-      client: "",
-      vigencia: "",
-      status: "",
-    });
-    setActiveFilterPickerField(null);
+    setFilters({ client: "", contact: "" });
   };
 
   const activeFilterCount =
-    Object.values(filters).filter((v) => v.trim() !== "").length +
+    Object.values(filters).filter((v) => String(v).trim() !== "").length +
     (q.trim() ? 1 : 0);
 
-  const openFilterPicker = (fieldName) => {
-    setActiveFilterPickerField(fieldName);
-  };
+  const filterOptions = useMemo(() => {
+    const clients = new Set();
+    const contacts = new Set();
 
-  const closeFilterPicker = () => {
-    setActiveFilterPickerField(null);
-  };
-
-  const applyFilterValue = (value) => {
-    if (!activeFilterPickerField) return;
-    setFilters((prev) => ({
-      ...prev,
-      [activeFilterPickerField]: value,
-    }));
-    closeFilterPicker();
-  };
-
-  useEffect(() => {
-    if (!showFilters) {
-      setActiveFilterPickerField(null);
-    }
-  }, [showFilters]);
-
-  const handleDelete = async (id, groupId) => {
-    const confirmed = await notificationService.confirm({
-      title: "¿Eliminar póliza?",
-      text: "Esta acción no se puede deshacer.",
-      confirmButtonText: "Sí, eliminar",
+    sales.forEach((sale) => {
+      if (sale.client?.business_name) clients.add(sale.client.business_name);
+      if (sale.contact?.full_name) contacts.add(sale.contact.full_name);
     });
-    if (!confirmed) return;
-
-    try {
-      await deleteContactProductApi(id);
-      setPolicies((prev) => prev.filter((p) => p.id !== id));
-      if (groupId) {
-        setSelectedFoliosByGroup((prev) => {
-          const next = { ...prev };
-          if (String(next[groupId]) === String(id)) {
-            delete next[groupId];
-          }
-          return next;
-        });
-      }
-      notificationService.toast({ title: "La póliza ha sido eliminada.", icon: "success" });
-    } catch (e) {
-      notificationService.error("Error", e.message || "Error eliminando la póliza");
-    }
-  };
-
-  const handleDeleteGroup = async (group) => {
-    const count = group?.count || 0;
-    if (!count) return;
-
-    const confirmed = await notificationService.confirm({
-      title: count === 1 ? "¿Eliminar póliza?" : `¿Eliminar ${count} pólizas?`,
-      text: "Esta acción eliminará todas las licencias del grupo y no se puede deshacer.",
-      confirmButtonText: count === 1 ? "Sí, eliminar" : `Sí, eliminar ${count}`,
-    });
-    if (!confirmed) return;
-
-    const ids = group.policyIds || [];
-    try {
-      await Promise.all(ids.map((id) => deleteContactProductApi(id)));
-      setPolicies((prev) => prev.filter((p) => !ids.includes(p.id)));
-      notificationService.toast({ title: `${count} póliza(s) eliminadas correctamente.`, icon: "success" });
-    } catch (e) {
-      notificationService.error("Error", e.message || "Error eliminando pólizas");
-    }
-  };
-
-  const groupedPolicies = useMemo(() => {
-    const makeKey = (p) => {
-      const productName = p.product?.name || "";
-      const clientName = p.client?.business_name || "";
-      const contactEmail = p.contact?.email || "";
-      return [productName, clientName, contactEmail].join("||");
-    };
-
-    const map = new Map();
-
-    for (const p of policies) {
-      const key = makeKey(p);
-      const existing = map.get(key);
-      if (!existing) {
-        map.set(key, {
-          id: key,
-          product: p.product,
-          client: p.client,
-          contact: p.contact,
-          start_date: p.start_date,
-          expiration_date: p.expiration_date,
-          status: p.status,
-          count: 1,
-          licenseKeys: p.license_key ? [p.license_key] : [],
-          policyIds: [p.id],
-          items: [p],
-        });
-      } else {
-        existing.count += 1;
-        existing.policyIds.push(p.id);
-        if (p.license_key) existing.licenseKeys.push(p.license_key);
-        existing.items.push(p);
-      }
-    }
-
-    return Array.from(map.values());
-  }, [policies]);
-
-  const filteredGroups = useMemo(() => {
-    const s = normalizeSearchText(q);
-    const hasFieldFilters = Object.values(filters).some((v) => v.trim() !== "");
-    if (!s && !hasFieldFilters) return groupedPolicies;
-
-    return groupedPolicies.reduce((acc, g) => {
-      const productName = g.product?.name || "";
-      const productCategory = g.product?.category || "";
-      const clientName = g.client?.business_name || "";
-      const policyType =
-        inferPolicyType(g.product) === "POLICY" ? "poliza" : "servicio";
-
-      const statusRaw = g.status || "";
-      const statusLabel = getPolicyStatusLabel(statusRaw).toLowerCase();
-      const items = g.items || [];
-      const itemStatusLabels = items.map((item) =>
-        getPolicyStatusLabel(item.status).toLowerCase(),
-      );
-      const statusLabels = [statusLabel, ...itemStatusLabels];
-
-      const locale = "es";
-      const startDate =
-        g.start_date ? new Date(g.start_date).toLocaleDateString(locale) : "";
-      const expDate =
-        g.expiration_date ?
-          new Date(g.expiration_date).toLocaleDateString(locale)
-        : "";
-
-      const folios = (g.licenseKeys || []).join(" ");
-      const matchQ =
-        !s ||
-        normalizeSearchText(
-          [
-            productName,
-            productCategory,
-            clientName,
-            policyType,
-            statusLabels.join(" "),
-            startDate,
-            expDate,
-            folios
-          ].join(" "),
-        ).includes(s);
-
-      const matchFilters =
-        !hasFieldFilters ||
-        ((!filters.product ||
-          normalizeSearchText(productName + " " + productCategory).includes(
-            normalizeSearchText(filters.product),
-          )) &&
-          (!filters.client ||
-            normalizeSearchText(clientName).includes(
-              normalizeSearchText(filters.client),
-            )) &&
-          (!filters.vigencia ||
-            normalizeSearchText(startDate + " " + expDate).includes(
-              normalizeSearchText(filters.vigencia),
-            )) &&
-          (!filters.status ||
-            statusLabels.some(
-              (label) =>
-                normalizeSearchText(label) === normalizeSearchText(filters.status),
-            )));
-
-      if (!matchQ || !matchFilters) return acc;
-
-      if (filters.status) {
-        const selectedStatus = normalizeSearchText(filters.status);
-        const matchedItem = items.find(
-          (item) =>
-            normalizeSearchText(getPolicyStatusLabel(item.status)) === selectedStatus,
-        );
-
-        if (matchedItem) {
-          acc.push({
-            ...g,
-            start_date: matchedItem.start_date || g.start_date,
-            expiration_date: matchedItem.expiration_date || g.expiration_date,
-            status: matchedItem.status || g.status,
-            items: [matchedItem, ...items.filter((item) => item.id !== matchedItem.id)],
-          });
-          return acc;
-        }
-      }
-
-      acc.push(g);
-      return acc;
-    }, []);
-  }, [groupedPolicies, q, filters]);
-
-  const exportableGroups = useMemo(() => {
-    return filteredGroups.map((group) => ({
-      servicioPoliza: group.product?.name || "—",
-      tipo: inferPolicyType(group.product) === "POLICY" ? "Póliza" : "Servicio",
-      cantidad: group.count || group.items?.length || 1,
-      folios: (group.licenseKeys || []).join(", ") || "—",
-      cliente: group.client?.business_name || "Sin cliente",
-      inicio: formatPolicyDate(group.start_date),
-      vence: formatPolicyDate(group.expiration_date),
-      estado: getPolicyStatusLabel(group.status),
-    }));
-  }, [filteredGroups]);
-
-  const exportSummary = useMemo(() => {
-    const totalRegistros = exportableGroups.length;
-    const totalFolios = exportableGroups.reduce(
-      (sum, row) => sum + (Number(row.cantidad) || 0),
-      0,
-    );
-    const totalServicios = exportableGroups
-      .filter((row) => row.tipo === "Servicio")
-      .reduce((sum, row) => sum + (Number(row.cantidad) || 0), 0);
-    const totalPolizas = exportableGroups
-      .filter((row) => row.tipo === "Póliza")
-      .reduce((sum, row) => sum + (Number(row.cantidad) || 0), 0);
 
     return {
-      totalRegistros,
-      totalFolios,
-      totalServicios,
-      totalPolizas,
+      clients: Array.from(clients).sort(),
+      contacts: Array.from(contacts).sort(),
     };
-  }, [exportableGroups]);
+  }, [sales]);
+
+  const filteredSales = useMemo(() => {
+    const search = normalizeSearchText(q);
+    const clientFilter = normalizeSearchText(filters.client);
+    const contactFilter = normalizeSearchText(filters.contact);
+
+    return sales.filter((sale) => {
+      const productsSummary = getSaleProductsSummary(sale);
+      const saleDate = getSaleDate(sale);
+      const searchableText = normalizeSearchText(
+        [
+          sale.id,
+          sale.folio,
+          sale.client?.business_name,
+          sale.contact?.full_name,
+          sale.contact?.email,
+          sale.user?.full_name,
+          productsSummary.title,
+          productsSummary.detail,
+          formatSaleDate(saleDate),
+          formatSaleMoney(sale.total),
+        ].join(" "),
+      );
+
+      if (search && !searchableText.includes(search)) return false;
+      if (
+        clientFilter &&
+        normalizeSearchText(sale.client?.business_name || "") !== clientFilter
+      ) {
+        return false;
+      }
+      if (
+        contactFilter &&
+        normalizeSearchText(sale.contact?.full_name || "") !== contactFilter
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [sales, q, filters]);
+
+  const metrics = useMemo(() => {
+    const totalAmount = filteredSales.reduce(
+      (sum, sale) => sum + (Number(sale.total) || 0),
+      0,
+    );
+    const uniqueClients = new Set(
+      filteredSales.map((sale) => sale.client?.business_name).filter(Boolean),
+    ).size;
+    const uniqueContacts = new Set(
+      filteredSales.map((sale) => sale.contact?.full_name).filter(Boolean),
+    ).size;
+
+    return {
+      totalSales: filteredSales.length,
+      totalAmount,
+      uniqueClients,
+      uniqueContacts,
+    };
+  }, [filteredSales]);
+
+  const exportRows = useMemo(() => buildExportRows(filteredSales), [filteredSales]);
 
   useEffect(() => {
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: 0,
-    }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [q, filters]);
 
   useEffect(() => {
     const maxPageIndex = Math.max(
       0,
-      Math.ceil(filteredGroups.length / pagination.pageSize) - 1,
+      Math.ceil(filteredSales.length / pagination.pageSize) - 1,
     );
 
     if (pagination.pageIndex > maxPageIndex) {
-      setPagination((prev) => ({
-        ...prev,
-        pageIndex: maxPageIndex,
-      }));
+      setPagination((prev) => ({ ...prev, pageIndex: maxPageIndex }));
     }
-  }, [filteredGroups.length, pagination.pageIndex, pagination.pageSize]);
+  }, [filteredSales.length, pagination.pageIndex, pagination.pageSize]);
 
   const handleExportPDF = async () => {
-    if (!exportableGroups.length) {
-      notificationService.info("Sin datos", "No hay registros para exportar.");
+    if (!exportRows.length) {
+      notificationService.info("Sin datos", "No hay ventas para exportar.");
       return;
     }
 
@@ -430,123 +239,129 @@ export function usePolicies() {
       const doc = new jsPDF({ orientation: "landscape" });
       doc.setFontSize(16);
       doc.setTextColor(26, 43, 76);
-      doc.text("Servicios y pólizas", 14, 16);
+      doc.text("Ventas por cotización", 14, 16);
       doc.setFontSize(10);
       doc.setTextColor(90, 90, 90);
       doc.text(`Exportado: ${new Date().toLocaleString("es-MX")}`, 14, 23);
       doc.text(
-        `Resumen: ${exportSummary.totalFolios} folio(s) en ${exportSummary.totalRegistros} grupo(s) · ${exportSummary.totalServicios} servicio(s) · ${exportSummary.totalPolizas} póliza(s)`,
+        `Resumen: ${metrics.totalSales} venta(s) · ${formatSaleMoney(metrics.totalAmount)} · ${metrics.uniqueClients} cliente(s)`,
         14,
         29,
       );
 
       autoTable(doc, {
         startY: 34,
-        head: [
-          [
-            "SERVICIO/PÓLIZA",
-            "TIPO",
-            "CANTIDAD",
-            "FOLIOS",
-            "CLIENTE",
-            "INICIO",
-            "VENCE",
-            "ESTADO",
-          ],
-        ],
-        body: exportableGroups.map((row) => [
-          row.servicioPoliza,
-          row.tipo,
-          row.cantidad,
-          row.folios,
+        head: [["VENTA", "FOLIO", "CLIENTE", "CONTACTO", "PRODUCTOS", "TOTAL", "FECHA"]],
+        body: exportRows.map((row) => [
+          row.venta,
+          row.folio,
           row.cliente,
-          row.inicio,
-          row.vence,
-          row.estado,
+          row.contacto,
+          row.productos,
+          formatSaleMoney(row.total),
+          row.fechaVenta,
         ]),
         theme: "grid",
         headStyles: { fillColor: [34, 119, 180] },
         styles: { fontSize: 8, cellPadding: 2.5 },
         columnStyles: {
-          0: { cellWidth: 42 },
-          1: { cellWidth: 18 },
-          2: { cellWidth: 18, halign: "center" },
-          3: { cellWidth: 48 },
-          4: { cellWidth: 38 },
+          2: { cellWidth: 42 },
+          3: { cellWidth: 38 },
+          4: { cellWidth: 48 },
+          5: { halign: "right" },
         },
       });
 
-      doc.save(
-        `Servicios_Polizas_${new Date().toISOString().slice(0, 10)}.pdf`,
-      );
+      doc.save(`Ventas_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (e) {
       notificationService.error("Error", e.message || "No se pudo generar el PDF.");
     }
   };
 
   const handleExportExcel = async () => {
-    if (!exportableGroups.length) {
-      notificationService.info("Sin datos", "No hay registros para exportar.");
+    if (!exportRows.length) {
+      notificationService.info("Sin datos", "No hay ventas para exportar.");
       return;
     }
 
     try {
-      const rows = exportableGroups.map((row) => ({
-        "Servicio/Póliza": row.servicioPoliza,
-        Tipo: row.tipo,
-        Cantidad: row.cantidad,
-        Folios: row.folios,
-        Cliente: row.cliente,
-        Inicio: row.inicio,
-        Vence: row.vence,
-        Estado: row.estado,
-      }));
-
       await exportRowsToExcel({
-        rows,
-        sheetName: "ServiciosPolizas",
-        fileName: `Servicios_Polizas_${new Date().toISOString().slice(0, 10)}.xlsx`,
+        rows: exportRows.map((row) => ({
+          Venta: row.venta,
+          Folio: row.folio,
+          Cliente: row.cliente,
+          Contacto: row.contacto,
+          Correo: row.correo,
+          Productos: row.productos,
+          Cantidad: row.cantidad,
+          Total: row.total,
+          "Fecha de venta": row.fechaVenta,
+        })),
+        sheetName: "Ventas",
+        fileName: `Ventas_${new Date().toISOString().slice(0, 10)}.xlsx`,
       });
     } catch (e) {
       notificationService.error("Error", e.message || "No se pudo generar el Excel.");
     }
   };
 
+  const openSaleSummary = (sale) => {
+    setSelectedSale(sale);
+  };
+
+  const closeSaleSummary = () => {
+    setSelectedSale(null);
+  };
+
+  const handleDeleteSale = async (sale) => {
+    if (!sale?.id) return;
+
+    const confirmed = await notificationService.confirm({
+      title: "¿Eliminar venta?",
+      text: `Se eliminará la venta ${sale.folio || `#${sale.id}`} de este listado.`,
+      confirmButtonText: "Sí, eliminar",
+    });
+    if (!confirmed) return;
+
+    try {
+      await deleteQuoteApi(sale.id);
+      setSales((prev) => prev.filter((item) => String(item.id) !== String(sale.id)));
+      if (String(selectedSale?.id) === String(sale.id)) {
+        setSelectedSale(null);
+      }
+      notificationService.toast({
+        title: "Venta eliminada correctamente.",
+        icon: "success",
+      });
+    } catch (e) {
+      notificationService.error("Error", e.message || "No se pudo eliminar la venta.");
+    }
+  };
+
   return {
-    policies,
+    sales,
     loading,
     error,
     q,
     setQ,
     showFilters,
     setShowFilters,
-    activeFilterPickerField,
     filters,
+    setFilters,
     sorting,
     setSorting,
     pagination,
     setPagination,
-    editingRow,
-    setEditingRow,
-    viewingFoliosGroup,
-    setViewingFoliosGroup,
-    selectedFoliosByGroup,
-    setSelectedFoliosByGroup,
-    assignModalOpen,
-    assignTarget,
-    assignFormInitial,
+    selectedSale,
     load,
     clearFilters,
     activeFilterCount,
-    openFilterPicker,
-    closeFilterPicker,
-    applyFilterValue,
-    openAssignModal,
-    closeAssignModal,
-    handleDelete,
-    handleDeleteGroup,
-    startEditRow,
-    filteredGroups,
+    filterOptions,
+    filteredSales,
+    metrics,
+    openSaleSummary,
+    closeSaleSummary,
+    handleDeleteSale,
     handleExportPDF,
     handleExportExcel,
   };

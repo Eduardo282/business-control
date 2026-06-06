@@ -85,9 +85,15 @@ function ProductAvatar({ name = "", category = "" }) {
 }
 
 function inferProductType(product) {
+  const explicitType = String(product?.product_type || "")
+    .trim()
+    .toUpperCase();
   const source = `${product?.name || ""} ${product?.category || ""}`;
   const normalized = normalizeCategory(source);
 
+  if (explicitType === "CONTPAQI" || normalized.includes("contpaqi")) return "CONTPAQI";
+  if (explicitType === "POLICY") return "POLICY";
+  if (explicitType === "SERVICE") return "SERVICE";
   if (normalized.includes("poliza")) return "POLICY";
   if (normalized.includes("servicio")) return "SERVICE";
   return "PRODUCT";
@@ -96,6 +102,7 @@ function inferProductType(product) {
 function getTypeFilterLabel(type) {
   if (type === "POLICY") return "Pólizas";
   if (type === "SERVICE") return "Servicios";
+  if (type === "CONTPAQI") return "CONTPAQi";
   if (type === "PRODUCT") return "Productos";
   return "Todos";
 }
@@ -180,7 +187,7 @@ export default function Products({ categoryFilter }) {
       if (q.trim()) {
         const needle = q.trim().toLowerCase();
         if (
-          ![p.name, p.category, p.description]
+          ![p.folio, p.name, p.category, p.description]
             .join(" ")
             .toLowerCase()
             .includes(needle)
@@ -213,7 +220,10 @@ export default function Products({ categoryFilter }) {
       const nCat = String(p.category || "")
         .trim()
         .toLowerCase();
-      const key = `${nName}|${nCat}`;
+      const nFolio = String(p.folio || "")
+        .trim()
+        .toLowerCase();
+      const key = `${nName}|${nCat}|${nFolio}`;
       if (!map.has(key)) {
         map.set(key, { ...p, _groupCount: 1, _groupItems: [p] });
       } else {
@@ -299,6 +309,16 @@ export default function Products({ categoryFilter }) {
               </span>
             </div>
           </div>
+        ),
+      },
+      {
+        accessorKey: "folio",
+        header: "FOLIO",
+        enableSorting: true,
+        cell: ({ getValue }) => (
+          <span className="font-mono text-[12px] font-bold text-[#2277B4] dark:text-blue-400 tracking-wider whitespace-nowrap">
+            {getValue() || "—"}
+          </span>
         ),
       },
       {
@@ -432,6 +452,7 @@ export default function Products({ categoryFilter }) {
       doc.addPage();
 
       const tableData = filteredProducts.map((p) => [
+        p.folio || "",
         p.name || "",
         p.category || "",
         `$${parseFloat(p.current_price || 0).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
@@ -443,6 +464,7 @@ export default function Products({ categoryFilter }) {
         startY: 15,
         head: [
           [
+            "FOLIO",
             "PRODUCTO",
             "CATEGORÍA",
             "PRECIO",
@@ -455,7 +477,7 @@ export default function Products({ categoryFilter }) {
         headStyles: { fillColor: [34, 119, 180] },
         styles: { fontSize: 9, cellPadding: 3 },
         columnStyles: {
-          4: { cellWidth: 70 }, // Da más espacio a la columna de descripción y hace que el texto baje de línea
+          5: { cellWidth: 70 }, // Da más espacio a la columna de descripción y hace que el texto baje de línea
         },
       });
 
@@ -468,6 +490,7 @@ export default function Products({ categoryFilter }) {
   const handleExportExcel = async () => {
     try {
       const data = filteredProducts.map((p) => ({
+        Folio: p.folio || "",
         Producto: p.name || "",
         Categoría: p.category || "",
         Precio: parseFloat(p.current_price || 0),
@@ -493,7 +516,7 @@ export default function Products({ categoryFilter }) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold text-zinc-800 dark:text-zinc-100 tracking-tight">
-              {categoryFilter ? categoryFilter + "s" : "Catálogo de Productos"}
+              {categoryFilter ? categoryFilter + "s" : "Catálogo de Productos o servicios"}
             </h1>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
               {categoryFilter
@@ -513,7 +536,7 @@ export default function Products({ categoryFilter }) {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Buscar por nombre, categoría…"
+                placeholder="Buscar por folio, nombre, categoría…"
                 className="w-full pl-4 pr-9 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm transition-colors"
               />
               {q && (
@@ -598,6 +621,7 @@ export default function Products({ categoryFilter }) {
                 >
                   <option value="">Todos</option>
                   <option value="PRODUCT">Productos</option>
+                  <option value="CONTPAQI">Productos CONTPAQi</option>
                   <option value="SERVICE">Servicios</option>
                   <option value="POLICY">Pólizas</option>
                 </select>

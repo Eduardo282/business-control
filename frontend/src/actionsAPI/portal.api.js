@@ -36,6 +36,7 @@ export async function getContactDataApi(contactId) {
              expiration_date
              status
              product {
+                 folio
                  name
                  category
                  description
@@ -62,6 +63,8 @@ export async function listPortalQuotesApi() {
         items {
           id
           product {
+            id
+            folio
             name
           }
           quantity
@@ -79,6 +82,7 @@ export async function listPortalProductsApi() {
     query {
       portalProducts {
         id
+        folio
         name
         category
         product_type
@@ -96,6 +100,7 @@ export async function requestQuoteApi(items) {
     mutation RequestQuote($input: RequestQuoteInput!) {
       requestQuote(input: $input) {
         id
+        folio
         status
       }
     }
@@ -119,6 +124,7 @@ export async function updatePortalQuoteRequestApi(id, items) {
     mutation UpdatePortalQuoteRequest($id: ID!, $input: RequestQuoteInput!) {
       updatePortalQuoteRequest(id: $id, input: $input) {
         id
+        folio
         status
         total
       }
@@ -126,4 +132,34 @@ export async function updatePortalQuoteRequestApi(id, items) {
   `;
   const data = await gql(query, { id, input: { items } }, portalAxiosClient);
   return data.updatePortalQuoteRequest;
+}
+
+export async function changePortalPasswordApi(contactId, currentPassword, newPassword) {
+  const query = `
+    mutation ChangePortalPassword($contactId: ID!, $currentPassword: String!, $newPassword: String!) {
+      changePortalPassword(contactId: $contactId, currentPassword: $currentPassword, newPassword: $newPassword)
+    }
+  `;
+  const data = await gql(query, { contactId, currentPassword, newPassword }, portalAxiosClient);
+  return data.changePortalPassword;
+}
+
+export async function requestPortalPasswordResetApi(email) {
+  const query = `
+    mutation RequestPortalPasswordReset($email: String!) {
+      requestPortalPasswordReset(email: $email)
+    }
+  `;
+  const data = await gql(query, { email }, portalAxiosClient);
+  return data.requestPortalPasswordReset;
+}
+
+export async function resetPortalPasswordApi(token, newPassword) {
+  const query = `
+    mutation ResetPortalPassword($token: String!, $newPassword: String!) {
+      resetPortalPassword(token: $token, newPassword: $newPassword)
+    }
+  `;
+  const data = await gql(query, { token, newPassword }, portalAxiosClient);
+  return data.resetPortalPassword;
 }

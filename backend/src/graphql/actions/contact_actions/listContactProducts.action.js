@@ -19,6 +19,7 @@ export async function listContactProductsAction(contact_id) {
       status: determineStatus(row.status, row.expiration_date),
       product: {
         id: row.product_id,
+        folio: row.product_folio,
         name: row.product_name,
         category: row.product_category,
         description: row.product_description,

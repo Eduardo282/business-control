@@ -12,6 +12,7 @@ import { updatePortalQuoteRequestAction } from "../../actions/quote_actions/upda
 import { rejectPortalQuoteAction } from "../../actions/quote_actions/rejectPortalQuote.action.js";
 import { rejectQuoteAction } from "../../actions/quote_actions/rejectQuote.action.js";
 import { updateQuoteStatusAction } from "../../actions/quote_actions/updateQuoteStatus.action.js";
+import { registerQuoteAction } from "../../actions/quote_actions/registerQuote.action.js";
 
 export const createQuote = async (_parent, { input }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
@@ -92,4 +93,9 @@ export const rejectQuote = async (_parent, { id }, ctx) => {
 export const updateQuoteStatus = async (_parent, { id, status }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
   return updateQuoteStatusAction(id, status);
+};
+
+export const registerQuote = async (_parent, { id }, ctx) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  return registerQuoteAction(id);
 };

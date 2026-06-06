@@ -47,6 +47,7 @@ export async function fetchFullQuote(quoteId) {
          qi.*,
          COALESCE(qi.base_unit_price, qi.unit_price) as base_unit_price,
          COALESCE(qi.discount, 0) as discount,
+         p.folio as product_folio,
          p.name as product_name,
          p.description as product_desc,
          p.category as product_category,

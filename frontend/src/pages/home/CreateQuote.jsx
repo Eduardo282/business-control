@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -54,10 +54,37 @@ import { useCreateQuote } from "./create-quote/hooks/useCreateQuote";
 const roundCurrency = roundMoney;
 const clampDiscount = normalizeDiscount;
 
+function normalizeProductText(value = "") {
+  return String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function inferQuoteProductType(product = {}) {
+  const explicitType = String(product.product_type || "")
+    .trim()
+    .toUpperCase();
+  const searchableText = normalizeProductText(
+    `${product.name || ""} ${product.category || ""}`,
+  );
+
+  if (explicitType === "CONTPAQI" || searchableText.includes("contpaqi")) {
+    return "CONTPAQI";
+  }
+  if (explicitType === "POLICY") return "POLICY";
+  if (explicitType === "SERVICE") return "SERVICE";
+  if (searchableText.includes("poliza")) return "POLICY";
+  if (searchableText.includes("servicio")) return "SERVICE";
+  return "PRODUCT";
+}
+
 export default function CreateQuote() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const fixedClientId = searchParams.get("client_id");
+  const [productTypeFilter, setProductTypeFilter] = useState("");
 
   const {
     clientSearch,
@@ -84,7 +111,7 @@ export default function CreateQuote() {
     showPreviewModal,
     setShowPreviewModal,
     folio,
-    setFolio,
+    ensureQuoteFolio,
     justAdded,
     generatedQuote,
     editingItemDraft,
@@ -121,7 +148,6 @@ export default function CreateQuote() {
     save,
     startNewQuote,
     selectedContact,
-    portalAutoContactId,
     visibleClientResults,
   } = useCreateQuote(navigate);
 
@@ -172,10 +198,17 @@ export default function CreateQuote() {
       {
         accessorKey: "name",
         header: "Producto",
-        cell: ({ getValue }) => (
-          <span className="font-medium text-light-text-primary dark:text-zinc-100">
-            {getValue()}
-          </span>
+        cell: ({ row, getValue }) => (
+          <div className="min-w-0">
+            <span className="font-medium text-light-text-primary dark:text-zinc-100">
+              {getValue()}
+            </span>
+            {row.original.folio && (
+              <div className="text-[11px] font-mono font-semibold text-[#2277B4] dark:text-blue-400 mt-0.5">
+                {row.original.folio}
+              </div>
+            )}
+          </div>
         ),
       },
       {
@@ -284,6 +317,7 @@ export default function CreateQuote() {
 
       return [
         original.name,
+        original.folio,
         original.quantity,
         original.price,
         original.discount,
@@ -315,6 +349,11 @@ export default function CreateQuote() {
             <div className="text-xs text-light-text-secondary dark:text-zinc-400 mt-0.5">
               {p.category}
             </div>
+            {p.folio && (
+              <div className="text-[11px] font-mono font-semibold text-[#2277B4] dark:text-blue-400 mt-0.5">
+                Folio: {p.folio}
+              </div>
+            )}
             {p.description && (
               <div className="text-xs text-light-text-secondary dark:text-zinc-500 mt-1 line-clamp-1">
                 {p.description}
@@ -398,12 +437,21 @@ export default function CreateQuote() {
     [items, justAdded],
   );
 
+  const filteredProdResults = useMemo(
+    () =>
+      productTypeFilter
+        ? prodResults.filter((product) => inferQuoteProductType(product) === productTypeFilter)
+        : prodResults,
+    [prodResults, productTypeFilter],
+  );
+
   const groupedProdResults = useMemo(() => {
     const map = new Map();
-    prodResults.forEach((p) => {
+    filteredProdResults.forEach((p) => {
       const nName = String(p.name || "").trim().toLowerCase();
       const nCat = String(p.category || "").trim().toLowerCase();
-      const key = `${nName}|${nCat}`;
+      const nFolio = String(p.folio || "").trim().toLowerCase();
+      const key = `${nName}|${nCat}|${nFolio}`;
       if (!map.has(key)) {
         map.set(key, { ...p, _groupCount: 1 });
       } else {
@@ -411,7 +459,7 @@ export default function CreateQuote() {
       }
     });
     return Array.from(map.values());
-  }, [prodResults]);
+  }, [filteredProdResults]);
 
   const productSearchTable = useReactTable({
     data: groupedProdResults,
@@ -599,16 +647,7 @@ export default function CreateQuote() {
             className={`sticky top-24${!selectedClient || items.length === 0 ? "opacity-40 pointer-events-none select-none grayscale" : "transition-all duration-500"}`}>
             <button
               onClick={() => {
-                const homoclave =
-                  (selectedClient?.rfc || "GEN")
-                    .replace(/[^A-Z0-9]/gi, "")
-                    .slice(-3)
-                    .toUpperCase() || "GEN";
-                const random = Math.random()
-                  .toString(36)
-                  .substring(2, 8)
-                  .toUpperCase();
-                setFolio(`COT-${homoclave}-${random}`);
+                ensureQuoteFolio();
                 setShowPreviewModal(true);
               }}
               disabled={loading || !selectedClient || items.length === 0}
@@ -655,7 +694,7 @@ export default function CreateQuote() {
                       setProdSearch(e.target.value);
                       setShowProductModal(true);
                     }}
-                    placeholder="Buscar producto o servicio…"
+                    placeholder="Buscar folio, producto o servicio…"
                     className="glass-input bg-light-bg dark:!bg-black/30 text-light-text-primary dark:text-white border-light-border dark:border-white/10"
                     style={{ paddingRight: "2.25rem" }}
                   />
@@ -1018,6 +1057,12 @@ export default function CreateQuote() {
         productSearchTable={productSearchTable}
         isProductSearching={isProductSearching}
         prodResults={prodResults}
+        filteredProductCount={groupedProdResults.length}
+        productTypeFilter={productTypeFilter}
+        onProductTypeFilterChange={(value) => {
+          setProductTypeFilter(value);
+          productSearchTable.setPageIndex(0);
+        }}
       />
 
       <QuotePreviewModal

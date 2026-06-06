@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS client_contacts (
 
 CREATE TABLE IF NOT EXISTS products (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  folio VARCHAR(30) NULL UNIQUE,
   client_id INT NULL,
   name VARCHAR(180) NOT NULL,
   category VARCHAR(80) NOT NULL,
@@ -92,6 +93,7 @@ CREATE TABLE IF NOT EXISTS products (
   description TEXT NULL,
   expires_at DATETIME NULL,
   is_active TINYINT DEFAULT 1,
+  update_version INT NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_products_client_id (client_id),
@@ -106,6 +108,17 @@ CREATE TABLE IF NOT EXISTS product_price_history (
   changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_history_product_id (product_id),
   CONSTRAINT fk_history_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS product_update_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  product_id INT NOT NULL,
+  update_version INT NOT NULL DEFAULT 1,
+  change_type VARCHAR(40) NOT NULL DEFAULT 'DETAILS',
+  summary VARCHAR(255) NULL,
+  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_product_update_history_product_id (product_id),
+  CONSTRAINT fk_product_update_history_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS client_products (
@@ -180,13 +193,15 @@ CREATE TABLE IF NOT EXISTS policies (
 
 CREATE TABLE IF NOT EXISTS quotes (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  folio VARCHAR(30) NULL UNIQUE,
+  folio VARCHAR(30) NULL,
   client_id INT NOT NULL,
   contact_id INT NULL,
   user_id INT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   status ENUM('PENDING', 'SENT', 'ACCEPTED', 'REJECTED', 'REQUESTED') DEFAULT 'PENDING',
+  is_registered TINYINT NOT NULL DEFAULT 1,
+  registered_at DATETIME NULL,
   notes TEXT NULL,
   is_sent_to_client_portal TINYINT DEFAULT 0,
   notification_read TINYINT DEFAULT 0,
@@ -196,6 +211,7 @@ CREATE TABLE IF NOT EXISTS quotes (
   INDEX idx_quotes_user_id (user_id),
   INDEX idx_quotes_contact_id (contact_id),
   INDEX idx_quotes_status (status),
+  UNIQUE KEY uq_quotes_folio (folio),
   CONSTRAINT fk_quotes_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
   CONSTRAINT fk_quotes_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_quotes_contact FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE SET NULL
@@ -247,6 +263,7 @@ CREATE TABLE IF NOT EXISTS support_messages (
 CREATE TABLE IF NOT EXISTS product_categories (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(120) NOT NULL UNIQUE,
+  product_type VARCHAR(20) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -289,13 +306,20 @@ CALL bc_add_column_if_missing('clients', 'has_client_portal_access', '`has_clien
 CALL bc_add_column_if_missing('clients', 'portal_password_hash', '`portal_password_hash` VARCHAR(255) NULL AFTER `has_client_portal_access`');
 CALL bc_add_column_if_missing('client_contacts', 'has_portal_access', '`has_portal_access` TINYINT DEFAULT 0 AFTER `position_title`');
 CALL bc_add_column_if_missing('client_contacts', 'portal_password_hash', '`portal_password_hash` VARCHAR(255) NULL AFTER `has_portal_access`');
+CALL bc_add_column_if_missing('products', 'folio', '`folio` VARCHAR(30) NULL AFTER `id`');
 CALL bc_add_column_if_missing('products', 'client_id', '`client_id` INT NULL AFTER `id`');
 CALL bc_add_column_if_missing('products', 'product_type', '`product_type` VARCHAR(20) NULL DEFAULT \'PRODUCT\' AFTER `category`');
 CALL bc_add_column_if_missing('products', 'users_count', '`users_count` INT DEFAULT 0 AFTER `current_price`');
 CALL bc_add_column_if_missing('products', 'expires_at', '`expires_at` DATETIME NULL AFTER `description`');
+CALL bc_add_column_if_missing('products', 'update_version', '`update_version` INT NOT NULL DEFAULT 1 AFTER `description`');
+CALL bc_add_column_if_missing('products', 'created_at', '`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER `update_version`');
+CALL bc_add_column_if_missing('products', 'updated_at', '`updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created_at`');
+CALL bc_add_column_if_missing('product_categories', 'product_type', '`product_type` VARCHAR(20) NULL AFTER `name`');
 CALL bc_add_column_if_missing('contact_products', 'client_id', '`client_id` INT NULL AFTER `id`');
 CALL bc_add_column_if_missing('quotes', 'folio', '`folio` VARCHAR(30) NULL AFTER `id`');
 CALL bc_add_column_if_missing('quotes', 'contact_id', '`contact_id` INT NULL AFTER `client_id`');
+CALL bc_add_column_if_missing('quotes', 'is_registered', '`is_registered` TINYINT NOT NULL DEFAULT 1 AFTER `status`');
+CALL bc_add_column_if_missing('quotes', 'registered_at', '`registered_at` DATETIME NULL AFTER `is_registered`');
 CALL bc_add_column_if_missing('quotes', 'is_sent_to_client_portal', '`is_sent_to_client_portal` TINYINT DEFAULT 0 AFTER `notes`');
 CALL bc_add_column_if_missing('quotes', 'notification_read', '`notification_read` TINYINT DEFAULT 0 AFTER `is_sent_to_client_portal`');
 CALL bc_add_column_if_missing('quotes', 'is_deleted_admin', '`is_deleted_admin` TINYINT DEFAULT 0 AFTER `notification_read`');
@@ -318,6 +342,101 @@ WHERE base_unit_price IS NULL;
 UPDATE quote_items
 SET discount = 0
 WHERE discount IS NULL;
+
+UPDATE quotes
+SET registered_at = COALESCE(created_at, NOW())
+WHERE is_registered = 1
+  AND registered_at IS NULL;
+
+UPDATE products
+SET update_version = 1
+WHERE update_version IS NULL OR update_version < 1;
+
+UPDATE products
+SET product_type = 'POLICY'
+WHERE UPPER(COALESCE(product_type, 'PRODUCT')) = 'PRODUCT'
+  AND (
+    UPPER(COALESCE(name, '')) LIKE '%POLIZA%'
+    OR UPPER(COALESCE(category, '')) LIKE '%POLIZA%'
+  );
+
+UPDATE products
+SET product_type = 'SERVICE'
+WHERE UPPER(COALESCE(product_type, 'PRODUCT')) = 'PRODUCT'
+  AND (
+    UPPER(COALESCE(name, '')) LIKE '%SERVICIO%'
+    OR UPPER(COALESCE(category, '')) LIKE '%SERVICIO%'
+  );
+
+UPDATE products
+SET product_type = 'CONTPAQI'
+WHERE UPPER(COALESCE(product_type, 'PRODUCT')) = 'PRODUCT'
+  AND UPPER(COALESCE(name, '')) LIKE '%CONTPAQI%';
+
+UPDATE products
+SET folio = CONCAT(
+  CASE
+    WHEN UPPER(COALESCE(product_type, 'PRODUCT')) = 'SERVICE' THEN 'SRV'
+    WHEN UPPER(COALESCE(product_type, 'PRODUCT')) = 'POLICY' THEN 'POL'
+    ELSE 'PRD'
+  END,
+  '-',
+  LPAD(id, 6, '0')
+)
+WHERE folio IS NULL OR TRIM(folio) = '';
+
+SET @bc_products_folio_unique_index := (
+  SELECT INDEX_NAME
+  FROM information_schema.STATISTICS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'products'
+    AND COLUMN_NAME = 'folio'
+    AND NON_UNIQUE = 0
+  LIMIT 1
+);
+SET @bc_products_folio_unique_sql := IF(
+  @bc_products_folio_unique_index IS NULL,
+  'ALTER TABLE products ADD UNIQUE INDEX uq_products_folio (folio)',
+  'SELECT 1'
+);
+PREPARE bc_products_folio_unique_stmt FROM @bc_products_folio_unique_sql;
+EXECUTE bc_products_folio_unique_stmt;
+DEALLOCATE PREPARE bc_products_folio_unique_stmt;
+
+SET @bc_quote_folio_unique_index := (
+  SELECT INDEX_NAME
+  FROM information_schema.STATISTICS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'quotes'
+    AND COLUMN_NAME = 'folio'
+    AND NON_UNIQUE = 0
+  LIMIT 1
+);
+SET @bc_drop_quote_folio_unique_sql := IF(
+  @bc_quote_folio_unique_index IS NULL,
+  'SELECT 1',
+  CONCAT('ALTER TABLE quotes DROP INDEX `', REPLACE(@bc_quote_folio_unique_index, '`', '``'), '`')
+);
+PREPARE bc_drop_quote_folio_unique_stmt FROM @bc_drop_quote_folio_unique_sql;
+EXECUTE bc_drop_quote_folio_unique_stmt;
+DEALLOCATE PREPARE bc_drop_quote_folio_unique_stmt;
+
+UPDATE quotes
+SET folio = CONCAT(
+  CHAR(65 + MOD(FLOOR((id - 1) / 17576000), 26)),
+  CHAR(65 + MOD(FLOOR((id - 1) / 676000), 26)),
+  CHAR(65 + MOD(FLOOR((id - 1) / 26000), 26)),
+  CHAR(65 + MOD(FLOOR((id - 1) / 1000), 26)),
+  LPAD(MOD(id, 1000), 3, '0')
+)
+WHERE id IS NOT NULL
+  AND (
+    folio IS NULL
+    OR TRIM(folio) = ''
+    OR folio NOT REGEXP '^[A-Z]{4}[0-9]{3}$'
+  );
+
+ALTER TABLE quotes ADD UNIQUE INDEX uq_quotes_folio (folio);
 
 DROP PROCEDURE IF EXISTS bc_add_column_if_missing;
 
@@ -506,6 +625,45 @@ INSERT INTO products (name, category, current_price, description, users_count, c
 SELECT 'CONTPAQi Respaldos', 'Herramientas de Productividad y Nube', 1290.00, 'Licencia oficial CONTPAQi', 1, NULL
 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'CONTPAQi Respaldos');
 
+UPDATE products
+SET product_type = 'POLICY'
+WHERE UPPER(COALESCE(product_type, 'PRODUCT')) = 'PRODUCT'
+  AND (
+    UPPER(COALESCE(name, '')) LIKE '%POLIZA%'
+    OR UPPER(COALESCE(category, '')) LIKE '%POLIZA%'
+  );
+
+UPDATE products
+SET product_type = 'SERVICE'
+WHERE UPPER(COALESCE(product_type, 'PRODUCT')) = 'PRODUCT'
+  AND (
+    UPPER(COALESCE(name, '')) LIKE '%SERVICIO%'
+    OR UPPER(COALESCE(category, '')) LIKE '%SERVICIO%'
+  );
+
+UPDATE products
+SET product_type = 'CONTPAQI'
+WHERE UPPER(COALESCE(product_type, 'PRODUCT')) = 'PRODUCT'
+  AND UPPER(COALESCE(name, '')) LIKE '%CONTPAQI%';
+
+INSERT INTO product_categories (name, product_type)
+SELECT
+  category AS name,
+  CASE
+    WHEN SUM(UPPER(COALESCE(product_type, 'PRODUCT')) = 'SERVICE') > 0 THEN 'SERVICE'
+    WHEN SUM(UPPER(COALESCE(product_type, 'PRODUCT')) = 'POLICY') > 0 THEN 'POLICY'
+    WHEN SUM(
+      UPPER(COALESCE(product_type, 'PRODUCT')) = 'CONTPAQI'
+      OR UPPER(COALESCE(name, '')) LIKE '%CONTPAQI%'
+    ) > 0 THEN 'CONTPAQI'
+    ELSE 'PRODUCT'
+  END AS product_type
+FROM products
+WHERE category IS NOT NULL AND TRIM(category) <> ''
+GROUP BY category
+ON DUPLICATE KEY UPDATE
+  product_type = COALESCE(product_categories.product_type, VALUES(product_type));
+
 INSERT INTO product_price_history (product_id, price)
 SELECT p.id, p.current_price
 FROM products p
@@ -513,6 +671,32 @@ WHERE NOT EXISTS (
   SELECT 1
   FROM product_price_history h
   WHERE h.product_id = p.id
+);
+
+UPDATE products
+SET folio = CONCAT(
+  CASE
+    WHEN UPPER(COALESCE(product_type, 'PRODUCT')) = 'SERVICE' THEN 'SRV'
+    WHEN UPPER(COALESCE(product_type, 'PRODUCT')) = 'POLICY' THEN 'POL'
+    ELSE 'PRD'
+  END,
+  '-',
+  LPAD(id, 6, '0')
+)
+WHERE folio IS NULL OR TRIM(folio) = '';
+
+INSERT INTO product_update_history (product_id, update_version, change_type, summary, changed_at)
+SELECT
+  p.id,
+  GREATEST(COALESCE(p.update_version, 1), 1),
+  'CREATED',
+  'Registro inicial del producto',
+  COALESCE(p.created_at, CURRENT_TIMESTAMP)
+FROM products p
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM product_update_history puh
+  WHERE puh.product_id = p.id
 );
 
 SET @contact_id := (SELECT id FROM client_contacts WHERE email = 'contacto@cliente.com' LIMIT 1);
@@ -604,6 +788,7 @@ WHERE pol.id IS NULL
   AND LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) = 'poliza personalizada';
 
 SET @quote_product_id := (SELECT id FROM products WHERE name = 'Licencia Anual ERP' LIMIT 1);
+SET @quote_demo_folio := 'DEMO001';
 
 INSERT INTO quotes (
   folio,
@@ -617,7 +802,7 @@ INSERT INTO quotes (
   notification_read
 )
 SELECT
-  'COT-DEMO-001',
+  @quote_demo_folio,
   @client_id,
   @contact_id,
   @admin_id,
@@ -629,9 +814,9 @@ SELECT
 WHERE @client_id IS NOT NULL
   AND @admin_id IS NOT NULL
   AND @quote_product_id IS NOT NULL
-  AND NOT EXISTS (SELECT 1 FROM quotes WHERE folio = 'COT-DEMO-001');
+  AND NOT EXISTS (SELECT 1 FROM quotes WHERE notes = 'Cotizacion demo generada desde el setup SQL.');
 
-SET @quote_id := (SELECT id FROM quotes WHERE folio = 'COT-DEMO-001' LIMIT 1);
+SET @quote_id := (SELECT id FROM quotes WHERE notes = 'Cotizacion demo generada desde el setup SQL.' LIMIT 1);
 
 INSERT INTO quote_items (
   quote_id,

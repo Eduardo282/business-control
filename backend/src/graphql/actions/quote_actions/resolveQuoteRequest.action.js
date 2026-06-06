@@ -6,6 +6,7 @@ import {
   resolveQuoteRequest,
 } from "../../../repositories/quote.repository.js";
 import { quotePricingService } from "../../../services/quotePricing.service.js";
+import { resolveQuoteFolio } from "./quoteFolio.js";
 
 export const resolveQuoteRequestAction = async (requestId, input, user) => {
   const { client_id, contact_id, items, notes, folio: inputFolio } = input;
@@ -32,9 +33,11 @@ export const resolveQuoteRequestAction = async (requestId, input, user) => {
 
     // 3. Actualizar la cotización existente (REQUESTED -> PENDING) y asignar usuario admin
     const userId = user.id || user.userId;
-    const folio =
-      inputFolio ||
-      `COT-GEN-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const folio = await resolveQuoteFolio({
+      explicitFolio: inputFolio || existing.folio,
+      queryRunner: connection,
+      excludeQuoteId: requestId,
+    });
     await resolveQuoteRequest({
       quoteId: requestId,
       folio,
@@ -62,6 +65,7 @@ export const resolveQuoteRequestAction = async (requestId, input, user) => {
       subtotal: pricing.subtotal,
       iva: pricing.iva,
       status: "ACCEPTED",
+      is_registered: false,
       notes,
       created_at: new Date(),
     };

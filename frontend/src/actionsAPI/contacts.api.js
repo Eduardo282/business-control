@@ -70,6 +70,7 @@ export async function listContactProductsApi(contactId) {
                 status
                 product {
                     id
+                    folio
                     name
                 }
             }

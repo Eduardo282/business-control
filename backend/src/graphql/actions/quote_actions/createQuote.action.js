@@ -1,6 +1,7 @@
 import { createQuoteWithItems, fetchProductsForQuote } from "../../../repositories/quote.repository.js";
 import { createQuoteActor, createQuoteDraft } from "../../../services/quoteDraft.service.js";
 import { quotePricingService } from "../../../services/quotePricing.service.js";
+import { resolveQuoteFolio } from "./quoteFolio.js";
 
 export const createQuoteAction = async (input, user) => {
   const quoteDraft = createQuoteDraft(input);
@@ -25,9 +26,9 @@ export const createQuoteFromDraft = async ({
     products,
   });
 
-  const folio =
-    quoteDraft.folio ||
-    `COT-GEN-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+  const folio = await resolveQuoteFolio({
+    explicitFolio: quoteDraft.folio,
+  });
 
   const quoteId = await createQuoteWithItems({
     folio,
@@ -48,8 +49,8 @@ export const createQuoteFromDraft = async ({
     subtotal: pricing.subtotal,
     iva: pricing.iva,
     status: "PENDING",
+    is_registered: false,
     notes: quoteDraft.notes,
     created_at: new Date(),
   };
 };
-

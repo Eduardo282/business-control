@@ -1,6 +1,11 @@
 import { loginAction } from "../../actions/user_actions/login.action.js";
 import { registerUserAction } from "../../actions/user_actions/registerUser.action.js";
 import { loginContactAction } from "../../actions/contact_actions/loginContact.action.js";
+import {
+  changePortalPasswordAction,
+  requestPortalPasswordResetAction,
+  resetPortalPasswordAction,
+} from "../../actions/contact_actions/portalPassword.action.js";
 import { env } from "../../../config/env.js";
 import { timingSafeEqual } from "node:crypto";
 
@@ -29,4 +34,16 @@ export const verifyMasterPassword = async (_parent, { password }) => {
 
   if (provided.length !== expected.length) return false;
   return timingSafeEqual(provided, expected);
+};
+
+export const changePortalPassword = async (_parent, { contactId, currentPassword, newPassword }) => {
+  return changePortalPasswordAction({ contactId, currentPassword, newPassword });
+};
+
+export const requestPortalPasswordReset = async (_parent, { email }) => {
+  return requestPortalPasswordResetAction({ email });
+};
+
+export const resetPortalPassword = async (_parent, { token, newPassword }) => {
+  return resetPortalPasswordAction({ token, newPassword });
 };

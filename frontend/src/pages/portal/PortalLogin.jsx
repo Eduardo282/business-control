@@ -140,6 +140,13 @@ export default function PortalLogin() {
                 </span>
               }
             </button>
+            <div className="text-center pt-2">
+              <Link 
+                to="/portal/forgot-password" 
+                className="text-sm text-[#235b42] hover:underline font-medium">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
           </form>
 
           {/* Footer */}

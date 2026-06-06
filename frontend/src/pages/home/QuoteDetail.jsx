@@ -1,6 +1,6 @@
 import { useParams, Link, useLocation } from "react-router-dom";
 import Button from "../../components/ui/Button";
-import { Mail, ArrowLeft, Printer } from "@icons";
+import { Mail, ArrowLeft, Printer, CheckCircle2 } from "@icons";
 import { useQuoteDetail, getQuoteFolio } from "./quotes/useQuoteDetail";
 import EmailQuoteModal from "./quotes/EmailQuoteModal";
 import QuotePreview from "./quotes/QuotePreview";
@@ -20,12 +20,14 @@ export default function QuoteDetail() {
     emailError,
     emailSuccess,
     sendingToContact,
+    registeringQuote,
     quickNotice,
     quotePreviewRef,
     load,
     handlePrint,
     handleSendEmail,
     handleSendToQuoteContact,
+    handleRegisterQuote,
     handleExportWord,
   } = useQuoteDetail(id, isPortal);
 
@@ -64,6 +66,11 @@ export default function QuoteDetail() {
     : (quote.client?.contacts || []).find((c) => c.email);
   const preferredContactEmail = preferredContact?.email || "";
 
+  let displayStatus = String(quote.status || "PENDING").toUpperCase();
+  if (displayStatus !== "REJECTED" && displayStatus !== "REQUESTED") {
+    displayStatus = quote.is_registered ? "ACCEPTED" : "PENDING";
+  }
+
   return (
     <div className="space-y-6 animate-fade-in pb-20 print:p-0 print:space-y-0 relative">
       {/* Fondo decorativo */}
@@ -98,35 +105,54 @@ export default function QuoteDetail() {
             </h2>
             <span
               className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide border ${
-                String(quote.status).toUpperCase() === "PENDING"
+                displayStatus === "PENDING"
                   ? "text-yellow-600 border-yellow-600/30 bg-yellow-50 dark:bg-yellow-500/10"
-                  : String(quote.status).toUpperCase() === "REQUESTED"
+                  : displayStatus === "REQUESTED"
                   ? "text-blue-600 border-blue-600/30 bg-blue-50 dark:bg-blue-500/10"
-                  : String(quote.status).toUpperCase() === "SENT"
+                  : displayStatus === "SENT"
                   ? "text-indigo-600 border-indigo-600/30 bg-indigo-50 dark:bg-indigo-500/10"
-                  : String(quote.status).toUpperCase() === "ACCEPTED"
+                  : displayStatus === "ACCEPTED"
                   ? "text-emerald-600 border-emerald-600/30 bg-emerald-50 dark:bg-emerald-500/10"
-                  : String(quote.status).toUpperCase() === "REJECTED"
+                  : displayStatus === "REJECTED"
                   ? "text-red-600 border-red-600/30 bg-red-50 dark:bg-red-500/10"
                   : "text-zinc-500 border-zinc-200 dark:border-white/10"
               }`}
             >
-              {String(quote.status).toUpperCase() === "PENDING"
+              {displayStatus === "PENDING"
                 ? "PENDIENTE"
-                : String(quote.status).toUpperCase() === "REQUESTED"
+                : displayStatus === "REQUESTED"
                 ? "SOLICITADA"
-                : String(quote.status).toUpperCase() === "SENT"
+                : displayStatus === "SENT"
                 ? "ENVIADA"
-                : String(quote.status).toUpperCase() === "ACCEPTED"
+                : displayStatus === "ACCEPTED"
                 ? "ACEPTADA"
-                : String(quote.status).toUpperCase() === "REJECTED"
+                : displayStatus === "REJECTED"
                 ? "RECHAZADA"
-                : quote.status}
+                : displayStatus}
             </span>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:justify-end">
+          {!isPortal && (
+            <Button
+              variant={quote.is_registered ? "ghost" : "primary"}
+              onClick={handleRegisterQuote}
+              disabled={quote.is_registered || registeringQuote}
+              className={`flex-1 sm:flex-none !px-3 !py-1.5 !rounded-md !text-[13px] !font-semibold !border !transition-all !duration-150 disabled:!opacity-70 disabled:!cursor-not-allowed !flex !items-center !gap-2 !justify-center ${
+                quote.is_registered
+                  ? "!bg-emerald-50 dark:!bg-emerald-500/10 !text-emerald-700 dark:!text-emerald-300 !border-emerald-200 dark:!border-emerald-500/30 !shadow-none"
+                  : "!shadow-sm"
+              }`}
+            >
+              <CheckCircle2 size={16} />
+              {quote.is_registered
+                ? "REGISTRADO"
+                : registeringQuote
+                ? "Registrando…"
+                : "Registrar y enviar al portal"}
+            </Button>
+          )}
           {!isPortal && (
             <Button
               variant="ghost"

@@ -26,7 +26,12 @@ export function buildQuotePdfHtml(quote) {
       const lineTotal = Number(item.total) || discountedUnitPrice * quantity;
       const productName = escapeHtml(item.product_name);
       const productDescription = escapeHtml(
-        item.product_desc || item.product_category || "",
+        [
+          item.product_folio ? `Folio: ${item.product_folio}` : "",
+          item.product_desc || item.product_category || "",
+        ]
+          .filter(Boolean)
+          .join(" | "),
       );
 
       return `

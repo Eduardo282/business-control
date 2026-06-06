@@ -1,0 +1,2 @@
+ALTER TABLE quotes
+  ADD COLUMN is_registered TINYINT NOT NULL DEFAULT 1 AFTER status;

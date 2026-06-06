@@ -16,6 +16,9 @@ export const notificationService = {
       text,
       icon: "success",
       confirmButtonColor: "#4f46e5", // Indigo-600
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
     });
   },
 
@@ -30,6 +33,9 @@ export const notificationService = {
       text,
       icon: "error",
       confirmButtonColor: "#4f46e5",
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
     });
   },
 
@@ -44,6 +50,9 @@ export const notificationService = {
       text,
       icon: "info",
       confirmButtonColor: "#4f46e5",
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
     });
   },
 
@@ -58,6 +67,9 @@ export const notificationService = {
       text,
       icon: "warning",
       confirmButtonColor: "#4f46e5",
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
     });
   },
 

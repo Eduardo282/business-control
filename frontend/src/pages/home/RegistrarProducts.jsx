@@ -23,6 +23,7 @@ import {
 } from "@icons";
 import Input from "../../components/ui/Input";
 import {
+  assignCategoryTypeApi,
   createProductApi,
   listCategoriesApi,
   createCategoryApi,
@@ -256,6 +257,69 @@ function categoryMatches(sourceCategory, selectedCategory) {
   return source === selected || selected.includes(source) || source.includes(selected);
 }
 
+const PRODUCT_TYPE_VALUES = ["PRODUCT", "CONTPAQI", "SERVICE", "POLICY"];
+const PRODUCT_TYPE_PRIORITY = {
+  PRODUCT: 1,
+  CONTPAQI: 2,
+  SERVICE: 3,
+  POLICY: 3,
+};
+
+function normalizeCatalogProductType(value) {
+  const normalized = String(value || "").trim().toUpperCase();
+  if (normalized === "CONTPAQI" || normalized === "CONTPAQI_PRODUCT") return "CONTPAQI";
+  if (PRODUCT_TYPE_VALUES.includes(normalized)) return normalized;
+  return "";
+}
+
+function inferProductType(product = {}) {
+  const explicitType = normalizeCatalogProductType(product.product_type);
+  if (explicitType) return explicitType;
+
+  const source = `${product?.name || ""} ${product?.category || ""}`;
+  const normalized = normalizeServicePolicyCategory(source);
+
+  if (normalized.includes("poliza")) return "POLICY";
+  if (normalized.includes("servicio")) return "SERVICE";
+  if (normalized.includes("contpaqi")) return "CONTPAQI";
+  return "PRODUCT";
+}
+
+function getCategoryTypeKey(category = "") {
+  return normalizeServicePolicyCategory(category);
+}
+
+function shouldReplaceCategoryType(currentType, nextType) {
+  if (!currentType) return true;
+  return (PRODUCT_TYPE_PRIORITY[nextType] || 0) >= (PRODUCT_TYPE_PRIORITY[currentType] || 0);
+}
+
+function toCatalogItem(product = {}) {
+  return {
+    id: String(product.id || crypto.randomUUID()),
+    folio: product.folio || "",
+    name: product.name,
+    category: product.category,
+    price: parseFloat(product.current_price || product.price || 0),
+    max_users: Math.max(1, parseInt(product.users_count || product.max_users || 1, 10) || 1),
+    description: product.description || "",
+    product_type: inferProductType(product),
+    isCustom: true,
+  };
+}
+
+function upsertCatalogItem(list, nextItem) {
+  const nextName = normalizeServicePolicyCategory(nextItem.name);
+  const nextCategory = normalizeServicePolicyCategory(nextItem.category);
+  const filtered = list.filter((item) => {
+    const itemName = normalizeServicePolicyCategory(item.name);
+    const itemCategory = normalizeServicePolicyCategory(item.category);
+    return !(itemName === nextName && itemCategory === nextCategory);
+  });
+
+  return [nextItem, ...filtered];
+}
+
 export default function RegistrarProducts() {
   const [searchParams] = useSearchParams();
   const fixedClientId = searchParams.get("client_id") || "";
@@ -266,6 +330,7 @@ export default function RegistrarProducts() {
     price: 0,
     users_count: 1,
     description: "",
+    product_type: "PRODUCT",
   });
 
   const [currentMaxUsers, setCurrentMaxUsers] = useState(30);
@@ -288,6 +353,7 @@ export default function RegistrarProducts() {
   const [customGeneralProducts, setCustomGeneralProducts] = useState([]);
   const [customContpaqiProducts, setCustomContpaqiProducts] = useState([]);
   const [customServices, setCustomServices] = useState([]);
+  const [categoryTypeByName, setCategoryTypeByName] = useState({});
 
   const prevCustomCategoriesRef = useRef([]);
 
@@ -301,87 +367,66 @@ export default function RegistrarProducts() {
       const apiProducts = await listProductsApi();
       const apiCategories = apiProducts.map((p) => p.category);
 
-      const getType = (p) => {
-        const source = `${p?.name || ""} ${p?.category || ""}`;
-        const normalized = source
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .toLowerCase()
-          .trim();
-
-        if (normalized.includes("poliza")) return "POLICY";
-        if (normalized.includes("servicio")) return "SERVICE";
-        return "PRODUCT";
-      };
+      setCategoryTypeByName((prev) => {
+        const next = { ...prev };
+        apiProducts.forEach((product) => {
+          const categoryKey = getCategoryTypeKey(product.category);
+          const productType = inferProductType(product);
+          if (!categoryKey) return;
+          if (shouldReplaceCategoryType(next[categoryKey], productType)) {
+            next[categoryKey] = productType;
+          }
+        });
+        return next;
+      });
 
       // Services
-      const apiServices = apiProducts.filter((p) => getType(p) === "SERVICE");
+      const apiServices = apiProducts.filter((p) => inferProductType(p) === "SERVICE");
       if (apiServices.length > 0) {
         setCustomServices((prev) => {
-          const map = new Map();
-          if (prev) prev.forEach((s) => map.set(normalizeServicePolicyCategory(s.name), s));
+          let next = prev || [];
           apiServices.forEach((apiService) => {
-            const nName = normalizeServicePolicyCategory(apiService.name);
-            if (!map.has(nName)) {
-              map.set(nName, {
-                id: apiService.id || crypto.randomUUID(),
-                name: apiService.name,
-                category: apiService.category,
-                price: parseFloat(apiService.current_price || apiService.price || 0),
-                description: apiService.description || "",
-              });
-            }
+            next = upsertCatalogItem(next, toCatalogItem(apiService));
           });
-          return Array.from(map.values());
+          return next;
         });
       }
 
       // Policies
-      const apiPolicies = apiProducts.filter((p) => getType(p) === "POLICY");
+      const apiPolicies = apiProducts.filter((p) => inferProductType(p) === "POLICY");
       if (apiPolicies.length > 0) {
         setCustomPolicies((prev) => {
-          const map = new Map();
-          if (prev) prev.forEach((s) => map.set(normalizeServicePolicyCategory(s.name), s));
+          let next = prev || [];
           apiPolicies.forEach((apiPolicy) => {
-            const nName = normalizeServicePolicyCategory(apiPolicy.name);
-            if (!map.has(nName)) {
-              map.set(nName, {
-                id: apiPolicy.id || crypto.randomUUID(),
-                name: apiPolicy.name,
-                category: apiPolicy.category,
-                price: parseFloat(apiPolicy.current_price || apiPolicy.price || 0),
-                description: apiPolicy.description || "",
-              });
-            }
+            next = upsertCatalogItem(next, toCatalogItem(apiPolicy));
           });
-          return Array.from(map.values());
+          return next;
+        });
+      }
+
+      // Custom CONTPAQi products
+      const apiContpaqiProducts = apiProducts.filter((p) => inferProductType(p) === "CONTPAQI");
+      if (apiContpaqiProducts.length > 0) {
+        setCustomContpaqiProducts((prev) => {
+          let next = prev || [];
+          apiContpaqiProducts.forEach((apiProduct) => {
+            next = upsertCatalogItem(next, toCatalogItem(apiProduct));
+          });
+          return next;
         });
       }
 
       // General Products
       const apiGeneralProducts = apiProducts.filter((p) => {
-        const type = getType(p);
-        if (type === "SERVICE" || type === "POLICY") return false;
-        if (p.name?.toUpperCase().includes("CONTPAQI")) return false;
-        return true;
+        return inferProductType(p) === "PRODUCT";
       });
       if (apiGeneralProducts.length > 0) {
         setCustomGeneralProducts((prev) => {
-          const map = new Map();
-          if (prev) prev.forEach((s) => map.set(normalizeServicePolicyCategory(s.name), s));
+          let next = prev || [];
           apiGeneralProducts.forEach((apiProduct) => {
-            const nName = normalizeServicePolicyCategory(apiProduct.name);
-            if (!map.has(nName)) {
-              map.set(nName, {
-                id: apiProduct.id || crypto.randomUUID(),
-                name: apiProduct.name,
-                category: apiProduct.category,
-                price: parseFloat(apiProduct.current_price || apiProduct.price || 0),
-                description: apiProduct.description || "",
-              });
-            }
+            next = upsertCatalogItem(next, toCatalogItem(apiProduct));
           });
-          return Array.from(map.values());
+          return next;
         });
       }
 
@@ -400,6 +445,8 @@ export default function RegistrarProducts() {
   }, []);
 
   const selectedCategory = String(newProduct.category || "").trim();
+  const selectedCategoryType =
+    categoryTypeByName[getCategoryTypeKey(selectedCategory)] || "";
 
   const builtInCategories = useMemo(() => {
     const values = [];
@@ -433,6 +480,7 @@ export default function RegistrarProducts() {
           price: Math.max(0, Number(item.price) || 0),
           max_users: Math.max(1, parseInt(item.max_users, 10) || 30),
           description: item.description || "",
+          product_type: "CONTPAQI",
           isCustom: false,
         }))
       ),
@@ -465,6 +513,8 @@ export default function RegistrarProducts() {
   const isServiceMode = useMemo(() => {
     if (activeFormMode === "SERVICE" || activeFormMode === "POLICY") return true;
     if (activeFormMode === "PRODUCT" || activeFormMode === "CONTPAQI") return false;
+    if (selectedCategoryType === "SERVICE" || selectedCategoryType === "POLICY") return true;
+    if (selectedCategoryType === "PRODUCT" || selectedCategoryType === "CONTPAQI") return false;
 
     const normalizedCategory = normalizeServicePolicyCategory(newProduct.category);
     return (
@@ -472,20 +522,25 @@ export default function RegistrarProducts() {
       normalizedCategory.includes("servicio") ||
       normalizedCategory.includes("poliza")
     );
-  }, [selectedSourceType, newProduct.category, activeFormMode]);
+  }, [selectedSourceType, newProduct.category, activeFormMode, selectedCategoryType]);
 
   const productTypeLabel = useMemo(() => {
     if (activeFormMode === "POLICY") return "Póliza";
     if (activeFormMode === "SERVICE") return "Servicio";
-    if (activeFormMode === "CONTPAQI") return "Producto";
+    if (activeFormMode === "CONTPAQI") return "Producto CONTPAQi";
     if (activeFormMode === "PRODUCT") return "Producto";
+    if (selectedCategoryType === "POLICY") return "Póliza";
+    if (selectedCategoryType === "SERVICE") return "Servicio";
+    if (selectedCategoryType === "CONTPAQI") return "Producto CONTPAQi";
+    if (selectedCategoryType === "PRODUCT") return "Producto";
 
     const normalizedCategory = normalizeServicePolicyCategory(newProduct.category);
     if (normalizedCategory.includes("poliza")) return "Póliza";
     if (normalizedCategory.includes("servicio")) return "Servicio";
+    if (normalizedCategory.includes("contpaqi")) return "Producto CONTPAQi";
 
     return "Producto";
-  }, [activeFormMode, newProduct.category]);
+  }, [activeFormMode, newProduct.category, selectedCategoryType]);
 
   const formLabels = useMemo(() => {
     if (activeFormMode === "POLICY")
@@ -496,6 +551,10 @@ export default function RegistrarProducts() {
       return { nameLabel: "NOMBRE DEL PRODUCTO", button: "Registrar Producto" };
     if (activeFormMode === "PRODUCT")
       return { nameLabel: "NOMBRE DEL PRODUCTO", button: "Registrar Producto" };
+    if (selectedCategoryType === "POLICY")
+      return { nameLabel: "NOMBRE DE LA PÓLIZA", button: "Registrar Póliza" };
+    if (selectedCategoryType === "SERVICE")
+      return { nameLabel: "NOMBRE DEL SERVICIO", button: "Registrar Servicio" };
 
     if (isServiceMode) {
       const normalizedCategory = normalizeServicePolicyCategory(newProduct.category);
@@ -504,7 +563,7 @@ export default function RegistrarProducts() {
       return { nameLabel: "NOMBRE DEL SERVICIO", button: "Registrar Servicio" };
     }
     return { nameLabel: "NOMBRE DEL PRODUCTO", button: "Registrar Producto" };
-  }, [activeFormMode, isServiceMode, newProduct.category]);
+  }, [activeFormMode, isServiceMode, newProduct.category, selectedCategoryType]);
 
   // Sync categories from API
   useEffect(() => {
@@ -514,6 +573,15 @@ export default function RegistrarProducts() {
         setCustomCategories((prev) =>
           uniqueByNormalizedValue([...cats.map((c) => c.name), ...prev])
         );
+        setCategoryTypeByName((prev) => {
+          const next = { ...prev };
+          cats.forEach((category) => {
+            const key = getCategoryTypeKey(category.name);
+            const type = normalizeCatalogProductType(category.product_type);
+            if (key && type) next[key] = type;
+          });
+          return next;
+        });
       } catch (e) {
         console.warn("No se pudieron cargar categorías desde el servidor:", e.message);
       }
@@ -565,14 +633,18 @@ export default function RegistrarProducts() {
 
     if (isSameCategory) return;
 
+    const nextCategoryType = categoryTypeByName[getCategoryTypeKey(nextCategory)] || "PRODUCT";
+
     setNewProduct({
       name: "",
       category: nextCategory,
       price: 0,
       users_count: 1,
       description: "",
+      product_type: nextCategoryType,
     });
     setCurrentMaxUsers(30);
+    setSelectedSourceType(nextCategoryType);
     setActiveFormMode(null);
   };
 
@@ -606,14 +678,46 @@ export default function RegistrarProducts() {
     }
   };
 
+  const openSelectorBySource = (source) => {
+    if (source === "CONTPAQI") setIsContpaqiModalOpen(true);
+    if (source === "POLICY") setIsPoliciesModalOpen(true);
+    if (source === "PRODUCT") setIsGeneralProductsModalOpen(true);
+    if (source === "SERVICE") setIsServicesModalOpen(true);
+  };
+
+  const handleSourceSelection = async (source) => {
+    const category = sanitizeCategoryLabel(selectedCategory);
+    const productType = normalizeCatalogProductType(source) || "PRODUCT";
+    if (!category) return;
+
+    try {
+      const savedCategory = await assignCategoryTypeApi(category, productType);
+      setCategoryTypeByName((prev) => ({
+        ...prev,
+        [getCategoryTypeKey(savedCategory?.name || category)]:
+          normalizeCatalogProductType(savedCategory?.product_type) || productType,
+      }));
+      setCustomCategories((prev) => uniqueByNormalizedValue([category, ...prev]));
+      setSelectedSourceType(productType);
+      setIsSourceModalOpen(false);
+      openSelectorBySource(productType);
+    } catch (e) {
+      notificationService.error(
+        "Error",
+        e.message || "No se pudo asignar el tipo de la categoría."
+      );
+    }
+  };
+
   const selectContpaqiProduct = (item) => {
     setNewProduct((prev) => ({
       ...prev,
       name: item.name,
-      category: item.category || prev.category,
+      category: selectedCategory || item.category || prev.category,
       price: Math.max(0, Number(item.price) || 0),
       users_count: 1,
       description: item.description || "",
+      product_type: "CONTPAQI",
     }));
     setCurrentMaxUsers(Math.max(1, Number(item.max_users) || 30));
     setSelectedSourceType("PRODUCT");
@@ -627,10 +731,11 @@ export default function RegistrarProducts() {
     setNewProduct((prev) => ({
       ...prev,
       name: service.name,
-      category: service.category || prev.category,
+      category: selectedCategory || service.category || prev.category,
       price: Math.max(0, Number(service.price) || 0),
       users_count: 1,
       description: service.description || "",
+      product_type: "SERVICE",
     }));
     setCurrentMaxUsers(1);
     setSelectedSourceType("SERVICE");
@@ -644,10 +749,11 @@ export default function RegistrarProducts() {
     setNewProduct((prev) => ({
       ...prev,
       name: policy.name,
-      category: policy.category || prev.category,
+      category: selectedCategory || policy.category || prev.category,
       price: Math.max(0, Number(policy.price) || 0),
       users_count: 1,
       description: policy.description || "",
+      product_type: "POLICY",
     }));
     setCurrentMaxUsers(1);
     setSelectedSourceType("SERVICE");
@@ -661,10 +767,11 @@ export default function RegistrarProducts() {
     setNewProduct((prev) => ({
       ...prev,
       name: product.name,
-      category: product.category || prev.category,
+      category: selectedCategory || product.category || prev.category,
       price: Math.max(0, Number(product.price) || 0),
       users_count: 1,
       description: product.description || "",
+      product_type: "PRODUCT",
     }));
     setCurrentMaxUsers(product.max_users || 1);
     setSelectedSourceType("PRODUCT");
@@ -746,30 +853,25 @@ export default function RegistrarProducts() {
         return;
       }
 
-      const getType = (p) => {
-        const source = `${p?.name || ""} ${p?.category || ""}`;
-        const normalized = source
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .toLowerCase()
-          .trim();
-
-        if (normalized.includes("poliza")) return "POLICY";
-        if (normalized.includes("servicio")) return "SERVICE";
-        return "PRODUCT";
-      };
-
-      let productType;
-      if (activeFormMode === "SERVICE") productType = "SERVICE";
-      else if (activeFormMode === "POLICY") productType = "POLICY";
-      else productType = getType({ name: safeName, category: safeCategory });
+      let productType = normalizeCatalogProductType(activeFormMode);
+      if (!productType) {
+        productType = normalizeCatalogProductType(
+          categoryTypeByName[getCategoryTypeKey(safeCategory)]
+        );
+      }
+      if (!productType) {
+        productType = inferProductType({ name: safeName, category: safeCategory });
+      }
 
       const payload = {
         ...newProduct,
         name: safeName,
         category: safeCategory,
         price: parseFloat(newProduct.price) || 0,
-        users_count: isServiceMode ? 1 : parseInt(newProduct.users_count, 10) || 1,
+        users_count:
+          productType === "SERVICE" || productType === "POLICY"
+            ? 1
+            : parseInt(newProduct.users_count, 10) || 1,
         client_id: fixedClientId || null,
         product_type: productType,
       };
@@ -778,60 +880,31 @@ export default function RegistrarProducts() {
 
       const nextItem = {
         id: String(createdProduct?.id || `custom-${Date.now()}`),
+        folio: createdProduct?.folio || "",
         name: safeName,
         category: safeCategory,
         price: payload.price,
         max_users: Math.max(1, parseInt(payload.users_count, 10) || 1),
         description: String(payload.description || "").trim(),
+        product_type: productType,
         isCustom: true,
       };
 
-      const normalizeObj = (item) => {
-        const nN = normalizeServicePolicyCategory(item.name);
-        const nC = normalizeServicePolicyCategory(item.category);
-        return { nN, nC };
-      };
-
-      const nName = normalizeServicePolicyCategory(safeName);
-      const nCat = normalizeServicePolicyCategory(safeCategory);
-
       if (productType === "SERVICE") {
-        setCustomServices((prev) => {
-          const filtered = prev.filter((item) => {
-            const { nN, nC } = normalizeObj(item);
-            return !(nN === nName && nC === nCat);
-          });
-          return [nextItem, ...filtered];
-        });
+        setCustomServices((prev) => upsertCatalogItem(prev, nextItem));
       } else if (productType === "POLICY") {
-        setCustomPolicies((prev) => {
-          const filtered = prev.filter((item) => {
-            const { nN, nC } = normalizeObj(item);
-            return !(nN === nName && nC === nCat);
-          });
-          return [nextItem, ...filtered];
-        });
+        setCustomPolicies((prev) => upsertCatalogItem(prev, nextItem));
+      } else if (productType === "CONTPAQI") {
+        setCustomContpaqiProducts((prev) => upsertCatalogItem(prev, nextItem));
       } else {
-        if (safeName.toUpperCase().includes("CONTPAQI")) {
-          setCustomContpaqiProducts((prev) => {
-            const filtered = prev.filter((item) => {
-              const { nN, nC } = normalizeObj(item);
-              return !(nN === nName && nC === nCat);
-            });
-            return [nextItem, ...filtered];
-          });
-        } else {
-          setCustomGeneralProducts((prev) => {
-            const filtered = prev.filter((item) => {
-              const { nN, nC } = normalizeObj(item);
-              return !(nN === nName && nC === nCat);
-            });
-            return [nextItem, ...filtered];
-          });
-        }
+        setCustomGeneralProducts((prev) => upsertCatalogItem(prev, nextItem));
       }
 
       setCustomCategories((prev) => uniqueByNormalizedValue([safeCategory, ...prev]));
+      setCategoryTypeByName((prev) => ({
+        ...prev,
+        [getCategoryTypeKey(safeCategory)]: productType,
+      }));
 
       setNewProduct({
         name: "",
@@ -839,20 +912,27 @@ export default function RegistrarProducts() {
         price: 0,
         users_count: 1,
         description: "",
+        product_type: productType,
       });
       setCurrentMaxUsers(30);
       setSelectedSourceType("PRODUCT");
       setActiveFormMode(null);
 
-      const typeLabels = { SERVICE: "Servicio", POLICY: "Póliza", PRODUCT: "Producto" };
+      const typeLabels = {
+        SERVICE: "Servicio",
+        POLICY: "Póliza",
+        CONTPAQI: "Producto CONTPAQi",
+        PRODUCT: "Producto",
+      };
       const typeLabel = typeLabels[productType] || "Producto";
       const dualTable = productType === "SERVICE" || productType === "POLICY";
+      const folioText = createdProduct?.folio ? ` Folio: ${createdProduct.folio}.` : "";
 
       notificationService.success(
         "¡Éxito!",
         dualTable
-          ? `${typeLabel} registrado en Productos y en Historial de Servicios y Pólizas.`
-          : `${typeLabel} registrado correctamente.`
+          ? `${typeLabel} registrado en Productos y en Historial de Servicios y Pólizas.${folioText}`
+          : `${typeLabel} registrado correctamente.${folioText}`
       );
     } catch (e) {
       notificationService.error("Error", e.message || "Error al crear producto");
@@ -877,10 +957,10 @@ export default function RegistrarProducts() {
 
       <form onSubmit={handleCreate} className="mb-6 animate-fade-in">
         <div
-          className={`p-6 rounded-xl glass-panel shadow-xl border transition-all duration-300 ${
+          className={`p-6 rounded-xl glass-panel shadow-xl border transition-all duration-500 ease-out ${
             isFormHighlighted
-              ? "ring-[1px] ring-[#2277B4]/25 dark:ring-blue-400/25 shadow-[0_0_10px_rgba(0,0,0,0.5)] bg-blue-50/5 dark:bg-blue-950/5"
-              : "border-zinc-200 dark:border-dark-700"
+              ? "ring-4 ring-[#2277B4]/60 dark:ring-blue-400/50 shadow-[0_0_25px_rgba(34,119,180,0.4)] dark:shadow-[0_0_25px_rgba(96,165,250,0.4)] border-[#2277B4] dark:border-blue-400 bg-blue-50/40 dark:bg-blue-900/30 scale-[1.01]"
+              : "border-zinc-200 dark:border-dark-700 scale-100"
           }`}
         >
           <button
@@ -1058,13 +1138,7 @@ export default function RegistrarProducts() {
         isOpen={isSourceModalOpen}
         onClose={() => setIsSourceModalOpen(false)}
         selectedCategory={selectedCategory}
-        onSelectSource={(source) => {
-          setIsSourceModalOpen(false);
-          if (source === "CONTPAQI") setIsContpaqiModalOpen(true);
-          if (source === "POLICY") setIsPoliciesModalOpen(true);
-          if (source === "PRODUCT") setIsGeneralProductsModalOpen(true);
-          if (source === "SERVICE") setIsServicesModalOpen(true);
-        }}
+        onSelectSource={handleSourceSelection}
       />
 
       {/* Categories modal */}
@@ -1105,6 +1179,7 @@ export default function RegistrarProducts() {
             price: 0,
             users_count: 1,
             description: "",
+            product_type: "CONTPAQI",
           });
           setCurrentMaxUsers(30);
           setActiveFormMode("CONTPAQI");
@@ -1134,6 +1209,7 @@ export default function RegistrarProducts() {
             price: 0,
             users_count: 1,
             description: "",
+            product_type: "POLICY",
           });
           setCurrentMaxUsers(1);
           setActiveFormMode("POLICY");
@@ -1163,6 +1239,7 @@ export default function RegistrarProducts() {
             price: 0,
             users_count: 1,
             description: "",
+            product_type: "PRODUCT",
           });
           setCurrentMaxUsers(30);
           setActiveFormMode("PRODUCT");
@@ -1192,6 +1269,7 @@ export default function RegistrarProducts() {
             price: 0,
             users_count: 1,
             description: "",
+            product_type: "SERVICE",
           });
           setCurrentMaxUsers(1);
           setActiveFormMode("SERVICE");

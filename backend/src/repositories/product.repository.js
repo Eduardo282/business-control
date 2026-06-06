@@ -11,7 +11,22 @@ import { normalizePagination } from "./pagination.js";
 // ─── Productos ──────────────────────────────────────────────────────────────
 
 const PRODUCT_COLUMNS =
-  "id, client_id, name, category, product_type, current_price, users_count, description";
+  "id, folio, client_id, name, category, product_type, current_price, users_count, description, update_version, created_at, updated_at";
+
+const PRODUCT_UPDATE_HISTORY_COLUMNS =
+  "id, product_id, update_version, change_type, summary, changed_at";
+
+export const PRODUCT_TYPE_VALUES = ["PRODUCT", "CONTPAQI", "SERVICE", "POLICY"];
+
+export function normalizeCatalogProductType(value) {
+  const normalized = String(value || "")
+    .trim()
+    .toUpperCase();
+
+  if (normalized === "CONTPAQI" || normalized === "CONTPAQI_PRODUCT") return "CONTPAQI";
+  if (PRODUCT_TYPE_VALUES.includes(normalized)) return normalized;
+  return "PRODUCT";
+}
 
 /**
  * Busca un producto por su ID con historial de precios.
@@ -29,7 +44,14 @@ export async function findProductById(id) {
     "SELECT id, product_id, price, changed_at FROM product_price_history WHERE product_id = :id ORDER BY changed_at DESC",
     { id },
   );
-  return { ...rows[0], price_history: hist };
+  const [updateHistory] = await pool.query(
+    `SELECT ${PRODUCT_UPDATE_HISTORY_COLUMNS}
+     FROM product_update_history
+     WHERE product_id = :id
+     ORDER BY changed_at DESC, id DESC`,
+    { id },
+  );
+  return { ...rows[0], price_history: hist, update_history: updateHistory };
 }
 
 /**
@@ -69,7 +91,7 @@ export async function listProducts({ client_id, limit, offset } = {}) {
   params.offset = page.offset;
 
   const [rows] = await pool.query(query, params);
-  return rows.map((r) => ({ ...r, price_history: [] }));
+  return rows.map((r) => ({ ...r, price_history: [], update_history: [] }));
 }
 
 /**
@@ -79,7 +101,7 @@ export async function listProducts({ client_id, limit, offset } = {}) {
  * @returns {Promise<object[]>}
  */
 export async function searchProducts(q, client_id) {
-  let query = `SELECT ${PRODUCT_COLUMNS} FROM products WHERE (name LIKE :q OR category LIKE :q)`;
+  let query = `SELECT ${PRODUCT_COLUMNS} FROM products WHERE (folio LIKE :q OR name LIKE :q OR category LIKE :q)`;
   const params = { q: `%${q}%` };
 
   if (client_id) {
@@ -88,7 +110,7 @@ export async function searchProducts(q, client_id) {
   }
 
   const [rows] = await pool.query(query, params);
-  return rows.map((r) => ({ ...r, price_history: [] }));
+  return rows.map((r) => ({ ...r, price_history: [], update_history: [] }));
 }
 
 /**
@@ -97,11 +119,20 @@ export async function searchProducts(q, client_id) {
  * @returns {Promise<number>} ID del producto insertado
  */
 export async function insertProduct(data, queryRunner = pool) {
-  const { name, description, current_price, category, client_id, product_type, users_count } = data;
+  const { folio, name, description, current_price, category, client_id, product_type, users_count } = data;
   const [result] = await queryRunner.query(
-    `INSERT INTO products (name, description, current_price, category, client_id, product_type, users_count)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [name, description || null, current_price, category || null, client_id || null, product_type || "SERVICE", users_count || 0],
+    `INSERT INTO products (folio, name, description, current_price, category, client_id, product_type, users_count)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      folio || null,
+      name,
+      description || null,
+      current_price,
+      category || null,
+      client_id || null,
+      normalizeCatalogProductType(product_type),
+      users_count || 0,
+    ],
   );
   return result.insertId;
 }
@@ -113,13 +144,18 @@ export async function insertProduct(data, queryRunner = pool) {
  * @param {object} [queryRunner]
  * @returns {Promise<void>}
  */
-export async function updateProduct(id, fields, queryRunner = pool) {
+export async function updateProduct(id, fields, queryRunner = pool, options = {}) {
   const setClauses = [];
   const params = { id };
 
   for (const [key, value] of Object.entries(fields)) {
     setClauses.push(`${key} = :${key}`);
     params[key] = value;
+  }
+
+  if (options.bumpRevision) {
+    setClauses.push("update_version = COALESCE(update_version, 1) + 1");
+    setClauses.push("updated_at = CURRENT_TIMESTAMP");
   }
 
   if (!setClauses.length) return;
@@ -154,6 +190,33 @@ export async function insertPriceHistory({ product_id, price }, queryRunner = po
     "INSERT INTO product_price_history (product_id, price) VALUES (?, ?)",
     [product_id, price],
   );
+}
+
+/**
+ * Registra un movimiento de actualización del producto.
+ * @param {object} data
+ * @param {number|string} data.product_id
+ * @param {number} data.update_version
+ * @param {string} data.change_type
+ * @param {string|null} data.summary
+ * @param {object} [queryRunner]
+ * @returns {Promise<void>}
+ */
+export async function insertProductUpdateHistory(
+  { product_id, update_version, change_type, summary },
+  queryRunner = pool,
+) {
+  const [result] = await queryRunner.query(
+    `INSERT INTO product_update_history (product_id, update_version, change_type, summary)
+     VALUES (?, ?, ?, ?)`,
+    [
+      product_id,
+      Math.max(1, Number(update_version) || 1),
+      change_type || "DETAILS",
+      summary || null,
+    ],
+  );
+  return result.insertId;
 }
 
 /**
@@ -219,7 +282,7 @@ export async function deleteCategory(name) {
  */
 export async function listProductCategories(queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    "SELECT id, name FROM product_categories ORDER BY name ASC"
+    "SELECT id, name, product_type FROM product_categories ORDER BY name ASC"
   );
   return rows;
 }
@@ -231,11 +294,44 @@ export async function listProductCategories(queryRunner = pool) {
  * @returns {Promise<number>}
  */
 export async function insertProductCategory(name, queryRunner = pool) {
-  const [res] = await queryRunner.query(
-    "INSERT INTO product_categories (name) VALUES (:name)",
-    { name }
+  const safeName = String(name || "").trim();
+  await queryRunner.query(
+    `INSERT INTO product_categories (name)
+     VALUES (:name)
+     ON DUPLICATE KEY UPDATE name = VALUES(name)`,
+    { name: safeName },
   );
-  return res.insertId;
+  const [rows] = await queryRunner.query(
+    "SELECT id, name, product_type FROM product_categories WHERE name = :name LIMIT 1",
+    { name: safeName },
+  );
+  return rows[0];
+}
+
+/**
+ * Inserta o actualiza el tipo asignado a una categoría.
+ * @param {string} name
+ * @param {string} productType
+ * @param {object} [queryRunner]
+ * @returns {Promise<object>}
+ */
+export async function upsertProductCategoryType(name, productType, queryRunner = pool) {
+  const safeName = String(name || "").trim();
+  const safeType = normalizeCatalogProductType(productType);
+
+  await queryRunner.query(
+    `INSERT INTO product_categories (name, product_type)
+     VALUES (:name, :product_type)
+     ON DUPLICATE KEY UPDATE product_type = VALUES(product_type)`,
+    { name: safeName, product_type: safeType },
+  );
+
+  const [rows] = await queryRunner.query(
+    "SELECT id, name, product_type FROM product_categories WHERE name = :name LIMIT 1",
+    { name: safeName },
+  );
+
+  return rows[0];
 }
 
 /**

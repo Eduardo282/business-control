@@ -11,6 +11,9 @@ export default function ProductSearchModal({
   productSearchTable,
   isProductSearching,
   prodResults,
+  filteredProductCount = prodResults.length,
+  productTypeFilter = "",
+  onProductTypeFilterChange,
 }) {
   if (!isOpen) return null;
 
@@ -34,19 +37,34 @@ export default function ProductSearchModal({
         </div>
 
         <div className="p-6 flex-1 flex flex-col overflow-hidden">
-          <div className="mb-4 relative shrink-0">
-            <Input
-              value={prodSearch}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Buscar producto por nombre o categoría…"
-              className="w-full glass-input bg-light-bg dark:!bg-black/30 text-light-text-primary dark:text-white border-light-border dark:border-white/10"
-              style={{ paddingRight: "2.5rem" }}
-              autoFocus
-            />
-            <Search
-              size={18}
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
-            />
+          <div className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px] shrink-0">
+            <div className="relative">
+              <Input
+                value={prodSearch}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder="Buscar producto por folio, nombre o categoría…"
+                className="w-full glass-input bg-light-bg dark:!bg-black/30 text-light-text-primary dark:text-white border-light-border dark:border-white/10"
+                style={{ paddingRight: "2.5rem" }}
+                autoFocus
+              />
+              <Search
+                size={18}
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
+              />
+            </div>
+
+            <select
+              value={productTypeFilter}
+              onChange={(e) => onProductTypeFilterChange?.(e.target.value)}
+              className="h-[48px] rounded-xl border border-light-border dark:border-dark-700 bg-white dark:bg-dark-900 px-3 text-sm font-semibold text-[#1a2b4c] dark:text-zinc-100 outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500"
+              aria-label="Filtrar productos por tipo"
+            >
+              <option value="">Todos los tipos</option>
+              <option value="PRODUCT">Productos normales</option>
+              <option value="CONTPAQI">Productos CONTPAQi</option>
+              <option value="SERVICE">Servicios</option>
+              <option value="POLICY">Pólizas</option>
+            </select>
           </div>
 
           <div className="bg-white dark:bg-dark-800 rounded-xl dark:border-white/10 flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -110,7 +128,9 @@ export default function ProductSearchModal({
                           <ShoppingBag size={48} />
                         </div>
                         <p className="text-light-text-secondary dark:text-zinc-400 font-medium">
-                          {prodSearch.trim().length > 0
+                          {productTypeFilter && prodResults.length > 0
+                            ? "No hay productos para el tipo seleccionado."
+                            : prodSearch.trim().length > 0
                             ? `No se encontraron productos con "${prodSearch}"`
                             : "No hay productos disponibles."}
                         </p>
@@ -121,7 +141,7 @@ export default function ProductSearchModal({
               </table>
             </div>
 
-            {!isProductSearching && prodResults.length > 0 && (
+            {!isProductSearching && filteredProductCount > 0 && (
               <div className="px-4 py-3 border-t border-light-border dark:border-dark-700 bg-white dark:bg-dark-800 flex items-center justify-between gap-3 flex-wrap shrink-0">
                 <label className="text-sm text-light-text-secondary dark:text-zinc-400 flex items-center gap-2">
                   Mostrar
@@ -179,8 +199,8 @@ export default function ProductSearchModal({
 
         <div className="px-6 py-4 border-t border-zinc-100 dark:border-dark-700 flex justify-between items-center bg-zinc-50 dark:bg-dark-900">
           <p className="text-xs text-light-text-secondary dark:text-zinc-400">
-            {prodResults.length > 0 && (
-              <span>{prodResults.length} producto(s) encontrado(s)</span>
+            {filteredProductCount > 0 && (
+              <span>{filteredProductCount} producto(s) encontrado(s)</span>
             )}
           </p>
           <div className="flex items-center gap-3">

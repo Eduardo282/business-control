@@ -16,6 +16,7 @@ function mapPolicyRows(rows) {
     status: determineStatus(row.status, row.expiration_date),
     product: {
       id: row.product_id,
+      folio: row.product_folio,
       name: row.product_name,
       category: row.product_category,
       current_price: row.current_price,
@@ -49,6 +50,7 @@ function mapStandaloneProducts(rows) {
     status: "ACTIVE",
     product: {
       id: row.product_id,
+      folio: row.product_folio,
       name: row.product_name,
       category: row.product_category,
       current_price: row.current_price,

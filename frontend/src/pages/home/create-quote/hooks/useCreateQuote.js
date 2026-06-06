@@ -13,9 +13,7 @@ import {
   createQuoteApi,
   getQuoteApi,
   resolveQuoteRequestApi,
-  toggleQuotePortalApi,
 } from "../../../../actionsAPI/quotes.api";
-import { logger } from "../../../../services/logger";
 import {
   normalizeDiscount,
   calculateItemTotal,
@@ -36,6 +34,21 @@ import {
 const MAX_CLIENT_RESULTS_IN_MODAL = 50;
 const roundCurrency = roundMoney;
 const clampDiscount = normalizeDiscount;
+const QUOTE_FOLIO_PATTERN = /^[A-Z]{4}\d{3}$/;
+const QUOTE_FOLIO_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+function generateQuoteFolioCandidate() {
+  const letters = Array.from(
+    { length: 4 },
+    () =>
+      QUOTE_FOLIO_LETTERS[
+        Math.floor(Math.random() * QUOTE_FOLIO_LETTERS.length)
+      ],
+  ).join("");
+  const numbers = String(Math.floor(Math.random() * 1000)).padStart(3, "0");
+
+  return `${letters}${numbers}`;
+}
 
 export function useCreateQuote(navigate) {
   const [searchParams] = useSearchParams();
@@ -140,6 +153,7 @@ export function useCreateQuote(navigate) {
     try {
       const quote = await getQuoteApi(id);
       if (quote) {
+        setFolio(quote.folio || "");
         await loadClient(quote.client.id, quote.contact?.id);
 
         if (quote.items && quote.items.length > 0) {
@@ -164,6 +178,7 @@ export function useCreateQuote(navigate) {
             return {
               tempId: createQuoteItemId(),
               product_id: item.product.id,
+              folio: item.product.folio || "",
               name: item.product.name,
               price: baseUnitPrice,
               discount,
@@ -444,6 +459,7 @@ export function useCreateQuote(navigate) {
     setError("");
     try {
       const requestId = searchParams.get("request_id");
+      const finalQuoteFolio = ensureQuoteFolio();
       const payload = {
         client_id: selectedClient.id,
         contact_id: selectedContactId || undefined,
@@ -458,7 +474,7 @@ export function useCreateQuote(navigate) {
           };
         }),
         notes: "Ninguna por el momento",
-        folio: folio || undefined,
+        folio: finalQuoteFolio,
       };
 
       let savedQuote = null;
@@ -470,21 +486,6 @@ export function useCreateQuote(navigate) {
       setShowPreviewModal(false);
 
       if (savedQuote?.id) {
-        if (portalAutoContactId) {
-          try {
-            await toggleQuotePortalApi(
-              savedQuote.id,
-              true,
-              portalAutoContactId,
-            );
-          } catch (portalError) {
-            logger.error(
-              "No se pudo enviar automaticamente al portal:",
-              portalError,
-            );
-          }
-        }
-
         navigate(`/cotizaciones/${savedQuote.id}`);
         return;
       }
@@ -550,24 +551,19 @@ export function useCreateQuote(navigate) {
     );
   }, [selectedClient, selectedContactId]);
 
-  const portalAutoContactId = useMemo(() => {
-    const clientContacts = selectedClient?.contacts || [];
-    if (!clientContacts.length) return null;
+  const quoteFolio = String(folio || "").trim();
 
-    const explicitlySelectedContact = clientContacts.find(
-      (contact) => String(contact.id) === String(selectedContactId),
-    );
-
-    if (explicitlySelectedContact?.has_portal_access) {
-      return explicitlySelectedContact.id;
+  const ensureQuoteFolio = () => {
+    const normalizedFolio = quoteFolio.toUpperCase();
+    if (QUOTE_FOLIO_PATTERN.test(normalizedFolio)) {
+      if (normalizedFolio !== quoteFolio) setFolio(normalizedFolio);
+      return normalizedFolio;
     }
 
-    const firstPortalEnabledContact = clientContacts.find((contact) =>
-      Boolean(contact?.has_portal_access),
-    );
-
-    return firstPortalEnabledContact?.id || null;
-  }, [selectedClient, selectedContactId]);
+    const nextFolio = generateQuoteFolioCandidate();
+    setFolio(nextFolio);
+    return nextFolio;
+  };
 
   const visibleClientResults = useMemo(
     () => clientResults.slice(0, MAX_CLIENT_RESULTS_IN_MODAL),
@@ -598,8 +594,9 @@ export function useCreateQuote(navigate) {
     setShowProductModal,
     showPreviewModal,
     setShowPreviewModal,
-    folio,
+    folio: quoteFolio,
     setFolio,
+    ensureQuoteFolio,
     justAdded,
     generatedQuote,
     setGeneratedQuote,
@@ -638,7 +635,6 @@ export function useCreateQuote(navigate) {
     save,
     startNewQuote,
     selectedContact,
-    portalAutoContactId,
     visibleClientResults,
   };
 }

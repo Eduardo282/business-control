@@ -7,7 +7,7 @@ import { pool } from "../config/db.js";
 import { normalizePagination } from "./pagination.js";
 
 const QUOTE_COLUMNS =
-  "id, folio, client_id, contact_id, user_id, created_at, total, notes, status, is_sent_to_client_portal, notification_read, is_deleted_admin, is_deleted_portal";
+  "id, folio, client_id, contact_id, user_id, created_at, total, notes, status, is_registered, registered_at, is_sent_to_client_portal, notification_read, is_deleted_admin, is_deleted_portal";
 
 const QUOTE_ITEM_COLUMNS =
   "id, quote_id, product_id, quantity, base_unit_price, unit_price, discount, total";
@@ -38,7 +38,8 @@ export async function createQuoteWithItems({
     await connection.beginTransaction();
 
     const [resQuote] = await connection.query(
-      `INSERT INTO quotes (folio, client_id, contact_id, user_id, total, notes, status) VALUES (?, ?, ?, ?, ?, ?, 'PENDING')`,
+      `INSERT INTO quotes (folio, client_id, contact_id, user_id, total, notes, status, is_registered)
+       VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 0)`,
       [folio, client_id, contact_id || null, user_id, total, notes],
     );
     const quoteId = resQuote.insertId;
@@ -87,7 +88,7 @@ export async function replaceQuoteItems(connection, { quoteId, items }) {
 export async function fetchProductsForQuote(productIds, queryRunner = pool) {
   if (!productIds.length) return [];
   const [rows] = await queryRunner.query(
-    "SELECT id, name, category, product_type, current_price FROM products WHERE id IN (?)",
+    "SELECT id, folio, name, category, product_type, current_price FROM products WHERE id IN (?)",
     [productIds],
   );
   return rows;
@@ -103,7 +104,13 @@ export async function fetchProductsForQuote(productIds, queryRunner = pool) {
  */
 export async function findPortalQuote({ quoteId, contactId, queryRunner = pool }) {
   const [rows] = await queryRunner.query(
-    "SELECT id, status FROM quotes WHERE id = ? AND contact_id = ? AND is_deleted_portal = 0",
+    `SELECT id, status, folio, is_registered
+     FROM quotes
+     WHERE id = ?
+       AND contact_id = ?
+       AND is_registered = 1
+       AND is_sent_to_client_portal = 1
+       AND is_deleted_portal = 0`,
     [quoteId, contactId],
   );
   return rows?.[0] || null;
@@ -147,7 +154,16 @@ export async function softDeletePortalQuote({ quoteId, queryRunner = pool }) {
  * @param {object} [params.queryRunner]
  * @returns {Promise<void>}
  */
-export async function updateQuoteTotal({ quoteId, total, queryRunner = pool }) {
+export async function updateQuoteTotal({ quoteId, total, folio, queryRunner = pool }) {
+  if (folio !== undefined) {
+    await queryRunner.query("UPDATE quotes SET total = ?, folio = ? WHERE id = ?", [
+      total,
+      folio || null,
+      quoteId,
+    ]);
+    return;
+  }
+
   await queryRunner.query("UPDATE quotes SET total = ? WHERE id = ?", [total, quoteId]);
 }
 
@@ -161,7 +177,7 @@ export async function updateQuoteTotal({ quoteId, total, queryRunner = pool }) {
  */
 export async function findQuoteByStatus({ quoteId, status, queryRunner = pool }) {
   const [rows] = await queryRunner.query(
-    "SELECT id FROM quotes WHERE id = ? AND status = ?",
+    "SELECT id, folio FROM quotes WHERE id = ? AND status = ?",
     [quoteId, status],
   );
   return rows?.[0] || null;
@@ -192,7 +208,7 @@ export async function resolveQuoteRequest({
 }) {
   await queryRunner.query(
     `UPDATE quotes
-     SET folio = ?, client_id = ?, contact_id = ?, user_id = ?, total = ?, notes = ?, status = 'ACCEPTED', created_at = NOW()
+     SET folio = ?, client_id = ?, contact_id = ?, user_id = ?, total = ?, notes = ?, status = 'ACCEPTED', is_registered = 0, created_at = NOW()
      WHERE id = ?`,
     [folio, client_id, contact_id, user_id, total, notes, quoteId],
   );
@@ -213,12 +229,13 @@ export async function createQuote(data, queryRunner = pool) {
     total,
     notes,
     status,
+    is_registered,
     is_sent_to_client_portal,
   } = data;
 
   const [resQuote] = await queryRunner.query(
-    `INSERT INTO quotes (folio, client_id, contact_id, user_id, total, notes, status, is_sent_to_client_portal) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO quotes (folio, client_id, contact_id, user_id, total, notes, status, is_registered, is_sent_to_client_portal)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       folio || null,
       client_id,
@@ -227,6 +244,7 @@ export async function createQuote(data, queryRunner = pool) {
       total,
       notes || null,
       status || "PENDING",
+      is_registered !== undefined ? is_registered : 0,
       is_sent_to_client_portal !== undefined ? is_sent_to_client_portal : 0,
     ],
   );
@@ -328,8 +346,11 @@ export async function listQuotesFiltered({ status, user_id, is_deleted_admin = 0
  */
 export async function updateQuotePortalStatus({ quoteId, isSentToClientPortal, contactId }, queryRunner = pool) {
   const [result] = await queryRunner.query(
-    "UPDATE quotes SET is_sent_to_client_portal = ?, contact_id = ? WHERE id = ?",
-    [isSentToClientPortal, contactId || null, quoteId]
+    `UPDATE quotes
+     SET is_sent_to_client_portal = ?,
+         contact_id = COALESCE(?, contact_id)
+     WHERE id = ?`,
+    [isSentToClientPortal, contactId || null, quoteId],
   );
   return result.affectedRows || 0;
 }
@@ -356,7 +377,13 @@ export async function markQuoteAsRead(quoteId, queryRunner = pool) {
  */
 export async function listPortalQuotesByContact(contactId, queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE contact_id = ? AND is_sent_to_client_portal = 1 AND is_deleted_portal = 0 ORDER BY created_at DESC`,
+    `SELECT ${QUOTE_COLUMNS}
+     FROM quotes
+     WHERE contact_id = ?
+       AND is_registered = 1
+       AND is_sent_to_client_portal = 1
+       AND is_deleted_portal = 0
+     ORDER BY created_at DESC`,
     [contactId]
   );
   return rows;
@@ -374,6 +401,27 @@ export async function updateQuoteStatus({ quoteId, status }, queryRunner = pool)
   const [result] = await queryRunner.query(
     "UPDATE quotes SET status = ? WHERE id = ?",
     [status, quoteId]
+  );
+  return result.affectedRows || 0;
+}
+
+/**
+ * Marca una cotización como registrada.
+ * @param {number|string} quoteId
+ * @param {object} [queryRunner]
+ * @returns {Promise<number>}
+ */
+export async function registerQuote(quoteId, queryRunner = pool) {
+  const [result] = await queryRunner.query(
+    `UPDATE quotes
+     SET is_registered = 1,
+         registered_at = COALESCE(registered_at, NOW()),
+         is_sent_to_client_portal = CASE
+           WHEN contact_id IS NOT NULL THEN 1
+           ELSE is_sent_to_client_portal
+         END
+     WHERE id = ?`,
+    [quoteId],
   );
   return result.affectedRows || 0;
 }
@@ -445,6 +493,7 @@ export async function listPortalQuotesByClientId(clientId, queryRunner = pool) {
   const [rows] = await queryRunner.query(
     `SELECT ${QUOTE_COLUMNS} FROM quotes 
      WHERE client_id = ? 
+     AND is_registered = 1
      AND is_sent_to_client_portal = 1 
      AND is_deleted_portal = 0
      ORDER BY created_at DESC`,

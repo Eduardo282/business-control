@@ -4,7 +4,7 @@ export async function listProductsApi(client_id = null) {
   const query = `
     query GetProducts($clientId: ID) {
       products(client_id: $clientId) {
-        id name category description
+        id folio name category description
         current_price users_count client_id
         product_type
       }
@@ -19,10 +19,12 @@ export async function getProductApi(id) {
   const query = `
     query GetProduct($id: ID!) {
       product(id: $id) {
-        id name category description
+        id folio name category description
         current_price users_count client_id
         product_type
+        update_version created_at updated_at
         price_history { id price changed_at }
+        update_history { id product_id update_version change_type summary changed_at }
         client { id business_name rfc email1 }
       }
     }
@@ -34,7 +36,11 @@ export async function getProductApi(id) {
 export async function createProductApi(input) {
   const query = `
     mutation CreateProduct($input: CreateProductInput!) {
-      createProduct(input: $input) { id name product_type }
+      createProduct(input: $input) {
+        id folio name category description
+        current_price users_count client_id
+        product_type
+      }
     }
   `;
   const data = await gql(query, { input });
@@ -44,7 +50,13 @@ export async function createProductApi(input) {
 export async function updateProductApi(id, input) {
   const query = `
     mutation UpdateProduct($id: ID!, $input: UpdateProductInput!) {
-      updateProduct(id: $id, input: $input) { id name }
+      updateProduct(id: $id, input: $input) {
+        id folio name category description
+        current_price users_count client_id
+        product_type
+        update_version created_at updated_at
+        update_history { id product_id update_version change_type summary changed_at }
+      }
     }
   `;
   const data = await gql(query, { id, input });
@@ -56,7 +68,9 @@ export async function updateProductPriceApi(id, price) {
     mutation UpdateProductPrice($id: ID!, $price: Float!) {
       updateProductPrice(id: $id, price: $price) {
         id current_price
+        update_version created_at updated_at
         price_history { id price changed_at }
+        update_history { id product_id update_version change_type summary changed_at }
       }
     }
   `;
@@ -68,7 +82,7 @@ export async function searchProductsApi(q, client_id = null) {
   const query = `
     query SearchProducts($q: String!, $client_id: ID) {
       searchProducts(q: $q, client_id: $client_id) {
-        id name category description
+        id folio name category description
         current_price users_count client_id
         product_type
       }
@@ -95,7 +109,7 @@ export async function clearProductPriceHistoryApi(product_id) {
 export async function listCategoriesApi() {
   const query = `
     query ListProductCategories {
-      productCategories { id name }
+      productCategories { id name product_type }
     }
   `;
   const data = await gql(query);
@@ -105,11 +119,25 @@ export async function listCategoriesApi() {
 export async function createCategoryApi(name) {
   const query = `
     mutation CreateCategory($name: String!) {
-      createCategory(name: $name) { id name }
+      createCategory(name: $name) { id name product_type }
     }
   `;
   const data = await gql(query, { name });
   return data.createCategory;
+}
+
+export async function assignCategoryTypeApi(name, product_type) {
+  const query = `
+    mutation AssignCategoryType($name: String!, $product_type: String!) {
+      assignCategoryType(name: $name, product_type: $product_type) {
+        id
+        name
+        product_type
+      }
+    }
+  `;
+  const data = await gql(query, { name, product_type });
+  return data.assignCategoryType;
 }
 
 export async function deleteCategoryApi(id) {

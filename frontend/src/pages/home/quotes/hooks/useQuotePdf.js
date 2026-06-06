@@ -1,26 +1,26 @@
 import { calculateQuotePricing } from "@shared/quotePricingRules.js";
 import { notificationService } from "../../../../services/notificationService";
 
-let html2canvasLoaderPromise = null;
+let html2pdfLoaderPromise = null;
 
-async function loadHtml2Canvas() {
-  if (!html2canvasLoaderPromise) {
-    html2canvasLoaderPromise = (async () => {
+async function loadHtml2Pdf() {
+  if (!html2pdfLoaderPromise) {
+    html2pdfLoaderPromise = (async () => {
       try {
-        const module = await import("html2canvas");
+        const module = await import("html2pdf.js");
         return module.default || module;
       } catch {
         const fallbackModule = await import(
-          /* @vite-ignore */ "/node_modules/html2canvas/dist/html2canvas.esm.js"
+          /* @vite-ignore */ "/node_modules/html2pdf.js/dist/html2pdf.bundle.min.js"
         );
         return fallbackModule.default || fallbackModule;
       }
     })().catch((error) => {
-      html2canvasLoaderPromise = null;
+      html2pdfLoaderPromise = null;
       throw error;
     });
   }
-  return html2canvasLoaderPromise;
+  return html2pdfLoaderPromise;
 }
 
 function waitForStablePaint() {
@@ -46,76 +46,70 @@ export function getQuoteFileToken(sourceQuote) {
 }
 
 export function useQuotePdf(quote, quotePreviewRef) {
-  const getQuoteSnapshotCanvas = async () => {
+  const buildPdfFromSnapshot = async () => {
     const node = quotePreviewRef.current;
     if (!node) throw new Error("No se pudo obtener la vista de la cotización.");
 
     await waitForStablePaint();
-    const html2canvas = await loadHtml2Canvas();
+    const html2pdf = await loadHtml2Pdf();
 
-    return html2canvas(node, {
-      scale: 1.5,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      logging: false,
-      windowWidth: node.scrollWidth,
-      windowHeight: node.scrollHeight,
-      scrollX: 0,
-      scrollY: -window.scrollY,
-      onclone: (clonedDocument) => {
-        const clonedRoot = clonedDocument.querySelector(
-          '[data-export-preview="quote"]'
-        );
-
-        if (clonedRoot) {
-          clonedRoot.style.cssText += "opacity:1;filter:none;transform:none;animation:none;";
+    const opt = {
+      margin:       [30, 0, 30, 0], // Top, left, bottom, right margins in pt
+      filename:     'Cotizacion.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { 
+        scale: 1.5, 
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        windowWidth: node.scrollWidth,
+        windowHeight: node.scrollHeight,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        onclone: (clonedDocument) => {
+          const clonedRoot = clonedDocument.querySelector(
+            '[data-export-preview="quote"]'
+          );
+          if (clonedRoot) {
+            clonedRoot.style.cssText += "opacity:1;filter:none;transform:none;animation:none;border-radius:0;margin:0;width:100%;max-width:none;border:none;";
+          }
+          clonedDocument.documentElement.classList.remove("dark");
+          clonedDocument.body.classList.remove("dark");
+          const animatedElements = clonedDocument.querySelectorAll(
+            ".animate-fade-in, .animate-slide-up, .animate-scale-in"
+          );
+          animatedElements.forEach((element) => {
+            element.style.cssText += "opacity:1;filter:none;transform:none;animation:none;transition:none;";
+          });
         }
-        
-        clonedDocument.documentElement.classList.remove("dark");
-        clonedDocument.body.classList.remove("dark");
-
-        const animatedElements = clonedDocument.querySelectorAll(
-          ".animate-fade-in, .animate-slide-up, .animate-scale-in"
-        );
-
-        animatedElements.forEach((element) => {
-          element.style.cssText += "opacity:1;filter:none;transform:none;animation:none;transition:none;";
-        });
       },
-    });
-  };
+      jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' },
+      pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+    };
 
-  const buildPdfFromSnapshot = async () => {
-    const [canvas, jspdfModule] = await Promise.all([
-      getQuoteSnapshotCanvas(),
-      import("jspdf"),
-    ]);
-    const jsPDFCtor = jspdfModule.jsPDF || jspdfModule.default;
-
-    const tempDoc = new jsPDFCtor({ unit: "pt", format: "a4" });
-    const pageWidth = tempDoc.internal.pageSize.getWidth();
+    const worker = html2pdf().set(opt).from(node);
     
-    const margin = 16;
-    const printableWidth = pageWidth - margin * 2;
-    const imageHeight = (canvas.height * printableWidth) / canvas.width;
-    const pageHeight = imageHeight + margin * 2;
-    const imageData = canvas.toDataURL("image/jpeg", 0.75);
+    const pdfBase64DataUri = await worker.outputPdf('datauristring');
+    const pdfBase64 = pdfBase64DataUri.split(",")[1] || "";
+    
+    const pdfBlob = await html2pdf().set(opt).from(node).outputPdf('blob');
 
-    const doc = new jsPDFCtor({ unit: "pt", format: [pageWidth, pageHeight] });
+    const doc = {
+      output: (type) => {
+        if (type === 'blob') return pdfBlob;
+        if (type === 'datauristring') return pdfBase64DataUri;
+        return pdfBlob;
+      },
+      save: (filename) => {
+        const url = URL.createObjectURL(pdfBlob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+    };
 
-    doc.addImage(
-      imageData,
-      "JPEG",
-      margin,
-      margin,
-      printableWidth,
-      imageHeight,
-      undefined,
-      "FAST"
-    );
-
-    const dataUri = doc.output("datauristring");
-    const pdfBase64 = dataUri.split(",")[1] || "";
     return { doc, pdfBase64 };
   };
 
@@ -185,6 +179,7 @@ export function useQuotePdf(quote, quotePreviewRef) {
               const lineBg = index % 2 === 0 ? "#ffffff" : "#f8fafc";
               const usersCount = Number(item.product?.users_count) || 0;
               const productMeta = [
+                item.product?.folio ? `Folio: ${item.product.folio}` : "",
                 item.product?.description || item.product?.category || "",
                 usersCount > 0 ? `${usersCount} Usuario(s)` : "",
               ]

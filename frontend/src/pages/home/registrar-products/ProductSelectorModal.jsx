@@ -80,8 +80,15 @@ export default function ProductSelectorModal({
                             <ItemLogo size={13} />
                           </span>
                         )}
-                        <div className="font-bold text-lg text-[#1e293b] dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 min-w-0 truncate">
-                          {item.name}
+                        <div className="min-w-0">
+                          <div className="font-bold text-lg text-[#1e293b] dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
+                            {item.name}
+                          </div>
+                          {item.folio && (
+                            <div className="mt-0.5 text-[11px] font-mono font-bold text-[#2277B4] dark:text-blue-400 tracking-wider">
+                              Folio: {item.folio}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
