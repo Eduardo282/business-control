@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { authenticateAdmin } from "./auth.js";
 
 const baseUrl = process.env.E2E_BASE_URL;
 const adminEmail = process.env.E2E_ADMIN_EMAIL;
@@ -6,27 +7,16 @@ const adminPassword = process.env.E2E_ADMIN_PASSWORD;
 const canRun = Boolean(baseUrl && adminEmail && adminPassword);
 const canWriteProducts = process.env.E2E_REGISTER_PRODUCTS === "true";
 
-async function loginAsAdmin(page) {
-  await page.goto(`${baseUrl}/login`);
-  await page.locator('input[type="email"]').fill(adminEmail);
-  await page.locator('input[type="password"]').fill(adminPassword);
-
-  await Promise.all([
-    page.waitForURL("**/"),
-    page.getByRole("button", { name: /Iniciar/i }).click(),
-  ]);
-}
-
 test.describe("product registration flow", () => {
   test.skip(!canRun, "E2E env not configured");
   test.skip(!canWriteProducts, "Set E2E_REGISTER_PRODUCTS=true to run write E2E");
 
-  test("admin registers a service and sees it in the product catalog", async ({ page }) => {
+  test("admin registers a service and sees it in the product catalog", async ({ page, request }) => {
     const suffix = Date.now();
     const categoryName = `QA Servicios ${suffix}`;
     const serviceName = `QA Servicio ${suffix}`;
 
-    await loginAsAdmin(page);
+    await authenticateAdmin(page, request, { email: adminEmail, password: adminPassword });
     await page.goto(`${baseUrl}/registrar-productos`);
 
     await page.getByRole("button", { name: /Gestionar categorías/i }).click();
