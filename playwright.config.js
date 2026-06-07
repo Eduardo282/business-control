@@ -36,7 +36,7 @@ export default defineConfig({
     baseURL: e2eFrontendUrl,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: /** @type {import('@playwright/test').TraceMode} */ (process.env.PLAYWRIGHT_TRACE) || 'retain-on-failure',
+    trace: /** @type {import('@playwright/test').TraceMode} */ (process.env.PLAYWRIGHT_TRACE) || 'on',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
