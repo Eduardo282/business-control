@@ -22,7 +22,9 @@ test.describe("product registration flow", () => {
     await page.getByRole("button", { name: /Gestionar categorías/i }).click();
     await page.getByPlaceholder("Ej. Contabilidad", { exact: true }).fill(categoryName);
     await page.getByRole("button", { name: /^Agregar$/i }).click();
-    await page.getByRole("button", { name: categoryName }).click();
+    await expect(
+      page.getByPlaceholder("Selecciona una categoría en Gestionar categorías")
+    ).toHaveValue(categoryName);
 
     await page.getByText(/Seleccionar o agregar productos o servicios/i).click();
     await page.getByRole("button", { name: /Servicios/i }).click();
