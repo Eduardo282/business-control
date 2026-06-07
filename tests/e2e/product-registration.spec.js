@@ -11,10 +11,16 @@ async function loginAsAdmin(page) {
   await page.locator('input[type="email"]').fill(adminEmail);
   await page.locator('input[type="password"]').fill(adminPassword);
 
-  await Promise.all([
-    page.waitForURL("**/"),
-    page.getByRole("button", { name: /Iniciar/i }).click(),
-  ]);
+  // 1. Hacemos clic en Iniciar Sesión (Sin Promise.all, solo el clic directo)
+    await page.getByRole('button', { name: /Iniciar/i }).click();
+
+    // 2. Esperamos a que el sistema procese el login y aparezca algo del "Dashboard" o del Layout principal.
+    // Ajusta esta línea para buscar algo que SIEMPRE aparezca cuando ya estás dentro del sistema.
+    // Por ejemplo, el botón de "Cerrar sesión" o el texto de bienvenida.
+    await expect(page.getByText(/Sistema Empresarial/i)).not.toBeVisible({ timeout: 10000 }); // Espera a que desaparezca la pantalla de login
+    
+    // Opcional: Espera a que un elemento de la nueva pantalla sea visible
+    // await expect(page.getByRole('button', { name: /Cerrar sesión/i })).toBeVisible();
 }
 
 test.describe("product registration flow", () => {
