@@ -11,15 +11,10 @@ async function loginAsAdmin(page) {
   await page.locator('input[type="email"]').fill(adminEmail);
   await page.locator('input[type="password"]').fill(adminPassword);
 
- // 1. Hacemos clic en Iniciar Sesión
-    await page.getByRole('button', { name: /Iniciar/i }).click();
-
-    // 2. Esperamos a que el campo de "Correo electrónico" desaparezca. 
-    // Esto es único del Login y no viola el Strict Mode.
-    await expect(page.locator('input[type="email"]')).not.toBeVisible({ timeout: 10000 });
-    
-    // Opcional: Espera a que un elemento de la nueva pantalla sea visible
-    // await expect(page.getByRole('button', { name: /Cerrar sesión/i })).toBeVisible();
+  await Promise.all([
+    page.waitForURL("**/"),
+    page.getByRole("button", { name: /Iniciar/i }).click(),
+  ]);
 }
 
 test.describe("product registration flow", () => {

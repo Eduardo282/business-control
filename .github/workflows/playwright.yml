@@ -48,7 +48,9 @@ jobs:
       VITE_API_URL: http://127.0.0.1:4000/graphql
       E2E_BASE_URL: http://127.0.0.1:5173
       E2E_ADMIN_EMAIL: admin@businesscontrol.com
-      E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }} # 6. Seguridad: Usa secretos de GitHub Actions para credenciales sensibles.
+      # Ephemeral CI database seeded from backend/sql/workbench_full_setup.sql.
+      # Must match the demo admin created there: admin@businesscontrol.com / Admin123*
+      E2E_ADMIN_PASSWORD: "Admin123*"
       E2E_REGISTER_PRODUCTS: "true"
       PLAYWRIGHT_START_SERVERS: "true"
       PLAYWRIGHT_VERSION: ""
