@@ -15,9 +15,14 @@ test.describe("quote flow", () => {
     await page.locator('input[type="password"]').fill(adminPassword);
 
     await Promise.all([
-      page.waitForURL("**/"),
-      page.getByRole("button", { name: /Iniciar/i }).click(),
+      // Espera explícitamente a que la URL cambie a la raíz o al dashboard
+      page.waitForURL(/\/$/), 
+      page.getByRole('button', { name: /Iniciar/i }).click(),
     ]);
+
+    // Debug: Verifica si el token se guardó en el navegador
+    const token = await page.evaluate(() => localStorage.getItem('bc_token'));
+    console.log("Token encontrado en el navegador:", token);
 
     await page.goto(`${baseUrl}/cotizaciones/nueva`);
     await expect(page).toHaveURL(/\/cotizaciones\/nueva/);
