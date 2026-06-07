@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 export const logger = {
   error(message, error) {
     if (import.meta.env.DEV) {

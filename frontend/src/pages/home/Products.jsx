@@ -679,7 +679,7 @@ export default function Products({ categoryFilter }) {
               <div className="flex flex-wrap gap-2 mt-3">
                 {q.trim() && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200">
-                    Texto: "{q.trim()}"{" "}
+                    Texto: &quot;{q.trim()}&quot;{" "}
                     <button onClick={() => setQ("")}>
                       <X size={10} />
                     </button>

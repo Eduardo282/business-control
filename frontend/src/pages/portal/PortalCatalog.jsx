@@ -426,7 +426,7 @@ export default function PortalCatalog() {
         <div className="flex flex-wrap items-center gap-2 mt-[-0.5rem] mb-2">
           {globalFilter && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
-              Texto: "{globalFilter}"
+              Texto: &quot;{globalFilter}&quot;
               <button onClick={() => setGlobalFilter("")}>
                 <X size={10} />
               </button>

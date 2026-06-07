@@ -92,7 +92,7 @@ export default function ClientSearchModal({
             : clientSearch.trim().length > 0 ?
               <div className="text-center py-10 text-zinc-400">
                 <Building2 size={40} className="mx-auto mb-3 opacity-20" />
-                No se encontraron clientes con "{clientSearch}"
+                No se encontraron clientes con &quot;{clientSearch}&quot;
               </div>
             : <div className="text-center py-10 text-zinc-400">
                 <Search size={40} className="mx-auto mb-3 opacity-20" />

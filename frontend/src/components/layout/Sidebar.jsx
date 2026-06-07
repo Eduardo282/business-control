@@ -3,6 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
 import logo from "./assets/logo.png";
 import { getPendingQuoteRequestsCountApi } from "../../actionsAPI/quotes.api";
+import { logger } from "../../services/logger";
 import {
   LayoutDashboard,
   BadgeDollarSign,
@@ -65,7 +66,9 @@ export default function Sidebar({ role }) {
         try {
           const count = await getPendingQuoteRequestsCountApi();
           setPendingCount(count);
-        } catch (e) {}
+        } catch (error) {
+          logger.warn("Unable to load pending quote requests count", error);
+        }
       };
       fetchCount();
       // Poll every 2 seconds

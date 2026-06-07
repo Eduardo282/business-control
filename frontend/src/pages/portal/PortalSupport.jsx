@@ -23,7 +23,7 @@ const API_URL = import.meta.env.VITE_API_URL?.replace("/graphql", "") || "http:/
  */
 export default function PortalSupport() {
   const { contact } = useOutletContext();
-  const [socket, setSocket] = useState(null);
+  const socketRef = useRef(null);
   const [connected, setConnected] = useState(false);
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -126,7 +126,9 @@ export default function PortalSupport() {
           gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
           osc.start(ctx.currentTime);
           osc.stop(ctx.currentTime + 0.3);
-        } catch {}
+        } catch (audioError) {
+          logger.warn("Unable to play support notification sound", audioError);
+        }
       }
     });
 
@@ -164,12 +166,13 @@ export default function PortalSupport() {
       setChatState((prev) => ["connecting", "waiting"].includes(prev) ? "idle" : prev);
     });
 
-    setSocket(s);
+    socketRef.current = s;
 
     return () => {
+      socketRef.current = null;
       s.disconnect();
     };
-  }, []);
+  }, [addToast]);
 
   // ── Auto scroll ──
   useEffect(() => {
@@ -178,16 +181,18 @@ export default function PortalSupport() {
 
   // ── Mark as seen when messages arrive ──
   useEffect(() => {
+    const socket = socketRef.current;
     if (socket && conversation && chatState === "active" && messages.length > 0) {
       const last = messages[messages.length - 1];
       if (last.sender_type === "AGENT") {
         socket.emit("messages:seen", { conversationId: conversation.id });
       }
     }
-  }, [messages, chatState]);
+  }, [messages, chatState, conversation]);
 
   // ── Handle typing ──
   const handleTyping = useCallback(() => {
+    const socket = socketRef.current;
     if (!socket || !conversation) return;
     if (!isTyping) {
       setIsTyping(true);
@@ -198,9 +203,10 @@ export default function PortalSupport() {
       setIsTyping(false);
       socket.emit("typing:stop", { conversationId: conversation.id });
     }, 2000);
-  }, [socket, conversation, isTyping]);
+  }, [conversation, isTyping]);
 
   const startChat = () => {
+    const socket = socketRef.current;
     if (!socket) return;
     setChatState("waiting");
     socket.emit("conversation:start", {
@@ -211,6 +217,7 @@ export default function PortalSupport() {
 
   const sendMessage = (e) => {
     e?.preventDefault();
+    const socket = socketRef.current;
     if (!inputText.trim() || !socket || !conversation) return;
     socket.emit("message:send", {
       conversationId: conversation.id,
@@ -224,6 +231,7 @@ export default function PortalSupport() {
   };
 
   const deleteMessage = (msgId) => {
+    const socket = socketRef.current;
     if (!socket || !conversation) return;
     socket.emit("message:delete", {
       messageId: msgId,
@@ -232,11 +240,13 @@ export default function PortalSupport() {
   };
 
   const handleClose = () => {
+    const socket = socketRef.current;
     if (!socket || !conversation) return;
     socket.emit("conversation:close", { conversationId: conversation.id });
   };
 
   const handleRate = (value) => {
+    const socket = socketRef.current;
     if (!socket || !conversation) return;
     setRating(value);
     socket.emit("conversation:rate", { conversationId: conversation.id, rating: value });

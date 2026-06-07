@@ -86,7 +86,9 @@ export default function AgentSupport() {
           osc.frequency.value = 660; osc.type = "sine"; gain.gain.value = 0.08;
           gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
           osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.25);
-        } catch {}
+        } catch (audioError) {
+          logger.warn("Unable to play support notification sound", audioError);
+        }
       }
     });
 

@@ -673,7 +673,6 @@ export default function CreateQuote() {
               </div>
               <div className="flex items-center gap-4 text-right">
                 <button
-                  variant="ghost"
                   onClick={() => navigate("/cotizaciones/historial")}
                   className="inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-xl text-sm font-semibold text-black dark:text-zinc-100 hover:text-zinc-700 dark:hover:text-zinc-300 border border-transparent transition-all">
                   <ArrowLeft size={16} /> Regresar a historial
@@ -805,7 +804,7 @@ export default function CreateQuote() {
                   <BadgeDollarSign size={32} className="text-zinc-400" />
                 </div>
                 <p className="text-zinc-600 dark:text-zinc-200 font-semibold max-w-sm text-center px-4">
-                  Agrega "Datos del Cliente y Agrega Productos" para habilitar.
+                  Agrega &quot;Datos del Cliente y Agrega Productos&quot; para habilitar.
                 </p>
               </div>
             )}

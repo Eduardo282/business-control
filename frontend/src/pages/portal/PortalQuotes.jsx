@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, FileText, FolderOpen, Clock, History, ExternalLink, Trash2, Edit2, X, Plus, Minus, Search, FileSpreadsheet, Building2, Globe, BadgeDollarSign, Package, Users, User, ClipboardList, Download, Shield, LayoutDashboard, ShoppingBag, ShoppingCart } from "@icons";
+import { ChevronLeft, ChevronRight, FileText, FolderOpen, Clock, History, ExternalLink, Trash2, X, Plus, Minus, Search, FileSpreadsheet, Building2, Globe, BadgeDollarSign, Package, Users, User, ClipboardList, Download, Shield, LayoutDashboard, ShoppingBag, ShoppingCart } from "@icons";
 import { listPortalQuotesApi, deletePortalQuoteApi, updatePortalQuoteRequestApi } from "../../actionsAPI/portal.api";
 import Swal from "sweetalert2";
 import { logger } from "../../services/logger";
@@ -69,6 +69,9 @@ const PRODUCT_LOGO_MAP = {
   "CONTPAQi Escritorio Virtual": Building2,
   "CONTPAQi Optimiza": LayoutDashboard,
 };
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const PORTAL_QUOTES_RENDER_NOW = Date.now();
 
 const initialState = {
   quotes: [],
@@ -150,7 +153,7 @@ function PortalHeader({ filter, statusFilter, onStatusFilterChange }) {
   );
 }
 
-function QuoteRow({ quote, onEdit, onDelete }) {
+function QuoteRow({ quote, onDelete }) {
   const createdDate = new Date(quote.created_at);
   const expirationDate = new Date(createdDate.getTime() + 15 * 24 * 60 * 60 * 1000);
 
@@ -381,11 +384,7 @@ export default function PortalQuotes() {
   const [state, dispatch] = useReducer(portalReducer, initialState);
   const { quotes, loading, error, statusFilter, page, pageSize, editingQuote, editItems, savingEdit } = state;
 
-  useEffect(() => {
-    loadQuotes();
-  }, []);
-
-  const loadQuotes = async () => {
+  const loadQuotes = useCallback(async () => {
     dispatch({ type: "FETCH_START" });
     try {
       const data = await listPortalQuotesApi();
@@ -395,7 +394,11 @@ export default function PortalQuotes() {
       const msg = e.response?.data?.errors?.[0]?.message || e.message || "Error al cargar cotizaciones";
       dispatch({ type: "FETCH_ERROR", payload: msg });
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadQuotes();
+  }, [loadQuotes]);
 
   const handleDelete = async (id) => {
     const result = await Swal.fire({
@@ -478,10 +481,8 @@ export default function PortalQuotes() {
     }
   };
 
-  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
   const displayedQuotes = useMemo(() => {
-    const now = Date.now();
+    const now = PORTAL_QUOTES_RENDER_NOW;
     return quotes.filter((q) => {
       let computedStatus = q.status || "PENDING";
       if (computedStatus !== "REJECTED" && computedStatus !== "REQUESTED") {

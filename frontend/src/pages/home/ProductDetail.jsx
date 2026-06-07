@@ -504,7 +504,6 @@ export default function ProductDetail() {
               </div>
               <div className="flex pt-2 text-lg font-bold text-white items-center gap-2">
                 <button
-                  variant="ghost"
                   type="button"
                   onClick={() => setIsEditing(false)}
                   className="flex-1 py-3 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors">

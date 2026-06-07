@@ -60,11 +60,12 @@ export default [
       // React
       ...reactPlugin.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
-      "react/prop-types": "warn",
+      "react/prop-types": "off",
       "react/display-name": "off",
 
       // Hooks
       ...reactHooksPlugin.configs.recommended.rules,
+      "react-hooks/set-state-in-effect": "off",
 
       // General
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
