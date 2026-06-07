@@ -97,6 +97,26 @@ jobs:
             | mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD"
           pnpm --dir backend migrate
 
+      - name: Ensure E2E admin credentials
+        run: |
+          mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" <<'EOF'
+          INSERT INTO users (role_id, full_name, email, telefono, password_hash, is_active)
+          SELECT r.id,
+                 'Administrador',
+                 'admin@businesscontrol.com',
+                 '555-000-0000',
+                 '$2a$10$/2bZf8v74shgLeu4bShB5.5R5JJdkIRtCGhJSDFbnZr6RaXqxaLQu',
+                 1
+          FROM roles r
+          WHERE r.name = 'ADMIN'
+          ON DUPLICATE KEY UPDATE
+            role_id = VALUES(role_id),
+            full_name = VALUES(full_name),
+            telefono = VALUES(telefono),
+            password_hash = VALUES(password_hash),
+            is_active = VALUES(is_active);
+          EOF
+
       - name: Run shared unit tests
         run: pnpm run test:unit
 
