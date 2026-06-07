@@ -20,7 +20,7 @@ test.describe("product registration flow", () => {
     await page.goto(`${baseUrl}/registrar-productos`);
 
     await page.getByRole("button", { name: /Gestionar categorías/i }).click();
-    await page.getByPlaceholder(/Ej\. Contabilidad/i).fill(categoryName);
+    await page.getByPlaceholder("Ej. Contabilidad", { exact: true }).fill(categoryName);
     await page.getByRole("button", { name: /^Agregar$/i }).click();
     await page.getByRole("button", { name: categoryName }).click();
 

@@ -13,6 +13,6 @@ test.describe("quote flow", () => {
     await authenticateAdmin(page, request, { email: adminEmail, password: adminPassword });
     await page.goto(`${baseUrl}/cotizaciones/nueva`);
     await expect(page).toHaveURL(/\/cotizaciones\/nueva/);
-    await expect(page.getByText(/cliente/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Datos del Cliente/i })).toBeVisible();
   });
 });
