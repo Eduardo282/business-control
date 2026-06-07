@@ -1,33 +1,154 @@
-name: Playwright Tests
+name: Quality Gate
+
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
+  
+    # 1. Seguridad: Permisos de solo lectura por defecto para evitar vulnerabilidades.
+permissions:
+  contents: read
+  
+
+# 2. Ahorro de Minutos: Cancela la ejecución anterior si haces un nuevo push rápido.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
+    name: Tests, coverage, build and E2E
     timeout-minutes: 60
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: business_control_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      NODE_ENV: test
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: business_control_test
+      JWT_SECRET: ci-test-secret
+      CORS_ORIGIN: http://127.0.0.1:5173
+      VITE_API_URL: http://127.0.0.1:4000/graphql
+      E2E_BASE_URL: http://127.0.0.1:5173
+      E2E_ADMIN_EMAIL: admin@businesscontrol.com
+      E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }} # 6. Seguridad: Usa secretos de GitHub Actions para credenciales sensibles.
+      E2E_REGISTER_PRODUCTS: "true"
+      PLAYWRIGHT_START_SERVERS: "true"
+      PLAYWRIGHT_VERSION: ""
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-    - name: Install dependencies
-      run: npm install -g pnpm && pnpm install
-    - name: Run unit tests
-      run: pnpm test:unit
-    - name: Install Playwright Browsers
-      run: pnpm exec playwright install --with-deps
-    - name: Run Playwright tests
-      run: pnpm exec playwright test
-      env:
-        VITE_API_URL: http://127.0.0.1:4000/graphql
-        CORS_ORIGIN: http://127.0.0.1:5173
-        NODE_ENV: test
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+      # 5. Seguridad Extrema: Fijación por SHA en lugar de usar @v4 (apunta a la versión v4.1.1 de checkout).
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+        # 3. Código Limpio: Validación estática rápida antes de levantar la base de datos.
+      - name: Linter & Formatting Checks
+        run: |
+          git diff --check
+          pnpm run lint  <-- Descomenta esto si tienes configurado ESLint en tu package.json
+
+      - name: Install MySQL client
+        run: sudo apt-get update && sudo apt-get install -y default-mysql-client
+
+      - name: Create backend test env file
+        run: |
+          cat > backend/.env <<EOF
+          NODE_ENV=$NODE_ENV
+          MYSQL_HOST=$MYSQL_HOST
+          MYSQL_PORT=$MYSQL_PORT
+          MYSQL_USER=$MYSQL_USER
+          MYSQL_PASSWORD=$MYSQL_PASSWORD
+          MYSQL_DATABASE=$MYSQL_DATABASE
+          JWT_SECRET=$JWT_SECRET
+          CORS_ORIGIN=$CORS_ORIGIN
+          EOF
+
+      - name: Prepare test database
+        run: |
+          sed 's/business_control/business_control_test/g' backend/sql/workbench_full_setup.sql \
+            | mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD"
+          pnpm --dir backend migrate
+
+      - name: Run shared unit tests
+        run: pnpm run test:unit
+
+      - name: Run frontend component tests
+        run: pnpm run test:frontend
+
+      - name: Run backend integration tests
+        run: pnpm --dir backend test
+        env:
+          RUN_INTEGRATION_TESTS: "true"
+
+      - name: Generate frontend coverage report
+        run: pnpm run test:coverage
+
+      - name: Build frontend
+        run: pnpm run build:frontend
+
+# 4. Rendimiento: Cacheo inteligente de binarios de Playwright.
+      - name: Get Playwright version
+        id: playwright-version
+        run: |
+          echo "PLAYWRIGHT_VERSION=$(pnpm ls @playwright/test --json | grep -o '"version": "[^"]*"' | head -n 1 | cut -d'"' -f4)" >> $GITHUB_ENV
+
+      - name: Cache Playwright Browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Install Playwright browsers (if not cached)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Install Playwright OS dependencies (if cached)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+
+      - name: Run E2E smoke tests
+        run: pnpm exec playwright test --project=chromium
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: frontend-coverage
+          path: coverage/frontend/
+          retention-days: 30
+          

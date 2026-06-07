@@ -44,3 +44,7 @@ pnpm-debug.log*
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+coverage/
+
+# Added by ggshield
+.cache_ggshield

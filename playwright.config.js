@@ -1,6 +1,12 @@
 // @ts-check
 import { defineConfig, devices } from '@playwright/test';
 
+const e2eBackendPort = process.env.E2E_BACKEND_PORT || '4000';
+const e2eFrontendPort = process.env.E2E_FRONTEND_PORT || '5173';
+const e2eFrontendUrl = process.env.E2E_BASE_URL || `http://127.0.0.1:${e2eFrontendPort}`;
+const e2eApiUrl = process.env.E2E_API_URL || `http://127.0.0.1:${e2eBackendPort}/graphql`;
+const useTestDatabase = process.env.E2E_USE_TEST_DATABASE === 'true';
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -23,14 +29,16 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: [['list'], ['html', { open: 'never' }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:5173',
+    baseURL: e2eFrontendUrl,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: /** @type {import('@playwright/test').TraceMode} */ (process.env.PLAYWRIGHT_TRACE) || 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
 
   /* Configure projects for major browsers */
@@ -72,10 +80,35 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  webServer: process.env.PLAYWRIGHT_START_SERVERS === 'true'
+    ? [
+        {
+          command: useTestDatabase ? 'node tests/e2e/start-test-backend.mjs' : 'pnpm --dir backend start',
+          url: `http://127.0.0.1:${e2eBackendPort}/health`,
+          reuseExistingServer: useTestDatabase ? false : !process.env.CI,
+          timeout: 120_000,
+          env: {
+            ...process.env,
+            NODE_ENV: 'test',
+            PORT: String(e2eBackendPort),
+            CORS_ORIGIN: e2eFrontendUrl,
+            JWT_SECRET: process.env.JWT_SECRET || 'e2e-test-secret',
+            MYSQL_DATABASE: useTestDatabase
+              ? (process.env.MYSQL_TEST_DATABASE || 'business_control_test')
+              : process.env.MYSQL_DATABASE || '',
+          },
+        },
+        {
+          command: `pnpm --dir frontend dev --host 127.0.0.1 --port ${e2eFrontendPort}`,
+          url: e2eFrontendUrl,
+          reuseExistingServer: useTestDatabase ? false : !process.env.CI,
+          timeout: 120_000,
+          env: {
+            ...process.env,
+            VITE_API_URL: e2eApiUrl,
+          },
+        },
+      ]
+    : undefined,
 });
 

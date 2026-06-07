@@ -34,6 +34,8 @@ export async function createProductAction({
     await conn.beginTransaction();
 
     const safeType = normalizeCatalogProductType(product_type);
+    const safeUsersCount =
+      safeType === "SERVICE" || safeType === "POLICY" ? 1 : users_count || 0;
 
     const productId = await insertProduct(
       {
@@ -41,7 +43,7 @@ export async function createProductAction({
         category,
         current_price: price,
         description: description || null,
-        users_count: users_count || 0,
+        users_count: safeUsersCount,
         client_id: client_id || null,
         product_type: safeType,
       },
@@ -71,7 +73,7 @@ export async function createProductAction({
       name,
       category,
       current_price: price,
-      users_count: users_count || 0,
+      users_count: safeUsersCount,
       description,
       client_id,
       product_type: safeType,

@@ -1,6 +1,7 @@
 {
   "name": "business-control",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@11.1.1+sha512.d1fdf5f73c617b64fa1a56a81c3c8dfe0e966e33a6010aa256b517ae77be21d93e05affc0de1a83b0e4f29d569f68b446ae8f068cd7247c0bb3df0fb4d7bdf9a",
   "scripts": {
     "dev:frontend": "pnpm --dir frontend dev",
@@ -8,19 +9,37 @@
     "test:unit": "node --test shared/tests/quotePricingRules.test.js shared/tests/quoteItems.test.js",
     "test:integration": "pnpm --dir backend test",
     "test:e2e": "playwright test",
-    "test": "pnpm run test:unit && pnpm run test:integration",
+    "test": "pnpm run test:unit && pnpm run test:frontend && pnpm run test:integration",
     "build:frontend": "pnpm --dir frontend build",
     "build": "pnpm run build:frontend",
-    "lint": "echo \"Configure ESLint or Biome for linting\"",
-    "format": "echo \"Configure Prettier or Biome for formatting\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "scan:front": "nuclei -u http://192.168.100.4:5173",
     "scan:back": "nuclei -u http://127.0.0.1:4000",
     "scan:all": "nuclei -u http://192.168.100.4:5173 -u http://127.0.0.1:4000",
-    "scan:graphql": "nuclei -u http://127.0.0.1:4000/graphql -tags graphql"
+    "scan:graphql": "nuclei -u http://127.0.0.1:4000/graphql -tags graphql",
+    "test:frontend": "vitest run",
+    "test:frontend:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:demo": "playwright test product-registration --project=chromium --headed --trace on",
+    "test:ci": "pnpm run test:unit && pnpm run test:frontend && pnpm run test:integration && pnpm run build:frontend",
+    "test:integration:db": "pnpm --dir backend test:integration:db",
+    "test:e2e:real": "node tests/e2e/run-real-e2e.mjs"
   },
-
-  "devDependencies": { 
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.60.0",
-    "@types/node": "^25.7.0"
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^25.7.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
+    "jsdom": "^29.1.1",
+    "vitest": "^2.1.9"
   }
 }

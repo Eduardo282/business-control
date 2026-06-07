@@ -31,7 +31,7 @@ export const quote = async (_parent, { id }, ctx) => {
       String(found.contact_id) === String(ctx.user.contactId) &&
       Boolean(found.is_registered) &&
       Boolean(found.is_sent_to_client_portal) &&
-      !Boolean(found.is_deleted_portal);
+      !found.is_deleted_portal;
 
     if (!canAccessPortalQuote) {
       throw forbidden();
