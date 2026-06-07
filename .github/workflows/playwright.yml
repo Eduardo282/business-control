@@ -47,9 +47,9 @@ jobs:
       CORS_ORIGIN: http://127.0.0.1:5173
       VITE_API_URL: http://127.0.0.1:4000/graphql
       E2E_BASE_URL: http://127.0.0.1:5173
-      E2E_ADMIN_EMAIL: admin@businesscontrol.com
-      # Ephemeral CI database seeded from backend/sql/workbench_full_setup.sql.
-      # Must match the demo admin created there: admin@businesscontrol.com / Admin123*
+      E2E_API_URL: http://127.0.0.1:4000/graphql
+      E2E_USE_TEST_DATABASE: "true"
+      E2E_ADMIN_EMAIL: admin@businesscontrol.test
       E2E_ADMIN_PASSWORD: "Admin123*"
       E2E_REGISTER_PRODUCTS: "true"
       PLAYWRIGHT_START_SERVERS: "true"
@@ -96,26 +96,6 @@ jobs:
           sed 's/business_control/business_control_test/g' backend/sql/workbench_full_setup.sql \
             | mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD"
           pnpm --dir backend migrate
-
-      - name: Ensure E2E admin credentials
-        run: |
-          mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" <<'EOF'
-          INSERT INTO users (role_id, full_name, email, telefono, password_hash, is_active)
-          SELECT r.id,
-                 'Administrador',
-                 'admin@businesscontrol.com',
-                 '555-000-0000',
-                 '$2a$10$/2bZf8v74shgLeu4bShB5.5R5JJdkIRtCGhJSDFbnZr6RaXqxaLQu',
-                 1
-          FROM roles r
-          WHERE r.name = 'ADMIN'
-          ON DUPLICATE KEY UPDATE
-            role_id = VALUES(role_id),
-            full_name = VALUES(full_name),
-            telefono = VALUES(telefono),
-            password_hash = VALUES(password_hash),
-            is_active = VALUES(is_active);
-          EOF
 
       - name: Run shared unit tests
         run: pnpm run test:unit
