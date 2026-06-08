@@ -5,23 +5,67 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
-  
-    # 1. Seguridad: Permisos de solo lectura por defecto para evitar vulnerabilidades.
+
 permissions:
   contents: read
-  
 
-# 2. Ahorro de Minutos: Cancela la ejecución anterior si haces un nuevo push rápido.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  test:
-    name: Tests, coverage, build and E2E
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
+# Variables globales que se usarán en múltiples jobs
+env:
+  NODE_VERSION: 24
 
+jobs:
+  # -------------------------------------------------------------------
+  # JOB 1: LINT & UNIT TESTS (Rápido, sin base de datos)
+  # -------------------------------------------------------------------
+  lint-and-unit:
+    name: 🧹 Lint & Unit Tests
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --no-optional
+
+      - name: Linter & Formatting Checks
+        run: |
+          git diff --check
+          pnpm run lint  
+
+      - name: Run shared unit tests
+        run: pnpm run test:unit
+
+      - name: Run frontend component tests
+        run: pnpm run test:frontend
+
+      - name: Generate frontend coverage report
+        run: pnpm run test:coverage
+
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: coverage/frontend/
+          retention-days: 15
+
+  # -------------------------------------------------------------------
+  # JOB 2: INTEGRATION & E2E (Requiere MySQL y Playwright)
+  # -------------------------------------------------------------------
+  integration-and-e2e:
+    name: 🧪 Integration & E2E Tests
+    needs: lint-and-unit # Solo se ejecuta si el Job 1 pasa exitosamente
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
     services:
       mysql:
         image: mysql:8.4
@@ -37,6 +81,7 @@ jobs:
           --health-retries=10
 
     env:
+      # Variables confinadas solo al job que las necesita
       NODE_ENV: test
       MYSQL_HOST: 127.0.0.1
       MYSQL_PORT: 3306
@@ -53,33 +98,24 @@ jobs:
       E2E_ADMIN_PASSWORD: "Admin123*"
       E2E_REGISTER_PRODUCTS: "true"
       PLAYWRIGHT_START_SERVERS: "true"
+      RUN_INTEGRATION_TESTS: "true"
       PLAYWRIGHT_VERSION: ""
 
     steps:
-      # 5. Seguridad Extrema: Fijación por SHA en lugar de usar @v4 (apunta a la versión v4.1.1 de checkout).
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-
+      
       - uses: pnpm/action-setup@v4
-
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile 
+        run: pnpm install --frozen-lockfile --no-optional
 
-        # 3. Código Limpio: Validación estática rápida antes de levantar la base de datos.
-      - name: Linter & Formatting Checks
+      - name: Install MySQL client & Setup DB
         run: |
-          git diff --check
-          pnpm run lint  
-
-      - name: Install MySQL client
-        run: sudo apt-get update && sudo apt-get install -y default-mysql-client
-
-      - name: Create backend test env file
-        run: |
+          sudo apt-get update && sudo apt-get install -y default-mysql-client
           cat > backend/.env <<EOF
           NODE_ENV=$NODE_ENV
           MYSQL_HOST=$MYSQL_HOST
@@ -90,36 +126,20 @@ jobs:
           JWT_SECRET=$JWT_SECRET
           CORS_ORIGIN=$CORS_ORIGIN
           EOF
-
-      - name: Prepare test database
-        run: |
           sed 's/business_control/business_control_test/g' backend/sql/workbench_full_setup.sql \
             | mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD"
           pnpm --dir backend migrate
 
-      - name: Run shared unit tests
-        run: pnpm run test:unit
-
-      - name: Run frontend component tests
-        run: pnpm run test:frontend
-
       - name: Run backend integration tests
         run: pnpm --dir backend test
-        env:
-          RUN_INTEGRATION_TESTS: "true"
 
-      - name: Generate frontend coverage report
-        run: pnpm run test:coverage
-
-      - name: Build frontend
+      - name: Build frontend for E2E
         run: pnpm run build:frontend
 
-# 4. Rendimiento: Cacheo inteligente de binarios de Playwright.
       - name: Get Playwright version
         id: playwright-version
         run: |
           echo "PLAYWRIGHT_VERSION=$(pnpm ls @playwright/test --json | grep -o '"version": "[^"]*"' | head -n 1 | cut -d'"' -f4)" >> $GITHUB_ENV
-
       - name: Cache Playwright Browsers
         uses: actions/cache@v4
         id: playwright-cache
@@ -138,17 +158,10 @@ jobs:
       - name: Run E2E smoke tests
         run: pnpm exec playwright test --project=chromium
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
           path: playwright-report/
-          retention-days: 30
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: frontend-coverage
-          path: coverage/frontend/
-          retention-days: 30
-          
+          retention-days: 15
