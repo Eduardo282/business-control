@@ -67,7 +67,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --no-optional
+        run: pnpm install --frozen-lockfile 
 
         # 3. Código Limpio: Validación estática rápida antes de levantar la base de datos.
       - name: Linter & Formatting Checks
