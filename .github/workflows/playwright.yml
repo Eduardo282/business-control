@@ -111,7 +111,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --no-optional
+        run: pnpm install --frozen-lockfile
 
       - name: Install MySQL client & Setup DB
         run: |
