@@ -74,6 +74,8 @@ import ContactFilterPicker from "./client-detail/ContactFilterPicker";
 
 const EXCEL_VIEW_STORAGE_KEY = "clients_excel_view_config";
 const CONTACTS_EXCEL_VIEW_STORAGE_KEY = "contacts_excel_view_config";
+const CONTACT_TABLE_HEADER_HEIGHT = 41;
+const CONTACT_TABLE_ROW_HEIGHT = 56;
 const CONTACT_QUICK_FILTER_FIELDS = [
   {
     id: "position_title",
@@ -274,6 +276,7 @@ export default function ClientDetail() {
     useState(null);
   const [contactFilterPickerSearch, setContactFilterPickerSearch] =
     useState("");
+  const [contactFilterPickerPage, setContactFilterPickerPage] = useState(0);
 
   // Estado de edición de contacto
   const [editingContactId, setEditingContactId] = useState(null);
@@ -985,6 +988,7 @@ export default function ClientDetail() {
     if (!showContactFilters) {
       setActiveContactFilterPickerField(null);
       setContactFilterPickerSearch("");
+      setContactFilterPickerPage(0);
     }
   }, [showContactFilters]);
 
@@ -1028,16 +1032,19 @@ export default function ClientDetail() {
     });
     setActiveContactFilterPickerField(null);
     setContactFilterPickerSearch("");
+    setContactFilterPickerPage(0);
   };
 
   const openContactFilterPicker = (fieldName) => {
     setActiveContactFilterPickerField(fieldName);
     setContactFilterPickerSearch("");
+    setContactFilterPickerPage(0);
   };
 
   const closeContactFilterPicker = () => {
     setActiveContactFilterPickerField(null);
     setContactFilterPickerSearch("");
+    setContactFilterPickerPage(0);
   };
 
   const applyContactFilterValue = (value) => {
@@ -1085,6 +1092,8 @@ export default function ClientDetail() {
   const visibleContactRows = contactsTable.getRowModel().rows;
   const contactsPageSize = contactsTable.getState().pagination.pageSize;
   const shouldEnableContactTableScroll = contactsPageSize >= 25;
+  const contactTableMinHeight =
+    CONTACT_TABLE_HEADER_HEIGHT + contactsPageSize * CONTACT_TABLE_ROW_HEIGHT;
 
   const {
     handleExportContactsPDF,
@@ -1418,6 +1427,8 @@ export default function ClientDetail() {
                 activeContactFilterPickerConfig={activeContactFilterPickerConfig}
                 contactFilterPickerSearch={contactFilterPickerSearch}
                 setContactFilterPickerSearch={setContactFilterPickerSearch}
+                contactFilterPickerPage={contactFilterPickerPage}
+                setContactFilterPickerPage={setContactFilterPickerPage}
                 visibleContactFilterPickerOptions={visibleContactFilterPickerOptions}
                 contactFilters={contactFilters}
                 applyContactFilterValue={applyContactFilterValue}
@@ -1477,6 +1488,11 @@ export default function ClientDetail() {
                 className={`bg-white dark:bg-dark-900 overflow-x-auto border border-zinc-200 dark:border-dark-700 border-t-0 rounded-b-md ${
                   shouldEnableContactTableScroll ? "h-[65vh] overflow-y-scroll" : ""
                 }`}
+                style={
+                  shouldEnableContactTableScroll
+                    ? undefined
+                    : { minHeight: `${contactTableMinHeight}px` }
+                }
               >
                 <table className="w-full text-sm">
                   <thead>

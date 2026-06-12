@@ -6,6 +6,7 @@ import * as products from "./products.query.js";
 import * as quotes from "./quotes.query.js";
 import * as policies from "./policies.query.js";
 import * as categories from "./categories.query.js";
+import * as formDrafts from "./formDrafts.query.js";
 
 export default {
   ...auth,
@@ -16,4 +17,5 @@ export default {
   ...quotes,
   ...policies,
   ...categories,
+  ...formDrafts,
 };

@@ -22,6 +22,7 @@ export default defineConfig({
             return "pdf-export";
           }
           if (normalizedId.includes("/html2canvas/")) return "canvas-export";
+          if (normalizedId.includes("/html2pdf.js/")) return "html2pdf";
           if (normalizedId.includes("/@tanstack/")) return "table-vendor";
           if (normalizedId.includes("/sweetalert2/")) return "alerts";
           if (normalizedId.includes("/date-fns/")) return "date-utils";

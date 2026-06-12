@@ -104,39 +104,39 @@ export default function ClientFilterPicker({
             )}
           </div>
 
-          {options.length > FILTER_PAGE_SIZE && (
-            <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
-              <span className="text-xs text-zinc-500">
-                {filterPickerPage * FILTER_PAGE_SIZE + 1} -{" "}
-                {Math.min(
-                  (filterPickerPage + 1) * FILTER_PAGE_SIZE,
-                  options.length
-                )}{" "}
-                de {options.length}
-              </span>
-              <div className="flex gap-1">
-                <button
-                  onClick={() =>
-                    setFilterPickerPage((p) => Math.max(0, p - 1))
-                  }
-                  disabled={filterPickerPage === 0}
-                  className="px-2 py-1 text-xs font-medium text-zinc-600 bg-zinc-100 rounded hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Anterior
-                </button>
-                <button
-                  onClick={() => setFilterPickerPage((p) => p + 1)}
-                  disabled={
-                    (filterPickerPage + 1) * FILTER_PAGE_SIZE >=
-                    options.length
-                  }
-                  className="px-2 py-1 text-xs font-medium text-zinc-600 bg-zinc-100 rounded hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Siguiente
-                </button>
-              </div>
+          <div className="min-h-9 flex items-center justify-between pt-2 border-t border-zinc-100">
+            <span className="text-xs text-zinc-500">
+              {options.length > 0
+                ? filterPickerPage * FILTER_PAGE_SIZE + 1
+                : 0}{" "}
+              -{" "}
+              {Math.min(
+                (filterPickerPage + 1) * FILTER_PAGE_SIZE,
+                options.length
+              )}{" "}
+              de {options.length}
+            </span>
+            <div className="flex gap-1">
+              <button
+                onClick={() =>
+                  setFilterPickerPage((p) => Math.max(0, p - 1))
+                }
+                disabled={filterPickerPage === 0}
+                className="px-2 py-1 text-xs font-medium text-zinc-600 bg-zinc-100 rounded hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setFilterPickerPage((p) => p + 1)}
+                disabled={
+                  (filterPickerPage + 1) * FILTER_PAGE_SIZE >= options.length
+                }
+                className="px-2 py-1 text-xs font-medium text-zinc-600 bg-zinc-100 rounded hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Siguiente
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>,

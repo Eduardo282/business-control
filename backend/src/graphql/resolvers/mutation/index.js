@@ -5,6 +5,7 @@ import * as products from "./products.mutation.js";
 import * as quotes from "./quotes.mutation.js";
 import * as roles from "./roles.mutation.js";
 import * as categories from "./categories.mutation.js";
+import * as formDrafts from "./formDrafts.mutation.js";
 
 export default {
   ...auth,
@@ -14,4 +15,5 @@ export default {
   ...quotes,
   ...roles,
   ...categories,
+  ...formDrafts,
 };

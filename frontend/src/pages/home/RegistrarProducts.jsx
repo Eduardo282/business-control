@@ -31,6 +31,7 @@ import {
 } from "../../actionsAPI/products.api";
 import { notificationService } from "../../services/notificationService";
 import { logger } from "../../services/logger";
+import { usePersistedFormDraft } from "../../hooks/usePersistedFormDraft";
 
 // Modularized components
 import SourceSelectionModal from "./registrar-products/SourceSelectionModal";
@@ -447,6 +448,58 @@ export default function RegistrarProducts() {
   const selectedCategory = String(newProduct.category || "").trim();
   const selectedCategoryType =
     categoryTypeByName[getCategoryTypeKey(selectedCategory)] || "";
+
+  const productDraftScope = fixedClientId ? `client:${fixedClientId}` : "global";
+  const productDraftData = useMemo(
+    () => ({
+      newProduct,
+      currentMaxUsers,
+      selectedSourceType,
+      activeFormMode,
+    }),
+    [newProduct, currentMaxUsers, selectedSourceType, activeFormMode]
+  );
+
+  usePersistedFormDraft({
+    formKey: "register-product",
+    scopeKey: productDraftScope,
+    data: productDraftData,
+    isMeaningfulDraft: (draft) => {
+      const product = draft?.newProduct || {};
+      return Boolean(
+        String(product.name || "").trim() ||
+          String(product.category || "").trim() ||
+          String(product.description || "").trim() ||
+          Number(product.price || 0) > 0 ||
+          Number(product.users_count || 1) > 1 ||
+          draft?.activeFormMode
+      );
+    },
+    onDraftLoaded: (draft) => {
+      if (draft?.newProduct) {
+        setNewProduct((prev) => ({
+          ...prev,
+          ...draft.newProduct,
+          product_type:
+            normalizeCatalogProductType(draft.newProduct.product_type) ||
+            prev.product_type,
+        }));
+      }
+      if (draft?.currentMaxUsers) {
+        setCurrentMaxUsers(Math.max(1, Number(draft.currentMaxUsers) || 30));
+      }
+      if (draft?.selectedSourceType) {
+        setSelectedSourceType(
+          normalizeCatalogProductType(draft.selectedSourceType) || "PRODUCT"
+        );
+      }
+      if (draft?.activeFormMode) {
+        setActiveFormMode(
+          normalizeCatalogProductType(draft.activeFormMode) || null
+        );
+      }
+    },
+  });
 
   const builtInCategories = useMemo(() => {
     const values = [];
@@ -1122,7 +1175,7 @@ export default function RegistrarProducts() {
             </div>
           </div>
 
-          <div className="flex justify-end mt-6 pt-4 border-t border-light-border dark:border-white/5">
+          <div className="flex justify-end mt-6 pt-4">
             <button
               type="submit"
               className="px-8 py-2 justify-center bg-[#2277B4] hover:bg-[#125280] text-white rounded-xl shadow-lg shadow-[#2277B450]"

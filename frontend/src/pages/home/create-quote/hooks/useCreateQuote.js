@@ -14,6 +14,8 @@ import {
   getQuoteApi,
   resolveQuoteRequestApi,
 } from "../../../../actionsAPI/quotes.api";
+import { deleteFormDraftApi } from "../../../../actionsAPI/formDrafts.api";
+import { usePersistedFormDraft } from "../../../../hooks/usePersistedFormDraft";
 import {
   normalizeDiscount,
   calculateItemTotal,
@@ -148,6 +150,73 @@ export function useCreateQuote(navigate) {
       normalizeSearchText(value).includes(search),
     );
   }, [tableFilterPickerOptions, tableFilterPickerSearch]);
+
+  const fixedClientId = searchParams.get("client_id");
+  const requestId = searchParams.get("request_id");
+  const quoteDraftScope = fixedClientId ? `client:${fixedClientId}` : "global";
+  const quoteDraftData = useMemo(
+    () => ({
+      clientSearch,
+      selectedClient:
+        selectedClient ?
+          {
+            id: selectedClient.id,
+            business_name: selectedClient.business_name,
+            rfc: selectedClient.rfc,
+            contacts: selectedClient.contacts || [],
+          }
+        : null,
+      selectedContactId,
+      items,
+      folio,
+    }),
+    [clientSearch, selectedClient, selectedContactId, items, folio],
+  );
+
+  usePersistedFormDraft({
+    formKey: "create-quote",
+    scopeKey: quoteDraftScope,
+    data: quoteDraftData,
+    enabled: !requestId,
+    isMeaningfulDraft: (draft) =>
+      Boolean(
+        draft?.selectedClient ||
+          String(draft?.clientSearch || "").trim() ||
+          String(draft?.folio || "").trim() ||
+          draft?.items?.length,
+      ),
+    onDraftLoaded: (draft) => {
+      if (draft?.selectedClient) {
+        setSelectedClient(draft.selectedClient);
+        setClientSearch(draft.clientSearch || draft.selectedClient.business_name || "");
+      } else if (draft?.clientSearch) {
+        setClientSearch(draft.clientSearch);
+      }
+
+      if (draft?.selectedContactId) {
+        setSelectedContactId(draft.selectedContactId);
+      }
+
+      if (Array.isArray(draft?.items)) {
+        setItems(
+          draft.items.map((item) => ({
+            ...item,
+            tempId: item.tempId || createQuoteItemId(),
+            discount: clampDiscount(item.discount || 0),
+            quantity: Math.max(1, Number(item.quantity) || 1),
+            price: Math.max(0, Number(item.price) || 0),
+            total:
+              Number(item.total) ||
+              calculateItemTotal(item.price, item.quantity, item.discount),
+          })),
+        );
+      }
+
+      if (draft?.folio) {
+        setFolio(String(draft.folio).toUpperCase());
+      }
+    },
+  });
 
   const loadRequest = async (id) => {
     try {
@@ -486,6 +555,7 @@ export function useCreateQuote(navigate) {
       setShowPreviewModal(false);
 
       if (savedQuote?.id) {
+        await deleteFormDraftApi("create-quote", quoteDraftScope);
         navigate(`/cotizaciones/${savedQuote.id}`);
         return;
       }

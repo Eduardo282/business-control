@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from "react";
-import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { notificationService } from "../../services/notificationService";
 import { useAuth } from "../../hooks/useAuth";
@@ -29,6 +28,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import { exportRowsToExcel } from "../../utils/excelExport";
+import ClientFilterPicker from "./clients/ClientFilterPicker";
 
 const AVATAR_COLORS = [
   ["#1a2b4c", "#e8edf5"],
@@ -99,14 +99,6 @@ function inferProductType(product) {
   return "PRODUCT";
 }
 
-function getTypeFilterLabel(type) {
-  if (type === "POLICY") return "Pólizas";
-  if (type === "SERVICE") return "Servicios";
-  if (type === "CONTPAQI") return "CONTPAQi";
-  if (type === "PRODUCT") return "Productos";
-  return "Todos";
-}
-
 // ── Componente principal ─────────────────────────────────────────────────────
 export default function Products({ categoryFilter }) {
   const { user } = useAuth();
@@ -120,10 +112,14 @@ export default function Products({ categoryFilter }) {
   // ── Filtros ────────────────────────────────────────────────────────────────
   const [q, setQ] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
+  const [filterFolio, setFilterFolio] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterPriceMin, setFilterPriceMin] = useState("");
   const [filterPriceMax, setFilterPriceMax] = useState("");
   const [filterUsers, setFilterUsers] = useState("");
+  const [activeFilterPickerField, setActiveFilterPickerField] = useState(null);
+  const [filterPickerSearch, setFilterPickerSearch] = useState("");
+  const [filterPickerPage, setFilterPickerPage] = useState(0);
 
   const load = async () => {
     setError("");
@@ -145,6 +141,7 @@ export default function Products({ categoryFilter }) {
   }, [
     q,
     filterCategory,
+    filterFolio,
     filterType,
     filterPriceMin,
     filterPriceMax,
@@ -152,8 +149,13 @@ export default function Products({ categoryFilter }) {
     categoryFilter,
   ]);
 
-  const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
-  const [categoryPage, setCategoryPage] = useState(1);
+  useEffect(() => {
+    if (!showFilters) {
+      setActiveFilterPickerField(null);
+      setFilterPickerSearch("");
+      setFilterPickerPage(0);
+    }
+  }, [showFilters]);
 
   const visibleProducts = useMemo(() => allProducts, [allProducts]);
 
@@ -165,21 +167,45 @@ export default function Products({ categoryFilter }) {
     [visibleProducts],
   );
 
-  const CATEGORY_CHIPS_PAGE_SIZE = 12;
-  const categoriesWithAll = useMemo(
-    () => ["Todas", ...categories],
-    [categories],
+  const folios = useMemo(
+    () =>
+      [...new Set(visibleProducts.map((p) => p.folio).filter(Boolean))].sort(
+        (a, b) => a.localeCompare(b, "es", { sensitivity: "base" }),
+      ),
+    [visibleProducts],
   );
-  const totalCategoryPages = Math.max(
-    1,
-    Math.ceil(categoriesWithAll.length / CATEGORY_CHIPS_PAGE_SIZE),
-  );
-  const safeCategoryPage = Math.min(categoryPage, totalCategoryPages);
 
-  const visibleCategories = useMemo(() => {
-    const start = (safeCategoryPage - 1) * CATEGORY_CHIPS_PAGE_SIZE;
-    return categoriesWithAll.slice(start, start + CATEGORY_CHIPS_PAGE_SIZE);
-  }, [categoriesWithAll, safeCategoryPage]);
+  const quickFilterButtons = useMemo(
+    () => [
+      { id: "category", buttonLabel: "Categoría" },
+      { id: "folio", buttonLabel: "Folio" },
+    ],
+    [],
+  );
+
+  const activeFilterPickerConfig =
+    quickFilterButtons.find(
+      (button) => button.id === activeFilterPickerField,
+    ) || null;
+
+  const filterPickerOptions = useMemo(() => {
+    const options =
+      activeFilterPickerField === "category"
+        ? categories
+        : activeFilterPickerField === "folio"
+          ? folios
+          : [];
+    const search = normalizeCategory(filterPickerSearch);
+    if (!search) return options;
+    return options.filter((value) =>
+      normalizeCategory(value).includes(search),
+    );
+  }, [activeFilterPickerField, categories, folios, filterPickerSearch]);
+
+  const productFilters = useMemo(
+    () => ({ category: filterCategory, folio: filterFolio }),
+    [filterCategory, filterFolio],
+  );
 
   const filteredProducts = useMemo(() => {
     const filtered = visibleProducts.filter((p) => {
@@ -195,18 +221,22 @@ export default function Products({ categoryFilter }) {
           return false;
       }
       if (filterCategory && p.category !== filterCategory) return false;
+      if (filterFolio && p.folio !== filterFolio) return false;
       if (filterType && inferProductType(p) !== filterType) return false;
       if (
         filterPriceMin !== "" &&
-        parseFloat(p.current_price) < parseFloat(filterPriceMin)
+        Number(p.current_price) < Number(filterPriceMin)
       )
         return false;
       if (
         filterPriceMax !== "" &&
-        parseFloat(p.current_price) > parseFloat(filterPriceMax)
+        Number(p.current_price) > Number(filterPriceMax)
       )
         return false;
-      if (filterUsers !== "" && parseInt(p.users_count) < parseInt(filterUsers))
+      if (
+        filterUsers !== "" &&
+        Number(p.users_count) < Number(filterUsers)
+      )
         return false;
       return true;
     });
@@ -238,6 +268,7 @@ export default function Products({ categoryFilter }) {
     visibleProducts,
     q,
     filterCategory,
+    filterFolio,
     filterType,
     filterPriceMin,
     filterPriceMax,
@@ -246,21 +277,29 @@ export default function Products({ categoryFilter }) {
   ]);
 
   const activeFilterCount = [
-    q.trim(),
     filterCategory,
+    filterFolio,
     filterType,
     filterPriceMin,
     filterPriceMax,
     filterUsers,
-  ].filter(Boolean).length;
+  ].filter((value) => value !== "").length;
 
   const clearFilters = () => {
-    setQ("");
     setFilterCategory("");
+    setFilterFolio("");
     setFilterType("");
     setFilterPriceMin("");
     setFilterPriceMax("");
     setFilterUsers("");
+    setActiveFilterPickerField(null);
+    setFilterPickerSearch("");
+    setFilterPickerPage(0);
+  };
+
+  const applyFilterValue = (fieldName, value) => {
+    if (fieldName === "category") setFilterCategory(value);
+    if (fieldName === "folio") setFilterFolio(value);
   };
 
   const remove = async (id) => {
@@ -584,151 +623,6 @@ export default function Products({ categoryFilter }) {
             </button>
           </div>
         </div>
-
-        {/* Panel filtros */}
-        {showFilters && (
-          <div className="mt-4 pt-4 border-t border-zinc-100 animate-fade-in">
-            <div className="flex flex-wrap gap-3 items-end">
-              <div className="flex flex-col gap-1 min-w-[180px]">
-                <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wide">
-                  Categoría
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCategoryPage(1);
-                    setIsCategoriesModalOpen(true);
-                  }}
-                  className="px-3 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors flex items-center justify-between w-full shadow-sm hover:bg-zinc-50 dark:hover:bg-dark-800 cursor-pointer"
-                >
-                  <span className="truncate">
-                    {filterCategory === "" ? "Todas" : filterCategory}
-                  </span>
-                  <ChevronDown
-                    size={16}
-                    className="text-zinc-400 dark:text-zinc-500 ml-2 flex-shrink-0"
-                  />
-                </button>
-              </div>
-              <div className="flex flex-col gap-1 min-w-[160px]">
-                <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wide">
-                  Tipo
-                </label>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="px-3 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                >
-                  <option value="">Todos</option>
-                  <option value="PRODUCT">Productos</option>
-                  <option value="CONTPAQI">Productos CONTPAQi</option>
-                  <option value="SERVICE">Servicios</option>
-                  <option value="POLICY">Pólizas</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-1 w-[120px]">
-                <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wide">
-                  Precio mín $
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={filterPriceMin}
-                  onChange={(e) => setFilterPriceMin(e.target.value)}
-                  placeholder="0"
-                  className="px-3 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-1 w-[120px]">
-                <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wide">
-                  Precio máx $
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={filterPriceMax}
-                  onChange={(e) => setFilterPriceMax(e.target.value)}
-                  placeholder="∞"
-                  className="px-3 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-1 w-[130px]">
-                <label className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wide">
-                  Usuarios (mín)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={filterUsers}
-                  onChange={(e) => setFilterUsers(e.target.value)}
-                  placeholder="Cualquiera"
-                  className="px-3 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                />
-              </div>
-              {activeFilterCount > 0 && (
-                <button
-                  onClick={clearFilters}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-red-500 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors self-end"
-                >
-                  <X size={13} /> Limpiar
-                </button>
-              )}
-            </div>
-
-            {activeFilterCount > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {q.trim() && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200">
-                    Texto: &quot;{q.trim()}&quot;{" "}
-                    <button onClick={() => setQ("")}>
-                      <X size={10} />
-                    </button>
-                  </span>
-                )}
-                {filterCategory && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-medium border border-purple-200">
-                    Cat: {filterCategory}{" "}
-                    <button onClick={() => setFilterCategory("")}>
-                      <X size={10} />
-                    </button>
-                  </span>
-                )}
-                {filterType && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium border border-indigo-200">
-                    Tipo: {getTypeFilterLabel(filterType)}{" "}
-                    <button onClick={() => setFilterType("")}>
-                      <X size={10} />
-                    </button>
-                  </span>
-                )}
-                {filterPriceMin && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-xs font-medium border border-green-200">
-                    Precio ≥ ${filterPriceMin}{" "}
-                    <button onClick={() => setFilterPriceMin("")}>
-                      <X size={10} />
-                    </button>
-                  </span>
-                )}
-                {filterPriceMax && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-xs font-medium border border-green-200">
-                    Precio ≤ ${filterPriceMax}{" "}
-                    <button onClick={() => setFilterPriceMax("")}>
-                      <X size={10} />
-                    </button>
-                  </span>
-                )}
-                {filterUsers && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 text-xs font-medium border border-orange-200">
-                    Usuarios ≥ {filterUsers}{" "}
-                    <button onClick={() => setFilterUsers("")}>
-                      <X size={10} />
-                    </button>
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {error && (
@@ -746,243 +640,275 @@ export default function Products({ categoryFilter }) {
               Analizando catálogo de productos...
             </p>
           </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="p-20 text-center bg-white dark:bg-dark-800 rounded-3xl border border-zinc-100 dark:border-dark-700 shadow-sm">
-            <div className="flex justify-center mb-6 opacity-20">
-              <PackageX size={64} />
-            </div>
-            <h3 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">
-              No se encontraron productos
-            </h3>
-          </div>
         ) : (
           <div className="bg-white dark:bg-dark-800 rounded-xl border border-zinc-200 dark:border-dark-700 shadow-sm overflow-hidden glass-panel">
             {/* Toolbar de tabla */}
             <div className="px-5 py-3.5 border-b border-zinc-100 dark:border-dark-700 flex flex-col sm:flex-row sm:items-center justify-end gap-3 bg-zinc-50/50 dark:bg-dark-900/50">
+              <div
+                className={`flex flex-1 flex-wrap items-center gap-2 transition-opacity duration-150 ${
+                  showFilters
+                    ? "opacity-100"
+                    : "pointer-events-none opacity-0"
+                }`}
+              >
+                {quickFilterButtons.map((button) => {
+                  const selectedValue = productFilters[button.id];
+                  return (
+                    <button
+                      key={button.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveFilterPickerField(button.id);
+                        setFilterPickerSearch("");
+                        setFilterPickerPage(0);
+                      }}
+                      tabIndex={showFilters ? 0 : -1}
+                      className={`inline-flex items-center rounded-md border px-3 py-1 text-xs font-bold uppercase tracking-wide transition-colors ${
+                        selectedValue
+                          ? "border-[#2277B4] bg-[#2277B4] text-white"
+                          : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-dark-700 dark:bg-dark-800 dark:text-zinc-300 dark:hover:bg-dark-700"
+                      }`}
+                    >
+                      {button.buttonLabel}
+                    </button>
+                  );
+                })}
+                <select
+                  aria-label="Filtrar por tipo"
+                  value={filterType}
+                  onChange={(event) => setFilterType(event.target.value)}
+                  tabIndex={showFilters ? 0 : -1}
+                  className={`h-7 min-w-28 rounded-md border px-2 text-xs font-semibold outline-none transition-colors ${
+                    filterType
+                      ? "border-[#2277B4] bg-white text-zinc-700 dark:bg-dark-800 dark:text-zinc-300"
+                      : "border-zinc-200 bg-white text-zinc-700 focus:border-[#2277B4] dark:border-dark-700 dark:bg-dark-800 dark:text-zinc-300"
+                  }`}
+                >
+                  <option value="">Tipo</option>
+                  <option value="PRODUCT">Productos</option>
+                  <option value="CONTPAQI">CONTPAQi</option>
+                  <option value="SERVICE">Servicios</option>
+                  <option value="POLICY">Pólizas</option>
+                </select>
+                <input
+                  type="number"
+                  min="0"
+                  aria-label="Precio mínimo"
+                  value={filterPriceMin}
+                  onChange={(event) => setFilterPriceMin(event.target.value)}
+                  placeholder="Precio mín."
+                  tabIndex={showFilters ? 0 : -1}
+                  className={`h-7 w-24 rounded-md border px-2 text-xs outline-none transition-colors placeholder:text-zinc-400 focus:border-[#2277B4] ${
+                    filterPriceMin !== ""
+                      ? "border-[#2277B4] bg-blue-50 text-[#125280] dark:bg-blue-950/30 dark:text-blue-300"
+                      : "border-zinc-200 bg-white text-zinc-700 dark:border-dark-700 dark:bg-dark-800 dark:text-zinc-300"
+                  }`}
+                />
+                <input
+                  type="number"
+                  min="0"
+                  aria-label="Precio máximo"
+                  value={filterPriceMax}
+                  onChange={(event) => setFilterPriceMax(event.target.value)}
+                  placeholder="Precio máx."
+                  tabIndex={showFilters ? 0 : -1}
+                  className={`h-7 w-24 rounded-md border px-2 text-xs outline-none transition-colors placeholder:text-zinc-400 focus:border-[#2277B4] ${
+                    filterPriceMax !== ""
+                      ? "border-[#2277B4] bg-blue-50 text-[#125280] dark:bg-blue-950/30 dark:text-blue-300"
+                      : "border-zinc-200 bg-white text-zinc-700 dark:border-dark-700 dark:bg-dark-800 dark:text-zinc-300"
+                  }`}
+                />
+                <input
+                  type="number"
+                  min="0"
+                  aria-label="Usuarios mínimos"
+                  value={filterUsers}
+                  onChange={(event) => setFilterUsers(event.target.value)}
+                  placeholder="Usuarios"
+                  tabIndex={showFilters ? 0 : -1}
+                  className={`h-7 w-24 rounded-md border px-2 text-xs outline-none transition-colors placeholder:text-zinc-400 focus:border-[#2277B4] ${
+                    filterUsers !== ""
+                      ? "border-[#2277B4] bg-blue-50 text-[#125280] dark:bg-blue-950/30 dark:text-blue-300"
+                      : "border-zinc-200 bg-white text-zinc-700 dark:border-dark-700 dark:bg-dark-800 dark:text-zinc-300"
+                  }`}
+                />
+                {activeFilterCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    tabIndex={showFilters ? 0 : -1}
+                    className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    <X size={14} /> Limpiar
+                  </button>
+                )}
+              </div>
               <span className="text-[12px] text-zinc-500">
-                Pág. {pagination.pageIndex + 1} de {table.getPageCount()}
+                Pág. {pagination.pageIndex + 1} de{" "}
+                {Math.max(table.getPageCount(), 1)}
               </span>
             </div>
 
-            {/* Tabla Tradicional */}
-            <div
-              className={`overflow-x-auto ${isTableScrollable ? "max-h-[65vh] overflow-y-auto" : ""}`}
-            >
-              <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className={isTableScrollable ? "sticky top-0 z-20" : ""}>
-                  {table.getHeaderGroups().map((hg) => (
-                    <tr
-                      key={hg.id}
-                      className="bg-zinc-50/80 dark:bg-dark-900/50 border-b border-zinc-200 dark:border-dark-700"
-                    >
-                      {hg.headers.map((header) => (
-                        <th
-                          key={header.id}
-                          onClick={header.column.getToggleSortingHandler()}
-                          className={`px-5 py-3 text-[11px] font-bold text-[#2277B4] dark:text-primary-400 uppercase tracking-wider ${
-                            header.column.getCanSort()
-                              ? "cursor-pointer select-none hover:bg-zinc-100 dark:hover:bg-dark-800 transition-colors"
-                              : ""
-                          }`}
-                        >
-                          <div
-                            className={`flex items-center gap-1.5 ${header.column.id === "actions" ? "justify-center" : ""}`}
-                          >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                            {header.column.getCanSort() && (
-                              <span className="text-zinc-400">
-                                {header.column.getIsSorted() === "asc" ? (
-                                  <ChevronUp
-                                    size={12}
-                                    className="text-blue-600"
-                                  />
-                                ) : header.column.getIsSorted() === "desc" ? (
-                                  <ChevronDown
-                                    size={12}
-                                    className="text-blue-600"
-                                  />
-                                ) : (
-                                  <ChevronsUpDown
-                                    size={12}
-                                    className="opacity-50"
-                                  />
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody className="divide-y divide-zinc-100/80 dark:divide-dark-700/80">
-                  {table.getRowModel().rows.map((row) => (
-                    <tr
-                      key={row.id}
-                      className="hover:bg-zinc-50/70 dark:hover:bg-dark-700/50 transition-colors"
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id} className="px-5 py-3.5">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="px-5 py-3 border-t border-zinc-100 dark:border-dark-700 flex items-center justify-between bg-zinc-50/50 dark:bg-dark-900/50">
-              <label className="text-[12px] text-zinc-500 flex items-center gap-2">
-                Mostrar
-                <select
-                  value={pagination.pageSize}
-                  onChange={(e) =>
-                    setPagination({
-                      pageIndex: 0,
-                      pageSize: Number(e.target.value),
-                    })
-                  }
-                  className="px-2 py-1 rounded-md border border-zinc-200 dark:border-dark-700 text-[12px] text-zinc-700 dark:text-zinc-300 bg-white dark:bg-dark-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                >
-                  {[10, 25, 50, 100].map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => table.setPageIndex(0)}
-                  disabled={!table.getCanPreviousPage()}
-                  className="px-2 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm"
-                >
-                  ««
-                </button>
-                <button
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                  className="px-3 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm"
-                >
-                  Anterior
-                </button>
-                <button
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                  className="px-3 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm"
-                >
-                  Siguiente
-                </button>
-                <button
-                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                  disabled={!table.getCanNextPage()}
-                  className="px-2 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm"
-                >
-                  »»
-                </button>
+            {filteredProducts.length === 0 ? (
+              <div className="p-20 text-center">
+                <div className="flex justify-center mb-6 opacity-20">
+                  <PackageX size={64} />
+                </div>
+                <h3 className="text-xl font-semibold text-zinc-800 dark:text-zinc-100">
+                  No se encontraron productos
+                </h3>
               </div>
-            </div>
-          </div>
-        )}
-        {/* Modal de categorías */}
-        {isCategoriesModalOpen &&
-          createPortal(
-            <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-zinc-500/50 dark:bg-black/60 backdrop-blur-sm animate-fade-in">
-              <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-fade-in relative border border-zinc-200 dark:border-dark-700">
-                <div className="p-4 border-b border-white/10 bg-[#1a2b4c] flex items-center justify-between">
-                  <h2 className="font-semibold text-white text-lg">
-                    Categorías
-                  </h2>
-                  <button
-                    onClick={() => setIsCategoriesModalOpen(false)}
-                    className="text-white/70 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
-                  >
-                    <X size={20} />
-                  </button>
+            ) : (
+              <>
+                {/* Tabla Tradicional */}
+                <div
+                  className={`overflow-x-auto ${isTableScrollable ? "max-h-[65vh] overflow-y-auto" : ""}`}
+                >
+                  <table className="w-full text-left text-sm whitespace-nowrap">
+                    <thead
+                      className={isTableScrollable ? "sticky top-0 z-20" : ""}
+                    >
+                      {table.getHeaderGroups().map((hg) => (
+                        <tr
+                          key={hg.id}
+                          className="bg-zinc-100 dark:bg-dark-900 border-b border-zinc-200 dark:border-dark-700"
+                        >
+                          {hg.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              onClick={header.column.getToggleSortingHandler()}
+                              className={`px-5 py-3 text-[11px] font-bold text-[#2277B4] dark:text-primary-400 uppercase tracking-wider ${
+                                header.column.getCanSort()
+                                  ? "cursor-pointer select-none hover:bg-zinc-100 dark:hover:bg-dark-800 transition-colors"
+                                  : ""
+                              }`}
+                            >
+                              <div
+                                className={`flex items-center gap-1.5 ${header.column.id === "actions" ? "justify-center" : ""}`}
+                              >
+                                {flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext(),
+                                )}
+                                {header.column.getCanSort() && (
+                                  <span className="text-zinc-400">
+                                    {header.column.getIsSorted() === "asc" ? (
+                                      <ChevronUp
+                                        size={12}
+                                        className="text-blue-600"
+                                      />
+                                    ) : header.column.getIsSorted() ===
+                                      "desc" ? (
+                                      <ChevronDown
+                                        size={12}
+                                        className="text-blue-600"
+                                      />
+                                    ) : (
+                                      <ChevronsUpDown
+                                        size={12}
+                                        className="opacity-50"
+                                      />
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                          ))}
+                        </tr>
+                      ))}
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100/80 dark:divide-dark-700/80">
+                      {table.getRowModel().rows.map((row) => (
+                        <tr
+                          key={row.id}
+                          className="hover:bg-zinc-50/70 dark:hover:bg-dark-700/50 transition-colors"
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <td key={cell.id} className="px-5 py-3.5">
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
-                <div className="p-5 space-y-4">
-                  <div>
-                    <h3 className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase mb-3 tracking-wider">
-                      Selecciona una categoría
-                    </h3>
-                    {categories.length === 0 ? (
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                        Aún no hay categorías registradas.
-                      </p>
-                    ) : (
-                      <div className="min-h-[190px] flex flex-col justify-between">
-                        <div className="flex flex-wrap content-start gap-2 h-[138px] overflow-hidden pr-1">
-                          {visibleCategories.map((cat) => {
-                            const isSelected =
-                              cat === "Todas"
-                                ? filterCategory === ""
-                                : cat === filterCategory;
-                            return (
-                              <button
-                                key={cat}
-                                type="button"
-                                onClick={() => {
-                                  setFilterCategory(cat === "Todas" ? "" : cat);
-                                  setIsCategoriesModalOpen(false);
-                                }}
-                                className={`px-3 py-1.5 rounded-full border text-xs font-semibold transition-all hover:scale-[1.03] active:scale-[0.97] cursor-pointer ${
-                                  isSelected
-                                    ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-900/20 dark:text-blue-400"
-                                    : "border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-dark-800/80 hover:text-zinc-900 dark:hover:text-zinc-100"
-                                }`}
-                              >
-                                {cat}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-dark-700 flex items-center justify-between">
-                          <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                            Página {safeCategoryPage} de {totalCategoryPages}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setCategoryPage((prev) => Math.max(1, prev - 1))
-                              }
-                              disabled={safeCategoryPage === 1}
-                              className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-dark-700 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-dark-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                              Anterior
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setCategoryPage((prev) =>
-                                  Math.min(totalCategoryPages, prev + 1),
-                                )
-                              }
-                              disabled={safeCategoryPage === totalCategoryPages}
-                              className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-dark-700 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-dark-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                              Siguiente
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                <div className="px-5 py-3 border-t border-zinc-100 dark:border-dark-700 flex items-center justify-between bg-zinc-50/50 dark:bg-dark-900/50">
+                  <label className="text-[12px] text-zinc-500 flex items-center gap-2">
+                    Mostrar
+                    <select
+                      value={pagination.pageSize}
+                      onChange={(e) =>
+                        setPagination({
+                          pageIndex: 0,
+                          pageSize: Number(e.target.value),
+                        })
+                      }
+                      className="px-2 py-1 rounded-md border border-zinc-200 dark:border-dark-700 text-[12px] text-zinc-700 dark:text-zinc-300 bg-white dark:bg-dark-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+                    >
+                      {[10, 25, 50, 100].map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => table.setPageIndex(0)}
+                      disabled={!table.getCanPreviousPage()}
+                      className="px-2 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm"
+                    >
+                      ««
+                    </button>
+                    <button
+                      onClick={() => table.previousPage()}
+                      disabled={!table.getCanPreviousPage()}
+                      className="px-3 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm"
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      onClick={() => table.nextPage()}
+                      disabled={!table.getCanNextPage()}
+                      className="px-3 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm"
+                    >
+                      Siguiente
+                    </button>
+                    <button
+                      onClick={() =>
+                        table.setPageIndex(table.getPageCount() - 1)
+                      }
+                      disabled={!table.getCanNextPage()}
+                      className="px-2 py-1.5 rounded-md border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-400 text-[12px] font-medium hover:bg-zinc-50 dark:hover:bg-dark-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-dark-900 shadow-sm"
+                    >
+                      »»
+                    </button>
                   </div>
                 </div>
-              </div>
-            </div>,
-            document.body,
-          )}
+              </>
+            )}
+          </div>
+        )}
       </div>
+
+      <ClientFilterPicker
+        isOpen={!!activeFilterPickerField && showFilters}
+        onClose={() => setActiveFilterPickerField(null)}
+        fieldName={activeFilterPickerField}
+        fieldConfig={activeFilterPickerConfig}
+        filters={productFilters}
+        options={filterPickerOptions}
+        filterPickerSearch={filterPickerSearch}
+        setFilterPickerSearch={setFilterPickerSearch}
+        filterPickerPage={filterPickerPage}
+        setFilterPickerPage={setFilterPickerPage}
+        onApplyFilter={applyFilterValue}
+      />
     </div>
   );
 }

@@ -23,13 +23,6 @@ export default function ProductSelectorModal({
     return "Nuevo producto";
   };
 
-  const getBorderColor = () => {
-    if (type === "SERVICE") return "border-[#B58DE0]/45 dark:border-dark-600 hover:bg-[#B58DE0]/5";
-    if (type === "POLICY") return "border-purple-200 dark:border-dark-700 hover:bg-purple-50";
-    if (type === "PRODUCT") return "border-emerald-200 dark:border-dark-700 hover:bg-emerald-50";
-    return "border-zinc-200 dark:border-zinc-700 hover:border-blue-300 hover:shadow-md";
-  };
-
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-dark-800 rounded-3xl w-full max-w-2xl shadow-2xl animate-fade-in flex flex-col max-h-[85vh] overflow-hidden">
@@ -64,24 +57,22 @@ export default function ProductSelectorModal({
               </div>
             ) : (
               products.map((item) => {
-                const ItemLogo = productLogoMap[item.name] || Package;
+                const ItemLogo = productLogoMap[item.name] || Icon;
 
                 return (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => onSelectProduct(item)}
-                    className={`w-full text-left p-5 rounded-2xl border bg-white dark:bg-dark-900 dark:hover:bg-dark-800 transition-all group ${getBorderColor()}`}
+                    className="w-full rounded-2xl border border-blue-200 bg-white p-5 text-left transition-all group hover:border-blue-300 hover:shadow-md dark:border-blue-900/60 dark:bg-dark-900 dark:hover:border-blue-700 dark:hover:bg-dark-800"
                   >
                     <div className="flex justify-between items-start gap-4 mb-1.5">
                       <div className="flex items-start gap-3 min-w-0">
-                        {type === "CONTPAQI" && (
-                          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-zinc-200 dark:border-dark-700 bg-zinc-50 dark:bg-dark-800 text-zinc-400 group-hover:border-blue-200 dark:group-hover:bg-dark-700 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
-                            <ItemLogo size={13} />
-                          </span>
-                        )}
+                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-500 transition-colors group-hover:border-blue-300 group-hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-400 dark:group-hover:bg-blue-900/40">
+                          <ItemLogo size={13} />
+                        </span>
                         <div className="min-w-0">
-                          <div className="font-bold text-lg text-[#1e293b] dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
+                          <div className="truncate text-lg font-bold text-blue-600 dark:text-blue-400">
                             {item.name}
                           </div>
                           {item.folio && (

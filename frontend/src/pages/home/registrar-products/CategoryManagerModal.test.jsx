@@ -75,4 +75,23 @@ describe("CategoryManagerModal", () => {
 
     expect(props.setCategoryPage).toHaveBeenCalled();
   });
+
+  it("filters categories by search and resets pagination", async () => {
+    const user = userEvent.setup();
+    const props = renderModal({
+      availableCategories: ["Contabilidad", "Servicios", "Tesorería"],
+      categoryPage: 2,
+    });
+
+    await user.type(
+      screen.getByRole("searchbox", { name: /Buscar categorías/i }),
+      "teso"
+    );
+
+    expect(screen.getByRole("button", { name: "Tesorería" })).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Contabilidad" })
+    ).not.toBeInTheDocument();
+    expect(props.setCategoryPage).toHaveBeenCalledWith(1);
+  });
 });

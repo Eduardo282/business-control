@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Plus } from "@icons";
+import { X, Search } from "@icons";
 
 const CATEGORY_CHIPS_PAGE_SIZE = 12;
 
@@ -17,16 +17,28 @@ export default function CategoryManagerModal({
   categoryPage,
   setCategoryPage,
 }) {
+  const [categorySearch, setCategorySearch] = useState("");
+
   if (!isOpen) return null;
+
+  const normalizedCategorySearch =
+    normalizeServicePolicyCategory(categorySearch);
+  const filteredCategories = normalizedCategorySearch
+    ? availableCategories.filter((category) =>
+        normalizeServicePolicyCategory(category).includes(
+          normalizedCategorySearch
+        )
+      )
+    : availableCategories;
 
   const totalCategoryPages = Math.max(
     1,
-    Math.ceil(availableCategories.length / CATEGORY_CHIPS_PAGE_SIZE)
+    Math.ceil(filteredCategories.length / CATEGORY_CHIPS_PAGE_SIZE)
   );
   const safeCategoryPage = Math.min(categoryPage, totalCategoryPages);
 
   const start = (safeCategoryPage - 1) * CATEGORY_CHIPS_PAGE_SIZE;
-  const visibleCategories = availableCategories.slice(
+  const visibleCategories = filteredCategories.slice(
     start,
     start + CATEGORY_CHIPS_PAGE_SIZE
   );
@@ -83,9 +95,30 @@ export default function CategoryManagerModal({
             <h3 className="text-xs font-semibold text-zinc-400 uppercase mb-3">
               Categorías
             </h3>
+            <div className="relative mb-3">
+              <Search
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+              />
+              <input
+                type="search"
+                value={categorySearch}
+                onChange={(event) => {
+                  setCategorySearch(event.target.value);
+                  setCategoryPage(1);
+                }}
+                placeholder="Buscar categoría..."
+                aria-label="Buscar categorías"
+                className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-9 pr-3 text-sm text-zinc-700 outline-none transition-colors placeholder:text-zinc-400 focus:border-[#2277B4] focus:ring-1 focus:ring-[#2277B4] dark:border-dark-700 dark:bg-dark-900 dark:text-zinc-100"
+              />
+            </div>
             {availableCategories.length === 0 ? (
               <p className="text-sm text-zinc-500">
                 Aún no hay categorías registradas.
+              </p>
+            ) : filteredCategories.length === 0 ? (
+              <p className="py-6 text-center text-sm text-zinc-500">
+                No se encontraron categorías.
               </p>
             ) : (
               <div className="min-h-[190px] flex flex-col">

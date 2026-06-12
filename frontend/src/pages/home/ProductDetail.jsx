@@ -46,6 +46,8 @@ const AVATAR_COLORS = [
   ["#1d4ed8", "#dbeafe"],
   ["#15803d", "#dcfce7"],
 ];
+const PRODUCT_UPDATE_ROW_HEIGHT = 34;
+
 function getAvatarColors(str = "") {
   let h = 0;
   for (let i = 0; i < str.length; i++)
@@ -164,25 +166,32 @@ export default function ProductDetail() {
     setGlobalFilter(date.toLocaleDateString());
   };
 
+  const currentPriceHistoryId = product?.price_history?.[0]?.id;
+
   // Use useMemo for columns
   const historyColumns = useMemo(
     () => [
       {
         accessorKey: "price",
         header: "Precio Anterior",
-        cell: ({ row }) => (
-          <div>
-            <div className="text-stone-600 dark:text-zinc-100 font-mono font-bold text-[15px]">
-              $
-              {(Number(row.original.price) || 0).toLocaleString("es-MX", {
-                minimumFractionDigits: 2,
-              })}
+        cell: ({ row }) => {
+          const isCurrentPrice =
+            String(row.original.id) === String(currentPriceHistoryId);
+
+          return (
+            <div>
+              <div className="text-stone-600 dark:text-zinc-100 font-mono font-bold text-[15px]">
+                $
+                {(Number(row.original.price) || 0).toLocaleString("es-MX", {
+                  minimumFractionDigits: 2,
+                })}
+              </div>
+              <div className="text-[10px] text-light-text-secondary dark:text-zinc-500 mt-0.5 uppercase tracking-wider">
+                {isCurrentPrice ? "Precio Actual" : "Precio Anterior"}
+              </div>
             </div>
-            <div className="text-[10px] text-light-text-secondary dark:text-zinc-500 mt-0.5 uppercase tracking-wider">
-              Precio Anterior
-            </div>
-          </div>
-        ),
+          );
+        },
         filterFn: "includesString",
       },
       {
@@ -224,7 +233,7 @@ export default function ProductDetail() {
         filterFn: "includesString",
       },
     ],
-    [],
+    [currentPriceHistoryId],
   );
 
   const table = useReactTable({
@@ -326,8 +335,6 @@ export default function ProductDetail() {
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
         {/* Info principal */}
         <div className="flex-1 glass-panel p-8 rounded-md relative overflow-hidden group dark:border-white/10">
-          <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-zinc-200 to-zinc-300" />
-
           {!isEditing ?
             <div className="relative z-10">
               <div className="flex justify-between items-start">
@@ -357,7 +364,7 @@ export default function ProductDetail() {
                 {product.description ||
                   "Sin descripción disponible para este producto."}
               </p>
-              <div className="mt-8 flex flex-wrap items-end gap-8 lg:gap-12">
+              <div className="mt-8 flex flex-wrap items-start gap-8 lg:gap-12">
                 <div className="flex items-end gap-4 p-4 rounded-xl w-fit">
                   <div>
                     <div className="text-xs text-light-text-secondary dark:text-zinc-500 mb-1">
@@ -383,7 +390,7 @@ export default function ProductDetail() {
                 </div>
 
                 {!["SERVICE", "POLICY"].includes(inferProductType(product)) && product.users_count > 0 && (
-                  <div className="flex items-center gap-3 px-4 py-3 w-fit">
+                  <div className="flex items-start gap-3 p-4 w-fit">
                     <div className="p-2 rounded-lg">
                       <Users size={20} className="text-black dark:text-zinc-400" />
                     </div>
@@ -398,7 +405,7 @@ export default function ProductDetail() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 px-4 py-3 w-fit border-l border-light-border dark:border-white/5 ml-4">
+                <div className="flex items-start gap-3 p-4 w-fit border-l border-light-border dark:border-white/5 ml-4">
                   <div>
                     <div className="text-xs text-light-text-secondary dark:text-zinc-500 mb-1">
                       Folio
@@ -522,17 +529,19 @@ export default function ProductDetail() {
         <div className="w-full md:w-96 space-y-6">
           {/* Tarjeta de actualizacion de precio */}
           {user?.role?.name !== "SOPORTE" && (
-            <div className="rounded-md p-6 bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 shadow-md shadow-zinc-200 dark:shadow-none">
-              <h3 className="font-semibold text-light-text-primary dark:text-zinc-100 mb-2 flex items-center gap-2">
-                <span className="text-black dark:text-zinc-400">$</span> Actualizar Precio
-              </h3>
-              <div className="flex gap-2 items-end">
+            <div className="rounded-md p-4 bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 shadow-md shadow-zinc-200 dark:shadow-none">
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <h3 className="text-sm font-semibold text-light-text-primary dark:text-zinc-100 flex items-center gap-2">
+                  <span className="text-black dark:text-zinc-400">$</span> Actualizar Precio
+                </h3>
+                {newPrice && !isNaN(newPrice) && (
+                  <div className="text-[10px] text-black dark:text-zinc-400 font-mono text-right whitespace-nowrap">
+                    + IVA: ${(parseFloat(newPrice) * 0.16).toFixed(2)}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2 items-center">
                 <div className="w-full">
-                  {newPrice && !isNaN(newPrice) && (
-                    <div className="text-[10px] text-black dark:text-zinc-400 mt-1 font-mono text-right">
-                      + IVA: ${(parseFloat(newPrice) * 0.16).toFixed(2)}
-                    </div>
-                  )}
                   <div className="relative">
                     <input
                       id="price-update-input"
@@ -542,7 +551,7 @@ export default function ProductDetail() {
                       min="0"
                       step="0.01"
                       placeholder="0.00"
-                      className="w-full rounded-xl pl-4 pr-12 py-3 font-mono text-lg text-light-text-primary dark:text-zinc-100 bg-white dark:bg-dark-800 border border-[#cfd9e6] dark:border-dark-700 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30"
+                      className="w-full rounded-xl pl-4 pr-12 py-2 font-mono text-base text-light-text-primary dark:text-zinc-100 bg-white dark:bg-dark-800 border border-[#cfd9e6] dark:border-dark-700 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30"
                     />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col overflow-hidden rounded-md border border-[#b8cce6] dark:border-dark-600 shadow-sm">
                       <button
@@ -561,7 +570,7 @@ export default function ProductDetail() {
                   </div>
                 </div>
                 <button
-                  className="text-white bg-[#2277B4] rounded-full px-4 py-2 hover:bg-[#125280] shadow-lg shadow-[#2277B450] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="text-sm text-white bg-[#2277B4] rounded-full px-4 py-2 hover:bg-[#125280] shadow-lg shadow-[#2277B450] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   onClick={handlePriceUpdate}
                   disabled={updatingPrice || !newPrice}>
                   {updatingPrice ? "..." : "Actualizar"}
@@ -733,7 +742,12 @@ export default function ProductDetail() {
                 </div>
 
                 {paged.length > 0 ? (
-                  <div className="divide-y divide-[#eef3f8] dark:divide-white/10">
+                  <div
+                    className="divide-y divide-[#eef3f8] dark:divide-white/10"
+                    style={{
+                      minHeight: `${updatePagination.pageSize * PRODUCT_UPDATE_ROW_HEIGHT}px`,
+                    }}
+                  >
                     {paged.map((entry, idx) => {
                       const date = new Date(entry.changed_at);
                       return (

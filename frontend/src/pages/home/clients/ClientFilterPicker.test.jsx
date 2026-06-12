@@ -66,5 +66,8 @@ describe("ClientFilterPicker", () => {
     renderPicker({ options: [] });
 
     expect(screen.getByText(/No hay valores para mostrar/i)).toBeVisible();
+    expect(screen.getByText("0 - 0 de 0")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Anterior" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Siguiente" })).toBeDisabled();
   });
 });

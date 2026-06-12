@@ -85,3 +85,10 @@ export const Product = {
     return ctx.loaders?.clientById?.load(parent.client_id) || getClientAction(parent.client_id);
   },
 };
+
+export const FormDraft = {
+  data_json: (parent) => {
+    if (typeof parent.data_json === "string") return parent.data_json;
+    return JSON.stringify(parent.data_json || {});
+  },
+};

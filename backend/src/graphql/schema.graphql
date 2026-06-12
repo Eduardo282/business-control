@@ -120,6 +120,20 @@ type SendEmailResponse {
   message: String
 }
 
+type FormDraft {
+  id: ID!
+  form_key: String!
+  scope_key: String!
+  data_json: String!
+  updated_at: DateTime!
+}
+
+input UpsertFormDraftInput {
+  form_key: String!
+  scope_key: String
+  data_json: String!
+}
+
 type ProductCategory {
   id: ID!
   name: String!
@@ -130,6 +144,7 @@ type Query {
   me: User
   roles: [Role!]!
   productCategories: [ProductCategory!]!
+  formDraft(form_key: String!, scope_key: String): FormDraft
 
   clients(limit: Int, offset: Int): [Client!]!
   client(id: ID!): Client
@@ -226,6 +241,9 @@ type Mutation {
   ): Boolean!
   requestPortalPasswordReset(email: String!): Boolean!
   resetPortalPassword(token: String!, newPassword: String!): Boolean!
+
+  upsertFormDraft(input: UpsertFormDraftInput!): FormDraft!
+  deleteFormDraft(form_key: String!, scope_key: String): Boolean!
 }
 
 type PortalProduct {
