@@ -12,7 +12,7 @@ import {
 import {
   assertGenericQuoteStatusUpdateAllowed,
   VALID_ADMIN_QUOTE_STATUSES,
-} from "../src/graphql/actions/quote_actions/updateQuoteStatus.action.js";
+} from "../src/modules/quotes/quoteActions.js";
 
 test("migration backfills only the historical portal request signature", () => {
   const migration = readFileSync(

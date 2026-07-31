@@ -1,12 +1,4 @@
--- Business Control - MySQL Workbench full setup
--- Ejecuta este archivo completo en MySQL Workbench.
--- Base usada por backend/src/config/env.js: MYSQL_DATABASE=business_control
-
-CREATE DATABASE IF NOT EXISTS business_control
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE business_control;
+-- Baseline schema definition (reusable for dev and tests)
 
 SET SQL_SAFE_UPDATES = 0;
 SET FOREIGN_KEY_CHECKS = 0;

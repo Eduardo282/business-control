@@ -8,8 +8,9 @@ allowBuilds:
   esbuild: false
   puppeteer: false
 
-  minimumReleaseAge: 4320
+minimumReleaseAge: 4320
 
-  onlyBuiltDependencies: []
-  ignoredBuiltDependencies: []
-  strictDepBuilds: true
+onlyBuiltDependencies: []
+ignoredBuiltDependencies: []
+strictDepBuilds: true
+

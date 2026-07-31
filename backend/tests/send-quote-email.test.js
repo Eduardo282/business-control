@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { sendQuoteEmailAction } from "../src/graphql/actions/quote_actions/sendQuoteEmail.action.js";
+import { sendQuoteEmailAction } from "../src/modules/quotes/quoteActions.js";
 import {
   findUnreadQuoteRequests,
   markQuoteEmailSent,

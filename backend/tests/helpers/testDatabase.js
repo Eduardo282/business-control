@@ -76,7 +76,15 @@ export async function resetTestDatabase(queryRunner = pool) {
         .filter(s => s.length > 0);
       
       for (const stmt of statements) {
-        await queryRunner.query(stmt);
+        try {
+          await queryRunner.query(stmt);
+        } catch (e) {
+          // Ignore duplicate column/table/key errors if baseline already includes them
+          const ignorableCodes = ["ER_DUP_FIELDNAME", "ER_TABLE_EXISTS_ERROR", "ER_DUP_KEYNAME", "ER_CANT_DROP_FIELD_OR_KEY"];
+          if (!ignorableCodes.includes(e.code) && e.errno !== 1060 && e.errno !== 1050 && e.errno !== 1061) {
+            throw e;
+          }
+        }
       }
     } catch (e) {
       if (e.code !== "ENOENT") throw e;

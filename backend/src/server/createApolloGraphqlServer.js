@@ -1,14 +1,13 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ApolloServer } from "@apollo/server";
 import depthLimit from "graphql-depth-limit";
 import resolvers from "../graphql/resolvers/index.js";
 
+const schemaPath = fileURLToPath(new URL("../graphql/schema.graphql", import.meta.url));
+
 export function createApolloGraphqlServer() {
-  const typeDefs = readFileSync(
-    join(process.cwd(), "src/graphql/schema.graphql"),
-    "utf8",
-  );
+  const typeDefs = readFileSync(schemaPath, "utf8");
 
   return new ApolloServer({
     typeDefs,

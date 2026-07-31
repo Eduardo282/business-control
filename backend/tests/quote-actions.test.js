@@ -2,7 +2,7 @@ import { test, after } from "node:test";
 import assert from "node:assert/strict";
 
 import { pool } from "../src/config/db.js";
-import { createQuoteFromDraft } from "../src/graphql/actions/quote_actions/createQuote.action.js";
+import { createQuoteFromDraft } from "../src/modules/quotes/createQuote.js";
 import { createQuoteActor, createQuoteDraft } from "../src/services/quoteDraft.service.js";
 
 after(async () => {

@@ -94,7 +94,7 @@ Archivos de entrada clave:
 - Esquema API: `backend/src/graphql/schema.graphql`
 - Frontend: `frontend/src/main.jsx`
 - Rutas UI: `frontend/src/routes.jsx`
-- Base SQL recomendada: `backend/sql/workbench_full_setup.sql`
+- Base SQL recomendada: `backend/sql/baseline.sql`
 
 ## 4. Como arrancar el proyecto
 

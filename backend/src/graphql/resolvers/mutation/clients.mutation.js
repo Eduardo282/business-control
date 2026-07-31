@@ -19,7 +19,7 @@ export const createClient = async (_parent, { input }, ctx) => {
 
 export const bulkCreateClients = async (_parent, { inputs }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
-  return bulkCreateClientsAction(ctx.user.userId, inputs);
+  return bulkCreateClientsAction({ inputs, created_by_user_id: ctx.user.userId });
 };
 
 export const updateClient = async (_parent, { id, input }, ctx) => {

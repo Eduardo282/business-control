@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import {
   generateQuoteFolioCandidate,
   resolveQuoteFolio,
-} from "../src/graphql/actions/quote_actions/quoteFolio.js";
+} from "../src/modules/quotes/infrastructure/quoteFolio.js";
 
 test("generateQuoteFolioCandidate creates a quote-only folio format", () => {
   const folio = generateQuoteFolioCandidate();

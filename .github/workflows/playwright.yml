@@ -126,7 +126,7 @@ jobs:
           JWT_SECRET=$JWT_SECRET
           CORS_ORIGIN=$CORS_ORIGIN
           EOF
-          sed 's/business_control/business_control_test/g' backend/sql/workbench_full_setup.sql \
+          sed 's/business_control/business_control_test/g' backend/sql/baseline.sql \
             | mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u"$MYSQL_USER" -p"$MYSQL_PASSWORD"
           pnpm --dir backend migrate
 

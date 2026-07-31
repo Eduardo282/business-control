@@ -2,9 +2,11 @@ import { after, describe, test } from "node:test";
 import assert from "node:assert/strict";
 
 import { pool } from "../src/config/db.js";
-import { createCategoryAction } from "../src/graphql/actions/product_actions/createCategory.action.js";
-import { assignCategoryTypeAction } from "../src/graphql/actions/product_actions/assignCategoryType.action.js";
-import { createProductAction } from "../src/graphql/actions/product_actions/createProduct.action.js";
+import {
+  createCategoryAction,
+  assignCategoryTypeAction,
+  createProductAction,
+} from "../src/modules/products/productActions.js";
 import { normalizeCatalogProductType } from "../src/repositories/product.repository.js";
 
 after(async () => {

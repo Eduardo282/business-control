@@ -20,7 +20,7 @@ services:
       - "${DB_EXTERNAL_PORT:-3307}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./backend/sql/workbench_full_setup.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/sql/baseline.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-nuevacontrasena}"]
       interval: 10s

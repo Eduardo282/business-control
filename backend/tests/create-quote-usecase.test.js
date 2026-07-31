@@ -257,20 +257,16 @@ test("upstream failures propagate without persistence", async (t) => {
   }
 });
 
-test("legacy quote creation exports remain compatible", async () => {
-  const [quoteModule, legacyAction, quoteDraftDomain, legacyDraftService] =
+test("quote creation exports remain compatible", async () => {
+  const [quoteModule, quoteDraftDomain, legacyDraftService] =
     await Promise.all([
       import("../src/modules/quotes/createQuote.js"),
-      import("../src/graphql/actions/quote_actions/createQuote.action.js"),
       import("../src/modules/quotes/domain/quoteDraft.js"),
       import("../src/services/quoteDraft.service.js"),
     ]);
 
-  assert.equal(legacyAction.createQuoteAction, quoteModule.createQuoteAction);
-  assert.equal(
-    legacyAction.createQuoteFromDraft,
-    quoteModule.createQuoteFromDraft,
-  );
+  assert.equal(typeof quoteModule.createQuoteAction, "function");
+  assert.equal(typeof quoteModule.createQuoteFromDraft, "function");
   assert.equal(
     legacyDraftService.createQuoteDraft,
     quoteDraftDomain.createQuoteDraft,
