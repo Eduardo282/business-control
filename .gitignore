@@ -48,3 +48,23 @@ coverage/
 
 # Added by ggshield
 .cache_ggshield
+
+# --- CACHE Y TEMPORALES DE HERRAMIENTAS / AGENTES ---
+.pnpm-store/
+.atl/
+scratch/
+graphify-out/
+.codex/
+.gemini/
+
+# --- CACHES DE TEST Y SISTEMA ---
+.vitest-cache/
+Thumbs.db
+*.tmp
+*.temp
+
+# --- SCRIPTS Y DUMPS DE RECUPERACIÓN TEMPORALES ---
+recover.*
+line*.jsonl
+table_code.json
+

@@ -1,6 +1,6 @@
 import { requireRoles } from "../../../middlewares/role.middleware.js";
-import { deleteFormDraftAction } from "../../actions/form_draft_actions/deleteFormDraft.action.js";
-import { upsertFormDraftAction } from "../../actions/form_draft_actions/upsertFormDraft.action.js";
+import { deleteFormDraftAction } from "../../../modules/drafts/draftActions.js";
+import { upsertFormDraftAction } from "../../../modules/drafts/draftActions.js";
 
 export const upsertFormDraft = async (_parent, { input }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS", "SOPORTE"]);

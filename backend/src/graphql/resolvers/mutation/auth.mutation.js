@@ -1,11 +1,7 @@
-import { loginAction } from "../../actions/user_actions/login.action.js";
-import { registerUserAction } from "../../actions/user_actions/registerUser.action.js";
-import { loginContactAction } from "../../actions/contact_actions/loginContact.action.js";
-import {
-  changePortalPasswordAction,
-  requestPortalPasswordResetAction,
-  resetPortalPasswordAction,
-} from "../../actions/contact_actions/portalPassword.action.js";
+import { loginAction } from "../../../modules/users/userActions.js";
+import { registerUserAction } from "../../../modules/users/userActions.js";
+import { loginContactAction } from "../../../modules/contacts/contactActions.js";
+import { changePortalPasswordAction, requestPortalPasswordResetAction, resetPortalPasswordAction } from "../../../modules/contacts/contactActions.js";
 import { env } from "../../../config/env.js";
 import { timingSafeEqual } from "node:crypto";
 

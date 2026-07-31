@@ -17,10 +17,10 @@ export default function Home() {
         <div className="flex justify-center mb-4 opacity-50">
           <Construction size={48} />
         </div>
-        <p className="text-zinc-500 font-medium">
+        <p className="text-zinc-500 dark:text-zinc-400 font-medium">
           Módulo de Soporte Técnico en desarrollo
         </p>
-        <div className="mt-2 text-xs text-zinc-400 font-mono bg-zinc-100 w-fit mx-auto px-3 py-1 rounded-lg">
+        <div className="mt-2 text-xs text-zinc-500 dark:text-zinc-400 font-mono bg-zinc-100 dark:bg-dark-800 w-fit mx-auto px-3 py-1 rounded-lg border border-zinc-200 dark:border-dark-700">
           Status: Integracion_pendiente
         </div>
       </div>
@@ -30,7 +30,7 @@ export default function Home() {
   // Para otros roles
   return (
     <div className="text-center py-12">
-      <p className="text-zinc-500">Bienvenido al sistema</p>
+      <p className="text-zinc-500 dark:text-zinc-400">Bienvenido al sistema</p>
     </div>
   );
 }

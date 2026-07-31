@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { toggleQuotePortalApi, sendQuoteEmailApi } from "../../../../actionsAPI/quotes.api";
 import { notificationService } from "../../../../services/notificationService";
+import { getQuoteStatusAfterSend } from "../../../../utils/quoteStatus.js";
 
 export function useQuotePortal(
   quote,
   setQuote,
-  buildPdfFromSnapshot,
+  _buildPdfFromSnapshot,
   buildContactEmailMessage,
   setQuickNotice
 ) {
@@ -17,7 +18,11 @@ export function useQuotePortal(
     setToggleLoading(true);
     try {
       await toggleQuotePortalApi(quote.id, status, contactId);
-      setQuote((prev) => ({ ...prev, is_sent_to_client_portal: status }));
+      setQuote((prev) => ({
+        ...prev,
+        is_sent_to_client_portal: status,
+        status: status ? getQuoteStatusAfterSend(prev.status) : prev.status,
+      }));
     } catch (e) {
       notificationService.error("Error", "Error actualizando portal: " + e.message);
     } finally {
@@ -39,12 +44,10 @@ export function useQuotePortal(
     if (contact?.email) {
       try {
         const totalWithTax = Number(quote?.total) || 0;
-        const { pdfBase64 } = await buildPdfFromSnapshot();
         await sendQuoteEmailApi({
           quote_id: quote.id,
           contact_email: contact.email,
           message: buildContactEmailMessage(contact.full_name, totalWithTax),
-          pdf_base64: pdfBase64,
         });
         notificationService.toast({
           title: `Portal habilitado y cotización enviada a ${contact.email}`,

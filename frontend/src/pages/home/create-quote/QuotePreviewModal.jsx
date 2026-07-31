@@ -223,7 +223,7 @@ export default function QuotePreviewModal({
                   </div>
                   <div className="flex justify-between items-center pt-3 border-t border-zinc-100 dark:border-dark-700">
                     <span className="font-bold text-zinc-800 dark:text-zinc-100 text-base">
-                      Total Neto
+                      Total
                     </span>
                     <span className="font-bold text-2xl text-[#1a2b4c] dark:text-emerald-400 font-mono tracking-tight">
                       ${Number(totalWithIva || 0).toLocaleString("es-MX", {

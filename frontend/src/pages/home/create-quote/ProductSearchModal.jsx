@@ -19,7 +19,7 @@ export default function ProductSearchModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-dark-900 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col">
         <div className="px-6 py-4 border-b border-zinc-100 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c]">
           <div>
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -49,14 +49,14 @@ export default function ProductSearchModal({
               />
               <Search
                 size={18}
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary dark:text-zinc-400"
               />
             </div>
 
             <select
               value={productTypeFilter}
               onChange={(e) => onProductTypeFilterChange?.(e.target.value)}
-              className="h-[48px] rounded-xl border border-light-border dark:border-dark-700 bg-white dark:bg-dark-900 px-3 text-sm font-semibold text-[#1a2b4c] dark:text-zinc-100 outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-500"
+              className="h-[48px] rounded-xl border border-light-border dark:border-dark-700 bg-white dark:bg-dark-900 px-3 text-sm font-semibold text-[#1a2b4c] dark:text-zinc-100 outline-none focus:border-[#2277B4] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#153465]/30 dark:focus:ring-blue-500/30"
               aria-label="Filtrar productos por tipo"
             >
               <option value="">Todos los tipos</option>
@@ -67,7 +67,7 @@ export default function ProductSearchModal({
             </select>
           </div>
 
-          <div className="bg-white dark:bg-dark-800 rounded-xl dark:border-white/10 flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="bg-white dark:bg-dark-800 rounded-xl border border-light-border dark:border-white/10 flex-1 flex flex-col min-h-0 overflow-hidden">
             <div className="flex-1 overflow-auto relative">
               <table className="w-full text-left text-sm table-fixed">
                 <thead className="sticky top-0 z-10">
@@ -78,7 +78,7 @@ export default function ProductSearchModal({
                       {hg.headers.map((header) => (
                         <th
                           key={header.id}
-                          className={`px-4 py-3 text-[11px] font-bold text-light-text-secondary uppercase tracking-wider ${
+                          className={`px-4 py-3 text-[11px] font-bold text-light-text-secondary dark:text-zinc-400 uppercase tracking-wider ${
                             header.id === "current_price" ?
                               "text-right w-28 sm:w-32"
                             : header.id === "actions" ?
@@ -95,7 +95,7 @@ export default function ProductSearchModal({
                     </tr>
                   ))}
                 </thead>
-                <tbody className="divide-y divide-light-border">
+                <tbody className="divide-y divide-light-border dark:divide-dark-700">
                   {isProductSearching ?
                     <tr>
                       <td colSpan="3" className="py-12 text-center">
@@ -165,13 +165,13 @@ export default function ProductSearchModal({
                   <button
                     onClick={() => productSearchTable.setPageIndex(0)}
                     disabled={!productSearchTable.getCanPreviousPage()}
-                    className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:bg-zinc-100 disabled:text-zinc-400 dark:disabled:bg-dark-700 dark:disabled:text-zinc-500 disabled:cursor-not-allowed transition-colors">
                     ««
                   </button>
                   <button
                     onClick={() => productSearchTable.previousPage()}
                     disabled={!productSearchTable.getCanPreviousPage()}
-                    className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:bg-zinc-100 disabled:text-zinc-400 dark:disabled:bg-dark-700 dark:disabled:text-zinc-500 disabled:cursor-not-allowed transition-colors">
                     Anterior
                   </button>
                   <span className="text-xs text-zinc-500 dark:text-zinc-400 mx-2">
@@ -180,7 +180,7 @@ export default function ProductSearchModal({
                   <button
                     onClick={() => productSearchTable.nextPage()}
                     disabled={!productSearchTable.getCanNextPage()}
-                    className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:bg-zinc-100 disabled:text-zinc-400 dark:disabled:bg-dark-700 dark:disabled:text-zinc-500 disabled:cursor-not-allowed transition-colors">
                     Siguiente
                   </button>
                   <button
@@ -188,7 +188,7 @@ export default function ProductSearchModal({
                       productSearchTable.setPageIndex(productSearchTable.getPageCount() - 1)
                     }
                     disabled={!productSearchTable.getCanNextPage()}
-                    className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:bg-zinc-100 disabled:text-zinc-400 dark:disabled:bg-dark-700 dark:disabled:text-zinc-500 disabled:cursor-not-allowed transition-colors">
                     »»
                   </button>
                 </div>

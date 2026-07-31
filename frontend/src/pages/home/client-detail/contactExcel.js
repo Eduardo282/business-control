@@ -3,6 +3,7 @@ import {
   exportRowsToExcel,
   exportTemplateToExcel,
 } from "../../../utils/excelExport";
+import { loadXlsx } from "../../../utils/dynamicImports";
 
 export const CONTACT_TEMPLATE_COLUMNS = [
   "NOMBRE COMPLETO",
@@ -32,7 +33,7 @@ const CONTACT_COLUMN_MAP = {
 };
 
 export async function parseContactWorkbook(fileBuffer) {
-  const XLSX = await import("xlsx");
+  const XLSX = await loadXlsx();
   const wb = XLSX.read(fileBuffer, { type: "array" });
   const ws = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, {

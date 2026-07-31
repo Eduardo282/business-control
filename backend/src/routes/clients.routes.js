@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   importClientsFromDriveAction,
+  importClientsFromLocalAction,
   listClientsDynamicAction,
   updateClientDynamicAction,
 } from "../services/clientsDynamic.service.js";
@@ -52,6 +53,22 @@ router.post("/import-drive", requireBackofficeRole, async (req, res) => {
   } catch (error) {
     return res.status(400).json({
       message: error.message || "No se pudo importar el archivo desde Drive.",
+    });
+  }
+});
+
+router.post("/import-local-base64", requireBackofficeRole, async (req, res) => {
+  try {
+    const { fileBase64 } = req.body || {};
+    const report = await importClientsFromLocalAction({
+      fileBase64,
+      createdByUserId: req.user.userId,
+    });
+
+    return res.json(report);
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message || "No se pudo importar el archivo local.",
     });
   }
 });

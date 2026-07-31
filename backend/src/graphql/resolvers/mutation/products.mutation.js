@@ -1,9 +1,9 @@
 import { requireRoles } from "../../../middlewares/role.middleware.js";
-import { createProductAction } from "../../actions/product_actions/createProduct.action.js";
-import { updateProductAction } from "../../actions/product_actions/updateProduct.action.js";
-import { deleteProductAction } from "../../actions/product_actions/deleteProduct.action.js";
-import { updateProductPriceAction } from "../../actions/product_actions/updateProductPrice.action.js";
-import { clearProductPriceHistoryAction } from "../../actions/product_actions/clearProductPriceHistory.action.js";
+import { createProductAction } from "../../../modules/products/productActions.js";
+import { updateProductAction } from "../../../modules/products/productActions.js";
+import { deleteProductAction } from "../../../modules/products/productActions.js";
+import { updateProductPriceAction } from "../../../modules/products/productActions.js";
+import { clearProductPriceHistoryAction } from "../../../modules/products/productActions.js";
 
 export const createProduct = async (_parent, { input }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);

@@ -1,8 +1,8 @@
 import { requireRoles } from "../../../middlewares/role.middleware.js";
 import { notFound } from "../../../errors/appErrors.js";
-import { listClientsAction } from "../../actions/client_actions/listClients.action.js";
-import { getClientAction } from "../../actions/client_actions/getClient.action.js";
-import { searchClientsAction } from "../../actions/client_actions/searchClients.action.js";
+import { listClientsAction } from "../../../modules/clients/clientActions.js";
+import { getClientAction } from "../../../modules/clients/clientActions.js";
+import { searchClientsAction } from "../../../modules/clients/clientActions.js";
 
 
 export const clients = async (_parent, { limit, offset }, ctx) => {

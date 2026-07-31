@@ -4,6 +4,22 @@ import { Mail, ArrowLeft, Printer, CheckCircle2 } from "@icons";
 import { useQuoteDetail, getQuoteFolio } from "./quotes/useQuoteDetail";
 import EmailQuoteModal from "./quotes/EmailQuoteModal";
 import QuotePreview from "./quotes/QuotePreview";
+import { getQuoteDisplayStatus } from "../../utils/quoteStatus";
+
+export const QUOTE_DETAIL_STATUS_CLASSES = {
+  PENDIENTE: "text-amber-700 border-amber-200 bg-amber-50 dark:text-amber-300 dark:border-amber-500/30 dark:bg-amber-500/10",
+  SOLICITADA: "text-blue-700 border-blue-200 bg-blue-50 dark:text-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10",
+  ENVIADA: "text-indigo-700 border-indigo-200 bg-indigo-50 dark:text-indigo-300 dark:border-indigo-500/30 dark:bg-indigo-500/10",
+  ACEPTADA: "text-emerald-700 border-emerald-200 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-500/10",
+  RECHAZADA: "text-red-700 border-red-200 bg-red-50 dark:text-red-300 dark:border-red-500/30 dark:bg-red-500/10",
+};
+
+export function getQuoteDetailStatusClasses(displayStatus) {
+  return (
+    QUOTE_DETAIL_STATUS_CLASSES[displayStatus] ||
+    "text-zinc-600 border-zinc-200 bg-zinc-50 dark:text-zinc-300 dark:border-dark-700 dark:bg-dark-800"
+  );
+}
 
 export default function QuoteDetail() {
   const { id } = useParams();
@@ -21,7 +37,6 @@ export default function QuoteDetail() {
     emailSuccess,
     sendingToContact,
     registeringQuote,
-    quickNotice,
     quotePreviewRef,
     load,
     handlePrint,
@@ -41,7 +56,7 @@ export default function QuoteDetail() {
 
   if (error) {
     return (
-      <div className="p-8 text-center text-light-text-secondary dark:text-red-400 bg-light-error/10 dark:bg-red-500/10 rounded-xl m-4">
+      <div className="p-8 text-center text-light-error dark:text-red-300 bg-light-error/10 dark:bg-red-500/10 border border-light-error/20 dark:border-red-500/30 rounded-xl m-4">
         {error}
       </div>
     );
@@ -56,20 +71,18 @@ export default function QuoteDetail() {
   }
 
   const quoteFolio = getQuoteFolio(quote);
-  const quoteDateLabel = new Date(quote.created_at).toLocaleDateString("es-MX");
+  const quoteDateLabel = new Date(quote.created_at).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
   const createdDate = new Date(quote.created_at);
   const expirationDate = new Date(createdDate.getTime() + 15 * 24 * 60 * 60 * 1000);
-  const quoteValidityLabel = expirationDate.toLocaleDateString("es-MX");
+  const quoteValidityLabel = expirationDate.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
   const preferredContact =
     quote.contact?.email ?
       quote.contact
     : (quote.client?.contacts || []).find((c) => c.email);
   const preferredContactEmail = preferredContact?.email || "";
+  const isSentToContact = Boolean(quote.email_sent_at);
 
-  let displayStatus = String(quote.status || "PENDING").toUpperCase();
-  if (displayStatus !== "REJECTED" && displayStatus !== "REQUESTED") {
-    displayStatus = quote.is_registered ? "ACCEPTED" : "PENDING";
-  }
+  const displayStatus = getQuoteDisplayStatus(quote);
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 print:p-0 print:space-y-0 relative">
@@ -92,7 +105,7 @@ export default function QuoteDetail() {
         <div>
           <Link
             to={isPortal ? "/portal/quotes" : "/cotizaciones/historial"}
-            className="text-xs font-medium text-light-text-secondary hover:text-light-text-primary flex items-center gap-1 transition-colors group"
+            className="text-xs font-medium text-light-text-secondary dark:text-zinc-400 hover:text-light-text-primary dark:hover:text-zinc-100 flex items-center gap-1 transition-colors group"
           >
             <span className="group-hover:-translate-x-1 transition-transform">
               <ArrowLeft size={16} />
@@ -103,33 +116,23 @@ export default function QuoteDetail() {
             <h2 className="text-xl font-semibold text-light-text-primary dark:text-zinc-100">
               Cotización {quoteFolio}
             </h2>
-            <span
-              className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide border ${
-                displayStatus === "PENDING"
-                  ? "text-yellow-600 border-yellow-600/30 bg-yellow-50 dark:bg-yellow-500/10"
-                  : displayStatus === "REQUESTED"
-                  ? "text-blue-600 border-blue-600/30 bg-blue-50 dark:bg-blue-500/10"
-                  : displayStatus === "SENT"
-                  ? "text-indigo-600 border-indigo-600/30 bg-indigo-50 dark:bg-indigo-500/10"
-                  : displayStatus === "ACCEPTED"
-                  ? "text-emerald-600 border-emerald-600/30 bg-emerald-50 dark:bg-emerald-500/10"
-                  : displayStatus === "REJECTED"
-                  ? "text-red-600 border-red-600/30 bg-red-50 dark:bg-red-500/10"
-                  : "text-zinc-500 border-zinc-200 dark:border-white/10"
-              }`}
-            >
-              {displayStatus === "PENDING"
-                ? "PENDIENTE"
-                : displayStatus === "REQUESTED"
-                ? "SOLICITADA"
-                : displayStatus === "SENT"
-                ? "ENVIADA"
-                : displayStatus === "ACCEPTED"
-                ? "ACEPTADA"
-                : displayStatus === "REJECTED"
-                ? "RECHAZADA"
-                : displayStatus}
-            </span>
+            {!isPortal && (
+              <span
+                className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide border ${getQuoteDetailStatusClasses(displayStatus)}`}
+              >
+                {displayStatus === "PENDIENTE"
+                  ? "PENDIENTE"
+                  : displayStatus === "SOLICITADA"
+                  ? "SOLICITADA"
+                  : displayStatus === "ENVIADA"
+                  ? "ENVIADA"
+                  : displayStatus === "ACEPTADA"
+                  ? "ACEPTADA"
+                  : displayStatus === "RECHAZADA"
+                  ? "RECHAZADA"
+                  : displayStatus}
+              </span>
+            )}
           </div>
         </div>
 
@@ -147,21 +150,29 @@ export default function QuoteDetail() {
             >
               <CheckCircle2 size={16} />
               {quote.is_registered
-                ? "REGISTRADO"
+                ? "ENVIADO"
                 : registeringQuote
-                ? "Registrando…"
-                : "Registrar y enviar al portal"}
+                ? "Enviando…"
+                : "Enviar al portal"}
             </Button>
           )}
           {!isPortal && (
             <Button
               variant="ghost"
               onClick={handleSendToQuoteContact}
-              disabled={sendingToContact || !preferredContactEmail}
-              className="flex-1 sm:flex-none !px-3 !py-1.5 !rounded-md !text-[13px] !font-semibold !border !border-[#1B4733]/30 dark:!border-dark-700 !text-light-text-secondary dark:!text-zinc-300 !transition-all !duration-150 disabled:!opacity-50 disabled:!cursor-not-allowed disabled:!bg-white disabled:dark:!bg-dark-900 disabled:!text-emerald-700 disabled:!border-emerald-200 !flex !items-center !gap-2 !justify-center hover:!bg-[#1B4733]/15 hover:dark:!bg-dark-800"
+              disabled={isSentToContact || sendingToContact || !preferredContactEmail}
+              className={`flex-1 sm:flex-none !px-3 !py-1.5 !rounded-md !text-[13px] !font-semibold !border !transition-all !duration-150 disabled:!cursor-not-allowed !flex !items-center !gap-2 !justify-center ${
+                isSentToContact
+                  ? "!bg-emerald-50 dark:!bg-emerald-500/10 !text-emerald-700 dark:!text-emerald-300 !border-emerald-200 dark:!border-emerald-500/30 !shadow-none disabled:!opacity-100"
+                  : "!border-[#1B4733]/30 dark:!border-dark-700 !text-light-text-secondary dark:!text-zinc-300 disabled:!opacity-100 disabled:!bg-zinc-100 disabled:!border-zinc-200 disabled:!text-zinc-400 dark:disabled:!bg-dark-800 dark:disabled:!border-dark-700 dark:disabled:!text-zinc-500 hover:!bg-[#1B4733]/15 hover:dark:!bg-dark-800"
+              }`}
             >
-              <Mail size={16} />
-              {sendingToContact ? "Enviando…" : "Enviar al contacto"}
+              {isSentToContact ? <CheckCircle2 size={16} /> : <Mail size={16} />}
+              {isSentToContact
+                ? "Enviado"
+                : sendingToContact
+                ? "Enviando…"
+                : "Enviar al contacto"}
             </Button>
           )}
           <Button
@@ -181,17 +192,7 @@ export default function QuoteDetail() {
         </div>
       </div>
 
-      {quickNotice && (
-        <div
-          className={`print:hidden px-4 py-3 rounded-xl border text-sm ${
-            quickNotice.type === "success"
-              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-300"
-              : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-300"
-          }`}
-        >
-          {quickNotice.message}
-        </div>
-      )}
+
 
       {/* Printable Quote Preview */}
       <QuotePreview

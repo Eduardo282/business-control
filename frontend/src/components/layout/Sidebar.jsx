@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
-import logo from "./assets/logo.png";
+import logo from "../../assets/logo.png";
 import { getPendingQuoteRequestsCountApi } from "../../actionsAPI/quotes.api";
 import { logger } from "../../services/logger";
 import {
@@ -38,7 +38,7 @@ function Item({
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all relative ${
+        `relative flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent dark:focus-visible:ring-blue-400 motion-reduce:transition-none ${
           isActive && !shouldDisableActive ?
             "bg-white dark:bg-white/10 text-zinc-900 dark:text-zinc-100 shadow-[0_5px_5px_0px_#00000050] ring-1 ring-light-border/50 dark:ring-white/10"
           : "text-zinc-500 dark:text-zinc-400 hover:bg-white/40 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-zinc-100"
@@ -71,8 +71,8 @@ export default function Sidebar({ role }) {
         }
       };
       fetchCount();
-      // Poll every 2 seconds
-      const interval = setInterval(fetchCount, 2000);
+      // Poll cada 60 segundos
+      const interval = setInterval(fetchCount, 60000);
       return () => clearInterval(interval);
     }
   }, [role]);
@@ -108,7 +108,7 @@ export default function Sidebar({ role }) {
   }, [role]);
 
   return (
-    <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-300 z-40 border-r border-white/30 dark:border-white/10 bg-white/35 dark:bg-dark-800/60 backdrop-blur-2xl shadow-xl shadow-zinc-900/5 dark:shadow-black/30 ring-1 ring-white/20 dark:ring-white/5">
+    <aside className="sticky top-0 z-40 flex h-screen w-64 flex-col border-r border-zinc-300/70 bg-white/70 px-4 pb-4 pt-6 text-zinc-800 shadow-xl shadow-zinc-900/5 backdrop-blur-2xl ring-1 ring-white/40 transition-all duration-300 dark:border-white/10 dark:bg-dark-800/80 dark:text-zinc-100 dark:shadow-black/30 dark:ring-white/5 motion-reduce:transition-none">
       {/* Rol actual */}
       <div className="mb-6 px-3 py-3 rounded-xl bg-white/40 dark:bg-transparent border border-white/30 dark:border-transparent backdrop-blur-xl dark:backdrop-blur-none">
         <div className="flex items-center justify-center gap-3">
@@ -126,7 +126,7 @@ export default function Sidebar({ role }) {
       </div>
 
       {/* Navegación */}
-      <nav className="space-y-1 flex-1">
+      <nav aria-label="Navegación principal" className="flex-1 space-y-1">
         <Item to="/" icon={LayoutDashboard}>
           Inicio
         </Item>
@@ -146,6 +146,9 @@ export default function Sidebar({ role }) {
               Generar Cotización
             </Item>
             <Item to="/polizas" icon={BadgeDollarSign}>
+              Cotizaciones
+            </Item>
+            <Item to="/ventas" icon={BadgeDollarSign}>
               Ventas
             </Item>
             <Item
@@ -163,7 +166,7 @@ export default function Sidebar({ role }) {
 
       <div className="pt-4 text-center">
         <span className="text-xs font-bold text-[#1a2b4c] dark:text-zinc-400 whitespace-nowrap">
-          Business Control 
+          Business Control
         </span>
       </div>
     </aside>

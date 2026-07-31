@@ -1,12 +1,14 @@
 import { requireRoles } from "../../middlewares/role.middleware.js";
 import { forbidden } from "../../errors/appErrors.js";
-import { listContactsByClientAction } from "../actions/contact_actions/listContactsByClient.action.js";
-import { getClientAction } from "../actions/client_actions/getClient.action.js";
-import { listContactProductsAction } from "../actions/contact_actions/listContactProducts.action.js";
-import { getContactAction } from "../actions/contact_actions/getContact.action.js";
+import { listContactsByClientAction } from "../../modules/contacts/contactActions.js";
+import { getClientAction } from "../../modules/clients/clientActions.js";
+import { listContactProductsAction } from "../../modules/contacts/contactActions.js";
+import { getContactAction } from "../../modules/contacts/contactActions.js";
 import { findUserWithRole } from "../../repositories/user.repository.js";
 import { findProductByIdLean } from "../../repositories/product.repository.js";
-import { getQuoteItemsAction } from "../actions/quote_actions/getQuoteItems.action.js";
+import { getQuoteItemsAction } from "../../modules/quotes/quoteActions.js";
+import { getQuoteAction } from "../../modules/quotes/quoteActions.js";
+import { getSaleItemsAction } from "../../modules/sales/saleActions.js";
 
 export const Client = {
   contacts: async (parent, _args, ctx) => {
@@ -74,6 +76,33 @@ export const Quote = {
 };
 
 export const QuoteItem = {
+  product: async (parent, _args, ctx) => {
+    return ctx.loaders?.productById?.load(parent.product_id) || findProductByIdLean(parent.product_id);
+  },
+};
+
+export const Sale = {
+  quote: async (parent, _args, ctx) => {
+    if (!parent.quote_id) return null;
+    return ctx.loaders?.quoteById?.load(parent.quote_id) || getQuoteAction(parent.quote_id);
+  },
+  client: async (parent, _args, ctx) => {
+    return ctx.loaders?.clientById?.load(parent.client_id) || getClientAction(parent.client_id);
+  },
+  contact: async (parent, _args, ctx) => {
+    if (!parent.contact_id) return null;
+    return ctx.loaders?.contactById?.load(parent.contact_id) || getContactAction(parent.contact_id);
+  },
+  user: async (parent, _args, ctx) => {
+    if (!parent.user_id) return null;
+    return ctx.loaders?.userById?.load(parent.user_id) || findUserWithRole(parent.user_id);
+  },
+  items: async (parent, _args, ctx) => {
+    return ctx.loaders?.saleItemsBySaleId?.load(parent.id) || getSaleItemsAction(parent.id);
+  },
+};
+
+export const SaleItem = {
   product: async (parent, _args, ctx) => {
     return ctx.loaders?.productById?.load(parent.product_id) || findProductByIdLean(parent.product_id);
   },

@@ -67,4 +67,26 @@ describe("EditItemModal", () => {
     expect(onApply).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it("provides dark surfaces and a readable dark total", () => {
+    render(
+      <EditItemModal
+        editingItemDraft={draft}
+        editingItemTotals={{ subtotal: 180, total: 208.8 }}
+        formatCurrency={(value) => Number(value).toFixed(2)}
+        onClose={() => {}}
+        onApply={() => {}}
+        onChangeField={() => {}}
+      />,
+    );
+
+    const heading = screen.getByRole("heading", { name: /Editar producto/i });
+    expect(heading).toBeVisible();
+
+    screen.getAllByRole("spinbutton").forEach((input) => {
+      expect(input).toBeVisible();
+    });
+    
+    expect(screen.getByText("$208.80")).toBeVisible();
+  });
 });

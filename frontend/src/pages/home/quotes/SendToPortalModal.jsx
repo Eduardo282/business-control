@@ -54,7 +54,7 @@ export default function SendToPortalModal({
       <Card className="relative w-full max-w-lg overflow-hidden !bg-white dark:!bg-dark-900 border border-zinc-200 dark:border-dark-700 shadow-2xl shadow-zinc-900/20">
         <div className="px-6 py-5 border-b border-zinc-100 dark:border-dark-700 flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="size-10 rounded-xl bg-[#1B4733]/10 text-[#1B4733] inline-flex items-center justify-center shrink-0">
+            <div className="size-10 rounded-xl bg-[#1B4733]/10 dark:bg-emerald-500/10 text-[#1B4733] dark:text-emerald-300 ring-1 ring-[#1B4733]/10 dark:ring-emerald-500/20 inline-flex items-center justify-center shrink-0">
               <Globe size={20} />
             </div>
             <div>
@@ -71,7 +71,7 @@ export default function SendToPortalModal({
             type="button"
             onClick={onClose}
             disabled={toggleLoading}
-            className="size-8 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 hover:dark:bg-dark-800 hover:text-zinc-700 hover:dark:text-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center transition-colors"
+            className="size-8 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 hover:dark:bg-dark-800 hover:text-zinc-700 hover:dark:text-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:disabled:bg-dark-800 dark:disabled:text-zinc-600 disabled:cursor-not-allowed inline-flex items-center justify-center transition-colors"
           >
             <X size={16} />
           </button>
@@ -84,19 +84,20 @@ export default function SendToPortalModal({
             </label>
             <select
               id="portal-contact-select"
-              className="w-full rounded-xl border border-zinc-300 dark:border-dark-700 bg-zinc-50/80 dark:bg-dark-800/80 px-3 py-2.5 text-sm text-zinc-800 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-[#1B4733]/20 focus:border-[#1B4733] transition-colors"
+              className="w-full rounded-xl border border-zinc-300 dark:border-dark-700 bg-zinc-50/80 dark:bg-dark-800/80 px-3 py-2.5 text-sm text-zinc-800 dark:text-zinc-100 outline-none focus:ring-2 focus:ring-[#1B4733]/20 dark:focus:ring-emerald-400/20 focus:border-[#1B4733] dark:focus:border-emerald-400 transition-colors"
               onChange={(e) => {
                 setSelectedContactId(e.target.value);
                 setPortalError("");
               }}
               value={selectedContactId}
             >
-              <option value="">-- Seleccionar --</option>
+              <option value="" className="bg-white text-zinc-800 dark:bg-dark-800 dark:text-zinc-100">-- Seleccionar --</option>
               {clientContacts.map((contact) => (
                 <option
                   key={contact.id}
                   value={contact.id}
                   disabled={!contact.has_portal_access}
+                  className="bg-white text-zinc-800 disabled:text-zinc-400 dark:bg-dark-800 dark:text-zinc-100 dark:disabled:text-zinc-500"
                 >
                   {contact.full_name} ({contact.email || "Sin correo"})
                   {!contact.has_portal_access ? " - portal no habilitado" : ""}
@@ -120,14 +121,14 @@ export default function SendToPortalModal({
             variant="ghost"
             onClick={onClose}
             disabled={toggleLoading}
-            className="!bg-white dark:!bg-dark-900 !border !border-zinc-200 dark:!border-dark-700 !text-zinc-700 dark:!text-zinc-300 hover:!bg-zinc-100 hover:dark:!bg-dark-800 disabled:!opacity-50"
+            className="!bg-white dark:!bg-dark-900 !border !border-zinc-200 dark:!border-dark-700 !text-zinc-700 dark:!text-zinc-300 hover:!bg-zinc-100 hover:dark:!bg-dark-800 disabled:!bg-zinc-100 disabled:!text-zinc-400 dark:disabled:!bg-dark-800 dark:disabled:!text-zinc-500 disabled:!opacity-100"
           >
             Cancelar
           </Button>
           <button
             onClick={handleConfirm}
             disabled={toggleLoading || !selectedPortalContactHasAccess}
-            className="!bg-[#2B7FBE] hover:!bg-[#236EA8] !text-white !rounded-2xl !px-6 !py-2.5 shadow-[0_7px_14px_rgba(43,127,190,0.32)] hover:shadow-[0_9px_18px_rgba(43,127,190,0.38)] !transition-all !duration-150 disabled:!opacity-50 disabled:!cursor-not-allowed"
+            className="!bg-[#2B7FBE] hover:!bg-[#236EA8] !text-white !rounded-2xl !px-6 !py-2.5 shadow-[0_7px_14px_rgba(43,127,190,0.32)] hover:shadow-[0_9px_18px_rgba(43,127,190,0.38)] !transition-all !duration-150 disabled:!bg-zinc-300 disabled:!text-zinc-500 dark:disabled:!bg-dark-700 dark:disabled:!text-zinc-500 disabled:shadow-none disabled:!cursor-not-allowed"
           >
             {toggleLoading ? "Enviando…" : "Confirmar y Enviar"}
           </button>

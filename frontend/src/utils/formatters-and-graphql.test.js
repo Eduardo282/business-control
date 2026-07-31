@@ -25,10 +25,11 @@ describe("formatters", () => {
   });
 
   it.each([
-    ["PENDING", "Pendiente"],
-    ["requested", "Solicitada"],
-    ["APPROVED", "Aprobada"],
-    ["REJECTED", "Rechazada"],
+    ["PENDIENTE", "Pendiente"],
+    ["solicitada", "Solicitada"],
+    ["ACEPTADA", "Aceptada"],
+    ["ENVIADA", "Enviada"],
+    ["RECHAZADA", "Rechazada"],
     ["CUSTOM", "CUSTOM"],
     [undefined, "Pendiente"],
   ])("maps quote status %s to %s", (status, expected) => {

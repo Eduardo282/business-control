@@ -1,0 +1,89 @@
+# ============================================
+# Docker Compose — Business Control
+# ============================================
+# Usage:
+#   docker compose up -d          → start all services
+#   docker compose logs -f        → follow logs
+#   docker compose down           → stop and remove containers
+#   docker compose down -v        → stop, remove containers AND volumes (deletes DB data)
+
+services:
+  # ─── MySQL Database ─────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: bc-database
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-nuevacontrasena}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-business_control}
+    ports:
+      - "${DB_EXTERNAL_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/sql/workbench_full_setup.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-nuevacontrasena}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - bc-network
+
+  # ─── Backend (Node.js + Apollo GraphQL) ─────────
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: bc-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      ALLOW_UNSECURE_HTTP: "true"
+      JWT_SECRET: ${JWT_SECRET:-super-secret-change-me}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      RUN_MIGRATIONS: "true"
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-nuevacontrasena}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-business_control}
+      ZEROBOUNCE_API_KEY: ${ZEROBOUNCE_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      MASTER_PASSWORD: ${MASTER_PASSWORD:-}
+    ports:
+      - "${BACKEND_PORT:-4000}:4000"
+    networks:
+      - bc-network
+
+  # ─── Frontend (Vite + React → Nginx) ───────────
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:4000/graphql}
+    container_name: bc-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    networks:
+      - bc-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  bc-network:
+    driver: bridge

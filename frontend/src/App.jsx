@@ -9,7 +9,6 @@ export default function App() {
         titleTemplate="%s | Business Control"
       >
         <meta name="description" content="Sistema de gestión empresarial: cotizaciones, clientes, productos y pólizas." />
-        <meta name="theme-color" content="#2277B4" />
       </Helmet>
       <AppRoutes />
     </>

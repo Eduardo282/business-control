@@ -73,6 +73,146 @@ export default [
     },
   },
 
+  // Architecture boundaries: domain code stays framework and adapter agnostic.
+  {
+    files: ["frontend/src/features/*/domain/**/*.{js,jsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "react",
+              message: "Feature domain modules must remain framework-independent.",
+            },
+            {
+              name: "react-dom",
+              message: "Feature domain modules must remain framework-independent.",
+            },
+            {
+              name: "react-router-dom",
+              message: "Routing belongs outside feature domain modules.",
+            },
+          ],
+          patterns: [
+            {
+              group: [
+                "react/**",
+                "react-dom/**",
+                "**/actionsAPI/**",
+                "**/components/**",
+                "**/context/**",
+                "**/hooks/**",
+                "**/pages/**",
+                "**/services/**",
+              ],
+              message:
+                "Feature domain modules may depend only on domain or shared pure utilities.",
+            },
+            {
+              regex: "\\.jsx(?:$|[?#])",
+              message: "Feature domain modules must not import JSX modules.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXElement",
+          message: "Feature domain modules must remain JSX-free.",
+        },
+        {
+          selector: "JSXFragment",
+          message: "Feature domain modules must remain JSX-free.",
+        },
+        {
+          selector: "ImportExpression",
+          message: "Feature domain modules must not use dynamic imports.",
+        },
+      ],
+    },
+  },
+
+  {
+    files: ["backend/src/modules/*/domain/**/*.js"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "**/config/**",
+                "**/graphql/**",
+                "**/middlewares/**",
+                "**/repositories/**",
+                "**/routes/**",
+                "**/server/**",
+                "**/services/**",
+                "**/application/**",
+                "**/infrastructure/**",
+              ],
+              message:
+                "Domain modules may depend only on domain or shared pure utilities.",
+            },
+            {
+              regex: "^(?:\\.\\./)+[^/]+\\.js$",
+              message:
+                "Domain modules must not import their module composition root.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ImportExpression",
+          message: "Domain modules must not use dynamic imports.",
+        },
+      ],
+    },
+  },
+
+  {
+    files: ["backend/src/modules/*/application/**/*.js"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "**/config/**",
+                "**/graphql/**",
+                "**/middlewares/**",
+                "**/repositories/**",
+                "**/routes/**",
+                "**/server/**",
+                "**/services/**",
+                "**/infrastructure/**",
+              ],
+              message:
+                "Application modules must receive infrastructure through explicit dependencies.",
+            },
+            {
+              regex: "^(?:\\.\\./)+[^/]+\\.js$",
+              message:
+                "Application modules must not import their module composition root.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ImportExpression",
+          message: "Application modules must not use dynamic imports.",
+        },
+      ],
+    },
+  },
+
   // ── Root config/scripts (playwright, vitest, etc.) ──────────────
   {
     // <-- CORREGIDO: Añadidos .mjs y cualquier archivo .config.js en cualquier carpeta

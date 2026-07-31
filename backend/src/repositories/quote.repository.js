@@ -7,7 +7,7 @@ import { pool } from "../config/db.js";
 import { normalizePagination } from "./pagination.js";
 
 const QUOTE_COLUMNS =
-  "id, folio, client_id, contact_id, user_id, created_at, total, notes, status, is_registered, registered_at, is_sent_to_client_portal, notification_read, is_deleted_admin, is_deleted_portal";
+  "id, folio, client_id, contact_id, user_id, created_at, total, notes, status, is_contact_requested, is_registered, registered_at, email_sent_at, is_sent_to_client_portal, portal_responded_at, notification_read, notification_dismissed, is_deleted_admin, is_deleted_portal";
 
 const QUOTE_ITEM_COLUMNS =
   "id, quote_id, product_id, quantity, base_unit_price, unit_price, discount, total";
@@ -38,8 +38,8 @@ export async function createQuoteWithItems({
     await connection.beginTransaction();
 
     const [resQuote] = await connection.query(
-      `INSERT INTO quotes (folio, client_id, contact_id, user_id, total, notes, status, is_registered)
-       VALUES (?, ?, ?, ?, ?, ?, 'PENDING', 0)`,
+      `INSERT INTO quotes (folio, client_id, contact_id, user_id, total, notes, status, is_contact_requested, is_registered)
+       VALUES (?, ?, ?, ?, ?, ?, 'PENDIENTE', 0, 0)`,
       [folio, client_id, contact_id || null, user_id, total, notes],
     );
     const quoteId = resQuote.insertId;
@@ -184,6 +184,28 @@ export async function findQuoteByStatus({ quoteId, status, queryRunner = pool })
 }
 
 /**
+ * Locks a contact-created quote request for exclusive resolution.
+ * @param {number|string} quoteId
+ * @param {object} [queryRunner]
+ * @returns {Promise<object|null>}
+ */
+export async function findContactRequestedQuoteForUpdate(
+  quoteId,
+  queryRunner = pool,
+) {
+  const [rows] = await queryRunner.query(
+    `SELECT ${QUOTE_COLUMNS}
+     FROM quotes
+     WHERE id = ?
+       AND status = 'SOLICITADA'
+       AND is_contact_requested = 1
+     FOR UPDATE`,
+    [quoteId],
+  );
+  return rows?.[0] || null;
+}
+
+/**
  * Actualiza la cotizacion al resolver una solicitud.
  * @param {object} params
  * @param {number|string} params.quoteId
@@ -194,7 +216,7 @@ export async function findQuoteByStatus({ quoteId, status, queryRunner = pool })
  * @param {number} params.total
  * @param {string|null} params.notes
  * @param {object} [params.queryRunner]
- * @returns {Promise<void>}
+ * @returns {Promise<number>}
  */
 export async function resolveQuoteRequest({
   quoteId,
@@ -206,12 +228,15 @@ export async function resolveQuoteRequest({
   notes,
   queryRunner = pool,
 }) {
-  await queryRunner.query(
+  const [result] = await queryRunner.query(
     `UPDATE quotes
-     SET folio = ?, client_id = ?, contact_id = ?, user_id = ?, total = ?, notes = ?, status = 'ACCEPTED', is_registered = 0, created_at = NOW()
-     WHERE id = ?`,
+     SET folio = ?, client_id = ?, contact_id = ?, user_id = ?, total = ?, notes = ?, status = 'PENDIENTE', is_registered = 0, created_at = NOW()
+     WHERE id = ?
+       AND status = 'SOLICITADA'
+       AND is_contact_requested = 1`,
     [folio, client_id, contact_id, user_id, total, notes, quoteId],
   );
+  return result.affectedRows || 0;
 }
 
 /**
@@ -229,13 +254,14 @@ export async function createQuote(data, queryRunner = pool) {
     total,
     notes,
     status,
+    is_contact_requested,
     is_registered,
     is_sent_to_client_portal,
   } = data;
 
   const [resQuote] = await queryRunner.query(
-    `INSERT INTO quotes (folio, client_id, contact_id, user_id, total, notes, status, is_registered, is_sent_to_client_portal)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO quotes (folio, client_id, contact_id, user_id, total, notes, status, is_contact_requested, is_registered, is_sent_to_client_portal)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       folio || null,
       client_id,
@@ -243,7 +269,8 @@ export async function createQuote(data, queryRunner = pool) {
       user_id || null,
       total,
       notes || null,
-      status || "PENDING",
+      status || "PENDIENTE",
+      is_contact_requested ? 1 : 0,
       is_registered !== undefined ? is_registered : 0,
       is_sent_to_client_portal !== undefined ? is_sent_to_client_portal : 0,
     ],
@@ -267,7 +294,7 @@ export async function findQuoteById(id, queryRunner = pool) {
 }
 
 /**
- * Obtiene las cotizaciones activas o rechazadas para la cola de notificaciones.
+ * Obtiene las solicitudes y respuestas del portal para la cola de notificaciones.
  * @param {object} [queryRunner]
  * @returns {Promise<object[]>}
  */
@@ -275,20 +302,35 @@ export async function findUnreadQuoteRequests(queryRunner = pool) {
   const [rows] = await queryRunner.query(
     `SELECT ${QUOTE_COLUMNS}
      FROM quotes
-     WHERE status IN ('REQUESTED', 'REJECTED') AND is_deleted_admin = 0
-     ORDER BY CASE WHEN status = 'REQUESTED' THEN 0 ELSE 1 END, created_at DESC`
+     WHERE (
+       (is_contact_requested = 1 AND status IN ('SOLICITADA', 'ACEPTADA', 'RECHAZADA'))
+       OR (
+         status IN ('ACEPTADA', 'RECHAZADA')
+         AND portal_responded_at IS NOT NULL
+       )
+     )
+       AND is_deleted_admin = 0
+       AND notification_dismissed = 0
+     ORDER BY
+       notification_read ASC,
+       CASE
+         WHEN status = 'SOLICITADA' THEN 0
+         WHEN status = 'ACEPTADA' THEN 1
+         ELSE 2
+       END,
+       COALESCE(portal_responded_at, created_at) DESC`
   );
   return rows;
 }
 
 /**
- * Cuenta las cotizaciones con estado REQUESTED.
+ * Cuenta las cotizaciones con estado SOLICITADA.
  * @param {object} [queryRunner]
  * @returns {Promise<number>}
  */
 export async function countPendingQuoteRequests(queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    "SELECT COUNT(*) as count FROM quotes WHERE status = 'REQUESTED' AND is_deleted_admin = 0"
+    "SELECT COUNT(*) as count FROM quotes WHERE status = 'SOLICITADA' AND is_contact_requested = 1 AND is_deleted_admin = 0 AND notification_dismissed = 0"
   );
   return rows?.[0]?.count || 0;
 }
@@ -348,9 +390,19 @@ export async function updateQuotePortalStatus({ quoteId, isSentToClientPortal, c
   const [result] = await queryRunner.query(
     `UPDATE quotes
      SET is_sent_to_client_portal = ?,
-         contact_id = COALESCE(?, contact_id)
+         contact_id = COALESCE(?, contact_id),
+         status = CASE
+           WHEN status IN ('ACEPTADA', 'RECHAZADA') THEN status
+           WHEN ? = 1 AND is_registered = 1 THEN 'ENVIADA'
+           ELSE status
+         END
      WHERE id = ?`,
-    [isSentToClientPortal, contactId || null, quoteId],
+    [
+      isSentToClientPortal,
+      contactId || null,
+      isSentToClientPortal,
+      quoteId,
+    ],
   );
   return result.affectedRows || 0;
 }
@@ -406,6 +458,48 @@ export async function updateQuoteStatus({ quoteId, status }, queryRunner = pool)
 }
 
 /**
+ * Guarda la respuesta del contacto sobre una cotizacion enviada al portal.
+ * @param {object} params
+ * @param {number|string} params.quoteId
+ * @param {"ACEPTADA"|"RECHAZADA"} params.status
+ * @param {string[]} [params.expectedStatuses]
+ * @param {object} [queryRunner]
+ * @returns {Promise<number>}
+ */
+export async function updatePortalQuoteResponseStatus({
+  quoteId,
+  status,
+  expectedStatuses = ["SOLICITADA", "PENDIENTE", "ENVIADA"],
+}, queryRunner = pool) {
+  const placeholders = expectedStatuses.map(() => "?").join(", ");
+  const [result] = await queryRunner.query(
+    `UPDATE quotes
+     SET status = ?,
+         portal_responded_at = NOW(),
+         notification_read = 0
+     WHERE id = ?
+       AND status IN (${placeholders})
+       AND portal_responded_at IS NULL`,
+    [status, quoteId, ...expectedStatuses],
+  );
+  return result.affectedRows || 0;
+}
+
+export async function markQuoteEmailSent(quoteId, queryRunner = pool) {
+  const [result] = await queryRunner.query(
+    `UPDATE quotes
+     SET email_sent_at = NOW(),
+         status = CASE
+           WHEN status IN ('ACEPTADA', 'RECHAZADA') THEN status
+           ELSE 'ENVIADA'
+         END
+     WHERE id = ?`,
+    [quoteId],
+  );
+  return result.affectedRows || 0;
+}
+
+/**
  * Marca una cotización como registrada.
  * @param {number|string} quoteId
  * @param {object} [queryRunner]
@@ -419,6 +513,12 @@ export async function registerQuote(quoteId, queryRunner = pool) {
          is_sent_to_client_portal = CASE
            WHEN contact_id IS NOT NULL THEN 1
            ELSE is_sent_to_client_portal
+         END,
+         status = CASE
+           WHEN status IN ('ACEPTADA', 'RECHAZADA') THEN status
+           WHEN contact_id IS NOT NULL THEN 'ENVIADA'
+           WHEN status = 'ENVIADA' THEN 'ENVIADA'
+           ELSE 'PENDIENTE'
          END
      WHERE id = ?`,
     [quoteId],
@@ -427,7 +527,28 @@ export async function registerQuote(quoteId, queryRunner = pool) {
 }
 
 /**
- * Lista todas las cotizaciones excluyendo las que tienen estado REQUESTED y que no estén eliminadas.
+ * Marks a portal-requested quote as accepted after the admin resolves it.
+ * Normal admin-created quotes remain ENVIADA until the contact responds.
+ * @param {number|string} quoteId
+ * @param {object} [queryRunner]
+ * @returns {Promise<number>}
+ */
+export async function acceptResolvedQuoteRequest(quoteId, queryRunner = pool) {
+  const [result] = await queryRunner.query(
+    `UPDATE quotes
+     SET status = 'ACEPTADA'
+     WHERE id = ?
+       AND status = 'ENVIADA'
+       AND is_contact_requested = 1
+       AND is_registered = 1
+       AND is_sent_to_client_portal = 1`,
+    [quoteId],
+  );
+  return result.affectedRows || 0;
+}
+
+/**
+ * Lista todas las cotizaciones excluyendo las que tienen estado SOLICITADA y que no estén eliminadas.
  * @param {{ limit?: number, offset?: number }} [pagination]
  * @param {object} [queryRunner]
  * @returns {Promise<object[]>}
@@ -435,35 +556,35 @@ export async function registerQuote(quoteId, queryRunner = pool) {
 export async function listAllNonRequestedQuotes(pagination = {}, queryRunner = pool) {
   const { limit, offset } = normalizePagination(pagination);
   const [rows] = await queryRunner.query(
-    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE status != 'SOLICITADA' AND is_deleted_admin = 0 ORDER BY created_at DESC LIMIT ? OFFSET ?`,
     [limit, offset],
   );
   return rows;
 }
 
 /**
- * Lista las cotizaciones de un cliente excluyendo las que tienen estado REQUESTED y que no estén eliminadas.
+ * Lista las cotizaciones de un cliente excluyendo las que tienen estado SOLICITADA y que no estén eliminadas.
  * @param {number|string} clientId
  * @param {object} [queryRunner]
  * @returns {Promise<object[]>}
  */
 export async function listQuotesByClientId(clientId, queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE client_id = ? AND status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC`,
+    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE client_id = ? AND status != 'SOLICITADA' AND is_deleted_admin = 0 ORDER BY created_at DESC`,
     [clientId]
   );
   return rows;
 }
 
 /**
- * Lista las cotizaciones de un usuario ejecutor excluyendo las que tienen estado REQUESTED y que no estén eliminadas.
+ * Lista las cotizaciones de un usuario ejecutor excluyendo las que tienen estado SOLICITADA y que no estén eliminadas.
  * @param {number|string} userId
  * @param {object} [queryRunner]
  * @returns {Promise<object[]>}
  */
 export async function listQuotesByUserId(userId, queryRunner = pool) {
   const [rows] = await queryRunner.query(
-    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE user_id = ? AND status != 'REQUESTED' AND is_deleted_admin = 0 ORDER BY created_at DESC`,
+    `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE user_id = ? AND status != 'SOLICITADA' AND is_deleted_admin = 0 ORDER BY created_at DESC`,
     [userId]
   );
   return rows;
@@ -479,6 +600,41 @@ export async function markQuoteNotificationAsRead(quoteId, queryRunner = pool) {
   const [result] = await queryRunner.query(
     "UPDATE quotes SET notification_read = 1 WHERE id = ?",
     [quoteId]
+  );
+  return result.affectedRows || 0;
+}
+
+/**
+ * Dismisses a single quote notification so it no longer appears in the queue.
+ * @param {number|string} quoteId
+ * @param {object} [queryRunner]
+ * @returns {Promise<number>}
+ */
+export async function dismissQuoteNotification(quoteId, queryRunner = pool) {
+  const [result] = await queryRunner.query(
+    "UPDATE quotes SET notification_dismissed = 1, notification_read = 1 WHERE id = ?",
+    [quoteId]
+  );
+  return result.affectedRows || 0;
+}
+
+/**
+ * Dismisses all quote notifications from the notification queue.
+ * @param {object} [queryRunner]
+ * @returns {Promise<number>}
+ */
+export async function dismissAllQuoteNotifications(queryRunner = pool) {
+  const [result] = await queryRunner.query(
+    `UPDATE quotes SET notification_dismissed = 1, notification_read = 1
+     WHERE (
+       (is_contact_requested = 1 AND status IN ('ACEPTADA', 'RECHAZADA'))
+       OR (
+         status IN ('ACEPTADA', 'RECHAZADA')
+         AND portal_responded_at IS NOT NULL
+       )
+     )
+       AND is_deleted_admin = 0
+       AND notification_dismissed = 0`
   );
   return result.affectedRows || 0;
 }

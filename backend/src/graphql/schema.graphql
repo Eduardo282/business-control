@@ -118,6 +118,7 @@ input UpdateContactInput {
 type SendEmailResponse {
   success: Boolean!
   message: String
+  email_sent_at: DateTime
 }
 
 type FormDraft {
@@ -161,9 +162,12 @@ type Query {
 
   quotes(limit: Int, offset: Int): [Quote!]!
   quote(id: ID!): Quote
+  sales(limit: Int, offset: Int): [Sale!]!
+  sale(id: ID!): Sale
   quotesByClient(client_id: ID!): [Quote!]!
   pendingQuoteRequestsCount: Int!
   unreadQuoteRequests: [Quote!]!
+  generateQuotePdf(quote_id: ID!): String!
 }
 
 input CreateContactProductInput {
@@ -179,6 +183,7 @@ type Mutation {
   verifyMasterPassword(password: String!): Boolean!
   createContactProduct(input: CreateContactProductInput!): ContactProduct!
   deleteContactProduct(id: ID!): Boolean!
+  deletePortalContactProduct(id: ID!): Boolean!
   updateContactProductDates(
     id: ID!
     start_date: String
@@ -187,12 +192,7 @@ type Mutation {
     license_key: String
   ): ContactProduct!
 
-  sendQuoteEmail(
-    quote_id: ID!
-    contact_email: String!
-    message: String!
-    pdf_base64: String
-  ): SendEmailResponse!
+  sendQuoteEmail(quote_id: ID!, contact_email: String!, message: String!): SendEmailResponse!
   toggleQuotePortal(id: ID!, access: Boolean!, contact_id: ID): Boolean!
   loginContact(email: String!, password: String!): LoginContactPayload!
   registerUser(input: RegisterUserInput!): User!
@@ -216,9 +216,20 @@ type Mutation {
 
   createQuote(input: CreateQuoteInput!): Quote!
   resolveQuoteRequest(requestId: ID!, input: CreateQuoteInput!): Quote!
+  createSaleFromQuote(input: CreateSaleFromQuoteInput!): Sale!
+  sendSaleEmail(
+    sale_id: ID!
+    contact_email: String!
+    message: String!
+  ): SendEmailResponse!
+  toggleSalePortal(id: ID!, access: Boolean!, contact_id: ID): Boolean!
+  deleteSale(id: ID!): Boolean!
+  deletePortalSale(id: ID!): Boolean!
   registerQuote(id: ID!): Quote!
   deleteQuote(id: ID!): Boolean!
   markQuoteNotificationRead(id: ID!): Boolean!
+  dismissQuoteNotification(id: ID!): Boolean!
+  dismissAllQuoteNotifications: Boolean!
 
   createCategory(name: String!): ProductCategory!
   assignCategoryType(name: String!, product_type: String!): ProductCategory!
@@ -230,6 +241,7 @@ type Mutation {
   requestQuote(input: RequestQuoteInput!): Quote!
   deletePortalQuote(id: ID!): Boolean!
   updatePortalQuoteRequest(id: ID!, input: RequestQuoteInput!): Quote!
+  acceptPortalQuote(id: ID!): Boolean!
   rejectPortalQuote(id: ID!): Boolean!
   rejectQuote(id: ID!): Boolean!
   updateQuoteStatus(id: ID!, status: String!): Quote!
@@ -320,6 +332,8 @@ type Quote {
   status: String!
   is_registered: Boolean!
   registered_at: DateTime
+  email_sent_at: DateTime
+  portal_responded_at: DateTime
   notes: String
   is_sent_to_client_portal: Boolean
   notification_read: Boolean
@@ -336,12 +350,45 @@ type QuoteItem {
   total: Float!
 }
 
+type Sale {
+  id: ID!
+  folio: String
+  quote: Quote
+  client: Client
+  user: User
+  contact: Contact
+  created_at: DateTime!
+  total: Float!
+  status: String!
+  email_sent_at: DateTime
+  is_sent_to_client_portal: Boolean
+  portal_sent_at: DateTime
+  notes: String
+  items: [SaleItem!]!
+}
+
+type SaleItem {
+  id: ID!
+  product: Product
+  quantity: Int!
+  base_unit_price: Float
+  unit_price: Float!
+  discount: Float
+  total: Float!
+}
+
 input CreateQuoteInput {
   client_id: ID!
   contact_id: ID
   items: [QuoteItemInput!]!
   notes: String
   folio: String
+}
+
+input CreateSaleFromQuoteInput {
+  quote_id: ID!
+  quote_item_ids: [ID!]!
+  notes: String
 }
 
 input QuoteItemInput {

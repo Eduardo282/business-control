@@ -1,8 +1,8 @@
 import { requireRoles } from "../../../middlewares/role.middleware.js";
-import { createClientAction } from "../../actions/client_actions/createClient.action.js";
-import { bulkCreateClientsAction } from "../../actions/client_actions/bulkCreateClients.action.js";
-import { updateClientAction } from "../../actions/client_actions/updateClient.action.js";
-import { deleteClientAction } from "../../actions/client_actions/deleteClient.action.js";
+import { createClientAction } from "../../../modules/clients/clientActions.js";
+import { bulkCreateClientsAction } from "../../../modules/clients/clientActions.js";
+import { updateClientAction } from "../../../modules/clients/clientActions.js";
+import { deleteClientAction } from "../../../modules/clients/clientActions.js";
 
 export const createClient = async (_parent, { input }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);

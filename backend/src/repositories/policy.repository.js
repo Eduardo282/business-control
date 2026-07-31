@@ -13,7 +13,7 @@ const VISIBLE_CONTACT_PRODUCT_CONDITION = `
         SELECT 1
         FROM quotes q
         JOIN quote_items qi ON qi.quote_id = q.id
-        WHERE q.status = 'ACCEPTED'
+        WHERE q.status = 'ACEPTADA'
           AND q.client_id = cp.client_id
           AND q.contact_id = cp.contact_id
           AND qi.product_id = cp.product_id

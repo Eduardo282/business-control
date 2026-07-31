@@ -13,7 +13,7 @@ const VISIBLE_CONTACT_PRODUCT_CONDITION = `
         SELECT 1
         FROM quotes q
         JOIN quote_items qi ON qi.quote_id = q.id
-        WHERE q.status = 'ACCEPTED'
+        WHERE q.status = 'ACEPTADA'
           AND q.client_id = cp.client_id
           AND q.contact_id = cp.contact_id
           AND qi.product_id = cp.product_id
@@ -192,6 +192,41 @@ export async function deleteContactProduct(id, queryRunner = pool) {
   const [result] = await queryRunner.query(
     "DELETE FROM contact_products WHERE id = ?",
     [id],
+  );
+  return result.affectedRows || 0;
+}
+
+/**
+ * Busca una asignación de servicio/póliza por contacto para operaciones del portal.
+ * @param {number|string} id
+ * @param {number|string} contactId
+ * @param {object} [queryRunner]
+ * @returns {Promise<object|null>}
+ */
+export async function findContactProductForContact(id, contactId, queryRunner = pool) {
+  const [rows] = await queryRunner.query(
+    `SELECT cp.id, cp.contact_id, cp.product_id,
+            p.name as product_name, p.category as product_category, p.product_type
+     FROM contact_products cp
+     JOIN products p ON cp.product_id = p.id
+     WHERE cp.id = ? AND cp.contact_id = ?
+     LIMIT 1`,
+    [id, contactId],
+  );
+  return rows?.[0] || null;
+}
+
+/**
+ * Elimina una asignación de producto solo si pertenece al contacto autenticado.
+ * @param {number|string} id
+ * @param {number|string} contactId
+ * @param {object} [queryRunner]
+ * @returns {Promise<number>} Número de filas afectadas
+ */
+export async function deleteContactProductForContact(id, contactId, queryRunner = pool) {
+  const [result] = await queryRunner.query(
+    "DELETE FROM contact_products WHERE id = ? AND contact_id = ?",
+    [id, contactId],
   );
   return result.affectedRows || 0;
 }

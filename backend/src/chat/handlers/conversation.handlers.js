@@ -66,6 +66,17 @@ export function registerConversationHandlers(io, socket, context) {
   // ── Close conversation ──
   socket.on("conversation:close", async ({ conversationId }) => {
     try {
+      const existing = await chatService.getConversation(conversationId);
+      if (!existing) {
+        return socket.emit("error", { message: "Conversación no encontrada" });
+      }
+      if (existing.status === "CLOSED") {
+        return socket.emit("conversation:closed", {
+          conversation: existing,
+          closedBy: "el sistema",
+        });
+      }
+
       const closedBy = isAgent ? "el agente" : "el cliente";
       const conversation = await chatService.closeConversation(conversationId);
 
@@ -73,7 +84,7 @@ export function registerConversationHandlers(io, socket, context) {
         conversationId,
         "SYSTEM",
         null,
-        `La conversación ha sido cerrada por ${closedBy}. ¡Gracias por contactarnos!`
+        `La conversación ha sido suspendida por ${closedBy}. El historial se conservará.`
       );
 
       io.to(`conv:${conversationId}`).emit("message:new", sysMsg);

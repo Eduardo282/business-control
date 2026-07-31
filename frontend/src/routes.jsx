@@ -39,6 +39,8 @@ const CreateQuote = lazy(() => import("./pages/home/CreateQuote"));
 const QuoteDetail = lazy(() => import("./pages/home/QuoteDetail"));
 const QuoteHistory = lazy(() => import("./pages/home/QuoteHistory"));
 const Policies = lazy(() => import("./pages/home/Policies"));
+const Sales = lazy(() => import("./pages/home/Sales"));
+const SaleDetail = lazy(() => import("./pages/home/SaleDetail"));
 const AgentSupport = lazy(() => import("./pages/home/AgentSupport"));
 const Layout = lazy(() => import("./pages/home/Layout"));
 
@@ -46,6 +48,7 @@ const PortalLogin = lazy(() => import("./pages/portal/PortalLogin"));
 const PortalLayout = lazy(() => import("./pages/portal/PortalLayout"));
 const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
 const PortalQuotes = lazy(() => import("./pages/portal/PortalQuotes"));
+const PortalSales = lazy(() => import("./pages/portal/PortalSales"));
 const PortalCatalog = lazy(() => import("./pages/portal/PortalCatalog"));
 const PortalSupport = lazy(() => import("./pages/portal/PortalSupport"));
 const PortalSettings = lazy(() => import("./pages/portal/PortalSettings"));
@@ -74,8 +77,12 @@ export default function AppRoutes() {
         <ErrorBoundary>
           <Suspense
             fallback={
-              <div className="min-h-screen w-full flex items-center justify-center text-zinc-600 text-sm">
-                Cargando…
+              <div
+                role="status"
+                className="min-h-screen w-full flex items-center justify-center gap-3 bg-surface-muted dark:bg-dark-900 text-content-secondary dark:text-zinc-200 text-sm"
+              >
+                <span className="size-5 animate-spin rounded-full border-2 border-zinc-300 border-t-[#2277B4] dark:border-zinc-700 dark:border-t-blue-400 motion-reduce:animate-none" />
+                <span>Cargando…</span>
               </div>
             }>
             <Routes>
@@ -108,6 +115,8 @@ export default function AppRoutes() {
               <Route path="dashboard" element={<PageMeta title="Portal — Dashboard" desc="Panel principal del portal de clientes."><PortalDashboard /></PageMeta>} />
               <Route path="quotes" element={<PageMeta title="Portal — Cotizaciones" desc="Cotizaciones disponibles en el portal de clientes."><PortalQuotes /></PageMeta>} />
               <Route path="quotes/:id" element={<PageMeta title="Portal — Detalle Cotización" desc="Detalle de cotización en el portal."><QuoteDetail /></PageMeta>} />
+              <Route path="sales" element={<PageMeta title="Portal — Ventas" desc="Ventas disponibles en el portal de clientes."><PortalSales /></PageMeta>} />
+              <Route path="sales/:id" element={<PageMeta title="Portal — Detalle Venta" desc="Detalle de venta en el portal."><SaleDetail /></PageMeta>} />
               <Route path="catalog" element={<PageMeta title="Portal — Catálogo" desc="Catálogo de productos disponibles para clientes."><PortalCatalog /></PageMeta>} />
               <Route path="support" element={<PageMeta title="Portal — Soporte" desc="Chat de soporte en tiempo real para clientes."><PortalSupport /></PageMeta>} />
               <Route path="settings" element={<PageMeta title="Portal — Ajustes" desc="Ajustes de cuenta y contraseña."><PortalSettings /></PageMeta>} />
@@ -132,7 +141,9 @@ export default function AppRoutes() {
                     path="/registrar-productos"
                     element={<PageMeta title="Registrar Productos" desc="Registro de nuevos productos y servicios al catálogo."><RegistrarProducts /></PageMeta>}
                   />
-                  <Route path="/polizas" element={<PageMeta title="Ventas" desc="Ventas generadas desde cotizaciones registradas."><Policies /></PageMeta>} />
+                  <Route path="/polizas" element={<PageMeta title="Cotizaciones" desc="Cotizaciones aceptadas por contactos del portal."><Policies /></PageMeta>} />
+                  <Route path="/ventas" element={<PageMeta title="Ventas" desc="Ventas generadas desde cotizaciones aceptadas."><Sales /></PageMeta>} />
+                  <Route path="/ventas/:id" element={<PageMeta title="Detalle de Venta" desc="Documento de venta generado desde cotización aceptada."><SaleDetail /></PageMeta>} />
                   <Route path="/productos/:id" element={<PageMeta title="Detalle de Producto" desc="Información detallada, precios e historial del producto."><ProductDetail /></PageMeta>} />
                   <Route
                     path="/cotizaciones/historial"

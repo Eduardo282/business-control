@@ -11,6 +11,7 @@ export const listQuotesApi = async () => {
         status
         is_registered
         registered_at
+        email_sent_at
         is_sent_to_client_portal
         client {
           id
@@ -27,6 +28,7 @@ export const listQuotesApi = async () => {
         items {
           id
           quantity
+          discount
           total
           product {
             id
@@ -53,6 +55,7 @@ export const listQuotesByClientApi = async (client_id) => {
         status
         is_registered
         registered_at
+        email_sent_at
         user {
           full_name
         }
@@ -76,6 +79,7 @@ export const getQuoteApi = async (id) => {
         status
         is_registered
         registered_at
+        email_sent_at
         notes
         is_sent_to_client_portal
         client {
@@ -135,6 +139,8 @@ export const createQuoteApi = async (input) => {
         status
         is_registered
         registered_at
+        email_sent_at
+        is_sent_to_client_portal
       }
     }
   `;
@@ -151,6 +157,8 @@ export const resolveQuoteRequestApi = async (requestId, input) => {
         status
         is_registered
         registered_at
+        email_sent_at
+        is_sent_to_client_portal
       }
     }
   `;
@@ -227,6 +235,7 @@ export const getUnreadQuoteRequestsApi = async () => {
         id
         created_at
         status
+        portal_responded_at
         notification_read
         contact {
           id
@@ -252,21 +261,41 @@ export const markQuoteNotificationReadApi = async (id) => {
   return data.markQuoteNotificationRead;
 };
 
+export const dismissQuoteNotificationApi = async (id) => {
+  const query = `
+    mutation($id: ID!) {
+      dismissQuoteNotification(id: $id)
+    }
+  `;
+  const data = await gql(query, { id });
+  return data.dismissQuoteNotification;
+};
+
+export const dismissAllQuoteNotificationsApi = async () => {
+  const query = `
+    mutation {
+      dismissAllQuoteNotifications
+    }
+  `;
+  const data = await gql(query);
+  return data.dismissAllQuoteNotifications;
+};
+
 export const sendQuoteEmailApi = async ({
   quote_id,
   contact_email,
   message,
-  pdf_base64,
 }) => {
   const query = `
-    mutation SendEmail($quote_id: ID!, $contact_email: String!, $message: String!, $pdf_base64: String) {
-      sendQuoteEmail(quote_id: $quote_id, contact_email: $contact_email, message: $message, pdf_base64: $pdf_base64) {
+    mutation SendEmail($quote_id: ID!, $contact_email: String!, $message: String!) {
+      sendQuoteEmail(quote_id: $quote_id, contact_email: $contact_email, message: $message) {
         success
         message
+        email_sent_at
       }
     }
   `;
-  const data = await gql(query, { quote_id, contact_email, message, pdf_base64 });
+  const data = await gql(query, { quote_id, contact_email, message });
   return data.sendQuoteEmail;
 };
 
@@ -278,4 +307,14 @@ export const toggleQuotePortalApi = async (id, access, contact_id) => {
   `;
   const data = await gql(query, { id, access, contact_id });
   return data.toggleQuotePortal;
+};
+
+export const generateQuotePdfApi = async (quote_id) => {
+  const query = `
+    query GenerateQuotePdf($quote_id: ID!) {
+      generateQuotePdf(quote_id: $quote_id)
+    }
+  `;
+  const data = await gql(query, { quote_id });
+  return data.generateQuotePdf;
 };

@@ -6,17 +6,17 @@ export default function Button({
   ...props
 }) {
   const base =
-    "font-medium rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden group ";
+    "group relative inline-flex items-center justify-center overflow-hidden rounded-xl border font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-blue-400 dark:focus-visible:ring-offset-dark-900 disabled:cursor-not-allowed disabled:opacity-55 disabled:shadow-none disabled:hover:translate-y-0 motion-reduce:transition-none ";
 
-  // Estilos de variantes
   const variants = {
     primary:
-      "bg-gradient-to-r from-light-accent to-light-accent dark:from-primary-600 dark:to-primary-500 hover:to-light-accent dark:hover:to-primary-400 text-white shadow-lg shadow-light-accent/25 dark:shadow-primary-500/25 border border-white/20 dark:border-primary-400/20",
-    secondary: "glass-button text-light-text-body dark:text-zinc-200",
+      "border-light-accent bg-gradient-to-r from-light-accent to-light-accentHover text-white shadow-lg shadow-light-accent/20 hover:from-light-accentHover hover:to-light-accentHover dark:border-blue-400/40 dark:from-blue-600 dark:to-blue-500 dark:hover:from-blue-500 dark:hover:to-blue-400 dark:shadow-blue-950/40",
+    secondary:
+      "border-zinc-300 bg-white text-zinc-800 shadow-sm hover:border-zinc-400 hover:bg-zinc-100 dark:border-white/20 dark:bg-white/10 dark:text-zinc-100 dark:hover:border-white/30 dark:hover:bg-white/15",
     danger:
-      "bg-light-error/10 dark:bg-red-500/10 text-light-error dark:text-red-400 border border-light-error/20 dark:border-red-500/20 hover:bg-light-error/20 dark:hover:bg-red-500/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)]",
+      "border-red-300 bg-red-50 text-red-700 hover:border-red-400 hover:bg-red-100 focus-visible:ring-red-600 dark:border-red-700 dark:bg-red-950/40 dark:text-red-300 dark:hover:border-red-600 dark:hover:bg-red-900/50 dark:focus-visible:ring-red-400",
     ghost:
-      "hover:bg-light-highlight/20 dark:hover:bg-white/5 text-light-text-secondary dark:text-zinc-400 hover:text-light-text-primary dark:hover:text-white border border-transparent",
+      "border-transparent bg-transparent text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-white/10 dark:hover:text-white",
   };
 
   const sizes = {
@@ -33,7 +33,10 @@ export default function Button({
       } ${className}`}>
       <span className="relative z-10 flex items-center gap-2">{children}</span>
       {variant === "primary" && (
-        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 translate-y-full bg-white/15 transition-transform duration-200 group-hover:translate-y-0 group-disabled:translate-y-full motion-reduce:transition-none"
+        />
       )}
     </button>
   );

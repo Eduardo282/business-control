@@ -7,6 +7,7 @@ export default {
       colors: {
         surface: {
           DEFAULT: "var(--color-surface)",
+          app: "var(--color-app-background)",
           muted: "var(--color-surface-muted)",
           elevated: "var(--color-surface-elevated)",
         },
@@ -18,8 +19,21 @@ export default {
         border: {
           semantic: "var(--color-border)",
         },
+        control: {
+          border: "var(--color-control-border)",
+          disabled: "var(--color-control-disabled)",
+        },
+        focus: "var(--color-focus)",
         brand: {
           DEFAULT: "var(--color-brand)",
+        },
+        danger: {
+          DEFAULT: "var(--color-danger)",
+          surface: "var(--color-danger-surface)",
+        },
+        success: {
+          DEFAULT: "var(--color-success)",
+          surface: "var(--color-success-surface)",
         },
         dark: {
           900: "#050511",
@@ -40,17 +54,17 @@ export default {
         },
         // Paleta de luz personalizada
         light: {
-          bg: "#DDEBF2", // Fondo principal
-          card: "#E0DFD4", // Tarjetas / Paneles
+          bg: "#F1F5F9", // Fondo principal
+          card: "#FFFFFF", // Tarjetas / Paneles
           text: {
-            primary: "#313357", // Encabezados
-            secondary: "#848484",
+            primary: "#1A2B4C", // Encabezados
+            secondary: "#475569",
             body: "#181818",
-            muted: "#B1B1B1",
+            muted: "#64748B",
           },
-          accent: "#1543F0", // Azul brillante
-          accentHover: "#365C87",
-          border: "#ACB9B0", // Bordes
+          accent: "#1D4ED8", // Azul accesible
+          accentHover: "#1E40AF",
+          border: "#94A3B8", // Bordes de controles
           warning: "#FEEBC6",
           error: "#611B1B",
           highlight: "#BCC5E6", // Selección/Resaltado
@@ -72,12 +86,7 @@ export default {
       animation: {
         "fade-in": "fadeIn 0.5s ease-out forwards",
         "slide-up": "slideUp 0.5s ease-out forwards",
-        "scale-in": "scaleIn 0.3s ease-out forwards",
-        float: "float 6s ease-in-out infinite",
         "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        blob: "blob 7s infinite",
-        "slot-reel": "slotReel 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
-        "lever-pull": "leverPull 0.5s ease-in-out",
       },
       keyframes: {
         fadeIn: {
@@ -88,35 +97,6 @@ export default {
           "0%": { opacity: "0", transform: "translateY(10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
-        scaleIn: {
-          "0%": { opacity: "0", transform: "scale(0.95)" },
-          "100%": { opacity: "1", transform: "scale(1)" },
-        },
-        slotReel: {
-          "0%": { opacity: "0", transform: "translateY(-60px) scale(0.9)" },
-          "50%": { opacity: "0.7", transform: "translateY(8px) scale(1.02)" },
-          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
-        },
-        leverPull: {
-          "0%": { transform: "rotate(0deg)" },
-          "40%": { transform: "rotate(35deg)" },
-          "100%": { transform: "rotate(0deg)" },
-        },
-        float: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-10px)" },
-        },
-        blob: {
-          "0%": { transform: "translate(0px, 0px) scale(1)" },
-          "33%": { transform: "translate(30px, -50px) scale(1.1)" },
-          "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
-          "100%": { transform: "translate(0px, 0px) scale(1)" },
-        },
-      },
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "glass-gradient":
-          "linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02))",
       },
       boxShadow: {
         glass: "0 8px 32px 0 rgba(0, 0, 0, 0.37)",
@@ -127,20 +107,5 @@ export default {
       },
     },
   },
-  plugins: [
-    function ({ addUtilities }) {
-      const newUtilities = {
-        ".text-stroke": {
-          "-webkit-text-stroke": "1px black",
-        },
-        ".text-stroke-2": {
-          "-webkit-text-stroke": "2px black",
-        },
-        ".text-stroke-white": {
-          "-webkit-text-stroke-color": "white",
-        },
-      };
-      addUtilities(newUtilities);
-    },
-  ],
+  plugins: [],
 };

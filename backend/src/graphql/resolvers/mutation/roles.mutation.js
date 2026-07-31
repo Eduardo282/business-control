@@ -1,5 +1,5 @@
-import { createRoleAction } from "../../actions/roles_actions/createRole.action.js";
-import { deleteRoleAction } from "../../actions/roles_actions/deleteRole.action.js";
+import { createRoleAction } from "../../../modules/users/userActions.js";
+import { deleteRoleAction } from "../../../modules/users/userActions.js";
 import { requireRoles } from "../../../middlewares/role.middleware.js";
 
 export const createRole = (_, { name }, ctx) => {

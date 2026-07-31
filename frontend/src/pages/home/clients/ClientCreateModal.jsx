@@ -61,32 +61,32 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess }) {
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+      <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl dark:shadow-black/50 w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col border border-transparent dark:border-dark-700">
         {/* Header del modal */}
-        <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-[#1a2b4c]">
-          <h3 className="text-lg font-semibold text-white">
+        <div className="px-6 py-4 border-b border-zinc-100 dark:border-dark-700 flex items-center justify-between bg-[#1a2b4c] dark:bg-blue-950">
+          <h3 className="text-lg font-semibold text-white dark:text-white">
             Nuevo Cliente
           </h3>
           <button
             onClick={handleClose}
-            className="size-8 flex items-center justify-center rounded-lg text-[#fff] transition-colors hover:bg-white/10"
+            className="size-8 flex items-center justify-center rounded-lg text-white dark:text-white transition-colors hover:bg-white/10 dark:hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/40 dark:focus:ring-white/40"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-300 px-4 py-3 rounded-xl text-sm">
               ⚠️ {error}
             </div>
           )}
 
           {/* Razón Social */}
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Razón Social *
             </label>
             <input
@@ -94,7 +94,7 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess }) {
               value={business_name}
               onChange={(e) => setBusinessName(e.target.value)}
               placeholder="Ej. Empresa SA de CV"
-              className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+              className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
               required
               autoFocus
             />
@@ -103,7 +103,7 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess }) {
           {/* RFC y Correo Principal */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 RFC
               </label>
               <input
@@ -111,11 +111,11 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess }) {
                 value={rfc}
                 onChange={(e) => setRfc(e.target.value)}
                 placeholder="XAXX010101000"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Correo Principal
               </label>
               <input
@@ -123,14 +123,14 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess }) {
                 value={email1}
                 onChange={(e) => setEmail1(e.target.value)}
                 placeholder="contacto@empresa.com"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
               />
             </div>
           </div>
 
           {/* Correo Secundario */}
           <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-2">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Correo Secundario
             </label>
             <input
@@ -138,14 +138,14 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess }) {
               value={email2}
               onChange={(e) => setEmail2(e.target.value)}
               placeholder="ventas@empresa.com"
-              className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+              className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
             />
           </div>
 
           {/* Celular y Teléfono */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Celular
               </label>
               <input
@@ -153,11 +153,11 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess }) {
                 value={celular}
                 onChange={(e) => setCelular(e.target.value)}
                 placeholder="55 1234 5678"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Teléfono
               </label>
               <input
@@ -165,7 +165,7 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess }) {
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
                 placeholder="55 9876 5432"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
               />
             </div>
           </div>
@@ -173,7 +173,7 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess }) {
           {/* Código Postal y Ciudad */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Código Postal
               </label>
               <input
@@ -181,11 +181,11 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess }) {
                 value={codigo_postal}
                 onChange={(e) => setCodigoPostal(e.target.value)}
                 placeholder="06600"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Ciudad
               </label>
               <input
@@ -193,25 +193,25 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess }) {
                 value={ciudad}
                 onChange={(e) => setCiudad(e.target.value)}
                 placeholder="Ciudad de México"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#153465]"
+                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
               />
             </div>
           </div>
 
           {/* Botones del modal */}
-          <div className="flex gap-3 pt-4 border-t border-zinc-100">
+          <div className="flex gap-3 pt-4 border-t border-zinc-100 dark:border-dark-700">
             <button
               type="button"
               onClick={handleClose}
               disabled={loading}
-              className="flex-1 py-3 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-50 transition-colors disabled:opacity-50"
+              className="flex-1 py-3 text-zinc-600 dark:text-zinc-300 font-semibold rounded-xl hover:bg-zinc-50 dark:hover:bg-dark-700 transition-colors disabled:opacity-50 disabled:text-zinc-400 dark:disabled:text-zinc-600 disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-3 bg-[#2277B4] text-white font-semibold rounded-xl hover:bg-[#125280] transition-colors shadow-lg shadow-[#2277B4]/30 disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-[#2277B4] dark:bg-blue-700 text-white dark:text-white font-semibold rounded-xl hover:bg-[#125280] dark:hover:bg-blue-600 transition-colors shadow-lg shadow-[#2277B4]/30 dark:shadow-black/30 disabled:opacity-50 disabled:bg-zinc-300 disabled:text-zinc-500 dark:disabled:bg-dark-700 dark:disabled:text-zinc-500 disabled:hover:bg-zinc-300 dark:disabled:hover:bg-dark-700 flex items-center justify-center gap-2"
             >
               {loading && <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
               Registrar Cliente

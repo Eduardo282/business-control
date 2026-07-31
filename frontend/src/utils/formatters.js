@@ -25,9 +25,10 @@ export function formatDateTime(value) {
 
 export function getQuoteStatusLabel(status) {
   const safeStatus = String(status || "").toUpperCase();
-  if (safeStatus === "PENDING") return "Pendiente";
-  if (safeStatus === "REQUESTED") return "Solicitada";
-  if (safeStatus === "APPROVED") return "Aprobada";
-  if (safeStatus === "REJECTED") return "Rechazada";
+  if (safeStatus === "PENDIENTE") return "Pendiente";
+  if (safeStatus === "SOLICITADA") return "Solicitada";
+  if (safeStatus === "ACEPTADA") return "Aceptada";
+  if (safeStatus === "ENVIADA") return "Enviada";
+  if (safeStatus === "RECHAZADA") return "Rechazada";
   return status || "Pendiente";
 }

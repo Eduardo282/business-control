@@ -1,18 +1,21 @@
 import { requireRoles } from "../../../middlewares/role.middleware.js";
 import { unauthenticated, forbidden } from "../../../errors/appErrors.js";
-import { createQuoteAction } from "../../actions/quote_actions/createQuote.action.js";
-import { deleteQuoteAction } from "../../actions/quote_actions/deleteQuote.action.js";
-import { sendQuoteEmailAction } from "../../actions/quote_actions/sendQuoteEmail.action.js";
-import { toggleQuotePortalAction } from "../../actions/quote_actions/toggleQuotePortal.action.js";
-import { requestQuoteAction } from "../../actions/quote_actions/requestQuote.action.js";
-import { markQuoteNotificationReadAction } from "../../actions/quote_actions/markQuoteNotificationRead.action.js";
-import { resolveQuoteRequestAction } from "../../actions/quote_actions/resolveQuoteRequest.action.js";
-import { deletePortalQuoteAction } from "../../actions/quote_actions/deletePortalQuote.action.js";
-import { updatePortalQuoteRequestAction } from "../../actions/quote_actions/updatePortalQuoteRequest.action.js";
-import { rejectPortalQuoteAction } from "../../actions/quote_actions/rejectPortalQuote.action.js";
-import { rejectQuoteAction } from "../../actions/quote_actions/rejectQuote.action.js";
-import { updateQuoteStatusAction } from "../../actions/quote_actions/updateQuoteStatus.action.js";
-import { registerQuoteAction } from "../../actions/quote_actions/registerQuote.action.js";
+import { createQuoteAction } from "../../../modules/quotes/createQuote.js";
+import { deleteQuoteAction } from "../../../modules/quotes/quoteActions.js";
+import { sendQuoteEmailAction } from "../../../modules/quotes/quoteActions.js";
+import { toggleQuotePortalAction } from "../../../modules/quotes/quoteActions.js";
+import { requestQuoteAction } from "../../../modules/quotes/quoteActions.js";
+import { markQuoteNotificationReadAction } from "../../../modules/quotes/quoteActions.js";
+import { dismissQuoteNotificationAction } from "../../../modules/quotes/quoteActions.js";
+import { dismissAllQuoteNotificationsAction } from "../../../modules/quotes/quoteActions.js";
+import { resolveQuoteRequestAction } from "../../../modules/quotes/quoteActions.js";
+import { deletePortalQuoteAction } from "../../../modules/quotes/quoteActions.js";
+import { updatePortalQuoteRequestAction } from "../../../modules/quotes/quoteActions.js";
+import { acceptPortalQuoteAction } from "../../../modules/quotes/quoteActions.js";
+import { rejectPortalQuoteAction } from "../../../modules/quotes/quoteActions.js";
+import { rejectQuoteAction } from "../../../modules/quotes/quoteActions.js";
+import { updateQuoteStatusAction } from "../../../modules/quotes/quoteActions.js";
+import { registerQuoteAction } from "../../../modules/quotes/quoteActions.js";
 
 export const createQuote = async (_parent, { input }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
@@ -32,7 +35,7 @@ export const deleteQuote = async (_parent, { id }, ctx) => {
 
 export const sendQuoteEmail = async (
   _parent,
-  { quote_id, contact_email, message, pdf_base64 },
+  { quote_id, contact_email, message },
   ctx,
 ) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
@@ -40,9 +43,9 @@ export const sendQuoteEmail = async (
     quote_id,
     contact_email,
     message,
-    pdf_base64,
   });
 };
+
 
 export const toggleQuotePortal = async (
   _parent,
@@ -56,6 +59,16 @@ export const toggleQuotePortal = async (
 export const markQuoteNotificationRead = async (_parent, { id }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
   return markQuoteNotificationReadAction(id);
+};
+
+export const dismissQuoteNotification = async (_parent, { id }, ctx) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  return dismissQuoteNotificationAction(id);
+};
+
+export const dismissAllQuoteNotifications = async (_parent, _args, ctx) => {
+  requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
+  return dismissAllQuoteNotificationsAction();
 };
 
 export const resolveQuoteRequest = async (
@@ -77,6 +90,12 @@ export const updatePortalQuoteRequest = async (_parent, { id, input }, ctx) => {
   if (!ctx.user) throw unauthenticated();
   if (ctx.user.role !== "CONTACT_PORTAL") throw forbidden();
   return updatePortalQuoteRequestAction(id, input, ctx.user);
+};
+
+export const acceptPortalQuote = async (_parent, { id }, ctx) => {
+  if (!ctx.user) throw unauthenticated();
+  if (ctx.user.role !== "CONTACT_PORTAL") throw forbidden();
+  return acceptPortalQuoteAction(id, ctx.user);
 };
 
 export const rejectPortalQuote = async (_parent, { id }, ctx) => {

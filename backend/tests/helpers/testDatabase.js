@@ -1,4 +1,7 @@
 import mysql from "mysql2/promise";
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 import { pool } from "../../src/config/db.js";
 
 export const TEST_DATABASE_NAME = process.env.MYSQL_TEST_DATABASE || "business_control_test";
@@ -9,243 +12,6 @@ export const TEST_PORTAL_PASSWORD = "Password123*";
 
 const ADMIN_PASSWORD_HASH = "$2a$10$/2bZf8v74shgLeu4bShB5.5R5JJdkIRtCGhJSDFbnZr6RaXqxaLQu";
 const PORTAL_PASSWORD_HASH = "$2a$10$xIzfSV1VMZV32R5i6QS2M./uI2LTVCtkFS5r2rOJ1wXOYagwH7QGu";
-
-const DROP_TABLES = [
-  "services",
-  "policies",
-  "contact_products",
-  "client_products",
-  "quote_items",
-  "quotes",
-  "product_update_history",
-  "product_price_history",
-  "product_categories",
-  "products",
-  "client_contacts",
-  "clients_column_meta",
-  "clients",
-  "users",
-  "roles",
-  "schema_migrations",
-];
-
-const SCHEMA_STATEMENTS = [
-  `CREATE TABLE roles (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(30) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    role_id INT NOT NULL,
-    full_name VARCHAR(120) NOT NULL,
-    email VARCHAR(120) NOT NULL UNIQUE,
-    telefono VARCHAR(40) NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    is_active TINYINT DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_test_users_roles FOREIGN KEY (role_id) REFERENCES roles(id)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE clients (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    created_by_user_id INT NOT NULL,
-    business_name VARCHAR(180) NOT NULL,
-    rfc VARCHAR(20) NULL,
-    email1 VARCHAR(120) NULL,
-    email2 VARCHAR(120) NULL,
-    celular VARCHAR(40) NULL,
-    telefono VARCHAR(40) NULL,
-    codigo_postal VARCHAR(20) NULL,
-    ciudad VARCHAR(120) NULL,
-    address TEXT NULL,
-    has_client_portal_access TINYINT DEFAULT 0,
-    portal_password_hash VARCHAR(255) NULL,
-    is_active TINYINT DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_test_clients_business_name (business_name),
-    CONSTRAINT fk_test_clients_users FOREIGN KEY (created_by_user_id) REFERENCES users(id)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE clients_column_meta (
-    column_name VARCHAR(128) NOT NULL PRIMARY KEY,
-    label VARCHAR(255) NOT NULL,
-    display_order INT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE client_contacts (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    client_id INT NOT NULL,
-    full_name VARCHAR(120) NOT NULL,
-    email VARCHAR(120) NULL,
-    phone VARCHAR(40) NULL,
-    position_title VARCHAR(80) NULL,
-    has_portal_access TINYINT DEFAULT 0,
-    portal_password_hash VARCHAR(255) NULL,
-    is_active TINYINT DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_test_contacts_client_id (client_id),
-    INDEX idx_test_contacts_email (email),
-    CONSTRAINT fk_test_contacts_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE products (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    folio VARCHAR(30) NULL UNIQUE,
-    client_id INT NULL,
-    name VARCHAR(180) NOT NULL,
-    category VARCHAR(80) NOT NULL,
-    product_type VARCHAR(20) NULL DEFAULT 'PRODUCT',
-    current_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    users_count INT DEFAULT 0,
-    description TEXT NULL,
-    expires_at DATETIME NULL,
-    is_active TINYINT DEFAULT 1,
-    update_version INT NOT NULL DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_test_products_client_id (client_id),
-    INDEX idx_test_products_name (name),
-    CONSTRAINT fk_test_products_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE product_price_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    product_id INT NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_test_history_product_id (product_id),
-    CONSTRAINT fk_test_price_history_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE product_update_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    product_id INT NOT NULL,
-    update_version INT NOT NULL DEFAULT 1,
-    change_type VARCHAR(40) NOT NULL DEFAULT 'DETAILS',
-    summary VARCHAR(255) NULL,
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_test_product_update_history_product_id (product_id),
-    CONSTRAINT fk_test_product_update_history_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE product_categories (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(120) NOT NULL UNIQUE,
-    product_type VARCHAR(20) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE quotes (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    folio VARCHAR(30) NULL,
-    client_id INT NOT NULL,
-    contact_id INT NULL,
-    user_id INT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    status ENUM('PENDING', 'SENT', 'ACCEPTED', 'REJECTED', 'REQUESTED') DEFAULT 'PENDING',
-    is_registered TINYINT NOT NULL DEFAULT 1,
-    registered_at DATETIME NULL,
-    notes TEXT NULL,
-    is_sent_to_client_portal TINYINT DEFAULT 0,
-    notification_read TINYINT DEFAULT 0,
-    is_deleted_admin TINYINT DEFAULT 0,
-    is_deleted_portal TINYINT DEFAULT 0,
-    INDEX idx_test_quotes_client_id (client_id),
-    INDEX idx_test_quotes_user_id (user_id),
-    INDEX idx_test_quotes_contact_id (contact_id),
-    INDEX idx_test_quotes_status (status),
-    UNIQUE KEY uq_test_quotes_folio (folio),
-    CONSTRAINT fk_test_quotes_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
-    CONSTRAINT fk_test_quotes_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT fk_test_quotes_contact FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE SET NULL
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE quote_items (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    quote_id INT NOT NULL,
-    product_id INT NOT NULL,
-    quantity INT NOT NULL DEFAULT 1,
-    base_unit_price DECIMAL(10,2) NULL,
-    unit_price DECIMAL(10,2) NOT NULL,
-    discount DECIMAL(5,2) NOT NULL DEFAULT 0.00,
-    total DECIMAL(10,2) NOT NULL,
-    INDEX idx_test_quote_items_quote_id (quote_id),
-    INDEX idx_test_quote_items_product_id (product_id),
-    CONSTRAINT fk_test_quote_items_quotes FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE,
-    CONSTRAINT fk_test_quote_items_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE client_products (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    client_id INT NOT NULL,
-    product_id INT NOT NULL,
-    license_key VARCHAR(100) NULL,
-    start_date DATE NOT NULL,
-    expiration_date DATE NOT NULL,
-    status ENUM('ACTIVE', 'EXPIRED', 'CANCELLED') DEFAULT 'ACTIVE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_test_client_products_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
-    CONSTRAINT fk_test_client_products_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE contact_products (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    client_id INT NOT NULL,
-    contact_id INT NOT NULL,
-    product_id INT NOT NULL,
-    license_key VARCHAR(100) NULL,
-    start_date DATE NOT NULL,
-    expiration_date DATE NOT NULL,
-    status ENUM('ACTIVE', 'EXPIRED', 'CANCELLED') DEFAULT 'ACTIVE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_test_contact_products_contacts FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE CASCADE,
-    CONSTRAINT fk_test_contact_products_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
-    CONSTRAINT fk_test_contact_products_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE services (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    contact_product_id INT NOT NULL UNIQUE,
-    client_id INT NOT NULL,
-    contact_id INT NOT NULL,
-    product_id INT NOT NULL,
-    folio VARCHAR(100) NULL,
-    start_date DATE NOT NULL,
-    expiration_date DATE NOT NULL,
-    status ENUM('ACTIVE', 'EXPIRED', 'CANCELLED') DEFAULT 'ACTIVE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_test_services_contact_product FOREIGN KEY (contact_product_id) REFERENCES contact_products(id) ON DELETE CASCADE,
-    CONSTRAINT fk_test_services_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
-    CONSTRAINT fk_test_services_contacts FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE CASCADE,
-    CONSTRAINT fk_test_services_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-
-  `CREATE TABLE policies (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    contact_product_id INT NOT NULL UNIQUE,
-    client_id INT NOT NULL,
-    contact_id INT NOT NULL,
-    product_id INT NOT NULL,
-    folio VARCHAR(100) NULL,
-    start_date DATE NOT NULL,
-    expiration_date DATE NOT NULL,
-    status ENUM('ACTIVE', 'EXPIRED', 'CANCELLED') DEFAULT 'ACTIVE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_test_policies_contact_product FOREIGN KEY (contact_product_id) REFERENCES contact_products(id) ON DELETE CASCADE,
-    CONSTRAINT fk_test_policies_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
-    CONSTRAINT fk_test_policies_contacts FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE CASCADE,
-    CONSTRAINT fk_test_policies_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
-];
 
 export function assertSafeTestDatabaseName(databaseName = process.env.MYSQL_DATABASE) {
   const normalized = String(databaseName || "").trim();
@@ -282,14 +48,58 @@ export async function ensureTestDatabase(databaseName = TEST_DATABASE_NAME) {
 
 export async function resetTestDatabase(queryRunner = pool) {
   assertSafeTestDatabaseName(process.env.MYSQL_DATABASE);
+
+  // 1. Dynamic Drop Tables
+  const [tablesResult] = await queryRunner.query("SHOW TABLES");
+  const dbNameRow = await queryRunner.query("SELECT DATABASE() as db");
+  const dbName = dbNameRow[0][0].db;
+  const key = `Tables_in_${dbName}`;
+
   await queryRunner.query("SET FOREIGN_KEY_CHECKS = 0");
-  for (const table of DROP_TABLES) {
-    await queryRunner.query(`DROP TABLE IF EXISTS \`${table}\``);
+  for (const row of tablesResult) {
+    if (row[key]) {
+      await queryRunner.query(`DROP TABLE IF EXISTS \`${row[key]}\``);
+    }
   }
   await queryRunner.query("SET FOREIGN_KEY_CHECKS = 1");
 
-  for (const statement of SCHEMA_STATEMENTS) {
-    await queryRunner.query(statement);
+  // Helper to parse and execute SQL statements
+  const runSqlScript = async (filePath) => {
+    try {
+      const content = await fs.readFile(filePath, "utf-8");
+      const statements = content
+        .split("\\n")
+        .filter(line => !line.trim().startsWith("--")) // Strip comments
+        .join("\\n")
+        .split(";")
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+      
+      for (const stmt of statements) {
+        await queryRunner.query(stmt);
+      }
+    } catch (e) {
+      if (e.code !== "ENOENT") throw e;
+    }
+  };
+
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const sqlBaseDir = path.join(__dirname, "../../sql");
+
+  // 2. Run Baseline Schema
+  await runSqlScript(path.join(sqlBaseDir, "baseline.sql"));
+
+  // 3. Run Migrations sequentially
+  const migrationsDir = path.join(sqlBaseDir, "migrations");
+  try {
+    const files = await fs.readdir(migrationsDir);
+    const sqlFiles = files.filter(f => f.endsWith(".sql")).sort();
+    for (const file of sqlFiles) {
+      await runSqlScript(path.join(migrationsDir, file));
+    }
+  } catch (e) {
+    if (e.code !== "ENOENT") throw e;
   }
 }
 

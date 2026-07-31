@@ -105,6 +105,13 @@ function buildRequiredFallbackValue(columnName, row, rowNumber) {
   return "N/A";
 }
 
+export async function addClientColumnsForImport(
+  clauses,
+  addColumns = addDynamicColumnsForHeaders,
+) {
+  return addColumns(clauses);
+}
+
 // =============================================================================
 // ACCIONES EXPORTADAS
 // =============================================================================
@@ -195,15 +202,13 @@ export async function updateClientDynamicAction({ id, input }) {
   return client;
 }
 
-export async function importClientsFromDriveAction({
-  fileUrl,
+export async function importClientsFromBufferAction({
+  fileBuffer,
   createdByUserId,
 }) {
-  if (!fileUrl)
-    throw new Error("Debes proporcionar la URL del archivo de Drive.");
+  if (!fileBuffer) throw new Error("Debes proporcionar el buffer del archivo.");
   if (!createdByUserId) throw new Error("Usuario no autenticado.");
 
-  const fileBuffer = await downloadExcelBuffer(fileUrl);
   const { headers, rows: rawRows } = parseExcelBuffer(fileBuffer);
 
   let columnsMeta = await getClientsTableColumns();
@@ -234,7 +239,7 @@ export async function importClientsFromDriveAction({
         return `ADD COLUMN ${escapeIdentifier(columnName)} TEXT NULL`;
       }
     );
-    await addDynamicColumnsForHeaders(clauses, columnsMeta);
+    await addClientColumnsForImport(clauses);
 
     // Keep track of what we created
     createdColumns = unmatched.map((header) => {
@@ -382,4 +387,26 @@ export async function importClientsFromDriveAction({
     ignoredHeaders: unmatched,
     errors: errors.slice(0, 100),
   };
+}
+
+export async function importClientsFromDriveAction({
+  fileUrl,
+  createdByUserId,
+}) {
+  if (!fileUrl)
+    throw new Error("Debes proporcionar la URL del archivo de Drive.");
+  
+  const fileBuffer = await downloadExcelBuffer(fileUrl);
+  return importClientsFromBufferAction({ fileBuffer, createdByUserId });
+}
+
+export async function importClientsFromLocalAction({
+  fileBase64,
+  createdByUserId,
+}) {
+  if (!fileBase64)
+    throw new Error("Debes proporcionar el contenido del archivo local.");
+  
+  const fileBuffer = Buffer.from(fileBase64, "base64");
+  return importClientsFromBufferAction({ fileBuffer, createdByUserId });
 }

@@ -64,4 +64,22 @@ describe("ClientSearchModal", () => {
 
     expect(props.onSelectClient).toHaveBeenCalledWith(client);
   });
+
+  it("provides explicit dark theme classes for modal and result surfaces", () => {
+    const client = { id: 123456789, business_name: "Textiles Atlas", rfc: "TEX010101ABC" };
+    renderModal({
+      clientResults: [client, { id: 2 }],
+      visibleClientResults: [client],
+    });
+
+    const heading = screen.getByRole("heading", { name: /Buscar Cliente/i });
+    expect(heading).toBeVisible();
+
+    expect(screen.getByPlaceholderText(/nombre del cliente o RFC/i)).toBeVisible();
+    
+    const result = screen.getByText("Textiles Atlas");
+    expect(result).toBeVisible();
+    
+    expect(screen.getByText(/1 de 2 resultados/i)).toBeVisible();
+  });
 });

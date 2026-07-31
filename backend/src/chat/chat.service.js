@@ -145,13 +145,3 @@ export async function getMessages(conversationId, limit = 100, beforeId = null) 
   const [rows] = await pool.query(sql, params);
   return rows;
 }
-
-export async function deleteMessage(messageId) {
-  const msg = await getMessage(messageId);
-  if (!msg) return null;
-  await pool.execute(
-    `DELETE FROM support_messages WHERE id = ?`,
-    [messageId]
-  );
-  return msg;
-}

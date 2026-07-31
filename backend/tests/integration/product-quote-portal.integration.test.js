@@ -156,6 +156,7 @@ describe("product → quote → contact portal integration", () => {
           registerQuote(id: $id) {
             id
             folio
+            status
             is_registered
             registered_at
             is_sent_to_client_portal
@@ -167,6 +168,7 @@ describe("product → quote → contact portal integration", () => {
 
     const registeredQuote = registeredQuoteData.registerQuote;
     assert.equal(registeredQuote.folio, draftQuote.folio);
+    assert.equal(registeredQuote.status, "ENVIADA");
     assert.equal(registeredQuote.is_registered, true);
     assert.ok(registeredQuote.registered_at);
     assert.equal(registeredQuote.is_sent_to_client_portal, true);
@@ -179,6 +181,7 @@ describe("product → quote → contact portal integration", () => {
             id
             folio
             total
+            status
             is_registered
             is_sent_to_client_portal
             items {
@@ -198,8 +201,63 @@ describe("product → quote → contact portal integration", () => {
     const portalQuote = visiblePortalData.quotes[0];
     assert.equal(portalQuote.id, draftQuote.id);
     assert.equal(portalQuote.folio, draftQuote.folio);
+    assert.equal(portalQuote.status, "ENVIADA");
     assert.notEqual(portalQuote.folio, product.folio);
     assert.equal(portalQuote.items[0].product.folio, product.folio);
     assert.equal(portalQuote.items[0].product.name, productName);
+
+    const acceptedQuoteData = await executeGraphql({
+      contextValue: portalContext(),
+      query: `
+        mutation AcceptPortalQuote($id: ID!) {
+          acceptPortalQuote(id: $id)
+        }
+      `,
+      variables: { id: draftQuote.id },
+    });
+
+    assert.equal(acceptedQuoteData.acceptPortalQuote, true);
+
+    const acceptedAdminQuoteData = await executeGraphql({
+      contextValue: adminContext(),
+      query: `
+        query AcceptedAdminQuote($id: ID!) {
+          quote(id: $id) {
+            id
+            status
+            portal_responded_at
+            notification_read
+          }
+        }
+      `,
+      variables: { id: draftQuote.id },
+    });
+
+    assert.equal(acceptedAdminQuoteData.quote.status, "ACEPTADA");
+    assert.ok(acceptedAdminQuoteData.quote.portal_responded_at);
+    assert.equal(acceptedAdminQuoteData.quote.notification_read, false);
+
+    const adminNotificationsData = await executeGraphql({
+      contextValue: adminContext(),
+      query: `
+        query AdminQuoteNotifications {
+          unreadQuoteRequests {
+            id
+            status
+            notification_read
+            contact {
+              full_name
+            }
+          }
+        }
+      `,
+    });
+
+    const acceptedNotification = adminNotificationsData.unreadQuoteRequests.find(
+      (item) => String(item.id) === String(draftQuote.id),
+    );
+    assert.ok(acceptedNotification);
+    assert.equal(acceptedNotification.status, "ACEPTADA");
+    assert.equal(acceptedNotification.notification_read, false);
   });
 });

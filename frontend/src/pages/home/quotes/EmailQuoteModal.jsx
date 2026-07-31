@@ -31,7 +31,8 @@ export default function EmailQuoteModal({
         quoteFolio
       } por un total de $${Number(quote.total).toLocaleString("es-MX", {
         minimumFractionDigits: 2,
-      })}.\n\nQuedo a la espera de sus comentarios.\n\nSaludos,\n${
+      })}.\n\nQuedo a su disposición para agendar y revisar si es necesario
+cualquier ajuste que considere necesario..\n\nSaludos,\n${
         quote.user?.full_name || "Equipo de Ventas"
       }`
     );

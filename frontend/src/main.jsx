@@ -2,13 +2,18 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { registerLocale, setDefaultLocale } from "react-datepicker";
 import { es } from "date-fns/locale";
-import "@fontsource/inter/400.css";
-import "@fontsource/inter/500.css";
-import "@fontsource/inter/600.css";
-import "@fontsource/inter/700.css";
+import "@fontsource/inter/latin-400.css";
+import "@fontsource/inter/latin-500.css";
+import "@fontsource/inter/latin-600.css";
+import "@fontsource/inter/latin-700.css";
 import App from "./App.jsx";
 import "./styles/index.css";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { initializeTheme } from "./context/theme.js";
+
+// Apply the validated route-specific preference before React mounts to avoid
+// a light/dark first-paint flash.
+initializeTheme();
 
 registerLocale("es", es);
 setDefaultLocale("es");

@@ -41,7 +41,7 @@ export async function findRoleByName(name) {
  * @param {string} name
  * @returns {Promise<number>} ID del rol creado
  */
-export async function insertRole(name) {
+export async function  insertRole(name) {
   const [result] = await pool.query("INSERT INTO roles (name) VALUES (?)", [name]);
   return result.insertId;
 }

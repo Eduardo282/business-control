@@ -31,10 +31,14 @@ const STATUS_LABELS = {
 };
 
 const STATUS_STYLES = {
-  ACTIVE: "text-[#1B4733] bg-[#E2F0D9]",
-  CANCELLED: "text-zinc-600 bg-zinc-100",
-  EXPIRING_SOON: "text-amber-700 bg-amber-100",
-  EXPIRED: "text-red-700 bg-red-100",
+  ACTIVE:
+    "text-[#1B4733] bg-[#E2F0D9] dark:text-emerald-300 dark:bg-emerald-500/15",
+  CANCELLED:
+    "text-zinc-600 bg-zinc-100 dark:text-zinc-300 dark:bg-zinc-500/15",
+  EXPIRING_SOON:
+    "text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-500/15",
+  EXPIRED:
+    "text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-500/15",
 };
 
 const POLICIES_COLUMNS = [
@@ -42,7 +46,7 @@ const POLICIES_COLUMNS = [
     accessorKey: "product_name",
     header: "Póliza o servicio",
     cell: ({ getValue }) => (
-      <span className="font-medium text-light-text-primary hover:text-[#2277B4]">
+      <span className="font-medium text-light-text-primary dark:text-zinc-100 hover:text-[#2277B4] dark:hover:text-blue-300">
         {getValue()}
       </span>
     ),
@@ -51,14 +55,14 @@ const POLICIES_COLUMNS = [
     accessorKey: "contact_name",
     header: "Contacto Asignado",
     cell: ({ getValue }) => (
-      <span className="text-light-text-secondary">{getValue() || "—"}</span>
+      <span className="text-light-text-secondary dark:text-zinc-400">{getValue() || "—"}</span>
     ),
   },
   {
     accessorKey: "license_key",
     header: "Folio",
     cell: ({ getValue }) => (
-      <span className="font-mono text-xs text-light-text-secondary">
+      <span className="font-mono text-xs text-light-text-secondary dark:text-zinc-400">
         {getValue() || "—"}
       </span>
     ),
@@ -67,7 +71,7 @@ const POLICIES_COLUMNS = [
     accessorKey: "expiration_date",
     header: "Vence",
     cell: ({ getValue }) => (
-      <span className="text-light-text-secondary">
+      <span className="text-light-text-secondary dark:text-zinc-400">
         {getValue() ? new Date(getValue()).toLocaleDateString() : "—"}
       </span>
     ),
@@ -80,7 +84,8 @@ const POLICIES_COLUMNS = [
       return (
         <span
           className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-            STATUS_STYLES[v] || "bg-zinc-100 text-zinc-600"
+            STATUS_STYLES[v] ||
+            "bg-zinc-100 text-zinc-600 dark:bg-zinc-500/15 dark:text-zinc-300"
           }`}>
           {STATUS_LABELS[v] || v}
         </span>
@@ -280,7 +285,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
           <button
             onClick={() => handleDeleteService(service)}
             disabled={isDeleting}
-            className="inline-flex items-center justify-center size-8 text-red-700 transition-transform duration-150 hover:scale-75 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center size-8 rounded-lg text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-150 hover:scale-90 disabled:opacity-60 disabled:bg-zinc-100 disabled:text-zinc-400 dark:disabled:bg-dark-700 dark:disabled:text-zinc-600 disabled:hover:scale-100 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:focus:ring-red-400/40"
             title={isDeleting ? "Eliminando…" : "Eliminar póliza o servicio"}>
             <Trash2 size={13} className={isDeleting ? "animate-pulse" : ""} />
           </button>
@@ -309,10 +314,10 @@ export const ClientPoliciesTab = ({ clientId }) => {
     <Card className="animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-        <h3 className="font-semibold text-light-text-primary flex items-center gap-2 flex-1">
+        <h3 className="font-semibold text-light-text-primary dark:text-zinc-100 flex items-center gap-2 flex-1">
           <FileText size={18} /> Pólizas y Servicios
           {totalRows !== services.length && (
-            <span className="ml-2 text-xs font-normal text-light-text-secondary">
+            <span className="ml-2 text-xs font-normal text-light-text-secondary dark:text-zinc-400">
               ({totalRows} de {services.length})
             </span>
           )}
@@ -322,7 +327,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
           {canClearFilters && (
             <button
               onClick={clearFilters}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-red-600 border border-red-100 hover:bg-red-50 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/60 bg-white dark:bg-dark-800 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:focus:ring-red-400/40"
               title="Limpiar filtros">
               <X size={14} /> Limpiar
             </button>
@@ -341,8 +346,8 @@ export const ClientPoliciesTab = ({ clientId }) => {
                 tabIndex={showFilters ? 0 : -1}
                 className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] border transition-all whitespace-nowrap ${
                   selectedValue ?
-                    "bg-[#2277B4] text-white border-[#2277B4]"
-                  : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                    "bg-[#2277B4] text-white border-[#2277B4] dark:bg-blue-700 dark:text-white dark:border-blue-600"
+                  : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100 dark:bg-dark-800 dark:text-zinc-300 dark:border-dark-700 dark:hover:bg-dark-700"
                 } ${
                   showFilters ?
                     "opacity-100 translate-y-0"
@@ -361,32 +366,32 @@ export const ClientPoliciesTab = ({ clientId }) => {
           <div className="relative">
             <Search
               size={14}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary dark:text-zinc-500"
             />
             <input
               type="text"
               placeholder="Buscar…"
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
-              className="pl-3 pr-8 py-1.5 text-sm rounded-lg border border-light-border bg-white focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-44 text-black"
+              className="pl-3 pr-8 py-1.5 text-sm rounded-lg border border-light-border dark:border-dark-700 bg-white dark:bg-dark-900 focus:outline-none focus:ring-1 focus:ring-[#2277B4] dark:focus:ring-blue-400/40 focus:border-[#2277B4] dark:focus:border-blue-400 w-44 text-black dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 transition-colors"
             />
           </div>
           <button
             onClick={() => setShowFilters((p) => !p)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
               showFilters || activeFilterCount > 0 ?
-                "bg-[#2277B4] text-white border-[#2277B4]"
-              : "bg-white text-light-text-secondary border-light-border hover:bg-zinc-50"
+                "bg-[#2277B4] text-white border-[#2277B4] dark:bg-blue-700 dark:text-white dark:border-blue-600"
+              : "bg-white text-light-text-secondary border-light-border hover:bg-zinc-50 dark:bg-dark-800 dark:text-zinc-300 dark:border-dark-700 dark:hover:bg-dark-700"
             }`}>
             <Filter size={13} />
             Filtros
             {activeFilterCount > 0 && (
-              <span className="ml-1 bg-white text-[#2277B4] rounded-full px-1.5 py-0 text-[10px] font-bold">
+              <span className="ml-1 bg-white text-[#2277B4] dark:bg-blue-200 dark:text-blue-950 rounded-full px-1.5 py-0 text-[10px] font-bold">
                 {activeFilterCount}
               </span>
             )}
           </button>
-          <span className="text-xs text-light-text-secondary whitespace-nowrap">
+          <span className="text-xs text-light-text-secondary dark:text-zinc-400 whitespace-nowrap">
             Pág. {pageIndex + 1} de {table.getPageCount() || 1}
           </span>
         </div>
@@ -396,42 +401,42 @@ export const ClientPoliciesTab = ({ clientId }) => {
         showFilters &&
         createPortal(
           <div
-            className="fixed inset-0 z-[9999] bg-black/45 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[9999] bg-black/45 dark:bg-black/70 flex items-center justify-center p-4"
             onClick={closePolicyFilterPicker}>
             <div
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+              className="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl dark:shadow-black/50 w-full max-w-md overflow-hidden border border-transparent dark:border-dark-700"
               onClick={(e) => e.stopPropagation()}>
-              <div className="px-5 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
+              <div className="px-5 py-4 border-b border-zinc-100 dark:border-dark-700 bg-[#1a2b4c] dark:bg-blue-950 flex items-center justify-between">
                 <div>
-                  <h3 className="text-white font-semibold text-base uppercase">
+                  <h3 className="text-white dark:text-white font-semibold text-base uppercase">
                     FILTRAR POR{" "}
                     {policyFilterFieldLabels[activePolicyFilterPickerField]}
                   </h3>
-                  <p className="text-[11px] text-zinc-300 mt-1">
+                  <p className="text-[11px] text-zinc-300 dark:text-zinc-300 mt-1">
                     Selecciona o busca un valor para filtrar 
                   </p>
                 </div>
                 <button
                   onClick={closePolicyFilterPicker}
-                  className="size-8 rounded-lg text-white hover:bg-white/10 flex items-center justify-center">
+                  className="size-8 rounded-lg text-white dark:text-white hover:bg-white/10 dark:hover:bg-white/10 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-white/40 dark:focus:ring-white/40">
                   <X size={16} />
                 </button>
               </div>
 
               <div className="p-4 space-y-3">
-                <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
-                  <Search size={15} className="text-zinc-500" />
+                <div className="flex items-center gap-2 bg-zinc-50 dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 rounded-lg px-3 py-2 focus-within:border-[#2277B4] dark:focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-[#2277B4]/20 dark:focus-within:ring-blue-400/20 transition-colors">
+                  <Search size={15} className="text-zinc-500 dark:text-zinc-400" />
                   <input
                     value={policyFilterPickerSearch}
                     onChange={(e) =>
                       setPolicyFilterPickerSearch(e.target.value)
                     }
                     placeholder="Buscar valor…"
-                    className="w-full bg-transparent text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none"
+                    className="w-full bg-transparent dark:bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none"
                   />
                 </div>
 
-                <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 divide-y divide-zinc-100">
+                <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 dark:border-dark-700 divide-y divide-zinc-100 dark:divide-dark-700 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
                   {visiblePolicyFilterPickerOptions.length > 0 ?
                     visiblePolicyFilterPickerOptions.map((value) => {
                       const isSelected =
@@ -445,14 +450,14 @@ export const ClientPoliciesTab = ({ clientId }) => {
                           onClick={() => applyPolicyFilterValue(value)}
                           className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                             isSelected ?
-                              "bg-[#2277B4]/10 text-[#125280] font-semibold"
-                            : "text-zinc-700 hover:bg-zinc-50"
+                              "bg-[#2277B4]/10 text-[#125280] dark:bg-blue-500/10 dark:text-blue-300 font-semibold"
+                            : "text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-dark-700"
                           }`}>
                           {value}
                         </button>
                       );
                     })
-                  : <div className="px-3 py-4 text-sm text-zinc-500 text-center">
+                  : <div className="px-3 py-4 text-sm text-zinc-500 dark:text-zinc-400 text-center">
                       No hay valores para mostrar.
                     </div>
                   }
@@ -464,9 +469,9 @@ export const ClientPoliciesTab = ({ clientId }) => {
         )}
 
       {/* Tabla */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
         <table className="w-full text-sm text-left">
-          <thead className="text-xs text-light-text-secondary uppercase bg-[#F2F5F9]">
+          <thead className="text-xs text-light-text-secondary dark:text-zinc-400 uppercase bg-[#F2F5F9] dark:bg-dark-900">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {hg.headers.map((header, i) => {
@@ -480,8 +485,8 @@ export const ClientPoliciesTab = ({ clientId }) => {
                           header.column.getToggleSortingHandler()
                         : undefined
                       }
-                      className={`px-4 py-3 select-none whitespace-nowrap transition-colors text-[#2277B4] ${
-                        canSort ? "cursor-pointer hover:bg-[#e8edf3]" : ""
+                      className={`px-4 py-3 select-none whitespace-nowrap transition-colors text-[#2277B4] dark:text-blue-300 ${
+                        canSort ? "cursor-pointer hover:bg-[#e8edf3] dark:hover:bg-dark-700" : ""
                       } ${i === 0 ? "rounded-l-lg" : ""} ${
                         i === hg.headers.length - 1 ? "rounded-r-lg" : ""
                       }`}>
@@ -506,10 +511,10 @@ export const ClientPoliciesTab = ({ clientId }) => {
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-light-border">
+          <tbody className="divide-y divide-light-border dark:divide-dark-700">
             {table.getRowModel().rows.length > 0 ?
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-zinc-50 transition-colors">
+                <tr key={row.id} className="hover:bg-zinc-50 dark:hover:bg-dark-700/60 transition-colors">
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3">
                       {flexRender(
@@ -523,7 +528,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
             : <tr>
                 <td
                   colSpan={policyColumns.length}
-                  className="text-center py-10 text-light-text-secondary text-sm">
+                  className="text-center py-10 text-light-text-secondary dark:text-zinc-400 text-sm">
                   {services.length === 0 ?
                     "No hay servicios activos."
                   : "Sin resultados para los filtros aplicados."}
@@ -535,13 +540,13 @@ export const ClientPoliciesTab = ({ clientId }) => {
       </div>
 
       {/* Paginación */}
-      <div className="flex items-center justify-between pt-4 border-t border-light-border mt-4 flex-wrap gap-2">
-        <div className="flex items-center gap-2 text-xs text-light-text-secondary">
+      <div className="flex items-center justify-between pt-4 border-t border-light-border dark:border-dark-700 mt-4 flex-wrap gap-2">
+        <div className="flex items-center gap-2 text-xs text-light-text-secondary dark:text-zinc-400">
           <span>Mostrar</span>
           <select
             value={pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
-            className="text-xs border border-light-border rounded px-2 py-1 bg-white text-black">
+            className="text-xs border border-light-border dark:border-dark-700 rounded px-2 py-1 bg-white dark:bg-dark-900 text-black dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-[#2277B4] dark:focus:ring-blue-400/40 dark:[color-scheme:dark] transition-colors">
             {[10, 25, 50, 100].map((n) => (
               <option key={n} value={n}>
                 {n}
@@ -557,25 +562,25 @@ export const ClientPoliciesTab = ({ clientId }) => {
           <button
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
-            className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-dark-700 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:bg-zinc-50 disabled:text-zinc-400 dark:disabled:bg-dark-800 dark:disabled:text-zinc-600 disabled:hover:bg-zinc-50 dark:disabled:hover:bg-dark-800 disabled:cursor-not-allowed transition-colors">
             ««
           </button>
           <button
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-dark-700 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:bg-zinc-50 disabled:text-zinc-400 dark:disabled:bg-dark-800 dark:disabled:text-zinc-600 disabled:hover:bg-zinc-50 dark:disabled:hover:bg-dark-800 disabled:cursor-not-allowed transition-colors">
             Anterior
           </button>
           <button
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="px-3 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-dark-700 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:bg-zinc-50 disabled:text-zinc-400 dark:disabled:bg-dark-800 dark:disabled:text-zinc-600 disabled:hover:bg-zinc-50 dark:disabled:hover:bg-dark-800 disabled:cursor-not-allowed transition-colors">
             Siguiente
           </button>
           <button
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
-            className="px-2 py-1 text-sm font-medium text-zinc-600 bg-zinc-100 rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-dark-700 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:bg-zinc-50 disabled:text-zinc-400 dark:disabled:bg-dark-800 dark:disabled:text-zinc-600 disabled:hover:bg-zinc-50 dark:disabled:hover:bg-dark-800 disabled:cursor-not-allowed transition-colors">
             »»
           </button>
         </div>

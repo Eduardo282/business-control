@@ -36,9 +36,11 @@ export async function getContactDataApi(contactId) {
              expiration_date
              status
              product {
+                 id
                  folio
                  name
                  category
+                 product_type
                  description
              }
           }
@@ -59,6 +61,8 @@ export async function listPortalQuotesApi() {
         created_at
         total
         status
+        is_registered
+        is_sent_to_client_portal
         notes
         items {
           id
@@ -75,6 +79,99 @@ export async function listPortalQuotesApi() {
   `;
   const data = await gql(query, {}, portalAxiosClient);
   return data.quotes;
+}
+
+export async function listPortalSalesApi() {
+  const query = `
+    query {
+      sales {
+        id
+        folio
+        created_at
+        total
+        status
+        portal_sent_at
+        quote {
+          id
+          folio
+        }
+        items {
+          id
+          quantity
+          total
+          product {
+            id
+            folio
+            name
+          }
+        }
+      }
+    }
+  `;
+  const data = await gql(query, {}, portalAxiosClient);
+  return data.sales;
+}
+
+export async function getPortalSaleApi(id) {
+  const query = `
+    query GetPortalSale($id: ID!) {
+      sale(id: $id) {
+        id
+        folio
+        created_at
+        total
+        status
+        portal_sent_at
+        quote {
+          id
+          folio
+        }
+        client {
+          business_name
+          rfc
+          address
+        }
+        contact {
+          full_name
+          email
+          phone
+          position_title
+        }
+        user {
+          full_name
+          email
+        }
+        items {
+          id
+          quantity
+          base_unit_price
+          unit_price
+          discount
+          total
+          product {
+            id
+            folio
+            name
+            category
+            description
+            users_count
+          }
+        }
+      }
+    }
+  `;
+  const data = await gql(query, { id }, portalAxiosClient);
+  return data.sale;
+}
+
+export async function deletePortalSaleApi(id) {
+  const query = `
+    mutation DeletePortalSale($id: ID!) {
+      deletePortalSale(id: $id)
+    }
+  `;
+  const data = await gql(query, { id }, portalAxiosClient);
+  return data.deletePortalSale;
 }
 
 export async function listPortalProductsApi() {
@@ -117,6 +214,36 @@ export async function deletePortalQuoteApi(id) {
   `;
   const data = await gql(query, { id }, portalAxiosClient);
   return data.deletePortalQuote;
+}
+
+export async function acceptPortalQuoteApi(id) {
+  const query = `
+    mutation AcceptPortalQuote($id: ID!) {
+      acceptPortalQuote(id: $id)
+    }
+  `;
+  const data = await gql(query, { id }, portalAxiosClient);
+  return data.acceptPortalQuote;
+}
+
+export async function rejectPortalQuoteApi(id) {
+  const query = `
+    mutation RejectPortalQuote($id: ID!) {
+      rejectPortalQuote(id: $id)
+    }
+  `;
+  const data = await gql(query, { id }, portalAxiosClient);
+  return data.rejectPortalQuote;
+}
+
+export async function deletePortalContactProductApi(id) {
+  const query = `
+    mutation DeletePortalContactProduct($id: ID!) {
+      deletePortalContactProduct(id: $id)
+    }
+  `;
+  const data = await gql(query, { id }, portalAxiosClient);
+  return data.deletePortalContactProduct;
 }
 
 export async function updatePortalQuoteRequestApi(id, items) {

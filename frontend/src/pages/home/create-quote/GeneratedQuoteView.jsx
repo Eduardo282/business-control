@@ -70,41 +70,41 @@ export default function GeneratedQuoteView({
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm p-5">
-              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <div className="bg-white dark:bg-dark-900 rounded-3xl border border-zinc-200 dark:border-dark-700 shadow-sm p-5">
+              <h3 className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Building2 size={15} /> Cliente
               </h3>
-              <p className="text-2xl font-bold text-zinc-800 leading-tight">
+              <p className="text-2xl font-bold text-zinc-800 dark:text-zinc-100 leading-tight">
                 {generatedQuote.client.business_name}
               </p>
-              <p className="text-sm text-zinc-500 font-mono mt-1">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 font-mono mt-1">
                 {generatedQuote.client.rfc}
               </p>
             </div>
 
-            <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm p-5">
-              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">
+            <div className="bg-white dark:bg-dark-900 rounded-3xl border border-zinc-200 dark:border-dark-700 shadow-sm p-5">
+              <h3 className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">
                 Contacto
               </h3>
               {generatedQuote.contact ?
                 <>
-                  <p className="text-xl font-bold text-zinc-800 leading-tight">
+                  <p className="text-xl font-bold text-zinc-800 dark:text-zinc-100 leading-tight">
                     {generatedQuote.contact.full_name}
                   </p>
-                  <p className="text-xs text-zinc-500 mt-1">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
                     {generatedQuote.contact.position_title}
                   </p>
-                  <div className="mt-3 pt-3 border-t border-zinc-100 space-y-1">
-                    <p className="text-sm text-zinc-700 break-all">
+                  <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-dark-700 space-y-1">
+                    <p className="text-sm text-zinc-700 dark:text-zinc-300 break-all">
                       {generatedQuote.contact.email}
                     </p>
-                    <p className="text-sm text-zinc-700">
+                    <p className="text-sm text-zinc-700 dark:text-zinc-300">
                       {generatedQuote.contact.phone}
                     </p>
                   </div>
                 </>
               : <div className="min-h-[110px] flex items-center">
-                  <p className="text-sm text-zinc-500 font-medium">
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
                     Sin contacto asignado.
                   </p>
                 </div>
@@ -112,13 +112,13 @@ export default function GeneratedQuoteView({
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-zinc-100 bg-zinc-50 flex items-center justify-between gap-3">
+          <div className="bg-white dark:bg-dark-900 rounded-3xl border border-zinc-200 dark:border-dark-700 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-zinc-100 dark:border-dark-700 bg-zinc-50 dark:bg-dark-800 flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-bold text-zinc-700 uppercase tracking-wider">
+                <p className="text-sm font-bold text-zinc-700 dark:text-zinc-200 uppercase tracking-wider">
                   Partidas cotizadas
                 </p>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                   {generatedQuote.items.reduce(
                     (acc, item) => acc + item.quantity,
                     0,
@@ -126,14 +126,14 @@ export default function GeneratedQuoteView({
                   productos en total
                 </p>
               </div>
-              <div className="px-3 py-1.5 rounded-lg bg-white border border-zinc-200 text-xs font-semibold text-zinc-600">
+              <div className="px-3 py-1.5 rounded-lg bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 text-xs font-semibold text-zinc-600 dark:text-zinc-300">
                 {generatedQuote.items.length} partida(s)
               </div>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[760px]">
-                <thead className="bg-white border-b border-zinc-100 text-xs uppercase tracking-wider text-zinc-500">
+                <thead className="bg-white dark:bg-dark-900 border-b border-zinc-100 dark:border-dark-700 text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                   <tr>
                     <th className="px-5 py-3 text-left">Producto</th>
                     <th className="px-4 py-3 text-right">Cantidad</th>
@@ -143,30 +143,30 @@ export default function GeneratedQuoteView({
                     <th className="px-5 py-3 text-right">Importe</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-100">
+                <tbody className="divide-y divide-zinc-100 dark:divide-dark-700">
                   {generatedQuote.items.map((item, index) => (
-                    <tr key={item.tempId || `${item.name}-${index}`}>
+                    <tr key={item.tempId || `${item.name}-${index}`} className="hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
                       <td className="px-5 py-3.5">
-                        <p className="font-semibold text-zinc-800">
+                        <p className="font-semibold text-zinc-800 dark:text-zinc-100">
                           {item.name}
                         </p>
                       </td>
-                      <td className="px-4 py-3.5 text-right font-mono text-zinc-700">
+                      <td className="px-4 py-3.5 text-right font-mono text-zinc-700 dark:text-zinc-300">
                         {item.quantity}
                       </td>
-                      <td className="px-4 py-3.5 text-right font-mono text-zinc-700">
+                      <td className="px-4 py-3.5 text-right font-mono text-zinc-700 dark:text-zinc-300">
                         ${formatCurrency(item.unit_price)}
                       </td>
-                      <td className="px-4 py-3.5 text-right font-mono text-zinc-700">
+                      <td className="px-4 py-3.5 text-right font-mono text-zinc-700 dark:text-zinc-300">
                         {clampDiscount(item.discount).toLocaleString("es-MX", {
                           maximumFractionDigits: 2,
                         })}
                         %
                       </td>
-                      <td className="px-4 py-3.5 text-right font-mono text-[#2277B4] font-semibold">
+                      <td className="px-4 py-3.5 text-right font-mono text-[#2277B4] dark:text-blue-400 font-semibold">
                         ${formatCurrency(item.discounted_unit_price)}
                       </td>
-                      <td className="px-5 py-3.5 text-right font-mono font-bold text-zinc-800">
+                      <td className="px-5 py-3.5 text-right font-mono font-bold text-zinc-800 dark:text-zinc-100">
                         ${formatCurrency(item.total)}
                       </td>
                     </tr>
@@ -178,46 +178,46 @@ export default function GeneratedQuoteView({
         </div>
 
         <div className="xl:col-span-1">
-          <div className="bg-white rounded-3xl border border-zinc-200 shadow-sm p-5 xl:sticky xl:top-24">
-            <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <div className="bg-white dark:bg-dark-900 rounded-3xl border border-zinc-200 dark:border-dark-700 shadow-sm p-5 xl:sticky xl:top-24">
+            <h3 className="text-sm font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
               <BadgeDollarSign size={16} /> Resumen financiero
             </h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm text-zinc-500 font-medium">
+              <div className="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400 font-medium">
                 <span>Subtotal bruto</span>
-                <span className="font-mono text-zinc-800">
+                <span className="font-mono text-zinc-800 dark:text-zinc-100">
                   ${formatCurrency(generatedQuote.grossSubtotal)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm text-zinc-500 font-medium">
+              <div className="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400 font-medium">
                 <span>Descuento</span>
-                <span className="font-mono text-rose-600">
+                <span className="font-mono text-rose-600 dark:text-rose-400">
                   -${formatCurrency(generatedQuote.totalDiscount)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm text-zinc-500 font-medium">
+              <div className="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400 font-medium">
                 <span>Subtotal neto</span>
-                <span className="font-mono text-zinc-800">
+                <span className="font-mono text-zinc-800 dark:text-zinc-100">
                   ${formatCurrency(generatedQuote.grandTotal)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm text-zinc-500 font-medium">
+              <div className="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400 font-medium">
                 <span>IVA (16%)</span>
-                <span className="font-mono text-zinc-800">
+                <span className="font-mono text-zinc-800 dark:text-zinc-100">
                   ${formatCurrency(generatedQuote.ivaTotal)}
                 </span>
               </div>
-              <div className="pt-3 border-t border-zinc-100 flex items-center justify-between">
-                <span className="text-base font-bold text-zinc-800">
-                  Total Neto
+              <div className="pt-3 border-t border-zinc-100 dark:border-dark-700 flex items-center justify-between">
+                <span className="text-base font-bold text-zinc-800 dark:text-zinc-100">
+                  Total
                 </span>
-                <span className="text-2xl font-bold text-[#1a2b4c] font-mono tracking-tight">
+                <span className="text-2xl font-bold text-[#1a2b4c] dark:text-emerald-400 font-mono tracking-tight">
                   ${formatCurrency(generatedQuote.totalWithIva)}
                 </span>
               </div>
             </div>
 
-            <div className="mt-4 p-3 rounded-2xl bg-[#F6FAFF] border border-[#D9E9FA] text-xs text-zinc-600 leading-relaxed">
+            <div className="mt-4 p-3 rounded-2xl bg-[#F6FAFF] dark:bg-blue-500/10 border border-[#D9E9FA] dark:border-blue-500/20 text-xs text-zinc-600 dark:text-blue-200 leading-relaxed">
               Este documento ya fue registrado y se encuentra listo para
               seguimiento comercial.
             </div>
@@ -225,10 +225,10 @@ export default function GeneratedQuoteView({
         </div>
       </div>
 
-      <section className="bg-white border border-zinc-200 rounded-2xl shadow-sm p-4 md:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <p className="text-sm text-zinc-600">
+      <section className="bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 rounded-2xl shadow-sm p-4 md:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Cotización generada por un total de
-          <span className="font-bold text-zinc-800">
+          <span className="font-bold text-zinc-800 dark:text-zinc-100">
             {" "}
             ${formatCurrency(generatedQuote.totalWithIva)}
           </span>
@@ -238,13 +238,13 @@ export default function GeneratedQuoteView({
           {generatedQuote.id && (
             <button
               onClick={() => navigate(`/cotizaciones/${generatedQuote.id}`)}
-              className="px-4 py-2 rounded-xl border border-zinc-300 text-zinc-700 hover:bg-zinc-100 font-semibold transition-colors">
+              className="px-4 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-dark-800 font-semibold transition-colors">
               Ver detalle
             </button>
           )}
           <button
             onClick={() => navigate("/cotizaciones/historial")}
-            className="px-4 py-2 rounded-xl border border-zinc-300 text-zinc-700 hover:bg-zinc-100 font-semibold transition-colors">
+            className="px-4 py-2 rounded-xl border border-zinc-300 dark:border-dark-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-dark-800 font-semibold transition-colors">
             Ir al historial
           </button>
           <button

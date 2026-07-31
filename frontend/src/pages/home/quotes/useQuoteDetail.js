@@ -3,6 +3,8 @@ import { registerQuoteApi } from "../../../actionsAPI/quotes.api.js";
 import { useQuoteStatus } from "./hooks/useQuoteStatus.js";
 import { useQuotePdf, getQuoteFolio, getQuoteFileToken } from "./hooks/useQuotePdf.js";
 import { useQuoteEmail } from "./hooks/useQuoteEmail.js";
+import { getQuoteStatusAfterSend } from "../../../utils/quoteStatus.js";
+import { notificationService } from "../../../services/notificationService.js";
 
 export { getQuoteFolio, getQuoteFileToken };
 
@@ -46,13 +48,22 @@ export function useQuoteDetail(id, isPortal) {
     setQuickNotice,
     handleSendEmail,
     handleSendToQuoteContact,
-  } = useQuoteEmail(quote, buildPdfFromSnapshot);
+  } = useQuoteEmail(quote, buildPdfFromSnapshot, (emailResult) => {
+    setQuote((current) =>
+      current
+        ? {
+            ...current,
+            email_sent_at: emailResult?.email_sent_at || new Date().toISOString(),
+            status: getQuoteStatusAfterSend(current.status),
+          }
+        : current,
+    );
+  });
 
   const handleRegisterQuote = async () => {
     if (!quote?.id || quote.is_registered) return;
 
     setRegisteringQuote(true);
-    setQuickNotice(null);
     try {
       const updatedQuote = await registerQuoteApi(quote.id);
       setQuote((current) => ({
@@ -60,15 +71,15 @@ export function useQuoteDetail(id, isPortal) {
         ...updatedQuote,
         is_registered: true,
       }));
-      setQuickNotice({
-        type: "success",
-        message: "Cotización registrada correctamente.",
-      });
+      notificationService.success(
+        "Cotización enviada",
+        "Cotización enviada correctamente."
+      );
     } catch (error) {
-      setQuickNotice({
-        type: "error",
-        message: error.message || "No se pudo registrar la cotización.",
-      });
+      notificationService.error(
+        "Error",
+        error.message || "No se pudo registrar la cotización."
+      );
     } finally {
       setRegisteringQuote(false);
     }

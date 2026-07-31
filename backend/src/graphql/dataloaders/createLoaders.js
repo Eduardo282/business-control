@@ -128,5 +128,33 @@ export function createLoaders() {
       const byId = mapRowsById(rows);
       return keys.map((key) => byId.get(String(key)) || null);
     }),
+
+    quoteById: new BatchLoader(async (keys) => {
+      const ids = uniqueKeys(keys);
+      if (!ids.length) return keys.map(() => null);
+      const [rows] = await pool.query(
+        "SELECT * FROM quotes WHERE id IN (?)",
+        [ids],
+      );
+      const byId = mapRowsById(rows);
+      return keys.map((key) => byId.get(String(key)) || null);
+    }),
+
+    saleItemsBySaleId: new BatchLoader(async (keys) => {
+      const ids = uniqueKeys(keys);
+      if (!ids.length) return keys.map(() => []);
+      const [rows] = await pool.query(
+        "SELECT id, sale_id, product_id, quantity, base_unit_price, unit_price, discount, total FROM sale_items WHERE sale_id IN (?)",
+        [ids],
+      );
+      const grouped = new Map();
+      rows.forEach((row) => {
+        const key = String(row.sale_id);
+        const items = grouped.get(key) || [];
+        items.push(row);
+        grouped.set(key, items);
+      });
+      return keys.map((key) => grouped.get(String(key)) || []);
+    }),
   };
 }

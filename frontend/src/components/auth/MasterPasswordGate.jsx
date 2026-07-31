@@ -30,7 +30,9 @@ function BackgroundPage() {
     lastRoute === "/portal/login" ? PortalLogin : Login;
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#eef2f7]" />}>
+    <Suspense
+      fallback={<div className="min-h-screen bg-surface-app dark:bg-dark-900" />}
+    >
       <BackgroundComponent />
     </Suspense>
   );
@@ -53,13 +55,12 @@ export default function MasterPasswordGate({ children }) {
 
     const askPassword = async () => {
       const result = await notificationService.passwordPrompt({
-        title:
-          '<span style="color:#162A42;font-size:1.25rem;font-weight:700">🔒 Acceso Restringido</span>',
+        title: "🔒 Acceso Restringido",
         html: `
-          <p style="color:#6b7280;font-size:0.9rem;margin-bottom:2px;">
+          <p class="swal-theme-copy swal-theme-copy--tight">
             Sección exclusiva para el administrador del sistema.
           </p>
-          <p style="color:#6b7280;font-size:0.9rem;">
+          <p class="swal-theme-copy">
             Ingresar contraseña para continuar.
           </p>
         `,
@@ -67,7 +68,6 @@ export default function MasterPasswordGate({ children }) {
         inputPlaceholder: "Escribe tu contraseña...",
         inputAttributes: {
           autocomplete: "current-password",
-          style: "font-size:1rem;letter-spacing:0.05em;",
         },
         confirmButtonText: "Ingresar",
         cancelButtonText: "Cancelar",
@@ -76,10 +76,10 @@ export default function MasterPasswordGate({ children }) {
         allowEscapeKey: false,
         confirmButtonColor: "#162A42",
         cancelButtonColor: "#9ca3af",
-        background: "#ffffff",
         customClass: {
           popup: "swal-register-popup",
           input: "swal-register-input",
+          htmlContainer: "swal-theme-copy",
         },
         inputValidator: (val) => {
           if (!val) return "Por favor ingresa la contraseña maestra.";
@@ -103,8 +103,8 @@ export default function MasterPasswordGate({ children }) {
           _masterGranted = true;
           setGranted(true);
           await notificationService.success(
-            "Access granted",
-            "Welcome, Tecno360.",
+            "Accesso garantizado",
+            "Bienvenido, Tecno360.",
           );
           notificationService.close();
         } else {

@@ -1,7 +1,7 @@
 import { requireRoles } from "../../../middlewares/role.middleware.js";
 import { unauthenticated, forbidden } from "../../../errors/appErrors.js";
-import { listContactsByClientAction } from "../../actions/contact_actions/listContactsByClient.action.js";
-import { getContactAction } from "../../actions/contact_actions/getContact.action.js";
+import { listContactsByClientAction } from "../../../modules/contacts/contactActions.js";
+import { getContactAction } from "../../../modules/contacts/contactActions.js";
 
 export const contactsByClient = async (_parent, { client_id }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);

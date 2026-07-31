@@ -90,7 +90,7 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
   return (
     <Card>
       <h3 className="font-semibold text-light-text-primary dark:text-white mb-6 flex items-center gap-2">
-        <span className="text-accent-400">
+        <span className="text-accent-500 dark:text-accent-400">
           <Tag size={20} />
         </span>{" "}
         Servicios Activos
@@ -99,17 +99,17 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
       {/* Formulario para agregar servicio */}
       <form
         onSubmit={handleAddService}
-        className="mb-6 p-4 rounded-xl bg-zinc-50 border border-zinc-200">
-        <h4 className="text-sm font-semibold text-zinc-700 mb-3 flex items-center gap-2">
+        className="mb-6 p-4 rounded-xl bg-zinc-50 dark:bg-dark-900 border border-zinc-200 dark:border-dark-700">
+        <h4 className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 mb-3 flex items-center gap-2">
           <UserPlus size={16} /> Asignar Nuevo Servicio
         </h4>
         <div className="grid grid-cols-12 gap-3">
           <div className="col-span-3">
-            <label className="text-xs text-zinc-500 mb-1 block">
+            <label className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 block">
               Contacto *
             </label>
             <select
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-black"
+              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-sm text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400/40 focus:border-primary-500 dark:focus:border-primary-400 outline-none dark:[color-scheme:dark] transition-colors"
               value={serviceForm.contact_id}
               onChange={(e) =>
                 setServiceForm({ ...serviceForm, contact_id: e.target.value })
@@ -124,11 +124,11 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
             </select>
           </div>
           <div className="col-span-3">
-            <label className="text-xs text-zinc-500 mb-1 block">
+            <label className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 block">
               Producto *
             </label>
             <select
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-black"
+              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-sm text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400/40 focus:border-primary-500 dark:focus:border-primary-400 outline-none dark:[color-scheme:dark] transition-colors"
               value={serviceForm.product_id}
               onChange={(e) =>
                 setServiceForm({ ...serviceForm, product_id: e.target.value })
@@ -143,12 +143,12 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
             </select>
           </div>
           <div className="col-span-2">
-            <label className="text-xs text-zinc-500 mb-1 block">
+            <label className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 block">
               Licencia / Serial
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-black"
+              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400/40 focus:border-primary-500 dark:focus:border-primary-400 outline-none transition-colors"
               placeholder="Opcional"
               value={serviceForm.license_key}
               onChange={(e) =>
@@ -157,12 +157,12 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
             />
           </div>
           <div className="col-span-2">
-            <label className="text-xs text-zinc-500 mb-1 block">
+            <label className="text-xs text-zinc-500 dark:text-zinc-400 mb-1 block">
               Vencimiento *
             </label>
             <input
               type="date"
-              className="w-full px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-black"
+              className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-sm text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400/40 focus:border-primary-500 dark:focus:border-primary-400 outline-none dark:[color-scheme:dark] transition-colors"
               value={serviceForm.expiration_date}
               onChange={(e) =>
                 setServiceForm({
@@ -176,7 +176,7 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
           <div className="col-span-2 flex items-end">
             <button
               type="submit"
-              className="w-full px-4 py-2 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors text-sm">
+              className="w-full px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white dark:text-white font-semibold rounded-lg hover:bg-primary-700 dark:hover:bg-primary-400 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:focus:ring-primary-400/40">
               Asignar
             </button>
           </div>
@@ -184,58 +184,58 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
       </form>
 
       {loading ?
-        <div className="text-center py-8 text-zinc-500">
+        <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
           Cargando servicios...
         </div>
-      : <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+      : <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-800 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-zinc-50 border-b border-zinc-200">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
+              <tr className="bg-zinc-50 dark:bg-dark-900 border-b border-zinc-200 dark:border-dark-700">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase">
                   Producto
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase">
                   Contacto
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase">
                   Licencia
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase">
                   Vence
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase">
                   Estado
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-zinc-100 dark:divide-dark-700">
               {services.map((s) => (
                 <tr
                   key={s.id}
-                  className="hover:bg-blue-50/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-zinc-800">
+                  className="hover:bg-blue-50/50 dark:hover:bg-blue-500/10 transition-colors">
+                  <td className="px-4 py-3 font-medium text-zinc-800 dark:text-zinc-100">
                     {s.product.name}
                   </td>
-                  <td className="px-4 py-3 text-zinc-600">{s.contact_name}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-zinc-500">
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-300">{s.contact_name}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-zinc-500 dark:text-zinc-400">
                     {s.license_key || "—"}
                   </td>
-                  <td className="px-4 py-3 text-zinc-600">
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-300">
                     {new Date(s.expiration_date).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-bold ${
                         s.status === "ACTIVE" ?
-                          "bg-emerald-100 text-emerald-600"
+                          "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
                         : s.status === "CANCELLED" ?
-                          "bg-zinc-100 text-zinc-600"
+                          "bg-zinc-100 text-zinc-600 dark:bg-zinc-500/15 dark:text-zinc-300"
                         : s.status === "EXPIRING_SOON" ?
-                          "bg-amber-100 text-amber-600"
-                        : "bg-red-100 text-red-500"
+                          "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
+                        : "bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-300"
                       }`}>
                       {s.status === "ACTIVE" ?
                         "Activo"
@@ -249,7 +249,7 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
                   <td className="px-4 py-3">
                     <button
                       onClick={() => handleDeleteService(s.id)}
-                      className="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1"
+                      className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm font-medium flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:focus:ring-red-400/40 rounded"
                       title="Eliminar">
                       <Trash2 size={16} /> Eliminar
                     </button>
@@ -264,7 +264,7 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
               <div className="flex justify-center mb-2 opacity-20">
                 <Tag size={36} />
               </div>
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 No hay servicios asignados a este cliente.
               </p>
             </div>

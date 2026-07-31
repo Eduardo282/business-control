@@ -41,7 +41,7 @@ export default function Login() {
       const res = await loginApi(email, password);
       localStorage.setItem("bc_token", res.token);
 
-      notificationService.toast({ title: `Welcome, ${res.user.full_name}` });
+      notificationService.toast({ title: `Bienvenido, ${res.user.full_name}` });
 
       setUser(res.user);
       navigate("/", { replace: true });
@@ -97,7 +97,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="correo@empresa.com"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] dark:border-white/10 bg-white dark:bg-white/5 shadow-sm text-[#1a2b4c] dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
+                  className="w-full rounded-xl border border-[#94a3b8] bg-white py-3.5 pl-11 pr-4 text-[#1a2b4c] shadow-sm transition-all placeholder:text-zinc-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#1d4ed8] dark:border-white/20 dark:bg-dark-700 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus:ring-blue-400"
                   required
                 />
               </div>
@@ -117,14 +117,14 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="EJ: &q/N,sKz"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-[#d6d4c9] dark:border-white/10 bg-white dark:bg-white/5 shadow-sm text-[#1a2b4c] dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] focus:border-transparent transition-all"
+                  className="w-full rounded-xl border border-[#94a3b8] bg-white py-3.5 pl-11 pr-4 text-[#1a2b4c] shadow-sm transition-all placeholder:text-zinc-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#1d4ed8] dark:border-white/20 dark:bg-dark-700 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus:ring-blue-400"
                   required
                 />
               </div>
             </div>
 
             {error && (
-              <div role="alert" className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm text-center">
+              <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200">
                 {error}
               </div>
             )}
@@ -133,7 +133,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group col-span-2 flex min-h-[68px] items-center justify-between rounded-[18px] border border-[#2277B4] bg-gradient-to-r from-[#2277B4] to-[#165d92] px-4 py-3 text-left text-white shadow-[0_16px_28px_-22px_rgba(34,119,180,0.95)] transition-all hover:-translate-y-0.5 hover:from-[#1e6da5] hover:to-[#114a73] focus:outline-none focus:ring-2 focus:ring-[#2277B4] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60">
+                className="group col-span-2 flex min-h-[68px] items-center justify-between rounded-[18px] border border-[#2277B4] bg-gradient-to-r from-[#2277B4] to-[#165d92] px-4 py-3 text-left text-white shadow-[0_16px_28px_-22px_rgba(34,119,180,0.95)] transition-all hover:-translate-y-0.5 hover:from-[#1e6da5] hover:to-[#114a73] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F1F4F8] disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-blue-400 dark:focus-visible:ring-offset-dark-800 motion-reduce:transition-none">
                 <span className="pr-3">
                   <span className="block text-sm font-semibold">
                     Iniciar Sesión
@@ -149,7 +149,7 @@ export default function Login() {
 
               <Link
                 to="/register"
-                className="group flex min-h-[92px] justify-center items-center rounded-[18px] border border-[#d8dde7] dark:border-white/10 bg-white dark:bg-white/5 px-3 py-3 text-left shadow-[0_14px_24px_-22px_rgba(26,43,76,0.65)] transition-all hover:-translate-y-0.5 hover:border-[#2277B4]/35 hover:shadow-[0_18px_30px_-22px_rgba(34,119,180,0.35)] focus:outline-none focus:ring-2 focus:ring-[#2277B4] focus:ring-offset-2">
+                className="group flex min-h-[92px] items-center justify-center gap-3 rounded-[18px] border border-zinc-300 bg-white px-3 py-3 text-left shadow-[0_14px_24px_-22px_rgba(26,43,76,0.65)] transition-all hover:-translate-y-0.5 hover:border-[#2277B4]/50 hover:shadow-[0_18px_30px_-22px_rgba(34,119,180,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F1F4F8] dark:border-white/15 dark:bg-white/10 dark:focus-visible:ring-blue-400 dark:focus-visible:ring-offset-dark-800 motion-reduce:transition-none">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2277B4]/12 text-[#2277B4] transition-colors group-hover:bg-[#2277B4]/18">
                   <UserPlus className="h-4 w-4" />
                 </span>
@@ -161,7 +161,7 @@ export default function Login() {
 
               <Link
                 to="/portal/login"
-                className="group flex min-h-[92px] justify-center items-center rounded-[18px] border border-[#1B4733] bg-[#1B4733] px-3 py-3 text-left shadow-[0_16px_28px_-24px_rgba(27,71,51,0.95)] transition-all hover:-translate-y-0.5 hover:bg-[#163a2b] hover:shadow-[0_20px_32px_-22px_rgba(27,71,51,1)] focus:outline-none focus:ring-2 focus:ring-[#1B4733] focus:ring-offset-2">
+                className="group flex min-h-[92px] items-center justify-center gap-3 rounded-[18px] border border-[#1B4733] bg-[#1B4733] px-3 py-3 text-left shadow-[0_16px_28px_-24px_rgba(27,71,51,0.95)] transition-all hover:-translate-y-0.5 hover:bg-[#163a2b] hover:shadow-[0_20px_32px_-22px_rgba(27,71,51,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4733] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F1F4F8] dark:border-emerald-500/50 dark:bg-emerald-900 dark:hover:bg-emerald-800 dark:focus-visible:ring-emerald-400 dark:focus-visible:ring-offset-dark-800 motion-reduce:transition-none">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/12 text-white transition-colors group-hover:bg-white/18">
                   <Building2 className="h-4 w-4" />
                 </span>
@@ -175,7 +175,7 @@ export default function Login() {
           </form>
 
           {/* Footer */}
-          <div className="mt-12 flex items-center justify-center gap-2 text-center text-xs text-[#5e6b82] font-medium">
+          <div className="mt-12 flex items-center justify-center gap-2 text-center text-xs font-medium text-[#5e6b82] dark:text-zinc-400">
             <span>Business Control © 2026 — Sistema Empresarial</span>
           </div>
         </div>

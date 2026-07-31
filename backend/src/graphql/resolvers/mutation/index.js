@@ -3,6 +3,7 @@ import * as clients from "./clients.mutation.js";
 import * as contacts from "./contacts.mutation.js";
 import * as products from "./products.mutation.js";
 import * as quotes from "./quotes.mutation.js";
+import * as sales from "./sales.mutation.js";
 import * as roles from "./roles.mutation.js";
 import * as categories from "./categories.mutation.js";
 import * as formDrafts from "./formDrafts.mutation.js";
@@ -13,6 +14,7 @@ export default {
   ...contacts,
   ...products,
   ...quotes,
+  ...sales,
   ...roles,
   ...categories,
   ...formDrafts,

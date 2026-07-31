@@ -125,28 +125,28 @@ export default function Roles() {
   };
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="min-h-screen flex bg-white dark:bg-dark-900">
       <AuthDecorativePanel
         title="Gestion de Roles"
         description="Modulo de registro y administracion de roles."
       />
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#F1F4F8] relative">
-        <div className="w-full max-w-md rounded-3xl border border-white/40 bg-white/90 backdrop-blur-sm p-8 shadow-[0_30px_60px_-35px_rgba(22,42,66,0.55)]">
-          <h1 className="text-3xl font-semibold text-[#153465] text-center mb-3">
+      <div className="relative flex w-full items-center justify-center bg-[#F1F4F8] p-8 dark:bg-dark-800 lg:w-1/2">
+        <div className="w-full max-w-md rounded-3xl border border-zinc-300/80 bg-white/90 p-8 shadow-[0_30px_60px_-35px_rgba(22,42,66,0.55)] backdrop-blur-sm dark:border-white/15 dark:bg-dark-700/95 dark:shadow-black/50">
+          <h1 className="mb-3 text-center text-3xl font-semibold text-[#153465] dark:text-zinc-100">
             Registrar Rol
           </h1>
-          <p className="text-[#6f7f9a] text-center text-lg mb-8">
+          <p className="mb-8 text-center text-lg text-[#6f7f9a] dark:text-zinc-300">
             Ingresa un nuevo rol para el sistema
           </p>
 
           <form onSubmit={submit} className="space-y-5">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-[#1a2b4c] font-bold text-sm">
+                <label className="text-sm font-bold text-[#1a2b4c] dark:text-zinc-200">
                   Escribe el nuevo rol
                 </label>
-                <span className="text-[#7987a0] text-sm">Solo MAYUSCULAS</span>
+                <span className="text-sm text-[#64748b] dark:text-zinc-400">Solo MAYUSCULAS</span>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-400">
@@ -159,23 +159,23 @@ export default function Roles() {
                   placeholder="EJ: SUPERVISOR"
                   pattern="[A-ZÁÉÍÓÚÜÑ ]+"
                   title="Solo letras MAYUSCULAS y espacios"
-                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-[#494949] bg-white text-black placeholder-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#2277B4] focus:border-transparent transition-all"
+                  className="w-full rounded-2xl border border-[#64748b] bg-white py-3.5 pl-11 pr-4 text-zinc-950 transition-all placeholder:text-zinc-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#1d4ed8] dark:border-white/25 dark:bg-dark-800 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus:ring-blue-400"
                   required
                 />
               </div>
               {roleInputError && (
-                <p className="mt-2 text-xs text-red-600">{roleInputError}</p>
+                <p className="mt-2 text-xs font-medium text-red-700 dark:text-red-300">{roleInputError}</p>
               )}
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm text-center">
+              <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-xl text-sm text-center">
+              <div role="status" className="rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-center text-sm font-medium text-green-700 dark:border-green-800 dark:bg-green-950/50 dark:text-green-200">
                 {success}
               </div>
             )}
@@ -183,24 +183,24 @@ export default function Roles() {
             <button
               type="submit"
               disabled={savingRole}
-              className="w-full py-3.5 bg-[#8AB6D6] text-white text-xl font-semibold rounded-2xl hover:bg-[#2277B4] transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+              className="w-full rounded-2xl bg-[#2277B4] py-3.5 text-xl font-semibold text-white transition-colors hover:bg-[#125280] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-blue-400 dark:focus-visible:ring-offset-dark-700">
               {savingRole ? "Registrando…" : "Registrar Rol"}
             </button>
           </form>
 
-          <div className="my-8 border-t border-zinc-200" />
+          <div className="my-8 border-t border-zinc-300 dark:border-white/15" />
 
-          <h2 className="text-[#1a2b4c] font-semibold text-xl mb-3">
+          <h2 className="mb-3 text-xl font-semibold text-[#1a2b4c] dark:text-zinc-100">
             Seleccionar un rol:
           </h2>
 
-          <div className="rounded-2xl border border-zinc-200 bg-[#f7f8fb] p-3 min-h-[80px] max-h-[170px] overflow-y-auto flex flex-wrap gap-2 content-start pr-2">
+          <div className="flex min-h-[80px] max-h-[170px] flex-wrap content-start gap-2 overflow-y-auto rounded-2xl border border-zinc-300 bg-[#f7f8fb] p-3 pr-2 dark:border-white/15 dark:bg-dark-800">
             {loadingRoles && (
-              <span className="text-sm text-zinc-500">Cargando roles...</span>
+              <span className="text-sm text-zinc-600 dark:text-zinc-300">Cargando roles...</span>
             )}
 
             {!loadingRoles && roles.length === 0 && (
-              <span className="text-sm text-zinc-500">
+              <span className="text-sm text-zinc-600 dark:text-zinc-300">
                 Aun no hay roles registrados.
               </span>
             )}
@@ -213,10 +213,10 @@ export default function Roles() {
                   onClick={() => setSelectedRoleName(role.name)}
                   className={`inline-flex items-center px-3 py-1 rounded-xl border text-sm font-semibold uppercase transition-colors ${
                     duplicateFlashRole === role.name ?
-                      "border-red-300 bg-red-100 text-red-700"
+                      "border-red-400 bg-red-100 text-red-700 dark:border-red-600 dark:bg-red-950/60 dark:text-red-200"
                     : selectedRoleName === role.name ?
-                      "border-[#1d4f7a] bg-[#1d4f7a] text-white"
-                    : "border-[#d9dfea] bg-white text-[#4b5d79] hover:bg-[#eef2f8]"
+                      "border-[#1d4f7a] bg-[#1d4f7a] text-white dark:border-blue-400 dark:bg-blue-600"
+                    : "border-[#94a3b8] bg-white text-[#334155] hover:bg-zinc-100 dark:border-white/20 dark:bg-dark-700 dark:text-zinc-200 dark:hover:bg-white/10"
                   }`}>
                   {role.name}
                 </button>
@@ -224,7 +224,7 @@ export default function Roles() {
           </div>
 
           {selectedRoleName && (
-            <p className="mt-3 text-sm text-[#1a2b4c]">
+            <p className="mt-3 text-sm text-[#1a2b4c] dark:text-zinc-200">
               Rol seleccionado:{" "}
               <span className="font-bold">{selectedRoleName}</span>
             </p>
@@ -234,7 +234,7 @@ export default function Roles() {
             type="button"
             onClick={goToRegisterWithSelectedRole}
             disabled={!selectedRoleName}
-            className="w-full mt-4 py-3 rounded-xl bg-[#2277B4] text-white font-semibold hover:bg-[#125280] transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+            className="mt-4 w-full rounded-xl bg-[#2277B4] py-3 font-semibold text-white transition-colors hover:bg-[#125280] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-blue-400 dark:focus-visible:ring-offset-dark-700">
             Usar rol seleccionado
           </button>
 
@@ -246,13 +246,13 @@ export default function Roles() {
                   { selectedRole: selectedRoleName }
                 : undefined
               }
-              className="inline-flex items-center gap-2 text-[#1a2b4c] font-bold hover:underline">
+              className="inline-flex items-center gap-2 font-bold text-[#1a2b4c] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] dark:text-zinc-200 dark:focus-visible:ring-blue-400">
               <ArrowLeft size={18} />
               Volver al Registro
             </Link>
             <Link
               to="/login"
-              className="text-[#64748b] font-semibold hover:underline">
+              className="font-semibold text-[#64748b] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d4ed8] dark:text-zinc-300 dark:focus-visible:ring-blue-400">
               Ir al Login
             </Link>
           </div>

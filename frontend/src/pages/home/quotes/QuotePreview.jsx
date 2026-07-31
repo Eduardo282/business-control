@@ -22,7 +22,6 @@ export default function QuotePreview({
       className="mx-auto max-w-5xl bg-white dark:bg-dark-900 text-zinc-900 dark:text-zinc-100 shadow-2xl print:shadow-none print:w-full print:m-0 animate-slide-up origin-top border border-zinc-200 dark:border-dark-700 rounded-2xl overflow-hidden"
     >
       <div className="bg-gradient-to-r from-[#0f274d] via-[#154982] to-[#1d6fb3] text-white px-8 md:px-12 py-3 flex items-center justify-between text-xs tracking-wide uppercase font-semibold print:bg-white print:text-zinc-900 print:border-b print:border-zinc-200">
-        <span>Business Control | Documento Comercial</span>
       </div>
 
       <div className="p-8 md:p-12 border-b border-zinc-100 dark:border-dark-700">
@@ -32,7 +31,7 @@ export default function QuotePreview({
               COTIZACIÓN
             </h1>
             <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-              Propuesta comercial formal para revisión y aprobación.
+              Cotización comercial formal.
             </p>
           </div>
           <div className="text-left md:text-right">
@@ -142,7 +141,7 @@ export default function QuotePreview({
                 Descripción / Producto
               </th>
               <th className="py-3 px-4 text-center bg-zinc-900 text-white">Cant</th>
-              <th className="py-3 px-4 text-right bg-zinc-900 text-white">Precio Lista</th>
+              <th className="py-3 px-4 text-right bg-zinc-900 text-white">Precio</th>
               <th className="py-3 px-4 text-right bg-zinc-900 text-white">Desc.</th>
               <th className="py-3 px-4 text-right bg-zinc-900 text-white">Precio Unit.</th>
               <th className="py-3 px-6 text-right bg-zinc-900 text-white rounded-r-lg">
@@ -228,10 +227,10 @@ export default function QuotePreview({
             Condiciones Comerciales
           </h4>
           <ul className="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
-            <li>1. Esta propuesta tiene vigencia hasta el {quoteValidityLabel}.</li>
-            <li>2. Los precios se expresan en MXN e incluyen descuentos aplicados por partida.</li>
+            <li>1. Vigencia hasta el {quoteValidityLabel}.</li>
+            <li>2. Los precios se expresan en MXN e incluyen descuentos aplicados por producto.</li>
             <li>3. El tiempo de entrega queda sujeto a disponibilidad y confirmación de inventario.</li>
-            <li>4. Cualquier ajuste posterior deberá formalizarse mediante actualización de cotización.</li>
+            <li>4. Cualquier ajuste posterior deberá formalizarse mediante una actualización de cotización.</li>
           </ul>
         </div>
 
@@ -277,7 +276,7 @@ export default function QuotePreview({
               </span>
             </div>
             <div className="flex justify-between items-end border-t border-zinc-900 dark:border-zinc-100 pt-3 mt-3">
-              <span className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">Total Neto</span>
+              <span className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">Total</span>
               <span className="font-bold font-mono text-zinc-900 dark:text-zinc-100 text-2xl">
                 $
                 {totalNeto.toLocaleString("es-MX", {
@@ -338,14 +337,15 @@ export default function QuotePreview({
             </div>
             <div className="text-right">
               <p className="max-w-xs leading-relaxed text-zinc-500 print:text-zinc-600">
-                * Precios sujetos a cambio sin previo aviso.
+                * Precios sujetos a cambios.
                 <br />* Tiempo de entrega sujeto a disponibilidad.
               </p>
             </div>
           </div>
 
           <div className="mt-8 pt-8 border-t border-zinc-800 flex justify-between items-center text-zinc-600 print:border-zinc-200">
-            <div>Business Control System</div>
+            <div>Business Control</div>
+            <div className="font-mono">{quoteDateLabel}</div>
           </div>
         </div>
       </div>

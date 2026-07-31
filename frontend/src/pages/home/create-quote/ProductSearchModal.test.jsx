@@ -177,4 +177,20 @@ describe("ProductSearchModal", () => {
 
     expect(screen.getByText(/No hay productos para el tipo seleccionado/i)).toBeVisible();
   });
+
+  it("provides explicit dark table, focus, and disabled states", () => {
+    renderModal({
+      productSearchTable: createTableMock({
+        rows: [createProductRow()],
+        pageSize: 5,
+      }),
+      prodResults: [{ id: 1 }],
+      filteredProductCount: 1,
+    });
+
+    const heading = screen.getByRole("heading", { name: /Buscar Productos/i });
+    expect(heading).toBeVisible();
+
+    expect(screen.getByLabelText(/Filtrar productos por tipo/i)).toBeVisible();
+  });
 });

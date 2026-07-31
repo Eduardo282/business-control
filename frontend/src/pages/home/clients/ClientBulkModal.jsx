@@ -3,20 +3,10 @@ import { createPortal } from "react-dom";
 import { X, Upload, CheckCircle2, AlertCircle, Lightbulb } from "@icons";
 import Swal from "sweetalert2";
 import {
-  bulkCreateClientsApi,
   importClientsFromDriveApi,
+  importClientsFromLocalApi,
 } from "../../../actionsAPI/clients.api";
-
-const CLIENT_TEMPLATE_COLUMNS = [
-  "RAZÓN SOCIAL",
-  "RFC",
-  "CORREO PRINCIPAL",
-  "CELULAR",
-  "CIUDAD",
-  "TELÉFONO",
-  "CORREO SECUNDARIO",
-  "CÓDIGO POSTAL",
-];
+import { loadXlsx } from "../../../utils/dynamicImports";
 
 const COLUMN_MAP = {
   "razon social": "business_name",
@@ -60,6 +50,7 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
   const [bulkResult, setBulkResult] = useState(null);
   const [driveUrl, setDriveUrl] = useState("");
   const [driveImporting, setDriveImporting] = useState(false);
+  const [fileToUpload, setFileToUpload] = useState(null);
   const bulkFileRef = useRef(null);
 
   if (!isOpen) return null;
@@ -83,11 +74,12 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
     if (!file) return;
     setBulkResult(null);
     setBulkErrors([]);
+    setFileToUpload(file);
 
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
-        const XLSX = await import("xlsx");
+        const XLSX = await loadXlsx();
         const wb = XLSX.read(evt.target.result, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, {
@@ -107,7 +99,15 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
           normalizeExcelHeader(header)
         );
         const mappedFields = normalizedHeaders.map(
-          (header) => COLUMN_MAP[header] || null
+          (header) => {
+            if (COLUMN_MAP[header]) return COLUMN_MAP[header];
+            return String(header || "")
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "_")
+              .replace(/^_+|_+$/g, "");
+          }
         );
 
         if (!mappedFields.some(Boolean)) {
@@ -160,7 +160,9 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
 
         setBulkData(mapped);
         setBulkErrors(errors);
-      } catch {
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("Error al leer archivo local:", err);
         setBulkData([]);
         setBulkErrors([
           "No se pudo leer el archivo. Verifica que sea un Excel válido (.xlsx / .xls).",
@@ -172,27 +174,23 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
   };
 
   const executeBulkUpload = async () => {
+    if (!fileToUpload) {
+      setBulkErrors(["No hay archivo cargado."]);
+      return;
+    }
     setBulkUploading(true);
     setBulkResult(null);
     try {
-      const inputs = bulkData.map(({ _row, ...rest }) => ({
-        business_name: rest.business_name,
-        rfc: rest.rfc || null,
-        email1: rest.email1 || null,
-        email2: rest.email2 || null,
-        celular: rest.celular || null,
-        telefono: rest.telefono || null,
-        codigo_postal: rest.codigo_postal || null,
-        ciudad: rest.ciudad || null,
-      }));
-
-      const CHUNK = 200;
-      let totalCreated = 0;
-      for (let i = 0; i < inputs.length; i += CHUNK) {
-        const chunk = inputs.slice(i, i + CHUNK);
-        const created = await bulkCreateClientsApi(chunk);
-        totalCreated += created.length;
-      }
+      const getBase64 = (f) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(f);
+      });
+      const base64 = await getBase64(fileToUpload);
+      
+      const report = await importClientsFromLocalApi(base64);
+      const totalCreated = report.importedCount || 0;
 
       setBulkResult({ success: true, count: totalCreated });
       onSuccess({ type: "excel", count: totalCreated });
@@ -294,28 +292,28 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+      <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl dark:shadow-black/50 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-transparent dark:border-dark-700">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-zinc-100 bg-[#1a2b4c] flex items-center justify-between">
-          <h3 className="text-white text-lg font-semibold flex items-center gap-2">
+        <div className="px-6 py-4 border-b border-zinc-100 dark:border-dark-700 bg-[#1a2b4c] dark:bg-blue-950 flex items-center justify-between">
+          <h3 className="text-white dark:text-white text-lg font-semibold flex items-center gap-2">
             Carga de Clientes
           </h3>
-          <button onClick={onClose} className="text-white hover:opacity-80">
+          <button onClick={onClose} className="text-white dark:text-white hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-white/40 dark:focus:ring-white/40 rounded">
             <X size={18} />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1 space-y-5">
+        <div className="p-6 overflow-y-auto flex-1 space-y-5 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
           {bulkResult?.success && bulkResult?.details?.ignoredHeaders?.length > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-800">
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-xl p-4 text-xs text-amber-800 dark:text-amber-200">
               <p className="font-semibold mb-1">Columnas ignoradas del Excel</p>
               <p>{bulkResult.details.ignoredHeaders.join(", ")}</p>
             </div>
           )}
 
           {bulkResult?.success && bulkResult?.details?.createdColumns?.length > 0 && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-800">
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60 rounded-xl p-4 text-xs text-emerald-800 dark:text-emerald-200">
               <p className="font-semibold mb-1">Columnas nuevas creadas en MySQL</p>
               <p>
                 {bulkResult.details.createdColumns
@@ -326,7 +324,7 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
           )}
 
           {bulkResult?.success && bulkResult?.details?.backfillReports?.length > 0 && (
-            <div className="bg-cyan-50 border border-cyan-200 rounded-xl p-4 text-xs text-cyan-800">
+            <div className="bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-900/60 rounded-xl p-4 text-xs text-cyan-800 dark:text-cyan-200">
               <p className="font-semibold mb-1">Autocompletado histórico aplicado</p>
               <p>
                 {bulkResult.details.backfillReports
@@ -340,19 +338,19 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
           )}
 
           {/* Help/Ayuda */}
-          <div className="bg-[#2277B412] border border-blue-200 rounded-xl p-4">
-            <p className="text-sm font-semibold text-[#2277B4] mb-2 flex items-center gap-1">
+          <div className="bg-[#2277B412] dark:bg-blue-500/10 border border-blue-200 dark:border-blue-800/60 rounded-xl p-4">
+            <p className="text-sm font-semibold text-[#2277B4] dark:text-blue-300 mb-2 flex items-center gap-1">
               <Lightbulb size={15} /> Ayuda
             </p>
-            <ul className="text-xs text-[#2277B4] space-y-1 mb-3 list-disc pl-5">
+            <ul className="text-xs text-[#2277B4] dark:text-blue-300 space-y-1 mb-3 list-disc pl-5">
               <li>Los clientes se asignarán automáticamente.</li>
               <li>También puedes pegar la URL del archivo de Google Drive.</li>
             </ul>
           </div>
 
           {/* Importar desde Google Drive */}
-          <div className="border border-zinc-200 rounded-xl p-4 space-y-3">
-            <p className="text-sm font-semibold text-zinc-700">
+          <div className="border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-900 rounded-xl p-4 space-y-3">
+            <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
               Importar desde Google Drive
             </p>
             <input
@@ -360,12 +358,12 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
               value={driveUrl}
               onChange={(e) => setDriveUrl(e.target.value)}
               placeholder="https://drive.google.com/file/d/.../view"
-              className="w-full px-3 py-2.5 text-sm rounded-lg border border-zinc-300 bg-white text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-[#2277B4]"
+              className="w-full px-3 py-2.5 text-sm rounded-lg border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-400/30 focus:border-[#2277B4] dark:focus:border-blue-400 transition-colors"
             />
             <button
               onClick={executeDriveImport}
               disabled={driveImporting}
-              className="px-4 py-2 bg-[#1a2b4c] text-white text-sm font-semibold rounded-lg hover:bg-[#16233f] transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 bg-[#1a2b4c] dark:bg-blue-900 text-white dark:text-blue-50 text-sm font-semibold rounded-lg hover:bg-[#16233f] dark:hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:bg-zinc-300 disabled:text-zinc-500 dark:disabled:bg-dark-700 dark:disabled:text-zinc-500 disabled:hover:bg-zinc-300 dark:disabled:hover:bg-dark-700 flex items-center gap-2"
             >
               {driveImporting ? (
                 <>
@@ -389,13 +387,13 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
             />
             <button
               onClick={() => bulkFileRef.current?.click()}
-              className="w-full py-8 border-2 border-dashed border-zinc-300 rounded-xl flex flex-col items-center gap-2 text-zinc-500 hover:border-[#2277B4] hover:text-[#2277B4] transition-colors cursor-pointer"
+              className="w-full py-8 border-2 border-dashed border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 rounded-xl flex flex-col items-center gap-2 text-zinc-500 dark:text-zinc-400 hover:border-[#2277B4] dark:hover:border-blue-400 hover:text-[#2277B4] dark:hover:text-blue-300 hover:bg-blue-50/40 dark:hover:bg-blue-500/10 transition-colors cursor-pointer"
             >
               <Upload size={28} />
               <span className="text-sm font-semibold">
                 Haz clic para seleccionar el archivo Excel
               </span>
-              <span className="text-[11px] text-zinc-400">
+              <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
                 O usa la plantilla descargada
               </span>
             </button>
@@ -403,11 +401,11 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
 
           {/* Errores de validación */}
           {bulkErrors.length > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <p className="text-sm font-semibold text-amber-800 mb-2 flex items-center gap-1">
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-xl p-4">
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-1">
                 <AlertCircle size={15} /> Advertencias
               </p>
-              <ul className="text-xs text-amber-700 space-y-1 max-h-32 overflow-y-auto">
+              <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-1 max-h-32 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
                 {bulkErrors.map((err, i) => (
                   <li key={i}>• {err}</li>
                 ))}
@@ -418,30 +416,30 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
           {/* Vista previa */}
           {bulkData.length > 0 && (
             <div>
-              <p className="text-sm font-semibold text-zinc-700 mb-2">
+              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
                 Vista previa ({bulkData.length} clientes listos para importar)
               </p>
-              <div className="border border-zinc-200 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
+              <div className="border border-zinc-200 dark:border-dark-700 rounded-xl overflow-hidden max-h-64 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
                 <table className="w-full text-xs">
-                  <thead className="bg-zinc-50 sticky top-0">
+                  <thead className="bg-zinc-50 dark:bg-dark-900 sticky top-0">
                     <tr>
-                      <th className="px-3 py-2 text-left font-semibold text-zinc-600">#</th>
-                      <th className="px-3 py-2 text-left font-semibold text-zinc-600">Razón Social</th>
-                      <th className="px-3 py-2 text-left font-semibold text-zinc-600">RFC</th>
-                      <th className="px-3 py-2 text-left font-semibold text-zinc-600">Correo</th>
-                      <th className="px-3 py-2 text-left font-semibold text-zinc-600">Celular</th>
-                      <th className="px-3 py-2 text-left font-semibold text-zinc-600">Ciudad</th>
+                      <th className="px-3 py-2 text-left font-semibold text-zinc-600 dark:text-zinc-300">#</th>
+                      <th className="px-3 py-2 text-left font-semibold text-zinc-600 dark:text-zinc-300">Razón Social</th>
+                      <th className="px-3 py-2 text-left font-semibold text-zinc-600 dark:text-zinc-300">RFC</th>
+                      <th className="px-3 py-2 text-left font-semibold text-zinc-600 dark:text-zinc-300">Correo</th>
+                      <th className="px-3 py-2 text-left font-semibold text-zinc-600 dark:text-zinc-300">Celular</th>
+                      <th className="px-3 py-2 text-left font-semibold text-zinc-600 dark:text-zinc-300">Ciudad</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-100">
+                  <tbody className="divide-y divide-zinc-100 dark:divide-dark-700">
                     {bulkData.map((r, i) => (
-                      <tr key={i} className="hover:bg-zinc-50">
-                        <td className="px-3 py-2 text-zinc-400">{i + 1}</td>
-                        <td className="px-3 py-2 font-medium text-zinc-800">{r.business_name}</td>
-                        <td className="px-3 py-2 text-zinc-600">{r.rfc || "—"}</td>
-                        <td className="px-3 py-2 text-zinc-600">{r.email1 || "—"}</td>
-                        <td className="px-3 py-2 text-zinc-600">{r.celular || "—"}</td>
-                        <td className="px-3 py-2 text-zinc-600">{r.ciudad || "—"}</td>
+                      <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-dark-700/60">
+                        <td className="px-3 py-2 text-zinc-400 dark:text-zinc-500">{i + 1}</td>
+                        <td className="px-3 py-2 font-medium text-zinc-800 dark:text-zinc-100">{r.business_name}</td>
+                        <td className="px-3 py-2 text-zinc-600 dark:text-zinc-300">{r.rfc || "—"}</td>
+                        <td className="px-3 py-2 text-zinc-600 dark:text-zinc-300">{r.email1 || "—"}</td>
+                        <td className="px-3 py-2 text-zinc-600 dark:text-zinc-300">{r.celular || "—"}</td>
+                        <td className="px-3 py-2 text-zinc-600 dark:text-zinc-300">{r.ciudad || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -452,12 +450,12 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-zinc-100 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-zinc-100 dark:border-dark-700 bg-white dark:bg-dark-800 flex items-center justify-end gap-3">
           {bulkData.length > 0 && (
             <button
               onClick={executeBulkUpload}
               disabled={bulkUploading}
-              className="px-6 py-2.5 bg-[#2277B4] text-white font-bold rounded-xl hover:bg-[#125280] transition-colors shadow-lg shadow-[#12528050] disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2.5 bg-[#2277B4] dark:bg-blue-700 text-white dark:text-white font-bold rounded-xl hover:bg-[#125280] dark:hover:bg-blue-600 transition-colors shadow-lg shadow-[#12528050] dark:shadow-black/30 disabled:opacity-50 disabled:bg-zinc-300 disabled:text-zinc-500 dark:disabled:bg-dark-700 dark:disabled:text-zinc-500 disabled:hover:bg-zinc-300 dark:disabled:hover:bg-dark-700 flex items-center gap-2"
             >
               {bulkUploading ? (
                 <>
@@ -474,7 +472,7 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
           )}
           <button
             onClick={onClose}
-            className="px-5 py-2.5 text-zinc-600 font-semibold rounded-xl hover:bg-zinc-100 transition-colors"
+            className="px-5 py-2.5 text-zinc-600 dark:text-zinc-300 font-semibold rounded-xl hover:bg-zinc-100 dark:hover:bg-dark-700 transition-colors"
           >
             Cerrar
           </button>

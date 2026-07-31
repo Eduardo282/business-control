@@ -24,30 +24,30 @@ export default function ProductSelectorModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-dark-800 rounded-3xl w-full max-w-2xl shadow-2xl animate-fade-in flex flex-col max-h-[85vh] overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 dark:bg-black/70 backdrop-blur-sm">
+      <div className="bg-white dark:bg-dark-800 rounded-3xl w-full max-w-2xl shadow-2xl dark:shadow-black/50 animate-fade-in flex flex-col max-h-[85vh] overflow-hidden border border-transparent dark:border-dark-700">
         {/* Header */}
-        <div className="p-4 border-b border-[#24395f] bg-[#1a2b4c] flex items-center gap-3">
+        <div className="p-4 border-b border-[#24395f] dark:border-dark-700 bg-[#1a2b4c] dark:bg-blue-950 flex items-center gap-3">
           <button
             onClick={onBack}
-            className="text-white/80 hover:text-white transition-colors p-2 bg-white/10 hover:bg-white/20 rounded-full"
+            className="text-white/80 dark:text-white/80 hover:text-white dark:hover:text-white transition-colors p-2 bg-white/10 dark:bg-white/10 hover:bg-white/20 dark:hover:bg-white/20 rounded-full focus:outline-none focus:ring-2 focus:ring-white/40"
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 className="font-semibold text-white text-xl flex items-center gap-2">
-            <Icon className="text-blue-300" size={24} /> {title}
+          <h2 className="font-semibold text-white dark:text-white text-xl flex items-center gap-2">
+            <Icon className="text-blue-300 dark:text-blue-300" size={24} /> {title}
           </h2>
           <button
             type="button"
             onClick={onNewProductClick}
-            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2277B4] hover:bg-[#125280] text-white text-xs font-semibold transition-colors"
+            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2277B4] dark:bg-blue-700 hover:bg-[#125280] dark:hover:bg-blue-600 text-white dark:text-white text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-blue-300/50 dark:focus:ring-blue-400/40"
           >
             <Plus size={14} /> {getButtonText()}
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-8 bg-[#f8fafc] dark:bg-dark-800 flex-1">
+        <div className="p-6 overflow-y-auto space-y-8 bg-[#f8fafc] dark:bg-dark-800 flex-1 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
           <div className="space-y-3">
             {products.length === 0 ? (
               <div className="rounded-xl border border-dashed border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 p-5 text-sm text-zinc-500 dark:text-zinc-400 text-center">
@@ -64,11 +64,11 @@ export default function ProductSelectorModal({
                     key={item.id}
                     type="button"
                     onClick={() => onSelectProduct(item)}
-                    className="w-full rounded-2xl border border-blue-200 bg-white p-5 text-left transition-all group hover:border-blue-300 hover:shadow-md dark:border-blue-900/60 dark:bg-dark-900 dark:hover:border-blue-700 dark:hover:bg-dark-800"
+                    className="w-full rounded-2xl border border-blue-200 bg-white p-5 text-left transition-all group hover:border-blue-300 hover:bg-blue-50/40 hover:shadow-md dark:border-blue-900/60 dark:bg-dark-900 dark:hover:border-blue-700 dark:hover:bg-blue-500/10 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-400/40"
                   >
                     <div className="flex justify-between items-start gap-4 mb-1.5">
                       <div className="flex items-start gap-3 min-w-0">
-                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-500 transition-colors group-hover:border-blue-300 group-hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-400 dark:group-hover:bg-blue-900/40">
+                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-500 transition-colors group-hover:border-blue-300 group-hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-400 dark:group-hover:border-blue-700 dark:group-hover:bg-blue-900/40">
                           <ItemLogo size={13} />
                         </span>
                         <div className="min-w-0">
@@ -84,18 +84,18 @@ export default function ProductSelectorModal({
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {item.isCustom && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 dark:text-emerald-300 dark:bg-emerald-500/15 dark:border-emerald-500/30">
                             Nuevo
                           </span>
                         )}
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-500/70 bg-blue-50/50 px-2 py-0.5 rounded-md border border-blue-100/50">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50/80 px-2 py-0.5 rounded-md border border-blue-200/80 dark:text-blue-300 dark:bg-blue-500/15 dark:border-blue-500/30">
                           {item.category}
                         </span>
                       </div>
                     </div>
 
                     {item.description && (
-                      <div className="text-sm text-zinc-500 leading-relaxed line-clamp-2">
+                      <div className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed line-clamp-2">
                         {item.description}
                       </div>
                     )}

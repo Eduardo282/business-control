@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../hooks/useAuth";
 import { logger } from "../../services/logger";
-import { Headphones, MessageCircle, Send, Clock, User, X, CheckCircle, Inbox, Mail, Trash2, AlertCircle } from "@icons";
+import { Headphones, MessageCircle, Send, Clock, User, X, CheckCircle, Inbox, Mail, AlertCircle } from "@icons";
 
 const API_URL = import.meta.env.VITE_API_URL?.replace("/graphql", "") || "http://localhost:4000";
 
@@ -20,7 +20,6 @@ export default function AgentSupport() {
   const [currentConv, setCurrentConv] = useState(null);
   const [clientOnline, setClientOnline] = useState(true);
   const [toasts, setToasts] = useState([]);
-  const [hoveredMsgId, setHoveredMsgId] = useState(null);
   const [seen, setSeen] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -92,12 +91,15 @@ export default function AgentSupport() {
       }
     });
 
-    s.on("message:deleted", ({ messageId }) => setMessages((p) => p.filter((m) => m.id !== messageId)));
-
     s.on("conversation:closed", ({ conversation: conv }) => {
       setActiveChats((p) => p.filter((c) => c.id !== conv.id));
-      setSelectedConvId((cur) => { if (cur === conv.id) { setCurrentConv(null); setMessages([]); return null; } return cur; });
-      addToast("Conversación cerrada", "info");
+      setSelectedConvId((cur) => {
+        if (cur === conv.id) {
+          setCurrentConv(conv);
+        }
+        return cur;
+      });
+      addToast("Chat suspendido. El historial se conservó.", "info");
     });
 
     s.on("typing:start", ({ conversationId }) => { if (conversationId === selectedConvIdRef.current) setRemoteTyping(true); });
@@ -132,14 +134,13 @@ export default function AgentSupport() {
   }, [socket, selectedConvId, isTyping]);
 
   const sendMessage = (e) => {
-    e?.preventDefault(); if (!inputText.trim() || !socket || !selectedConvId) return;
+    e?.preventDefault(); if (!inputText.trim() || !socket || !selectedConvId || currentConv?.status === "CLOSED") return;
     socket.emit("message:send", { conversationId: selectedConvId, body: inputText.trim() });
     setInputText(""); setIsTyping(false); setSeen(false);
     socket.emit("typing:stop", { conversationId: selectedConvId }); inputRef.current?.focus();
   };
 
-  const deleteMessage = (msgId) => { if (!socket || !selectedConvId) return; socket.emit("message:delete", { messageId: msgId, conversationId: selectedConvId }); };
-  const handleClose = () => { if (!socket || !selectedConvId) return; socket.emit("conversation:close", { conversationId: selectedConvId }); };
+  const handleClose = () => { if (!socket || !selectedConvId || currentConv?.status === "CLOSED") return; socket.emit("conversation:close", { conversationId: selectedConvId }); };
 
   const fmtTime = (d) => d ? new Date(d).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "";
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
@@ -151,13 +152,14 @@ export default function AgentSupport() {
       text.startsWith("Un agente se ha conectado")
     );
   };
+  const isCurrentConversationClosed = currentConv?.status === "CLOSED";
 
   return (
     <div className="relative">
       {/* Toasts */}
       <div className="fixed top-4 right-4 z-[9999] space-y-2 pointer-events-none">
         {toasts.map((t) => (
-          <div key={t.id} className={`pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 ${t.type === "warn" ? "bg-amber-500 text-white" : t.type === "success" ? "bg-emerald-500 text-white" : "bg-zinc-800 text-white"}`} style={{ animation: "fadeInDown 0.3s ease-out" }}>
+          <div key={t.id} className={`pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg dark:shadow-black/30 text-sm font-medium flex items-center gap-2 ${t.type === "warn" ? "bg-amber-500 text-white dark:bg-amber-600 dark:text-white" : t.type === "success" ? "bg-emerald-500 text-white dark:bg-emerald-600 dark:text-white" : "bg-zinc-800 text-white dark:bg-zinc-700 dark:text-white"}`} style={{ animation: "fadeInDown 0.3s ease-out" }}>
             {t.type === "warn" && <AlertCircle size={16} />}{t.type === "success" && <CheckCircle size={16} />}{t.type === "info" && <MessageCircle size={16} />}{t.text}
           </div>
         ))}
@@ -166,14 +168,14 @@ export default function AgentSupport() {
 
       {/* Page Header */}
       <div className="flex items-center gap-3 mb-6">
-      <Headphones size={24} color="black" />
+      <Headphones size={24} className="text-zinc-900 dark:text-zinc-100" />
         <div>
           <h1 className="text-2xl font-semibold text-zinc-800 dark:text-white">Centro de Soporte</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">Chats de clientes</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <span className={`size-2.5 rounded-full ${connected ? "bg-[#1B4733] animate-pulse" : "bg-zinc-300"}`} />
-          <span className="text-xs text-zinc-400">{connected ? "En línea" : "Desconectado"}</span>
+          <span className={`size-2.5 rounded-full ${connected ? "bg-[#1B4733] dark:bg-emerald-400 animate-pulse" : "bg-zinc-300 dark:bg-zinc-600"}`} />
+          <span className="text-xs text-zinc-400 dark:text-zinc-500">{connected ? "En línea" : "Desconectado"}</span>
         </div>
       </div>
 
@@ -184,44 +186,44 @@ export default function AgentSupport() {
           <div className="p-4 border-b border-zinc-100 dark:border-white/10">
             <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 flex items-center gap-2">
               <Clock size={14} /> En espera
-              {waitingQueue.length > 0 && <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center animate-pulse">{waitingQueue.length}</span>}
+              {waitingQueue.length > 0 && <span className="bg-red-500 text-white dark:bg-red-500 dark:text-white text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center animate-pulse">{waitingQueue.length}</span>}
             </h3>
           </div>
-          <div className="flex-1 overflow-y-auto divide-y divide-zinc-50 dark:divide-white/5">
+          <div className="flex-1 overflow-y-auto divide-y divide-zinc-50 dark:divide-white/5 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
             {waitingQueue.map((conv) => (
               <button key={conv.id} onClick={() => takeConversation(conv)} className="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-white/5 transition-colors group">
                 <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-full bg-[#1B4733] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">{conv.contact_name?.[0] || "?"}</div>
+                  <div className="size-9 rounded-full bg-[#1B4733] dark:bg-emerald-800 flex items-center justify-center text-white dark:text-emerald-50 text-xs font-bold flex-shrink-0">{conv.contact_name?.[0] || "?"}</div>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-zinc-800 dark:text-white truncate">{conv.contact_name || `Chat #${conv.id}`}</div>
-                    <div className="text-[11px] text-zinc-400 truncate">{conv.contact_email || "Sin email"}</div>
+                    <div className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate">{conv.contact_email || "Sin email"}</div>
                   </div>
                   <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-1 rounded-lg">Tomar</span>
                   </div>
                 </div>
-                <div className="mt-1 text-[10px] text-zinc-400 flex items-center gap-1 ml-12"><Clock size={10} />{fmtDate(conv.created_at)}</div>
+                <div className="mt-1 text-[10px] text-zinc-400 dark:text-zinc-500 flex items-center gap-1 ml-12"><Clock size={10} />{fmtDate(conv.created_at)}</div>
               </button>
             ))}
             {waitingQueue.length === 0 && (
-              <div className="px-4 py-6 text-center"><CheckCircle size={24} className="mx-auto text-emerald-400 mb-2" /><p className="text-xs text-zinc-400">No hay chats en espera</p></div>
+              <div className="px-4 py-6 text-center"><CheckCircle size={24} className="mx-auto text-emerald-500 dark:text-emerald-400 mb-2" /><p className="text-xs text-zinc-400 dark:text-zinc-500">No hay chats en espera</p></div>
             )}
             {activeChats.length > 0 && (
               <div className="px-4 py-3 bg-zinc-50 dark:bg-white/5">
                 <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 flex items-center gap-2">
-                  <MessageCircle size={14} /> Mis chats activos <span className="bg-[#1B4733] text-white text-[10px] px-1.5 py-0.5 rounded-full">{activeChats.length}</span>
+                  <MessageCircle size={14} /> Mis chats activos <span className="bg-[#1B4733] text-white dark:bg-emerald-800 dark:text-emerald-50 text-[10px] px-1.5 py-0.5 rounded-full">{activeChats.length}</span>
                 </h3>
               </div>
             )}
             {activeChats.map((conv) => (
-              <button key={conv.id} onClick={() => selectConversation(conv)} className={`w-full text-left px-4 py-3 transition-colors ${selectedConvId === conv.id ? "bg-blue-50 dark:bg-blue-500/10 border-l-3 border-blue-500" : "hover:bg-zinc-50 dark:hover:bg-white/5"}`}>
+              <button key={conv.id} onClick={() => selectConversation(conv)} className={`w-full text-left px-4 py-3 transition-colors ${selectedConvId === conv.id ? "bg-blue-50 dark:bg-blue-500/10 border-l-3 border-blue-500 dark:border-blue-400" : "hover:bg-zinc-50 dark:hover:bg-white/5"}`}>
                 <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-full bg-gradient-to-br from-[#1B4733] to-[#235b42] flex items-center justify-center text-white text-xs font-bold flex-shrink-0 relative">
-                    {conv.contact_name?.[0] || "?"}<span className="absolute -bottom-0.5 -right-0.5 size-3 bg-[#1B4733] rounded-full border-2 border-white dark:border-dark-800" />
+                  <div className="size-9 rounded-full bg-gradient-to-br from-[#1B4733] to-[#235b42] dark:from-emerald-800 dark:to-emerald-700 flex items-center justify-center text-white dark:text-emerald-50 text-xs font-bold flex-shrink-0 relative">
+                    {conv.contact_name?.[0] || "?"}<span className="absolute -bottom-0.5 -right-0.5 size-3 bg-[#1B4733] dark:bg-emerald-400 rounded-full border-2 border-white dark:border-dark-800" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-zinc-800 dark:text-white truncate">{conv.contact_name || `Chat #${conv.id}`}</div>
-                    <div className="text-[11px] text-zinc-400 truncate">{conv.subject || "Soporte General"}</div>
+                    <div className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate">{conv.subject || "Soporte General"}</div>
                   </div>
                 </div>
               </button>
@@ -240,26 +242,32 @@ export default function AgentSupport() {
           ) : (
             <>
               {/* Header */}
-              <div className="bg-[#0b438a] px-5 py-3 flex items-center justify-between flex-shrink-0">
+              <div className="bg-[#0b438a] dark:bg-blue-950 px-5 py-3 flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="size-9 rounded-xl flex items-center justify-center relative">
                     <User size={18} color="white" />
-                    <span className={`absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-[#0b438a] ${clientOnline ? "bg-[#fff]" : "bg-zinc-400"}`} />
+                    <span className={`absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-[#0b438a] dark:border-blue-950 ${clientOnline ? "bg-white dark:bg-emerald-300" : "bg-zinc-400 dark:bg-zinc-500"}`} />
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold text-sm">{currentConv?.contact_name || `Chat #${selectedConvId}`}</h3>
-                    <span className="text-blue-200 text-xs flex items-center gap-1">
+                    <h3 className="text-white dark:text-white font-semibold text-sm">{currentConv?.contact_name || `Chat #${selectedConvId}`}</h3>
+                    <span className="text-blue-200 dark:text-blue-200 text-xs flex items-center gap-1">
                       <Mail size={10} />{currentConv?.contact_email || "—"}
                       <span className="mx-1">•</span>
-                      <span className={clientOnline ? "text-green-300" : "text-zinc-300"}>{clientOnline ? "En línea" : "Desconectado"}</span>
+                      <span className={clientOnline ? "text-green-300 dark:text-green-300" : "text-zinc-300 dark:text-zinc-300"}>{clientOnline ? "En línea" : "Desconectado"}</span>
                     </span>
                   </div>
                 </div>
-                <button onClick={handleClose} className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl px-3 py-1.5 transition-colors text-xs font-semibold flex items-center gap-1.5" title="Cerrar conversación"><X size={14} />Cerrar chat</button>
+                {isCurrentConversationClosed ? (
+                  <span className="rounded-xl bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/80">
+                    Chat suspendido
+                  </span>
+                ) : (
+                  <button onClick={handleClose} className="text-white/70 dark:text-white/70 hover:text-white dark:hover:text-white hover:bg-white/10 dark:hover:bg-white/10 rounded-xl px-3 py-1.5 transition-colors text-xs font-semibold flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-white/40 dark:focus:ring-white/40" title="Suspender conversación"><X size={14} />Suspender chat</button>
+                )}
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-gradient-to-b from-zinc-50/50 to-white dark:from-dark-800 dark:to-dark-800" style={{ scrollbarWidth: "thin", scrollbarColor: "#d1d5db transparent" }}>
+              <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-gradient-to-b from-zinc-50/50 to-white dark:from-dark-800 dark:to-dark-800 [scrollbar-width:thin] [scrollbar-color:#d1d5db_transparent] dark:[scrollbar-color:#52525b_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-300 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-600">
                 {messages.map((msg) => {
                   const isAgent = msg.sender_type === "AGENT";
                   const isSystem = msg.sender_type === "SYSTEM";
@@ -274,24 +282,19 @@ export default function AgentSupport() {
                     );
                   }
                   return (
-                    <div key={msg.id} className={`flex ${isAgent ? "justify-end" : "justify-start"} group`} onMouseEnter={() => setHoveredMsgId(msg.id)} onMouseLeave={() => setHoveredMsgId(null)}>
+                    <div key={msg.id} className={`flex ${isAgent ? "justify-end" : "justify-start"} group`}>
                       <div className="max-w-[70%]">
                         <div className={`flex items-end gap-2 ${isAgent ? "flex-row-reverse" : ""}`}>
-                          <div className={`size-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${isAgent ? "bg-[#0b438a] text-white" : "bg-gradient-to-br from-[#1B4733] to-[#235b42] text-white"}`}>
+                          <div className={`size-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${isAgent ? "bg-[#0b438a] text-white dark:bg-blue-900 dark:text-blue-50" : "bg-gradient-to-br from-[#1B4733] to-[#235b42] text-white dark:from-emerald-800 dark:to-emerald-700 dark:text-emerald-50"}`}>
                             {isAgent ? <Headphones size={12} /> : currentConv?.contact_name?.[0] || "C"}
                           </div>
                           <div className="relative">
                             <div className={`px-3.5 py-2.5 rounded-2xl shadow-sm ${isAgent ? "bg-[#0b438a] text-white rounded-br-md" : "bg-white dark:bg-dark-700 text-zinc-800 dark:text-white border border-zinc-100 dark:border-white/10 rounded-bl-md"}`}>
                               <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.body}</p>
                             </div>
-                            {isAgent && hoveredMsgId === msg.id && (
-                              <button onClick={() => deleteMessage(msg.id)} className="absolute -left-8 top-1/2 -translate-y-1/2 size-6 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100" title="Eliminar mensaje">
-                                <Trash2 size={12} className="text-red-500" />
-                              </button>
-                            )}
                           </div>
                         </div>
-                        <div className={`text-[10px] text-zinc-400 mt-0.5 ${isAgent ? "text-right mr-9" : "ml-9"}`}>{fmtTime(msg.created_at)}</div>
+                        <div className={`text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5 ${isAgent ? "text-right mr-9" : "ml-9"}`}>{fmtTime(msg.created_at)}</div>
                       </div>
                     </div>
                   );
@@ -299,16 +302,16 @@ export default function AgentSupport() {
 
                 {/* Seen indicator */}
                 {seen && messages.length > 0 && messages[messages.length - 1]?.sender_type === "AGENT" && (
-                  <div className="flex justify-end pr-9"><span className="text-[10px] text-blue-500 font-medium flex items-center gap-1"><CheckCircle size={10} /> Visto</span></div>
+                  <div className="flex justify-end pr-9"><span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1"><CheckCircle size={10} /> Visto</span></div>
                 )}
 
                 {/* Typing */}
                 {remoteTyping && (
                   <div className="flex justify-start">
                     <div className="flex items-end gap-2">
-                      <div className="size-7 rounded-full bg-gradient-to-br from-[#1B4733] to-[#235b42] flex items-center justify-center text-white text-[10px] font-bold">{currentConv?.contact_name?.[0] || "C"}</div>
+                      <div className="size-7 rounded-full bg-gradient-to-br from-[#1B4733] to-[#235b42] dark:from-emerald-800 dark:to-emerald-700 flex items-center justify-center text-white dark:text-emerald-50 text-[10px] font-bold">{currentConv?.contact_name?.[0] || "C"}</div>
                       <div className="bg-white dark:bg-dark-700 border border-zinc-100 dark:border-white/10 px-3.5 py-2.5 rounded-2xl rounded-bl-md shadow-sm">
-                        <div className="flex gap-1">{[0, 1, 2].map((i) => (<div key={i} className="size-1.5 rounded-full bg-zinc-400 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />))}</div>
+                        <div className="flex gap-1">{[0, 1, 2].map((i) => (<div key={i} className="size-1.5 rounded-full bg-zinc-400 dark:bg-zinc-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />))}</div>
                       </div>
                     </div>
                   </div>
@@ -317,10 +320,16 @@ export default function AgentSupport() {
               </div>
 
               {/* Input */}
-              <form onSubmit={sendMessage} className="border-t border-zinc-100 dark:border-white/10 px-4 py-3 flex items-center gap-2 bg-white dark:bg-dark-800 flex-shrink-0">
-                <input ref={inputRef} type="text" value={inputText} onChange={(e) => { setInputText(e.target.value); handleTyping(); }} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }} placeholder="Escribe una respuesta…" className="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-dark-700 rounded-xl text-sm border border-zinc-100 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all placeholder:text-zinc-400" autoFocus />
-                <button type="submit" disabled={!inputText.trim()} className="size-10 rounded-xl bg-[#0b438a] text-white flex items-center justify-center shadow-md shadow-blue-500/20 hover:bg-[#0a3d7a] hover:shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"><Send size={16} /></button>
-              </form>
+              {isCurrentConversationClosed ? (
+                <div className="border-t border-zinc-100 bg-zinc-50 px-4 py-3 text-center text-sm font-medium text-zinc-500 dark:border-white/10 dark:bg-dark-900 dark:text-zinc-400">
+                  Este chat está suspendido. El historial permanece guardado.
+                </div>
+              ) : (
+                <form onSubmit={sendMessage} className="border-t border-zinc-100 dark:border-white/10 px-4 py-3 flex items-center gap-2 bg-white dark:bg-dark-800 flex-shrink-0">
+                  <input ref={inputRef} type="text" value={inputText} onChange={(e) => { setInputText(e.target.value); handleTyping(); }} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }} placeholder="Escribe una respuesta…" className="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-dark-700 text-zinc-800 dark:text-zinc-100 rounded-xl text-sm border border-zinc-100 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/30 focus:border-blue-400 dark:focus:border-blue-400 transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-500" autoFocus />
+                  <button type="submit" disabled={!inputText.trim()} className="size-10 rounded-xl bg-[#0b438a] text-white dark:bg-blue-900 dark:text-blue-50 flex items-center justify-center shadow-md shadow-blue-500/20 dark:shadow-black/30 hover:bg-[#0a3d7a] dark:hover:bg-blue-800 hover:shadow-lg dark:hover:shadow-black/40 hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:bg-zinc-300 disabled:text-zinc-500 dark:disabled:bg-dark-700 dark:disabled:text-zinc-500 disabled:cursor-not-allowed"><Send size={16} /></button>
+                </form>
+              )}
             </>
           )}
         </div>

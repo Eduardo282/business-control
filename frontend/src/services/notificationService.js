@@ -1,5 +1,13 @@
 import Swal from "sweetalert2";
 
+export const DESTRUCTIVE_CONFIRM_DIALOG_OPTIONS = Object.freeze({
+  confirmButtonColor: "#ef4444",
+  cancelButtonColor: "#f4f4f5",
+  customClass: {
+    cancelButton: "swal-cancel-button-light",
+  },
+});
+
 /**
  * Servicio centralizado para notificaciones y alertas en el frontend.
  * Abstrae SweetAlert2 proporcionando una API limpia y colores consistentes con la marca (Indigo).
@@ -110,8 +118,7 @@ export const notificationService = {
       text,
       icon,
       showCancelButton: true,
-      confirmButtonColor: "#4f46e5", // Indigo-600
-      cancelButtonColor: "#ef4444", // Red-500
+      ...DESTRUCTIVE_CONFIRM_DIALOG_OPTIONS,
       confirmButtonText,
       cancelButtonText,
     });

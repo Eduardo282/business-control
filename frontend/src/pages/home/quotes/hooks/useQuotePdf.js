@@ -1,35 +1,6 @@
 import { calculateQuotePricing } from "@shared/quotePricingRules.js";
 import { notificationService } from "../../../../services/notificationService";
-
-let html2pdfLoaderPromise = null;
-
-async function loadHtml2Pdf() {
-  if (!html2pdfLoaderPromise) {
-    html2pdfLoaderPromise = (async () => {
-      try {
-        const module = await import("html2pdf.js");
-        return module.default || module;
-      } catch {
-        const fallbackModule = await import(
-          /* @vite-ignore */ "/node_modules/html2pdf.js/dist/html2pdf.bundle.min.js"
-        );
-        return fallbackModule.default || fallbackModule;
-      }
-    })().catch((error) => {
-      html2pdfLoaderPromise = null;
-      throw error;
-    });
-  }
-  return html2pdfLoaderPromise;
-}
-
-function waitForStablePaint() {
-  return new Promise((resolve) => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(resolve);
-    });
-  });
-}
+import { generateQuotePdfApi } from "../../../../actionsAPI/quotes.api";
 
 export function getQuoteFolio(sourceQuote) {
   const rawFolio = sourceQuote?.folio ? String(sourceQuote.folio).trim() : "";
@@ -45,59 +16,40 @@ export function getQuoteFileToken(sourceQuote) {
   return cleaned || "quote";
 }
 
+/**
+ * Converts a base64 string to a Blob.
+ * @param {string} base64 — Raw base64 string (no data URI prefix)
+ * @param {string} [mimeType] — MIME type for the blob
+ * @returns {Blob}
+ */
+function base64ToBlob(base64, mimeType = "application/pdf") {
+  const byteCharacters = atob(base64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: mimeType });
+}
+
 export function useQuotePdf(quote, quotePreviewRef) {
+  /**
+   * Generates a PDF server-side via Puppeteer with full Paged Media support.
+   * Returns the base64 string for reuse (email sending, portal, etc.)
+   */
   const buildPdfFromSnapshot = async () => {
-    const node = quotePreviewRef.current;
-    if (!node) throw new Error("No se pudo obtener la vista de la cotización.");
+    if (!quote?.id) throw new Error("No se pudo obtener la cotización.");
 
-    await waitForStablePaint();
-    const html2pdf = await loadHtml2Pdf();
+    const pdfBase64 = await generateQuotePdfApi(quote.id);
+    if (!pdfBase64) throw new Error("El servidor no devolvió un PDF válido.");
 
-    const opt = {
-      margin:       [30, 0, 30, 0], // Top, left, bottom, right margins in pt
-      filename:     'Cotizacion.pdf',
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { 
-        scale: 1.5, 
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        windowWidth: node.scrollWidth,
-        windowHeight: node.scrollHeight,
-        scrollX: 0,
-        scrollY: -window.scrollY,
-        onclone: (clonedDocument) => {
-          const clonedRoot = clonedDocument.querySelector(
-            '[data-export-preview="quote"]'
-          );
-          if (clonedRoot) {
-            clonedRoot.style.cssText += "opacity:1;filter:none;transform:none;animation:none;border-radius:0;margin:0;width:100%;max-width:none;border:none;";
-          }
-          clonedDocument.documentElement.classList.remove("dark");
-          clonedDocument.body.classList.remove("dark");
-          const animatedElements = clonedDocument.querySelectorAll(
-            ".animate-fade-in, .animate-slide-up, .animate-scale-in"
-          );
-          animatedElements.forEach((element) => {
-            element.style.cssText += "opacity:1;filter:none;transform:none;animation:none;transition:none;";
-          });
-        }
-      },
-      jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-
-    const worker = html2pdf().set(opt).from(node);
-    
-    const pdfBase64DataUri = await worker.outputPdf('datauristring');
-    const pdfBase64 = pdfBase64DataUri.split(",")[1] || "";
-    
-    const pdfBlob = await html2pdf().set(opt).from(node).outputPdf('blob');
+    const pdfBlob = base64ToBlob(pdfBase64);
+    const pdfBase64DataUri = `data:application/pdf;base64,${pdfBase64}`;
 
     const doc = {
       output: (type) => {
-        if (type === 'blob') return pdfBlob;
-        if (type === 'datauristring') return pdfBase64DataUri;
+        if (type === "blob") return pdfBlob;
+        if (type === "datauristring") return pdfBase64DataUri;
         return pdfBlob;
       },
       save: (filename) => {
@@ -107,7 +59,7 @@ export function useQuotePdf(quote, quotePreviewRef) {
         link.download = filename;
         link.click();
         URL.revokeObjectURL(url);
-      }
+      },
     };
 
     return { doc, pdfBase64 };
@@ -124,7 +76,7 @@ export function useQuotePdf(quote, quotePreviewRef) {
         doc.save(`Cotizacion_${quoteFileToken}.pdf`);
       }
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-      notificationService.toast({ title: "PDF exportado con la vista actual.", icon: "success" });
+      notificationService.toast({ title: "PDF exportado correctamente.", icon: "success" });
     } catch (e) {
       notificationService.error("Error", e?.message || "No se pudo exportar el PDF.");
     }
@@ -165,7 +117,11 @@ export function useQuotePdf(quote, quotePreviewRef) {
         quote?.created_at ?
           new Date(quote.created_at).toLocaleDateString("es-MX")
         : "";
-      const wordValidityLabel = "15 dias naturales";
+      const wordValidityDate = quote?.created_at
+        ? new Date(new Date(quote.created_at).getTime() + 15 * 24 * 60 * 60 * 1000)
+            .toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric" })
+        : "15 dias naturales";
+      const wordValidityLabel = wordValidityDate;
 
       const rowsHtml =
         localPricing.items.length > 0 ?
@@ -187,7 +143,7 @@ export function useQuotePdf(quote, quotePreviewRef) {
                 .join(" | ");
 
               return `
-                <tr style="background:${lineBg}; page-break-inside: avoid;">
+                <tr style="background:${lineBg}; mso-row-break-inside: avoid; page-break-inside: avoid;">
                   <td style="padding:12px 12px; border-bottom:1px solid #e2e8f0; vertical-align:top;">
                     <div style="font-weight:700; color:#1e293b; font-size:14px;">${escapeHtml(item.product?.name || "Producto eliminado")}</div>
                     <div style="margin-top:4px; color:#64748b; font-size:11px; line-height:1.4;">${escapeHtml(productMeta)}</div>
@@ -212,10 +168,21 @@ export function useQuotePdf(quote, quotePreviewRef) {
         : "";
 
       const wordHtml = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns:v="urn:schemas-microsoft-com:vml" xmlns="http://www.w3.org/TR/REC-html40">
           <head>
             <meta charset="UTF-8" />
             <meta name="ProgId" content="Word.Document" />
+            <!--[if gte mso 9]>
+            <xml>
+              <w:WordDocument>
+                <w:View>Print</w:View>
+                <w:Zoom>100</w:Zoom>
+                <w:SpellingState>Clean</w:SpellingState>
+                <w:GrammarState>Clean</w:GrammarState>
+                <w:DoNotOptimizeForBrowser/>
+              </w:WordDocument>
+            </xml>
+            <![endif]-->
             <style>
               @page {
                 size: A4;
@@ -240,6 +207,10 @@ export function useQuotePdf(quote, quotePreviewRef) {
               tr {
                 page-break-inside: avoid;
                 page-break-after: auto;
+                mso-row-break-inside: avoid;
+              }
+              thead tr {
+                mso-header-repeat: yes;
               }
               .card, .conditions, .finance, .sign-card, .metric-card, .notes-card {
                 page-break-inside: avoid;
@@ -375,6 +346,7 @@ export function useQuotePdf(quote, quotePreviewRef) {
                 width: 100%;
                 border-collapse: collapse;
                 margin-top: 12px;
+                mso-table-allow-row-break-across: no;
               }
               .items-table th {
                 background: #f1f5f9;
@@ -386,9 +358,13 @@ export function useQuotePdf(quote, quotePreviewRef) {
                 padding: 10px 12px;
                 border-bottom: 2px solid #cbd5e1;
               }
+              .items-table thead tr {
+                mso-header-repeat: yes;
+              }
               .summary-wrap {
                 margin-top: 32px;
                 page-break-inside: avoid;
+                mso-keep-with-next: yes;
               }
               .summary-grid {
                 width: 100%;
@@ -449,6 +425,7 @@ export function useQuotePdf(quote, quotePreviewRef) {
               .notes-wrap {
                 margin-top: 28px;
                 page-break-inside: avoid;
+                mso-keep-with-next: yes;
               }
               .notes-card {
                 border: 1px solid #e2e8f0;
@@ -462,6 +439,7 @@ export function useQuotePdf(quote, quotePreviewRef) {
               .sign-wrap {
                 margin-top: 40px;
                 page-break-inside: avoid;
+                page-break-before: avoid;
               }
               .sign-grid {
                 width: 100%;
@@ -512,7 +490,7 @@ export function useQuotePdf(quote, quotePreviewRef) {
               <div class="top-strip">
                 <table>
                   <tr>
-                    <td>Propuesta Comercial Privada</td>
+                    <td>Cotización Comercial Privada</td>
                     <td>Vence: ${escapeHtml(wordValidityLabel)}</td>
                   </tr>
                 </table>
@@ -583,10 +561,10 @@ export function useQuotePdf(quote, quotePreviewRef) {
                   </tr>
                 </table>
 
-                <div class="items-title">Detalle de Partidas</div>
+                <div class="items-title" style="mso-keep-with-next: yes;">Detalle de Productos</div>
                 <table class="items-table">
                   <thead>
-                    <tr>
+                    <tr style="mso-header-repeat: yes;">
                       <th style="width:45%; text-align:left; padding-left:12px;">Concepto / Descripcion</th>
                       <th style="width:8%; text-align:center;">Cant.</th>
                       <th style="width:12%; text-align:right;">Precio U.</th>
@@ -601,17 +579,17 @@ export function useQuotePdf(quote, quotePreviewRef) {
                 </table>
               </div>
 
-              <div class="summary-wrap">
+              <div class="summary-wrap" style="mso-keep-with-next: yes;">
                 <table class="summary-grid">
-                  <tr>
+                  <tr style="mso-row-break-inside: avoid;">
                     <td style="width:64%; vertical-align:top;">
                       <div class="conditions">
                         <p class="section-title">Condiciones Comerciales</p>
                         <ul>
-                          <li>Esta propuesta tiene una vigencia de ${escapeHtml(wordValidityLabel)}.</li>
-                          <li>Los precios se expresan en MXN e incluyen descuentos aplicados por partida.</li>
+                          <li>Vigencia hasta el ${escapeHtml(wordValidityLabel)}.</li>
+                          <li>Los precios se expresan en MXN e incluyen descuentos aplicados por producto.</li>
                           <li>El tiempo de entrega queda sujeto a disponibilidad y confirmacion de inventario.</li>
-                          <li>Cualquier ajuste posterior debera formalizarse mediante actualizacion de cotizacion.</li>
+                          <li>Cualquier ajuste posterior debera formalizarse mediante una actualizacion de cotizacion.</li>
                         </ul>
                       </div>
                     </td>
@@ -623,7 +601,7 @@ export function useQuotePdf(quote, quotePreviewRef) {
                           <tr><td>Descuento</td><td>-${escapeHtml(money(localTotalDiscount))}</td></tr>
                           <tr><td>Subtotal neto</td><td>${escapeHtml(money(localNetSubtotal))}</td></tr>
                           <tr><td>IVA (16%)</td><td>${escapeHtml(money(localIva))}</td></tr>
-                          <tr class="totals-final"><td>Total Neto</td><td>${escapeHtml(money(localTotal))}</td></tr>
+                          <tr class="totals-final"><td>Total</td><td>${escapeHtml(money(localTotal))}</td></tr>
                         </table>
                       </div>
                     </td>
@@ -635,7 +613,7 @@ export function useQuotePdf(quote, quotePreviewRef) {
 
               <div class="sign-wrap">
                 <table class="sign-grid">
-                  <tr>
+                  <tr style="mso-row-break-inside: avoid;">
                     <td style="width:50%; vertical-align:top;">
                       <div class="sign-card">
                         <p class="section-title">Aceptacion del Cliente</p>
@@ -652,9 +630,9 @@ export function useQuotePdf(quote, quotePreviewRef) {
                 </table>
               </div>
 
-              <div class="footer" style="background-color: #0f172a; background: #0f172a;">
+              <div class="footer" style="background-color: #0f172a; background: #0f172a; page-break-inside: avoid;">
                 <table class="footer-grid" style="background-color: #0f172a; width: 100%;">
-                  <tr>
+                  <tr style="mso-row-break-inside: avoid;">
                     <td style="width:60%; vertical-align:top; border: none; padding-right:10px; background-color: #0f172a;" bgcolor="#0f172a">
                       <p class="footer-title" style="color: #34d399;">Informacion de Pago</p>
                       <div class="footer-copy" style="color: #94a3b8;">
@@ -666,7 +644,7 @@ export function useQuotePdf(quote, quotePreviewRef) {
                     </td>
                     <td style="width:40%; vertical-align:top; border: none; background-color: #0f172a;" bgcolor="#0f172a">
                       <div class="footer-note" style="color: #94a3b8;">
-                        * Precios sujetos a cambio sin previo aviso.<br />
+                        * Precios sujetos a cambios.<br />
                         * Tiempo de entrega sujeto a disponibilidad.
                       </div>
                     </td>

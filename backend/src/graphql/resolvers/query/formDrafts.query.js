@@ -1,5 +1,5 @@
 import { requireRoles } from "../../../middlewares/role.middleware.js";
-import { getFormDraftAction } from "../../actions/form_draft_actions/getFormDraft.action.js";
+import { getFormDraftAction } from "../../../modules/drafts/draftActions.js";
 
 export const formDraft = async (_parent, { form_key, scope_key }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS", "SOPORTE"]);

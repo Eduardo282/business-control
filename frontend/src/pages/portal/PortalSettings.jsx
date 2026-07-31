@@ -40,15 +40,31 @@ export default function PortalSettings() {
   };
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl space-y-6 text-zinc-800 dark:text-zinc-100">
+      <style>{`
+        .portal-settings-input:-webkit-autofill,
+        .portal-settings-input:-webkit-autofill:hover,
+        .portal-settings-input:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+          -webkit-text-fill-color: #18181b;
+          caret-color: #18181b;
+        }
+        .dark .portal-settings-input:-webkit-autofill,
+        .dark .portal-settings-input:-webkit-autofill:hover,
+        .dark .portal-settings-input:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0 1000px #09090b inset;
+          -webkit-text-fill-color: #f4f4f5;
+          caret-color: #f4f4f5;
+        }
+      `}</style>
       <div>
-        <h2 className="text-2xl font-semibold mb-1">Ajustes</h2>
+        <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 mb-1">Ajustes</h2>
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">
           Gestiona la seguridad y preferencias de tu cuenta.
         </p>
       </div>
 
-      <div className="bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 rounded-2xl p-6 shadow-sm">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl p-6 shadow-sm dark:shadow-black/20">
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg">
             <Lock size={20} />
@@ -67,7 +83,7 @@ export default function PortalSettings() {
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-950 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-[#235b42] focus:border-transparent transition-all"
+              className="portal-settings-input w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#235b42]/30 dark:focus:ring-emerald-400/30 focus:border-[#235b42] dark:focus:border-emerald-400 transition-all"
               required
             />
           </div>
@@ -81,7 +97,7 @@ export default function PortalSettings() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Mínimo 6 caracteres"
-              className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-950 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-[#235b42] focus:border-transparent transition-all"
+              className="portal-settings-input w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#235b42]/30 dark:focus:ring-emerald-400/30 focus:border-[#235b42] dark:focus:border-emerald-400 transition-all"
               required
               minLength={6}
             />
@@ -95,14 +111,14 @@ export default function PortalSettings() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-dark-700 bg-white dark:bg-dark-950 text-zinc-900 dark:text-zinc-100 focus:ring-2 focus:ring-[#235b42] focus:border-transparent transition-all"
+              className="portal-settings-input w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#235b42]/30 dark:focus:ring-emerald-400/30 focus:border-[#235b42] dark:focus:border-emerald-400 transition-all"
               required
               minLength={6}
             />
           </div>
 
           {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl">
+            <div role="alert" className="p-3 text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl">
               {error}
             </div>
           )}
@@ -111,7 +127,7 @@ export default function PortalSettings() {
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#235b42] text-white font-medium rounded-xl hover:bg-[#1b4733] focus:ring-2 focus:ring-offset-2 focus:ring-[#235b42] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#235b42] dark:bg-emerald-700 text-white font-medium rounded-xl hover:bg-[#1b4733] dark:hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#235b42] dark:focus:ring-emerald-400 focus:ring-offset-white dark:focus:ring-offset-zinc-900 transition-all disabled:bg-[#235b42]/60 dark:disabled:bg-emerald-950 disabled:text-white/80 dark:disabled:text-zinc-400 disabled:opacity-100 disabled:cursor-not-allowed">
               <Save size={18} />
               {loading ? "Guardando..." : "Actualizar Contraseña"}
             </button>

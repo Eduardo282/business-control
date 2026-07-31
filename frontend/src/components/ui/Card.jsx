@@ -1,9 +1,12 @@
 export default function Card({ children, className = "", glow = false }) {
   return (
     <div
-      className={`glass-panel rounded-md p-6 relative overflow-hidden group ${className}`}>
+      className={`glass-panel group relative overflow-hidden rounded-md border border-zinc-300/80 bg-white/85 p-6 text-content-primary shadow-sm dark:border-white/15 dark:bg-dark-800/90 dark:text-zinc-100 dark:shadow-black/30 ${className}`}>
       {glow && (
-        <div className="absolute -top-20 -right-20 size-40 bg-primary-500/5 rounded-full blur-3xl group-hover:bg-primary-500/10 transition-colors duration-500"></div>
+        <div
+          aria-hidden="true"
+          className="absolute -right-20 -top-20 size-40 rounded-full bg-primary-500/5 blur-3xl transition-colors duration-500 group-hover:bg-primary-500/10 motion-reduce:transition-none"
+        />
       )}
       <div className="relative z-10">{children}</div>
     </div>

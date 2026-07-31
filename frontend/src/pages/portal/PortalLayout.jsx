@@ -6,8 +6,8 @@ import {
   NavLink,
   useLocation,
 } from "react-router-dom";
-import { Clock, History, LayoutDashboard, BookOpen, Headphones, Settings } from "@icons";
-import logo from "../../components/layout/assets/logo.png";
+import { BadgeDollarSign, Clock, History, LayoutDashboard, BookOpen, Headphones, Settings } from "@icons";
+import logo from "../../assets/logo.png";
 import ThemeToggle from "../../components/layout/ThemeToggle";
 import { getContactDataApi } from "../../actionsAPI/portal.api";
 import { notificationService } from "../../services/notificationService";
@@ -29,8 +29,8 @@ function PortalItem({ to, children, icon: Icon, matchFilter }) {
       className={() =>
         `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all relative ${
           isActive ?
-            "bg-white dark:bg-white/10 text-zinc-900 dark:text-zinc-100 shadow-[0_5px_5px_0px_#00000050] ring-1 ring-white/50 dark:ring-white/10"
-          : "text-zinc-500 dark:text-zinc-400 hover:bg-white/40 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-zinc-100"
+            "bg-white dark:bg-white/10 text-zinc-900 dark:text-zinc-100 border border-white/70 dark:border-white/10 shadow-[0_5px_5px_0px_#00000050] ring-1 ring-white/50 dark:ring-white/10"
+          : "text-zinc-500 dark:text-zinc-400 border border-transparent hover:border-white/70 dark:hover:border-white/10 hover:bg-white/40 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-zinc-100"
         }`
       }>
       <Icon size={20} strokeWidth={1.5} />
@@ -53,11 +53,26 @@ export default function PortalLayout() {
       return;
     }
 
-    const parsedContact = JSON.parse(savedContact);
+    let parsedContact;
+    try {
+      parsedContact = JSON.parse(savedContact);
+    } catch {
+      sessionStorage.removeItem("bc_portal_token");
+      sessionStorage.removeItem("bc_portal_contact");
+      setLoading(false);
+      return;
+    }
+
+    if (!parsedContact?.id) {
+      sessionStorage.removeItem("bc_portal_token");
+      sessionStorage.removeItem("bc_portal_contact");
+      setLoading(false);
+      return;
+    }
+
     setContact(parsedContact);
     setLoading(false);
 
-    if (!parsedContact?.id) return;
     let canceled = false;
     getContactDataApi(parsedContact.id)
       .then((freshContact) => {
@@ -71,6 +86,11 @@ export default function PortalLayout() {
       .catch((error) => {
         if (canceled) return;
         logger.error("Error refreshing contact data", error);
+        if (error?.code === "UNAUTHENTICATED" || error?.code === "FORBIDDEN") {
+          sessionStorage.removeItem("bc_portal_token");
+          sessionStorage.removeItem("bc_portal_contact");
+          setContact(null);
+        }
       });
 
     return () => {
@@ -78,26 +98,29 @@ export default function PortalLayout() {
     };
   }, []);
 
-  if (loading) return <div>Cargando portal...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-200 transition-colors">
+        Cargando portal...
+      </div>
+    );
+  }
   if (!contact && !loading) return <Navigate to="/portal/login" />;
 
   const handleLogout = () => {
-    notificationService.toast({ title: "Session closed successfully" });
+    notificationService.toast({ title: "Sesión cerrada correctamente" });
     sessionStorage.removeItem("bc_portal_token");
     sessionStorage.removeItem("bc_portal_contact");
     navigate("/portal/login");
   };
 
   return (
-    <div className="min-h-screen flex bg-zinc-50 dark:bg-dark-950 text-zinc-800 dark:text-zinc-100 font-sans">
+    <div className="min-h-screen flex bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 font-sans transition-colors">
       {/* ── Sidebar ── */}
-      <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-300 z-40 border-r border-white/30 dark:border-white/10 bg-white/35 dark:bg-dark-800/60 backdrop-blur-2xl shadow-xl shadow-zinc-900/5 dark:shadow-black/30 ring-1 ring-white/20 dark:ring-white/5">
+      <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-300 z-40 border-r border-white/30 dark:border-zinc-800 bg-white/35 dark:bg-zinc-900/80 backdrop-blur-2xl shadow-xl shadow-zinc-900/5 dark:shadow-black/30 ring-1 ring-white/20 dark:ring-white/5">
         {/* Nombre del contacto */}
-        <div className="mb-6 mx-2 px-4 py-3 rounded-xl bg-white/40 dark:bg-transparent border border-white/30 dark:border-transparent backdrop-blur-xl dark:backdrop-blur-none">
-          <div className="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-0.5">
-            Cliente
-          </div>
-          <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200 truncate">
+        <div className="mb-6 mx-2 px-4 py-3 rounded-xl bg-white/40 dark:bg-zinc-950/40 border border-white/30 dark:border-zinc-800 backdrop-blur-xl dark:backdrop-blur-none">
+          <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200 word-break">
             {contact.full_name}
           </div>
         </div>
@@ -118,6 +141,9 @@ export default function PortalLayout() {
             icon={History}
             matchFilter="older">
             Cotizaciones anteriores
+          </PortalItem>
+          <PortalItem to="/portal/sales" icon={BadgeDollarSign}>
+            Ventas
           </PortalItem>
           <PortalItem to="/portal/catalog" icon={BookOpen}>
             Productos
@@ -142,7 +168,7 @@ export default function PortalLayout() {
       {/* ── Área derecha ── */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="bg-[#1B4733] text-white shadow-md">
+        <header className="bg-[#1B4733] dark:bg-emerald-950 text-white shadow-md dark:shadow-black/30 border-b border-transparent dark:border-emerald-900">
           <div className="px-6 py-4 flex justify-between items-center">
             <div>
               <h1 className="text-xl font-semibold">Portal</h1>
@@ -159,15 +185,15 @@ export default function PortalLayout() {
               <ThemeToggle />
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100 rounded-xl bg-white dark:bg-dark-800 border border-[#CBD5E1] dark:border-dark-700 hover:bg-[#F8FAFC] hover:dark:bg-dark-700 hover:border-[#B8C6D8] shadow-sm transition-colors duration-150">
+                className="px-4 py-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100 rounded-xl bg-white dark:bg-zinc-900 border border-[#CBD5E1] dark:border-zinc-700 hover:bg-[#F8FAFC] dark:hover:bg-zinc-800 hover:border-[#B8C6D8] dark:hover:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/70 dark:focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-[#1B4733] dark:focus:ring-offset-emerald-950 shadow-sm dark:shadow-black/20 transition-colors duration-150">
                 Cerrar Sesión
               </button>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-gradient-to-br from-zinc-50 via-zinc-200 to-zinc-400 dark:from-dark-950 dark:via-dark-900 dark:to-dark-800">
-          <Outlet context={{ contact }} />
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-gradient-to-br from-zinc-50 via-zinc-200 to-zinc-400 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-800 text-zinc-800 dark:text-zinc-100 transition-colors">
+          <Outlet context={{ contact, setContact }} />
         </main>
       </div>
     </div>

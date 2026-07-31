@@ -14,7 +14,10 @@ function getTransporter() {
     _transporter = nodemailer.createTransport({
       host: env.SMTP_HOST || "smtp.gmail.com",
       port: env.SMTP_PORT || 465,
-      secure: true,
+      secure: env.SMTP_PORT === 465,
+      pool: true,
+      maxConnections: 2,
+      maxMessages: 100,
       auth: {
         user: env.SMTP_USER,
         pass: env.SMTP_PASS,

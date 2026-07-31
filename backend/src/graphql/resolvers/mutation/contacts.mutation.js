@@ -1,11 +1,13 @@
 import { requireRoles } from "../../../middlewares/role.middleware.js";
-import { createContactAction } from "../../actions/contact_actions/createContact.action.js";
-import { bulkCreateContactsAction } from "../../actions/contact_actions/bulkCreateContacts.action.js";
-import { updateContactAction } from "../../actions/contact_actions/updateContact.action.js";
-import { deleteContactAction } from "../../actions/contact_actions/deleteContact.action.js";
-import { createContactProductAction } from "../../actions/contact_actions/createContactProduct.action.js";
-import { deleteContactProductAction } from "../../actions/contact_actions/deleteContactProduct.action.js";
-import { updateContactProductDatesAction } from "../../actions/policy_actions/updatePolicyDates.action.js";
+import { createContactAction } from "../../../modules/contacts/contactActions.js";
+import { bulkCreateContactsAction } from "../../../modules/contacts/contactActions.js";
+import { updateContactAction } from "../../../modules/contacts/contactActions.js";
+import { deleteContactAction } from "../../../modules/contacts/contactActions.js";
+import { createContactProductAction } from "../../../modules/contacts/contactActions.js";
+import { deleteContactProductAction } from "../../../modules/contacts/contactActions.js";
+import { deletePortalContactProductAction } from "../../../modules/contacts/contactActions.js";
+import { updateContactProductDatesAction } from "../../../modules/policies/policyActions.js";
+import { unauthenticated, forbidden } from "../../../errors/appErrors.js";
 
 export const createContact = async (_parent, { input }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
@@ -35,6 +37,12 @@ export const createContactProduct = async (_parent, { input }, ctx) => {
 export const deleteContactProduct = async (_parent, { id }, ctx) => {
   requireRoles(ctx.user, ["ADMIN"]);
   return deleteContactProductAction(id);
+};
+
+export const deletePortalContactProduct = async (_parent, { id }, ctx) => {
+  if (!ctx.user) throw unauthenticated();
+  if (ctx.user.role !== "CONTACT_PORTAL") throw forbidden();
+  return deletePortalContactProductAction(id, ctx.user);
 };
 
 export const updateContactProductDates = async (_parent, { id, start_date, expiration_date, status, license_key }, ctx) => {

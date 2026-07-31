@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+**/node_modules
+.pnpm-store
+
+# Build outputs
+frontend/dist
+coverage
+playwright-report
+test-results
+
+# Git
+.git
+.github
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.sw?
+
+# Environment files (secrets should NOT be baked into images)
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Documentation and config not needed in image
+docs
+openspec
+.atl
+README.md
+implementation_plan.md
+*.log
+*.jsonl
+*.ps1
+*.py
+
+# Test files
+tests
+**/tests
+playwright.config.js
+vitest.config.js
+eslint.config.js
+
+# Docker files (prevent recursive context)
+docker-compose.yml
+Dockerfile
+
+# Misc
+.cache_ggshield
+*.pem
+*.key

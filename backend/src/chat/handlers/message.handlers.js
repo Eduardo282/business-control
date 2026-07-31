@@ -9,6 +9,14 @@ export function registerMessageHandlers(io, socket, context) {
     try {
       if (!body || !body.trim()) return;
 
+      const conversation = await chatService.getConversation(conversationId);
+      if (!conversation) {
+        return socket.emit("error", { message: "Conversación no encontrada" });
+      }
+      if (conversation.status === "CLOSED") {
+        return socket.emit("error", { message: "El chat está suspendido." });
+      }
+
       const senderType = isAgent ? "AGENT" : "CLIENT";
       const senderId = isAgent ? user.userId : (user.contactId || null);
 
@@ -27,23 +35,10 @@ export function registerMessageHandlers(io, socket, context) {
     }
   });
 
-  // ── Delete a message ──
-  socket.on("message:delete", async ({ messageId, conversationId }) => {
-    try {
-      const deleted = await chatService.deleteMessage(messageId);
-      if (!deleted) {
-        return socket.emit("error", { message: "Mensaje no encontrado" });
-      }
-      // Notify everyone in the room
-      io.to(`conv:${conversationId}`).emit("message:deleted", {
-        messageId,
-        conversationId,
-        deletedBy: isAgent ? "AGENT" : "CLIENT",
-      });
-    } catch (err) {
-      logger.error("message:delete error:", err);
-      socket.emit("error", { message: "Error al eliminar mensaje" });
-    }
+  // Messages are immutable audit records. Keep the handler so older clients get
+  // an explicit rejection instead of silently diverging from server state.
+  socket.on("message:delete", () => {
+    socket.emit("error", { message: "Los mensajes no se pueden eliminar." });
   });
 
   // ── Request message history ──

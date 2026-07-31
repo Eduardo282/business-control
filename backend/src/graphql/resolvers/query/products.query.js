@@ -1,8 +1,5 @@
-import {
-  listProductsAction,
-  searchProductsAction,
-} from "../../actions/product_actions/listProducts.action.js";
-import { getProductAction } from "../../actions/product_actions/getProduct.action.js";
+import { listProductsAction, searchProductsAction } from "../../../modules/products/productActions.js";
+import { getProductAction } from "../../../modules/products/productActions.js";
 import { requireRoles } from "../../../middlewares/role.middleware.js";
 import { unauthenticated, forbidden } from "../../../errors/appErrors.js";
 

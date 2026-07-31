@@ -17,14 +17,20 @@
     0.9711 51.14%, 0.9833 59.06%, 0.9915 68.74%, 1 100%
   );
   color-scheme: light;
+  --color-app-background: #f8fafc;
   --color-surface: #ffffff;
-  --color-surface-muted: #f8fafc;
+  --color-surface-muted: #f1f5f9;
   --color-surface-elevated: #ffffff;
-  --color-border: #d8e3f2;
+  --color-border: #cbd5e1;
+  --color-control-border: #94a3b8;
+  --color-control-disabled: #e2e8f0;
   --color-text-primary: #1a2b4c;
   --color-text-secondary: #475569;
-  --color-text-muted: #94a3b8;
-  --color-brand: #2277b4;
+  --color-text-muted: #64748b;
+  --color-brand: #1d4ed8;
+  --color-focus: #1d4ed8;
+  --color-danger: #b91c1c;
+  --color-success: #15803d;
   --color-danger-surface: #fef2f2;
   --color-success-surface: #f0fdf4;
   --scrollbar-track: transparent;
@@ -63,14 +69,20 @@
 
 .dark {
   color-scheme: dark;
+  --color-app-background: #0f111a;
   --color-surface: #1a1d2d;
   --color-surface-muted: #151725;
   --color-surface-elevated: #252840;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-text-primary: #e2e8f0;
+  --color-border: #3f4557;
+  --color-control-border: #64748b;
+  --color-control-disabled: #252840;
+  --color-text-primary: #f1f5f9;
   --color-text-secondary: #cbd5e1;
-  --color-text-muted: #94a3b8;
+  --color-text-muted: #a1a1aa;
   --color-brand: #60a5fa;
+  --color-focus: #60a5fa;
+  --color-danger: #fca5a5;
+  --color-success: #86efac;
   --color-danger-surface: rgba(239, 68, 68, 0.15);
   --color-success-surface: rgba(34, 197, 94, 0.15);
   --scrollbar-track: transparent;
@@ -79,16 +91,38 @@
   --scrollbar-corner: transparent;
 }
 
+html,
 body {
-  background-color: white;
+  min-height: 100%;
+  background-color: var(--color-app-background);
+  color: var(--color-text-primary);
+}
+
+body {
   background-size: cover;
   background-attachment: fixed;
   background-position: center;
-  transition: background-color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
-.dark body {
-  background-color: #0f111a;
+::selection {
+  background-color: color-mix(in srgb, var(--color-brand) 28%, transparent);
+  color: var(--color-text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
+
+  ::view-transition-group(root),
+  ::view-transition-new(root),
+  ::view-transition-old(root) {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+  }
 }
 
 /* Barra de desplazamiento personalizada */
@@ -174,60 +208,6 @@ body {
     }
   }
 
-  .glass-button {
-    @apply backdrop-blur-md transition-all duration-300 shadow-sm dark:shadow-lg hover:shadow-md hover:-translate-y-0.5 text-light-text-primary dark:text-zinc-200;
-
-    /* Botón de luz */
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.8),
-      rgba(255, 255, 255, 0.4)
-    );
-    border: 1px solid rgba(255, 255, 255, 0.6);
-
-    /* Estado de hover */
-    &:hover {
-      background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.95),
-        rgba(255, 255, 255, 0.6)
-      );
-      border: 1px solid rgba(255, 255, 255, 0.9);
-    }
-  }
-
-  .dark .glass-button {
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.15),
-      rgba(255, 255, 255, 0.05)
-    );
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-
-    &:hover {
-      background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.25),
-        rgba(255, 255, 255, 0.1)
-      );
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-    }
-  }
-
-  .nav-item {
-    @apply flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-light-text-secondary dark:text-zinc-400 font-medium;
-  }
-
-  .nav-item:hover {
-    @apply bg-white/20 dark:bg-white/5 text-light-text-primary dark:text-zinc-100 translate-x-1;
-  }
-
-  .nav-item.active {
-    /* Usando color de realce específico #BCC5E6 para el fondo del estado activo en modo claro, y texto azul brillante #1543F0 */
-    @apply bg-light-highlight/20 dark:bg-gradient-to-r dark:from-primary-600/20 dark:to-primary-600/5 border border-light-accent/20 dark:border-primary-500/30 text-light-accent dark:text-primary-400 shadow-[0_0_15px_rgba(21,67,240,0.1)] dark:shadow-[0_0_15px_rgba(59,130,246,0.15)];
-  }
-
   .glass-flash {
     position: relative;
     overflow: hidden;
@@ -245,52 +225,6 @@ body {
     transform: translateX(-180%) rotate(12deg);
     opacity: 0;
     animation: glassFlash 3s ease-in-out 1s infinite;
-  }
-
-  .glass-link {
-    @apply inline-flex items-center gap-1 bg-transparent p-0 border-0 shadow-none text-blue-700 transition-colors text-sm font-semibold focus:outline-none;
-    position: relative;
-
-    /* Un toque “vidrio” sin forma de botón */
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
-  }
-
-  .glass-link > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  .glass-link::before {
-    content: "";
-    position: absolute;
-    inset: -2px -4px;
-    border-radius: 10px;
-    pointer-events: none;
-    opacity: 0;
-    background: linear-gradient(135deg, #d8dbde, #d8dbde);
-    backdrop-filter: blur(10px);
-    transition: opacity 180ms ease;
-  }
-
-  .glass-link:hover {
-    @apply text-blue-900 underline underline-offset-4;
-  }
-
-  .glass-link:hover::before {
-    opacity: 0.35;
-  }
-
-  .dark .glass-link {
-    @apply text-primary-400;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.15);
-  }
-
-  .dark .glass-link::before {
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.18),
-      rgba(255, 255, 255, 0.04)
-    );
   }
 }
 
@@ -310,20 +244,6 @@ body {
     opacity: 0;
     transform: translateX(260%) rotate(12deg);
   }
-}
-
-/* Utilidades de animación */
-.animate-delay-100 {
-  animation-delay: 100ms;
-}
-.animate-delay-200 {
-  animation-delay: 200ms;
-}
-.animate-delay-300 {
-  animation-delay: 300ms;
-}
-.animate-delay-500 {
-  animation-delay: 500ms;
 }
 
 /* Price history calendar theme */
@@ -399,392 +319,421 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   GLOBAL DARK MODE OVERRIDES
-   Intercepts common Tailwind utilities when .dark is active on <html>.
-   Using attribute selectors for Tailwind arbitrary values to avoid parsing errors.
+   DARK MODE COMPATIBILITY FALLBACK
+   Keeps unmigrated light-only utilities readable while :where() keeps the
+   theme wrapper specificity at zero. Explicit dark: variants therefore win.
+   Attribute selectors cover legacy Tailwind arbitrary values safely.
    ═══════════════════════════════════════════════════════════════════════ */
 
 /* ── Backgrounds ── */
-.dark .bg-white {
-  background-color: #1a1d2d !important;
+:where(.dark) .bg-white {
+  background-color: #1a1d2d;
 }
 
-.dark .bg-zinc-50,
-.dark .bg-zinc-100 {
-  background-color: #151725 !important;
+:where(.dark) .bg-zinc-50,
+:where(.dark) .bg-zinc-100 {
+  background-color: #151725;
 }
 
-.dark [class~="bg-[#F1F4F8]"] {
-  background-color: #0f111a !important;
+:where(.dark) [class~="bg-[#F1F4F8]"] {
+  background-color: #0f111a;
 }
 
-.dark .bg-zinc-200 {
-  background-color: #252840 !important;
+:where(.dark) .bg-zinc-200 {
+  background-color: #252840;
 }
 
 /* ── Text Colors ── */
-.dark .text-zinc-900,
-.dark .text-zinc-800,
-.dark [class~="text-[#1a2b4c]"],
-.dark [class~="text-[#181818]"],
-.dark [class~="text-[#000]"],
-.dark .text-black {
-  color: #e2e8f0 !important;
-}
-
-.dark .text-zinc-700,
-.dark .text-zinc-600,
-.dark [class~="text-[#3b4b6b]/70"] {
-  color: #cbd5e1 !important;
-}
-
-.dark .text-zinc-500,
-.dark [class~="text-[#5e6b82]"] {
-  color: #94a3b8 !important;
-}
-
-.dark .text-zinc-400 {
-  color: #64748b !important;
-}
-
-/* ── Borders ── */
-.dark .border-zinc-100,
-.dark .border-zinc-200,
-.dark [class~="border-[#CBD5E1]"],
-.dark [class~="border-[#d6d4c9]"],
-.dark [class~="border-[#d8dde7]"] {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-.dark .border-zinc-300 {
-  border-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-.dark .divide-zinc-100 > * + *,
-.dark .divide-zinc-200 > * + * {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.dark .border-dashed {
-  border-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-/* ── Inputs, Textareas, Selects ── */
-.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
-.dark textarea,
-.dark select {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: #e2e8f0 !important;
-}
-
-.dark input::placeholder,
-.dark textarea::placeholder {
-  color: #64748b !important;
-}
-
-.dark input:focus,
-.dark textarea:focus,
-.dark select:focus {
-  border-color: rgba(59, 130, 246, 0.5) !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
-}
-
-/* ── Tables ── */
-.dark table {
+:where(.dark) .text-zinc-900,
+:where(.dark) .text-zinc-800,
+:where(.dark) [class~="text-[#1a2b4c]"],
+:where(.dark) [class~="text-[#181818]"],
+:where(.dark) [class~="text-[#000]"],
+:where(.dark) .text-black {
   color: #e2e8f0;
 }
 
-.dark thead {
-  background-color: #151725 !important;
+:where(.dark) .text-zinc-700,
+:where(.dark) .text-zinc-600,
+:where(.dark) [class~="text-[#3b4b6b]/70"] {
+  color: #cbd5e1;
 }
 
-.dark thead th {
-  color: #94a3b8 !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+:where(.dark) .text-zinc-500,
+:where(.dark) [class~="text-[#5e6b82]"] {
+  color: #94a3b8;
 }
 
-.dark tbody tr {
-  border-color: rgba(255, 255, 255, 0.06) !important;
+:where(.dark) .text-zinc-400 {
+  color: #a1a1aa;
 }
 
-.dark tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.03) !important;
+/* ── Borders ── */
+:where(.dark) .border-zinc-100,
+:where(.dark) .border-zinc-200,
+:where(.dark) [class~="border-[#CBD5E1]"],
+:where(.dark) [class~="border-[#d6d4c9]"],
+:where(.dark) [class~="border-[#d8dde7]"] {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-.dark tbody td {
-  color: #cbd5e1 !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
+:where(.dark) .border-zinc-300 {
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
-.dark [class~="even:bg-zinc-50"]:nth-child(even) {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+:where(.dark) .divide-zinc-100 > * + *,
+:where(.dark) .divide-zinc-200 > * + * {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+:where(.dark) .border-dashed {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Inputs, Textareas, Selects ── */
+:where(.dark) :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), textarea, select) {
+  background-color: #151725;
+  border-color: #64748b;
+  color: #f1f5f9;
+}
+
+:where(.dark) :where(input, textarea)::placeholder {
+  color: #a1a1aa;
+}
+
+:where(.dark) :where(input, textarea, select):focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.28);
+}
+
+/* ── Tables ── */
+:where(.dark) table {
+  color: #e2e8f0;
+}
+
+:where(.dark) thead {
+  background-color: #151725;
+}
+
+:where(.dark) thead th {
+  color: #94a3b8;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+:where(.dark) tbody tr {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+:where(.dark) tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+:where(.dark) tbody td {
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+:where(.dark) [class~="even:bg-zinc-50"]:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
 /* ── Cards / Panels / Containers ── */
-.dark .shadow-sm {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+:where(.dark) .shadow-sm {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.dark .shadow-md {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+:where(.dark) .shadow-md {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.dark .shadow-lg {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+:where(.dark) .shadow-lg {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
-.dark .shadow-xl {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5) !important;
+:where(.dark) .shadow-xl {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
 
 /* ── Buttons common patterns ── */
-.dark [class~="hover:bg-zinc-100"]:hover,
-.dark [class~="hover:bg-zinc-50"]:hover {
-  background-color: rgba(255, 255, 255, 0.08) !important;
+:where(.dark) [class~="hover:bg-zinc-100"]:hover,
+:where(.dark) [class~="hover:bg-zinc-50"]:hover {
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
-.dark [class~="hover:bg-[#F8FAFC]"]:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+:where(.dark) [class~="hover:bg-[#F8FAFC]"]:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* ── Badges / Tags ── */
-.dark .bg-red-50 {
-  background-color: rgba(239, 68, 68, 0.15) !important;
+:where(.dark) .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.15);
 }
-.dark .bg-green-50 {
-  background-color: rgba(34, 197, 94, 0.15) !important;
+:where(.dark) .bg-green-50 {
+  background-color: rgba(34, 197, 94, 0.15);
 }
-.dark .bg-blue-50 {
-  background-color: rgba(59, 130, 246, 0.15) !important;
+:where(.dark) .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.15);
 }
-.dark .bg-yellow-50,
-.dark .bg-amber-50 {
-  background-color: rgba(245, 158, 11, 0.15) !important;
+:where(.dark) .bg-yellow-50,
+:where(.dark) .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.15);
 }
-.dark .bg-indigo-50 {
-  background-color: rgba(99, 102, 241, 0.15) !important;
+:where(.dark) .bg-indigo-50 {
+  background-color: rgba(99, 102, 241, 0.15);
 }
-.dark .bg-purple-50 {
-  background-color: rgba(168, 85, 247, 0.15) !important;
+:where(.dark) .bg-purple-50 {
+  background-color: rgba(168, 85, 247, 0.15);
 }
 
-.dark .border-red-200 {
-  border-color: rgba(239, 68, 68, 0.3) !important;
+:where(.dark) .border-red-200 {
+  border-color: rgba(239, 68, 68, 0.3);
 }
-.dark .border-green-200 {
-  border-color: rgba(34, 197, 94, 0.3) !important;
+:where(.dark) .border-green-200 {
+  border-color: rgba(34, 197, 94, 0.3);
 }
-.dark .border-blue-200 {
-  border-color: rgba(59, 130, 246, 0.3) !important;
+:where(.dark) .border-blue-200 {
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 /* ── Modals / Overlays / Popups ── */
-.dark [class~="bg-black/50"],
-.dark [class~="bg-black/40"],
-.dark [class~="bg-black/30"] {
-  background-color: rgba(0, 0, 0, 0.7) !important;
+:where(.dark) [class~="bg-black/50"],
+:where(.dark) [class~="bg-black/40"],
+:where(.dark) [class~="bg-black/30"] {
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 /* ── Specific Color Overrides ── */
-.dark [class~="text-[#1a2b4c]"] {
-  color: #e2e8f0 !important;
+:where(.dark) [class~="text-[#1a2b4c]"] {
+  color: #e2e8f0;
 }
 
-.dark .text-amber-800 {
-  color: #fbbf24 !important;
+:where(.dark) .text-amber-800 {
+  color: #fbbf24;
 }
 
-.dark .text-red-700 {
-  color: #fca5a5 !important;
+:where(.dark) .text-red-700 {
+  color: #fca5a5;
 }
 
-.dark .text-red-600 {
-  color: #fca5a5 !important;
+:where(.dark) .text-red-600 {
+  color: #fca5a5;
 }
 
-.dark .text-green-600,
-.dark .text-green-700 {
-  color: #4ade80 !important;
+:where(.dark) .text-green-600,
+:where(.dark) .text-green-700 {
+  color: #4ade80;
 }
 
-.dark .text-blue-700 {
-  color: #60a5fa !important;
+:where(.dark) .text-blue-700 {
+  color: #60a5fa;
 }
 
 /* ── Rings ── */
-.dark .ring-1 {
-  --tw-ring-color: rgba(255, 255, 255, 0.08) !important;
+:where(.dark) .ring-1 {
+  --tw-ring-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ── Background Gradients ── */
-.dark [class~="from-zinc-50"] {
-  --tw-gradient-from: #0f111a !important;
-  --tw-gradient-to: rgba(15, 17, 26, 0) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+:where(.dark) [class~="from-zinc-50"] {
+  --tw-gradient-from: #0f111a;
+  --tw-gradient-to: rgba(15, 17, 26, 0);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
-.dark [class~="via-zinc-50"] {
-  --tw-gradient-via: #131525 !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to) !important;
+:where(.dark) [class~="via-zinc-50"] {
+  --tw-gradient-via: #131525;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to);
 }
 
-.dark [class~="to-zinc-50"] {
-  --tw-gradient-to: #0f111a !important;
+:where(.dark) [class~="to-zinc-50"] {
+  --tw-gradient-to: #0f111a;
 }
 
 /* ── Pagination / Controls ── */
-.dark [class~="bg-[#2277B4]"] {
+:where(.dark) [class~="bg-[#2277B4]"] {
   /* Keep brand color in dark mode */
 }
 
-.dark [class~="hover:bg-zinc-200"]:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+:where(.dark) [class~="hover:bg-zinc-200"]:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* ── SweetAlert2 Dark Mode ── */
-.dark .swal2-popup {
-  background-color: #1a1d2d !important;
-  color: #e2e8f0 !important;
+/* ── SweetAlert2 theme integration (kept outside the compatibility fallback) ── */
+html:not(.dark) .swal2-title {
+  color: #1a2b4c;
 }
 
-.dark .swal2-title {
-  color: #e2e8f0 !important;
+html:not(.dark) .swal2-html-container,
+html:not(.dark) .swal-theme-copy {
+  color: #475569;
 }
 
-.dark .swal2-html-container {
-  color: #94a3b8 !important;
+.swal-register-popup .swal2-title {
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
-.dark .swal2-input,
-.dark .swal2-textarea {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  color: #e2e8f0 !important;
+.swal-theme-copy {
+  font-size: 0.9rem;
+}
+
+.swal-theme-copy--tight {
+  margin-bottom: 2px;
+}
+
+.swal-register-input {
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+}
+
+html.dark .swal2-popup {
+  background-color: #1a1d2d;
+  color: #f1f5f9;
+}
+
+html.dark .swal2-title {
+  color: #f1f5f9;
+}
+
+html.dark .swal2-html-container,
+html.dark .swal-theme-copy,
+html.dark .swal2-validation-message {
+  color: #cbd5e1;
+}
+
+.swal2-actions .swal-cancel-button-light {
+  color: #3f3f46;
+}
+
+html.dark .swal2-input,
+html.dark .swal2-textarea {
+  background-color: #151725;
+  border-color: #64748b;
+  color: #f1f5f9;
 }
 
 /* ── Datepicker Dark Mode ── */
-.dark .react-datepicker {
-  background-color: #1a1d2d !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+html.dark .react-datepicker {
+  background-color: #1a1d2d;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-.dark .react-datepicker__header {
-  background-color: #151725 !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+html.dark .react-datepicker__header {
+  background-color: #151725;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
-.dark .react-datepicker__day {
-  color: #cbd5e1 !important;
+html.dark .react-datepicker__day {
+  color: #cbd5e1;
 }
 
-.dark .react-datepicker__day:hover {
-  background-color: rgba(59, 130, 246, 0.2) !important;
+html.dark .react-datepicker__day:hover {
+  background-color: rgba(59, 130, 246, 0.2);
 }
 
-.dark .react-datepicker__day--selected {
-  background-color: #2277b4 !important;
-  color: #fff !important;
+html.dark .react-datepicker__day--selected {
+  background-color: #2277b4;
+  color: #fff;
 }
 
-.dark .react-datepicker__current-month,
-.dark .react-datepicker__day-name {
-  color: #e2e8f0 !important;
+html.dark .react-datepicker__current-month,
+html.dark .react-datepicker__day-name {
+  color: #e2e8f0;
 }
 
 /* ── Form Labels ── */
-.dark label {
+:where(.dark) label {
   color: #cbd5e1;
 }
 
 /* ── Placeholder text in search bars ── */
-.dark [class~="placeholder:text-zinc-400"]::placeholder {
-  color: #64748b !important;
+:where(.dark) [class~="placeholder:text-zinc-400"]::placeholder {
+  color: #64748b;
 }
 
 /* ── Scrollbar corner for dark tables ── */
-.dark .overflow-auto,
-.dark .overflow-x-auto {
+:where(.dark) .overflow-auto,
+:where(.dark) .overflow-x-auto {
   scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
 }
 
 /* ── White/50 patterns (glassmorphism) ── */
-.dark [class~="bg-white/50"] {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+:where(.dark) [class~="bg-white/50"] {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
-.dark [class~="bg-white/40"] {
-  background-color: rgba(255, 255, 255, 0.04) !important;
+:where(.dark) [class~="bg-white/40"] {
+  background-color: rgba(255, 255, 255, 0.04);
 }
 
-.dark [class~="bg-white/70"] {
-  background-color: rgba(15, 17, 26, 0.85) !important;
+:where(.dark) [class~="bg-white/70"] {
+  background-color: rgba(15, 17, 26, 0.85);
 }
 
-.dark [class~="bg-white/35"] {
-  background-color: rgba(255, 255, 255, 0.03) !important;
+:where(.dark) [class~="bg-white/35"] {
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
-.dark [class~="border-white/60"] {
-  border-color: rgba(255, 255, 255, 0.1) !important;
+:where(.dark) [class~="border-white/60"] {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-.dark [class~="border-white/30"] {
-  border-color: rgba(255, 255, 255, 0.08) !important;
+:where(.dark) [class~="border-white/30"] {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ── Search bar wrapper ── */
-.dark .bg-white.p-1,
-.dark .bg-white.border {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+:where(.dark) .bg-white:where(.p-1),
+:where(.dark) .bg-white:where(.border) {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* ── Additional specific patterns ── */
-.dark [class~="bg-[#f7f8fb]"] {
-  background-color: #151725 !important;
+:where(.dark) [class~="bg-[#f7f8fb]"] {
+  background-color: #151725;
 }
 
-.dark [class~="bg-white/90"] {
-  background-color: rgba(26, 29, 45, 0.95) !important;
+:where(.dark) [class~="bg-white/90"] {
+  background-color: rgba(26, 29, 45, 0.95);
 }
 
-.dark [class~="text-[#153465]"],
-.dark [class~="text-[#4b5d79]"],
-.dark [class~="text-[#6f7f9a]"],
-.dark [class~="text-[#7987a0]"] {
-  color: #94a3b8 !important;
+:where(.dark) [class~="text-[#153465]"],
+:where(.dark) [class~="text-[#4b5d79]"],
+:where(.dark) [class~="text-[#6f7f9a]"],
+:where(.dark) [class~="text-[#7987a0]"] {
+  color: #94a3b8;
 }
 
-.dark [class~="border-[#494949]"] {
-  border-color: rgba(255, 255, 255, 0.15) !important;
+:where(.dark) [class~="border-[#494949]"] {
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
-.dark [class~="border-[#d9dfea]"] {
-  border-color: rgba(255, 255, 255, 0.12) !important;
+:where(.dark) [class~="border-[#d9dfea]"] {
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.dark [class~="hover:bg-[#eef2f8]"]:hover {
-  background-color: rgba(255, 255, 255, 0.08) !important;
+:where(.dark) [class~="hover:bg-[#eef2f8]"]:hover {
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ── Roles page chip unselected ── */
-.dark .bg-white[class~="text-[#4b5d79]"] {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  color: #94a3b8 !important;
+:where(.dark) .bg-white:where([class~="text-[#4b5d79]"]) {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
 }
 
 /* ── Red/Green alert refinements ── */
-.dark .bg-red-100 {
-  background-color: rgba(239, 68, 68, 0.15) !important;
+:where(.dark) .bg-red-100 {
+  background-color: rgba(239, 68, 68, 0.15);
 }
 
 /* ── Table row backgrounds ── */
-.dark tr.bg-white,
-.dark .bg-white {
-  background-color: #1a1d2d !important;
+:where(.dark) tr.bg-white,
+:where(.dark) .bg-white {
+  background-color: #1a1d2d;
 }
 
 /* ── Ensure transparent backgrounds stay transparent ── */
-.dark .bg-transparent {
-  background-color: transparent !important;
+:where(.dark) .bg-transparent {
+  background-color: transparent;
 }
