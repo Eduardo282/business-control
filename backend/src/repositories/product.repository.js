@@ -16,7 +16,7 @@ const PRODUCT_COLUMNS =
 const PRODUCT_UPDATE_HISTORY_COLUMNS =
   "id, product_id, update_version, change_type, summary, changed_at";
 
-export const PRODUCT_TYPE_VALUES = ["PRODUCT", "CONTPAQI", "SERVICE", "POLICY"];
+const PRODUCT_TYPE_VALUES = ["PRODUCT", "CONTPAQI", "SERVICE", "POLICY"];
 
 export function normalizeCatalogProductType(value) {
   const normalized = String(value || "")
@@ -234,33 +234,6 @@ export async function clearPriceHistory(productId) {
 
 // ─── Categorías ─────────────────────────────────────────────────────────────
 
-/**
- * Lista todas las categorías únicas.
- * @returns {Promise<string[]>}
- */
-export async function listCategories() {
-  const [rows] = await pool.query(
-    "SELECT DISTINCT category FROM products WHERE category IS NOT NULL ORDER BY category ASC",
-  );
-  return rows.map((r) => r.category);
-}
-
-/**
- * Inserta una categoría (crea un producto placeholder si es necesario o maneja la lógica).
- * @param {string} name
- * @returns {Promise<void>}
- */
-export async function insertCategory(name) {
-  // Las categorías viven como campo en products. Verificar si ya existe.
-  const [existing] = await pool.query(
-    "SELECT id FROM products WHERE category = ? LIMIT 1",
-    [name],
-  );
-  if (existing.length) return; // Ya existe
-
-  // No se puede insertar una categoría sin producto; esto es una decisión de diseño.
-  // La acción original puede manejar esto directamente.
-}
 
 /**
  * Elimina una categoría (pone NULL en los productos que la usen).

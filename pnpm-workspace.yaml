@@ -3,7 +3,7 @@ packages:
   - "backend"
   - "shared"
 allowBuilds:
-  '@apollo/protobufjs': false
+  "@apollo/protobufjs": false
   core-js: false
   esbuild: false
   puppeteer: false
@@ -13,4 +13,3 @@ minimumReleaseAge: 4320
 onlyBuiltDependencies: []
 ignoredBuiltDependencies: []
 strictDepBuilds: true
-

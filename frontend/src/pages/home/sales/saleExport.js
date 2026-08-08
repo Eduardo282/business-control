@@ -6,7 +6,7 @@ export function getSaleFolio(sale) {
   return rawFolio || `VTA-${String(sale?.id ?? "").padStart(6, "0")}`;
 }
 
-export function getSaleFileToken(sale) {
+function getSaleFileToken(sale) {
   const raw = sale?.folio ? String(sale.folio).trim() : `VTA-${String(sale?.id ?? "sale").padStart(6, "0")}`;
   return raw.replace(/[^a-zA-Z0-9-_]+/g, "_");
 }

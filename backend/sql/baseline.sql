@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS clients (
   has_client_portal_access TINYINT DEFAULT 0,
   portal_password_hash VARCHAR(255) NULL,
   is_active TINYINT DEFAULT 1,
+  is_deleted TINYINT NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_clients_business_name (business_name),
@@ -171,7 +172,7 @@ CREATE TABLE IF NOT EXISTS services (
   INDEX idx_services_client_contact (client_id, contact_id),
   INDEX idx_services_product (product_id),
   CONSTRAINT fk_services_contact_product FOREIGN KEY (contact_product_id) REFERENCES contact_products(id) ON DELETE CASCADE,
-  CONSTRAINT fk_services_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+  CONSTRAINT fk_services_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
   CONSTRAINT fk_services_contacts FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE CASCADE,
   CONSTRAINT fk_services_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -191,7 +192,7 @@ CREATE TABLE IF NOT EXISTS policies (
   INDEX idx_policies_client_contact (client_id, contact_id),
   INDEX idx_policies_product (product_id),
   CONSTRAINT fk_policies_contact_product FOREIGN KEY (contact_product_id) REFERENCES contact_products(id) ON DELETE CASCADE,
-  CONSTRAINT fk_policies_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+  CONSTRAINT fk_policies_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
   CONSTRAINT fk_policies_contacts FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE CASCADE,
   CONSTRAINT fk_policies_products FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -220,7 +221,7 @@ CREATE TABLE IF NOT EXISTS quotes (
   INDEX idx_quotes_contact_id (contact_id),
   INDEX idx_quotes_status (status),
   UNIQUE KEY uq_quotes_folio (folio),
-  CONSTRAINT fk_quotes_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+  CONSTRAINT fk_quotes_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
   CONSTRAINT fk_quotes_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_quotes_contact FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -262,7 +263,7 @@ CREATE TABLE IF NOT EXISTS sales (
   INDEX idx_sales_user_id (user_id),
   UNIQUE KEY uq_sales_folio (folio),
   CONSTRAINT fk_sales_quotes FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE,
-  CONSTRAINT fk_sales_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+  CONSTRAINT fk_sales_clients FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
   CONSTRAINT fk_sales_contacts FOREIGN KEY (contact_id) REFERENCES client_contacts(id) ON DELETE SET NULL,
   CONSTRAINT fk_sales_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -9,7 +9,7 @@ import axios from "axios";
  * @param {string} fileUrl
  * @returns {string|null}
  */
-export function parseDriveFileId(fileUrl) {
+function parseDriveFileId(fileUrl) {
   const patterns = [/\/file\/d\/([^/]+)/i, /[?&]id=([^&]+)/i, /\/d\/([^/]+)/i];
 
   for (const pattern of patterns) {
@@ -25,12 +25,23 @@ export function parseDriveFileId(fileUrl) {
  * @param {string} fileUrl — URL original del archivo
  * @returns {string[]} URLs candidatas para intentar la descarga
  */
-export function buildDriveDownloadUrls(fileUrl) {
+function buildDriveDownloadUrls(fileUrl) {
   const url = String(fileUrl || "").trim();
   if (!url) return [];
 
   const urls = [];
-  if (/^https?:\/\//i.test(url)) urls.push(url);
+
+  try {
+    const parsedUrl = new URL(url);
+    if (!["docs.google.com", "drive.google.com"].includes(parsedUrl.hostname)) {
+      throw new Error("Dominio no permitido");
+    }
+  } catch {
+    return [];
+  }
+
+  // Si es un enlace directo a Google, lo agregamos como candidato base
+  if (/^https:\/\//i.test(url)) urls.push(url);
 
   const isGoogleSheetUrl = /docs\.google\.com\/spreadsheets\//i.test(url);
   if (isGoogleSheetUrl) {
@@ -66,7 +77,7 @@ export async function downloadExcelBuffer(fileUrl) {
   const candidates = buildDriveDownloadUrls(fileUrl);
   if (!candidates.length) {
     throw new Error(
-      "URL de archivo inválida. Usa una URL http(s) de Google Drive.",
+      "URL de archivo inválida, usa una URL de Google Drive.",
     );
   }
 
@@ -77,6 +88,8 @@ export async function downloadExcelBuffer(fileUrl) {
         responseType: "arraybuffer",
         timeout: 45000,
         maxRedirects: 5,
+        maxContentLength: 10 * 1024 * 1024, // 10 MB limit
+        maxBodyLength: 10 * 1024 * 1024,
         validateStatus: () => true,
       });
 

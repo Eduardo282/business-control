@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Upload, CheckCircle2, AlertCircle, Lightbulb } from "@icons";
 import Swal from "sweetalert2";
@@ -48,12 +48,31 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
   const [bulkErrors, setBulkErrors] = useState([]);
   const [bulkUploading, setBulkUploading] = useState(false);
   const [bulkResult, setBulkResult] = useState(null);
-  const [driveUrl, setDriveUrl] = useState("");
+  const DRIVE_URL_KEY = "bc_client_drive_url";
+  const [driveUrl, setDriveUrl] = useState(
+    () => localStorage.getItem(DRIVE_URL_KEY) || "",
+  );
   const [driveImporting, setDriveImporting] = useState(false);
   const [fileToUpload, setFileToUpload] = useState(null);
   const bulkFileRef = useRef(null);
+  const [previewPage, setPreviewPage] = useState(1);
+  const previewPageSize = 50;
 
   if (!isOpen) return null;
+
+  const persistDriveUrl = (val) => {
+    setDriveUrl(val);
+    if (val) {
+      localStorage.setItem(DRIVE_URL_KEY, val);
+    } else {
+      localStorage.removeItem(DRIVE_URL_KEY);
+    }
+  };
+
+  const clearDriveUrl = () => {
+    setDriveUrl("");
+    localStorage.removeItem(DRIVE_URL_KEY);
+  };
 
   const fireBulkModalAlert = (options) =>
     Swal.fire({
@@ -75,6 +94,7 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
     setBulkResult(null);
     setBulkErrors([]);
     setFileToUpload(file);
+    setPreviewPage(1);
 
     const reader = new FileReader();
     reader.onload = async (evt) => {
@@ -231,11 +251,11 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
     if (!url) {
       setBulkResult({
         success: false,
-        message: "Debes ingresar la URL del archivo en Google Drive.",
+        message: "Debes ingresar la URL del archivo de Google Drive.",
       });
       fireBulkModalAlert({
         title: "Falta la URL",
-        text: "Debes ingresar la URL del archivo en Google Drive.",
+        text: "Debes ingresar la URL del archivo de Google Drive.",
         icon: "warning",
         confirmButtonColor: "#2277B4",
         showConfirmButton: false,
@@ -353,13 +373,25 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
             <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
               Importar desde Google Drive
             </p>
-            <input
-              type="url"
-              value={driveUrl}
-              onChange={(e) => setDriveUrl(e.target.value)}
-              placeholder="https://drive.google.com/file/d/.../view"
-              className="w-full px-3 py-2.5 text-sm rounded-lg border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-400/30 focus:border-[#2277B4] dark:focus:border-blue-400 transition-colors"
-            />
+            <div className="relative">
+              <input
+                type="url"
+                value={driveUrl}
+                onChange={(e) => persistDriveUrl(e.target.value)}
+                placeholder="https://drive.google.com/file/d/.../view"
+                className="w-full px-3 py-2.5 pr-8 text-sm rounded-lg border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-400/30 focus:border-[#2277B4] dark:focus:border-blue-400 transition-colors"
+              />
+              {driveUrl && (
+                <button
+                  type="button"
+                  onClick={clearDriveUrl}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 transition-colors"
+                  title="Borrar URL"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              )}
+            </div>
             <button
               onClick={executeDriveImport}
               disabled={driveImporting}
@@ -394,7 +426,7 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
                 Haz clic para seleccionar el archivo Excel
               </span>
               <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                O usa la plantilla descargada
+                O usa la plantilla para descargar
               </span>
             </button>
           </div>
@@ -432,9 +464,9 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100 dark:divide-dark-700">
-                    {bulkData.map((r, i) => (
-                      <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-dark-700/60">
-                        <td className="px-3 py-2 text-zinc-400 dark:text-zinc-500">{i + 1}</td>
+                    {bulkData.slice((previewPage - 1) * previewPageSize, previewPage * previewPageSize).map((r, i) => (
+                      <tr key={(previewPage - 1) * previewPageSize + i} className="hover:bg-zinc-50 dark:hover:bg-dark-700/60">
+                        <td className="px-3 py-2 text-zinc-400 dark:text-zinc-500">{(previewPage - 1) * previewPageSize + i + 1}</td>
                         <td className="px-3 py-2 font-medium text-zinc-800 dark:text-zinc-100">{r.business_name}</td>
                         <td className="px-3 py-2 text-zinc-600 dark:text-zinc-300">{r.rfc || "—"}</td>
                         <td className="px-3 py-2 text-zinc-600 dark:text-zinc-300">{r.email1 || "—"}</td>
@@ -445,6 +477,32 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
                   </tbody>
                 </table>
               </div>
+              {bulkData.length > previewPageSize && (
+                <div className="flex items-center justify-between mt-3 px-1 text-xs">
+                  <span className="text-zinc-500 dark:text-zinc-400">
+                    Mostrando {(previewPage - 1) * previewPageSize + 1} a {Math.min(previewPage * previewPageSize, bulkData.length)} de {bulkData.length}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPreviewPage(p => Math.max(1, p - 1))}
+                      disabled={previewPage === 1}
+                      className="px-3 py-1.5 rounded bg-zinc-100 dark:bg-dark-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-dark-600 disabled:opacity-50 transition-colors"
+                    >
+                      Anterior
+                    </button>
+                    <span className="text-zinc-600 dark:text-zinc-400 font-medium">
+                      {previewPage} de {Math.ceil(bulkData.length / previewPageSize)}
+                    </span>
+                    <button
+                      onClick={() => setPreviewPage(p => Math.min(Math.ceil(bulkData.length / previewPageSize), p + 1))}
+                      disabled={previewPage === Math.ceil(bulkData.length / previewPageSize)}
+                      className="px-3 py-1.5 rounded bg-zinc-100 dark:bg-dark-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-dark-600 disabled:opacity-50 transition-colors"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

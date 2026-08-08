@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import Swal from "sweetalert2";
 import {
@@ -21,7 +21,23 @@ export function useContactBulkImport({
   const [bulkContactUploading, setBulkContactUploading] = useState(false);
   const [bulkContactDriveImporting, setBulkContactDriveImporting] =
     useState(false);
-  const [bulkContactDriveUrl, setBulkContactDriveUrl] = useState("");
+  const driveUrlStorageKey = `bc_contact_drive_url_${clientId}`;
+  const [bulkContactDriveUrl, setBulkContactDriveUrl] = useState(
+    () => localStorage.getItem(driveUrlStorageKey) || "",
+  );
+
+  useEffect(() => {
+    if (bulkContactDriveUrl) {
+      localStorage.setItem(driveUrlStorageKey, bulkContactDriveUrl);
+    } else {
+      localStorage.removeItem(driveUrlStorageKey);
+    }
+  }, [bulkContactDriveUrl, driveUrlStorageKey]);
+
+  const clearBulkContactDriveUrl = useCallback(() => {
+    setBulkContactDriveUrl("");
+    localStorage.removeItem(driveUrlStorageKey);
+  }, [driveUrlStorageKey]);
   const [bulkContactResult, setBulkContactResult] = useState(null);
   const bulkContactFileRef = useRef(null);
 
@@ -44,7 +60,6 @@ export function useContactBulkImport({
     setBulkContactData([]);
     setBulkContactErrors([]);
     setBulkContactResult(null);
-    setBulkContactDriveUrl("");
   };
 
   const openBulkContactModal = () => {
@@ -120,7 +135,9 @@ export function useContactBulkImport({
         title: "Error",
         text: err.message || "Error en la carga masiva.",
         icon: "error",
-        confirmButtonColor: "#d33",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } finally {
       setBulkContactUploading(false);
@@ -132,13 +149,16 @@ export function useContactBulkImport({
     if (!fileUrl) {
       setBulkContactResult({
         success: false,
-        message: "Debes ingresar la URL del archivo en Google Drive.",
+        message: "Debes ingresar la URL del archivo de Google Drive.",
       });
       fireBulkContactModalAlert({
         title: "Falta la URL",
-        text: "Debes ingresar la URL del archivo en Google Drive.",
+        text: "Debes ingresar la URL del archivo de Google Drive.",
         icon: "warning",
         confirmButtonColor: "#2277B4",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
       });
       return;
     }
@@ -199,7 +219,9 @@ export function useContactBulkImport({
         title: "Error",
         text: err.message || "Error importando archivo desde Drive.",
         icon: "error",
-        confirmButtonColor: "#d33",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
       });
     } finally {
       setBulkContactDriveImporting(false);
@@ -221,5 +243,6 @@ export function useContactBulkImport({
     handleBulkContactFile,
     executeBulkContactUpload,
     executeBulkContactDriveImport,
+    clearBulkContactDriveUrl,
   };
 }

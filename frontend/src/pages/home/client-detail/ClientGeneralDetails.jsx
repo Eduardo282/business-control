@@ -63,7 +63,7 @@ export default function ClientGeneralDetails({
                   {field.name === "email1" &&
                     field.value &&
                     field.value !== "—" && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 pointer-events-none opacity-0 group-hover/email:opacity-100 scale-95 translate-y-4 group-hover/email:-translate-y-6 group-hover/email:scale-100 transition-all duration-300 ease-out bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-950 dark:to-blue-900 backdrop-blur-md text-blue-950 dark:text-blue-100 text-[11px] font-medium py-2 px-3.5 rounded-xl border border-blue-200 dark:border-blue-800 shadow-[0_10px_25px_rgba(0,0,0,0.25)] dark:shadow-black/50 whitespace-nowrap z-50 normal-case tracking-normal flex items-center gap-2">
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 pointer-events-none opacity-0 group-hover/email:opacity-100 scale-95 translate-y-4 group-hover/email:-translate-y-6 group-hover/email:scale-100 transition-all duration-150 ease-out bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-950 dark:to-blue-900 backdrop-blur-sm text-blue-950 dark:text-blue-100 text-[11px] font-medium py-2 px-3.5 rounded-xl border border-blue-200 dark:border-blue-800 shadow-[0_10px_25px_rgba(0,0,0,0.25)] dark:shadow-black/50 whitespace-nowrap z-50 normal-case tracking-normal flex items-center gap-2">
                         <span>{field.value}</span>
                         <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent dark:border-transparent border-t-blue-200 dark:border-t-blue-900"></div>
                       </div>

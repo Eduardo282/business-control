@@ -115,7 +115,7 @@ export async function updateContact(id, data, queryRunner = pool) {
 }
 
 /**
- * Elimina un contacto de cliente.
+ * Elimina un contacto de cliente (borrado físico).
  * @param {number|string} id
  * @param {object} [queryRunner]
  * @returns {Promise<number>} Número de filas afectadas
@@ -126,6 +126,20 @@ export async function deleteContact(id, queryRunner = pool) {
     [id],
   );
   return result.affectedRows || 0;
+}
+
+/**
+ * Deshabilita un contacto sin eliminar su registro ni sus relaciones.
+ * @param {number|string} id
+ * @param {object} [queryRunner]
+ * @returns {Promise<boolean>}
+ */
+export async function softDeleteContact(id, queryRunner = pool) {
+  const [result] = await queryRunner.query(
+    "UPDATE client_contacts SET is_active = 0, has_portal_access = 0 WHERE id = ?",
+    [id],
+  );
+  return (result.affectedRows || 0) > 0;
 }
 
 /**
@@ -231,19 +245,6 @@ export async function deleteContactProductForContact(id, contactId, queryRunner 
   return result.affectedRows || 0;
 }
 
-/**
- * Desactiva un contacto del cliente (Soft Delete).
- * @param {number|string} id
- * @param {object} [queryRunner]
- * @returns {Promise<boolean>}
- */
-export async function softDeleteContact(id, queryRunner = pool) {
-  const [res] = await queryRunner.query(
-    "UPDATE client_contacts SET is_active = 0, has_portal_access = 0 WHERE id = ?",
-    [id],
-  );
-  return res.affectedRows > 0;
-}
 
 /**
  * Inserta múltiples contactos de forma masiva y retorna sus datos junto con el ID generado.

@@ -32,20 +32,6 @@ async function getBrowser() {
   return browserPromise;
 }
 
-export async function warmQuotePdfBrowser() {
-  await getBrowser();
-}
-
-export async function closeQuotePdfBrowser() {
-  const activeBrowserPromise = browserPromise;
-  browserPromise = null;
-  if (!activeBrowserPromise) return;
-
-  const browser = await activeBrowserPromise.catch(() => null);
-  if (browser?.isConnected()) {
-    await browser.close();
-  }
-}
 
 /**
  * Convierte una cadena HTML en un buffer PDF usando Puppeteer.
@@ -105,27 +91,3 @@ export async function renderHtmlToPdf(htmlContent, options = {}) {
   }
 }
 
-/**
- * Decodifica un PDF en base64 a un Buffer binario.
- * @param {string} pdfBase64 — Cadena base64 del PDF
- * @returns {Buffer} Buffer del PDF
- * @throws {Error} Si el base64 es inválido o el resultado está vacío
- */
-export function decodePdfBase64(pdfBase64) {
-  const normalized = String(pdfBase64)
-    .trim()
-    .replace(/^data:application\/pdf;base64,/i, "");
-
-  let buffer;
-  try {
-    buffer = Buffer.from(normalized, "base64");
-  } catch {
-    throw new Error("El PDF adjunto no tiene un formato base64 válido.");
-  }
-
-  if (!buffer?.length) {
-    throw new Error("El PDF adjunto está vacío.");
-  }
-
-  return buffer;
-}

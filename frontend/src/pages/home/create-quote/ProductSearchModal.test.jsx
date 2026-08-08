@@ -143,7 +143,7 @@ describe("ProductSearchModal", () => {
       />,
     );
 
-    expect(screen.getByText(/No se encontraron productos con "Conta"/i)).toBeVisible();
+    expect(screen.getByText(/No se encontraron productos con la clave "Conta"/i)).toBeVisible();
   });
 
   it("renders table rows and controls pagination", async () => {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import {
   Navigate,
   Outlet,
@@ -117,9 +117,9 @@ export default function PortalLayout() {
   return (
     <div className="min-h-screen flex bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 font-sans transition-colors">
       {/* ── Sidebar ── */}
-      <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-300 z-40 border-r border-white/30 dark:border-zinc-800 bg-white/35 dark:bg-zinc-900/80 backdrop-blur-2xl shadow-xl shadow-zinc-900/5 dark:shadow-black/30 ring-1 ring-white/20 dark:ring-white/5">
+      <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-150 z-40 border-r border-white/30 dark:border-zinc-800 bg-white/35 dark:bg-zinc-900/80 backdrop-blur-sm shadow-xl shadow-zinc-900/5 dark:shadow-black/30 ring-1 ring-white/20 dark:ring-white/5">
         {/* Nombre del contacto */}
-        <div className="mb-6 mx-2 px-4 py-3 rounded-xl bg-white/40 dark:bg-zinc-950/40 border border-white/30 dark:border-zinc-800 backdrop-blur-xl dark:backdrop-blur-none">
+        <div className="mb-6 mx-2 px-4 py-3 rounded-xl bg-white/40 dark:bg-zinc-950/40 border border-white/30 dark:border-zinc-800 backdrop-blur-sm dark:backdrop-blur-none">
           <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200 word-break">
             {contact.full_name}
           </div>
@@ -193,7 +193,13 @@ export default function PortalLayout() {
         </header>
 
         <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-gradient-to-br from-zinc-50 via-zinc-200 to-zinc-400 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-800 text-zinc-800 dark:text-zinc-100 transition-colors">
-          <Outlet context={{ contact, setContact }} />
+          <Suspense fallback={
+            <div className="w-full h-full flex items-center justify-center p-8">
+              <span className="size-6 animate-spin rounded-full border-2 border-zinc-300 border-t-[#1B4733] dark:border-zinc-700 dark:border-t-emerald-400 motion-reduce:animate-none" />
+            </div>
+          }>
+            <Outlet context={{ contact, setContact }} />
+          </Suspense>
         </main>
       </div>
     </div>

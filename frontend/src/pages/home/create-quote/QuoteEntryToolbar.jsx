@@ -59,8 +59,21 @@ export default function QuoteEntryToolbar({
               }}
               placeholder="Buscar folio, producto o servicio…"
               className="glass-input bg-light-bg dark:!bg-black/30 text-light-text-primary dark:text-white border-light-border dark:border-white/10"
-              style={{ paddingRight: "2.25rem" }}
+              style={{ paddingRight: "4rem" }}
             />
+            {prodSearch && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setProdSearch("");
+                }}
+                className="absolute right-8 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+                title="Limpiar búsqueda"
+              >
+                <X size={14} />
+              </button>
+            )}
             <Search
               size={14}
               className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary dark:text-zinc-400"
@@ -73,10 +86,12 @@ export default function QuoteEntryToolbar({
             Filtrar en la tabla
           </label>
           <div className="relative">
-            <Search
-              size={13}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary dark:text-zinc-400"
-            />
+            {!tableFilter && (
+              <Search
+                size={13}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary dark:text-zinc-400"
+              />
+            )}
             <input
               type="text"
               placeholder="Filtrar productos agregados…"
@@ -84,6 +99,16 @@ export default function QuoteEntryToolbar({
               onChange={(event) => setTableFilter(event.target.value)}
               className="pl-3 pr-8 py-2.5 text-sm rounded-xl border border-light-border dark:border-white/10 bg-white dark:bg-black/30 focus:outline-none focus:ring-1 focus:ring-[#2277B4] w-full text-black dark:text-white transition-colors"
             />
+            {tableFilter && (
+              <button
+                type="button"
+                onClick={() => setTableFilter("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+                title="Limpiar búsqueda"
+              >
+                <X size={13} />
+              </button>
+            )}
           </div>
         </div>
       </div>

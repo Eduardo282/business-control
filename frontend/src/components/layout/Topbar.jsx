@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Link, useLocation, matchPath, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useAuth } from "../../hooks/useAuth";
+import { useNotifications } from "../../context/NotificationContext.jsx";
 import { logger } from "../../services/logger";
 import ThemeToggle from "./ThemeToggle";
 import { Bell, Check, XCircle, ChevronLeft, ChevronRight, X } from "@icons";
@@ -49,26 +50,12 @@ export default function Topbar() {
   const sectionLabel = getSectionLabel(location.pathname);
 
   // States for Notifications
-  const [notifications, setNotifications] = useState([]);
+  const { notifications, setNotifications } = useNotifications();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifPage, setNotifPage] = useState(1);
   const notificationsRef = useRef(null);
 
-  useEffect(() => {
-    if (user?.role?.name === "ADMIN" || user?.role?.name === "VENTAS") {
-      const fetchNotifs = async () => {
-        try {
-          const res = await getUnreadQuoteRequestsApi();
-          setNotifications(res || []);
-        } catch (e) {
-          logger.error("Error fetching notifications", e);
-        }
-      };
-      fetchNotifs();
-      const interval = setInterval(fetchNotifs, 60000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
+  // Polling is now handled by NotificationContext
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -270,7 +257,7 @@ export default function Topbar() {
   const paginatedNotifications = notifications.slice((safeNotifPage - 1) * notifPageSize, safeNotifPage * notifPageSize);
 
   return (
-    <div className="sticky top-0 z-50 flex items-center justify-between border-b border-zinc-300/70 bg-white/85 px-8 py-4 shadow-md backdrop-blur-md transition-all duration-300 dark:border-white/10 dark:bg-dark-800/90 dark:shadow-black/30 motion-reduce:transition-none">
+    <div className="sticky top-0 z-50 flex items-center justify-between border-b border-zinc-300/70 bg-white/85 px-8 py-4 shadow-md backdrop-blur-sm transition-all duration-150 dark:border-white/10 dark:bg-dark-800/90 dark:shadow-black/30 motion-reduce:transition-none">
       <div className="text-zinc-800 dark:text-zinc-100 tracking-tight flex items-center gap-4">
         <div>
           <div className="font-semibold text-lg">Panel de Control</div>

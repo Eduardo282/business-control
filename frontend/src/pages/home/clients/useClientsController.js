@@ -5,7 +5,10 @@ import {
   listClientsDynamicApi,
 } from "../../../actionsAPI/clients.api";
 import { notificationService } from "../../../services/notificationService";
-import { EXCEL_VIEW_STORAGE_KEY } from "./clientConstants";
+import {
+  DEFAULT_VISIBLE_CLIENT_COLUMNS,
+  EXCEL_VIEW_STORAGE_KEY,
+} from "./clientConstants";
 import {
   filterClients,
   filterPickerOptions,
@@ -200,7 +203,7 @@ export default function useClientsController() {
     async (id) => {
       const isConfirmed = await notificationService.confirm({
         title: "¿Estás seguro?",
-        text: "Se eliminarán también sus cotizaciones y contactos.",
+        text: "Se eliminará el cliente y se desactivarán sus contactos. Las cotizaciones y ventas se conservarán.",
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar",
       });
@@ -314,6 +317,7 @@ export default function useClientsController() {
     clients,
     closeEditModal,
     detailColumns,
+    dynamicColumns,
     editingClient,
     error,
     expandedRows,

@@ -1,7 +1,11 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
-import DatePicker from "react-datepicker";
+import DatePicker, { registerLocale, setDefaultLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { es } from "date-fns/locale";
+
+registerLocale("es", es);
+setDefaultLocale("es");
 import {
   ArrowLeft,
   ChevronLeft,
@@ -20,7 +24,6 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import Button from "../../../components/ui/Button";
 import Input from "../../../components/ui/Input";
 import {
   inferProductType,

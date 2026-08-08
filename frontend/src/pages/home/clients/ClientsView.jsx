@@ -22,6 +22,7 @@ export default function ClientsView({
     clients,
     closeEditModal,
     detailColumns,
+    dynamicColumns,
     editingClient,
     error,
     expandedRows,
@@ -48,6 +49,7 @@ export default function ClientsView({
     showCreateModal,
     showEditModal,
     showFilters,
+    tableColumnsFromView,
     visibleFilterPickerOptions,
   } = controller;
   const { columns, isTableScrollable, table } = tableState;
@@ -115,6 +117,7 @@ export default function ClientsView({
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={handleCreateSuccess}
+        dynamicColumns={tableColumnsFromView}
       />
 
       <ClientEditModal
@@ -122,6 +125,7 @@ export default function ClientsView({
         onClose={closeEditModal}
         client={editingClient}
         onSuccess={handleEditSuccess}
+        dynamicColumns={tableColumnsFromView}
       />
 
       <ClientBulkModal

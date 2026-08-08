@@ -6,7 +6,7 @@ import EmailQuoteModal from "./quotes/EmailQuoteModal";
 import QuotePreview from "./quotes/QuotePreview";
 import { getQuoteDisplayStatus } from "../../utils/quoteStatus";
 
-export const QUOTE_DETAIL_STATUS_CLASSES = {
+const QUOTE_DETAIL_STATUS_CLASSES = {
   PENDIENTE: "text-amber-700 border-amber-200 bg-amber-50 dark:text-amber-300 dark:border-amber-500/30 dark:bg-amber-500/10",
   SOLICITADA: "text-blue-700 border-blue-200 bg-blue-50 dark:text-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10",
   ENVIADA: "text-indigo-700 border-indigo-200 bg-indigo-50 dark:text-indigo-300 dark:border-indigo-500/30 dark:bg-indigo-500/10",
@@ -38,7 +38,6 @@ export default function QuoteDetail() {
     sendingToContact,
     registeringQuote,
     quotePreviewRef,
-    load,
     handlePrint,
     handleSendEmail,
     handleSendToQuoteContact,
@@ -101,7 +100,7 @@ export default function QuoteDetail() {
       />
 
       {/* Action Toolbar */}
-      <div className="glass-panel p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden sticky top-6 z-40 backdrop-blur-xl shadow-xl">
+      <div className="glass-panel p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden sticky top-6 z-40 backdrop-blur-sm shadow-xl">
         <div>
           <Link
             to={isPortal ? "/portal/quotes" : "/cotizaciones/historial"}

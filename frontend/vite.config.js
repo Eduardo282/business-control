@@ -17,11 +17,6 @@ export default defineConfig({
           ) {
             return "react-vendor";
           }
-          if (normalizedId.includes("/xlsx/")) return "xlsx";
-          if (normalizedId.includes("/jspdf/") || normalizedId.includes("/jspdf-autotable/")) {
-            return "pdf-export";
-          }
-          if (normalizedId.includes("/html2canvas/")) return "canvas-export";
           if (normalizedId.includes("/@tanstack/")) return "table-vendor";
           if (normalizedId.includes("/sweetalert2/")) return "alerts";
           if (normalizedId.includes("/date-fns/")) return "date-utils";

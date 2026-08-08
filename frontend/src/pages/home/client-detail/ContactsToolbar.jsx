@@ -57,7 +57,16 @@ export default function ContactsToolbar({
             placeholder="Buscar contacto…"
             className="bg-transparent dark:bg-transparent border-none text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 px-3 w-full focus:outline-none"
           />
-          <div className="px-3 py-1.5 text-black dark:text-zinc-400">
+          {contactSearch && (
+            <button
+              onClick={() => setContactSearch("")}
+              className="p-1.5 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+              title="Limpiar búsqueda"
+            >
+              <X size={14} />
+            </button>
+          )}
+          <div className="px-3 py-1.5 text-black dark:text-zinc-400 flex items-center justify-center">
             <Search size={16} />
           </div>
         </div>

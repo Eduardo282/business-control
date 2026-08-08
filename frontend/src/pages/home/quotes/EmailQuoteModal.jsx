@@ -46,7 +46,7 @@ cualquier ajuste que considere necesario..\n\nSaludos,\n${
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-fade-in">
       <Card className="w-full max-w-lg shadow-2xl shadow-primary-500/10 border-light-border dark:border-white/10 !bg-light-card dark:!bg-zinc-900/95">
         <h3 className="text-xl font-semibold text-light-text-primary dark:text-white mb-4 flex items-center gap-2">
           <span className="text-primary-600 dark:text-primary-400">

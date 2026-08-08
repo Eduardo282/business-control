@@ -23,7 +23,7 @@ export default function RegisterProductForm({
   return (
     <form onSubmit={handleCreate} className="mb-6 animate-fade-in">
       <div
-        className={`p-6 rounded-xl glass-panel shadow-xl border transition-all duration-500 ease-out ${
+        className={`p-6 rounded-xl glass-panel shadow-xl border transition-all duration-150 ease-out ${
           isFormHighlighted
             ? "ring-4 ring-[#2277B4]/60 dark:ring-blue-400/50 shadow-[0_0_25px_rgba(34,119,180,0.4)] dark:shadow-[0_0_25px_rgba(96,165,250,0.4)] border-[#2277B4] dark:border-blue-400 bg-blue-50/40 dark:bg-blue-900/30 scale-[1.01]"
             : "border-zinc-200 dark:border-dark-700 scale-100"

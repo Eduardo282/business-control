@@ -8,14 +8,16 @@ export default function ClientsDetailsBar({
   quickFilterButtons,
   showFilters,
 }) {
-  if (detailColumnCount === 0) return null;
-
   return (
     <div className="px-4 py-2 min-h-10 bg-blue-50 dark:bg-blue-500/10 border-b border-blue-100 dark:border-blue-500/20 text-xs text-[#2277B4] dark:text-blue-300 flex items-center justify-between gap-3">
-      <div className="flex items-center gap-1 shrink-0">
-        <Lightbulb size={14} className="inline" /> Clic en{" "}
-        <ChevronRight size={12} className="inline" /> para más detalles
-      </div>
+      {detailColumnCount > 0 ? (
+        <div className="flex items-center gap-1 shrink-0">
+          <Lightbulb size={14} className="inline" /> Clic en{" "}
+          <ChevronRight size={12} className="inline" /> para más detalles
+        </div>
+      ) : (
+        <div className="shrink-0" />
+      )}
 
       <div className="flex items-center gap-3">
         <div

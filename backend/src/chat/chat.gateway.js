@@ -110,7 +110,3 @@ export function initSocketIO(httpServer, corsOrigin) {
   return io;
 }
 
-export function getIO() {
-  if (!io) throw new Error("Socket.IO not initialized");
-  return io;
-}

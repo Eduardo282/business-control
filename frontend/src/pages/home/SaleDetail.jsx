@@ -134,7 +134,7 @@ export default function SaleDetail() {
 
   return (
     <div className="relative space-y-6 pb-20 print:space-y-0 print:p-0">
-      <div className="sticky top-6 z-40 flex flex-col items-center justify-between gap-4 rounded-xl p-4 shadow-xl backdrop-blur-xl print:hidden sm:flex-row glass-panel">
+      <div className="sticky top-6 z-40 flex flex-col items-center justify-between gap-4 rounded-xl p-4 shadow-xl backdrop-blur-sm print:hidden sm:flex-row glass-panel">
         <div>
           <Link
             to={isPortal ? "/portal/sales" : "/ventas"}

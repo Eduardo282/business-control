@@ -87,8 +87,17 @@ export default function PortalCatalogView({ controller, tableState }) {
               placeholder="Buscar productos…"
               value={globalFilter ?? ""}
               onChange={(e) => setGlobalFilter(e.target.value)}
-              className="pl-9 pr-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-emerald-500/30 dark:focus:ring-emerald-400/30 focus:border-emerald-600 dark:focus:border-emerald-400 outline-none transition-all w-56 bg-white dark:bg-zinc-900"
+              className="pl-9 pr-9 py-2 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:ring-2 focus:ring-emerald-500/30 dark:focus:ring-emerald-400/30 focus:border-emerald-600 dark:focus:border-emerald-400 outline-none transition-all w-full bg-white dark:bg-zinc-900"
             />
+            {globalFilter && (
+              <button
+                type="button"
+                onClick={() => setGlobalFilter("")}
+                className="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
 
           {/* Filtro por categoría */}

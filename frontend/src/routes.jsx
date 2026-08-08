@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -42,10 +42,10 @@ const Policies = lazy(() => import("./pages/home/Policies"));
 const Sales = lazy(() => import("./pages/home/Sales"));
 const SaleDetail = lazy(() => import("./pages/home/SaleDetail"));
 const AgentSupport = lazy(() => import("./pages/home/AgentSupport"));
-const Layout = lazy(() => import("./pages/home/Layout"));
+import Layout from "./pages/home/Layout";
 
 const PortalLogin = lazy(() => import("./pages/portal/PortalLogin"));
-const PortalLayout = lazy(() => import("./pages/portal/PortalLayout"));
+import PortalLayout from "./pages/portal/PortalLayout";
 const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
 const PortalQuotes = lazy(() => import("./pages/portal/PortalQuotes"));
 const PortalSales = lazy(() => import("./pages/portal/PortalSales"));
@@ -75,16 +75,6 @@ export default function AppRoutes() {
       <ThemeProvider>
         <LocationTracker />
         <ErrorBoundary>
-          <Suspense
-            fallback={
-              <div
-                role="status"
-                className="min-h-screen w-full flex items-center justify-center gap-3 bg-surface-muted dark:bg-dark-900 text-content-secondary dark:text-zinc-200 text-sm"
-              >
-                <span className="size-5 animate-spin rounded-full border-2 border-zinc-300 border-t-[#2277B4] dark:border-zinc-700 dark:border-t-blue-400 motion-reduce:animate-none" />
-                <span>Cargando…</span>
-              </div>
-            }>
             <Routes>
             <Route path="/login" element={<PageMeta title="Iniciar Sesión" desc="Acceso al sistema de gestión empresarial."><Login /></PageMeta>} />
             <Route
@@ -158,7 +148,6 @@ export default function AppRoutes() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </Suspense>
         </ErrorBoundary>
       </ThemeProvider>
     </BrowserRouter>

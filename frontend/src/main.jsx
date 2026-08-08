@@ -1,7 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { registerLocale, setDefaultLocale } from "react-datepicker";
-import { es } from "date-fns/locale";
 import "@fontsource/inter/latin-400.css";
 import "@fontsource/inter/latin-500.css";
 import "@fontsource/inter/latin-600.css";
@@ -10,14 +8,22 @@ import App from "./App.jsx";
 import "./styles/index.css";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { initializeTheme } from "./context/theme.js";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
 
 // Apply the validated route-specific preference before React mounts to avoid
 // a light/dark first-paint flash.
 initializeTheme();
-
-registerLocale("es", es);
-setDefaultLocale("es");
-
+ 
 // Permite que herramientas de auditoria en desarrollo inyecten sesion
 // sin tocar rutas de login ni modales protegidos.
 if (import.meta.env.DEV) {
@@ -30,13 +36,18 @@ if (import.meta.env.DEV) {
 }
 
 import { HelmetProvider } from "react-helmet-async";
+import { NotificationProvider } from "./context/NotificationContext.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <HelmetProvider>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <NotificationProvider>
+            <App />
+          </NotificationProvider>
+        </AuthProvider>
+      </QueryClientProvider>
     </HelmetProvider>
   </React.StrictMode>,
 );

@@ -145,7 +145,8 @@ export function useContactsController({
 
       try {
         await deleteContactApi(contactId);
-        load();
+        await load();
+        setShowDisabled(true);
         notificationService.toast({
           title: "Contacto deshabilitado",
           icon: "success",

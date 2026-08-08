@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { pool } from "../src/config/db.js";
 import { createQuoteFromDraft } from "../src/modules/quotes/createQuote.js";
-import { createQuoteActor, createQuoteDraft } from "../src/services/quoteDraft.service.js";
+import { createQuoteActor, createQuoteDraft } from "../src/modules/quotes/domain/quoteDraft.js";
 
 after(async () => {
   await pool.end();

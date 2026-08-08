@@ -48,7 +48,7 @@ export default function SendToPortalModal({
         type="button"
         aria-label="Cerrar modal"
         onClick={() => !toggleLoading && onClose()}
-        className="absolute inset-0 bg-zinc-900/45 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-zinc-900/45 backdrop-blur-sm-[2px]"
       />
 
       <Card className="relative w-full max-w-lg overflow-hidden !bg-white dark:!bg-dark-900 border border-zinc-200 dark:border-dark-700 shadow-2xl shadow-zinc-900/20">

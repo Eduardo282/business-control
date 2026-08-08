@@ -75,6 +75,45 @@ export function createLoaders() {
       return keys.map((key) => byId.get(String(key)) || null);
     }),
 
+    contactsByClientId: new BatchLoader(async (keys) => {
+      const ids = uniqueKeys(keys);
+      if (!ids.length) return keys.map(() => []);
+      const [rows] = await pool.query(
+        "SELECT id, client_id, full_name, email, phone, position_title, has_portal_access, is_active, created_at, updated_at FROM client_contacts WHERE client_id IN (?) ORDER BY is_active DESC, full_name ASC",
+        [ids],
+      );
+      const byClientId = new Map();
+      for (const row of rows) {
+        const cId = String(row.client_id);
+        if (!byClientId.has(cId)) byClientId.set(cId, []);
+        byClientId.get(cId).push(row);
+      }
+      return keys.map((key) => byClientId.get(String(key)) || []);
+    }),
+
+    activeServicesByContactId: new BatchLoader(async (keys) => {
+      const ids = uniqueKeys(keys);
+      if (!ids.length) return keys.map(() => []);
+      const [rows] = await pool.query(
+        `SELECT cp.*, p.name as product_name, p.folio as product_folio
+         FROM contact_products cp
+         JOIN products p ON p.id = cp.product_id
+         WHERE cp.contact_id IN (?) AND cp.status = 'ACTIVE'`,
+        [ids],
+      );
+      const byContactId = new Map();
+      for (const row of rows) {
+        const cId = String(row.contact_id);
+        if (!byContactId.has(cId)) byContactId.set(cId, []);
+        // Match the shape expected by listContactProductsAction
+        byContactId.get(cId).push({
+          ...row,
+          product: { id: row.product_id, name: row.product_name, folio: row.product_folio },
+        });
+      }
+      return keys.map((key) => byContactId.get(String(key)) || []);
+    }),
+
     userById: new BatchLoader(async (keys) => {
       const ids = uniqueKeys(keys);
       if (!ids.length) return keys.map(() => null);

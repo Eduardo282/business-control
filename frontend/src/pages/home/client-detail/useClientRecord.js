@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   deleteClientApi,
   getClientApi,
@@ -65,112 +66,96 @@ function useExcelViewPreferences(storageKey) {
 }
 
 export function useClientRecord({ clientId, navigate }) {
-  const [client, setClient] = useState(null);
-  const [clientDynamicColumns, setClientDynamicColumns] = useState([]);
-  const [contactRows, setContactRows] = useState([]);
-  const [contactDynamicColumns, setContactDynamicColumns] = useState([]);
-  const [productsList, setProductsList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [isEditingClient, setIsEditingClient] = useState(false);
   const [clientForm, setClientForm] = useState(INITIAL_CLIENT_FORM);
+  const queryClient = useQueryClient();
 
   const clientPreferences = useExcelViewPreferences(EXCEL_VIEW_STORAGE_KEY);
   const contactPreferences = useExcelViewPreferences(
     CONTACTS_EXCEL_VIEW_STORAGE_KEY,
   );
 
-  const load = useCallback(async () => {
-    setError("");
-    setLoading(true);
-    try {
-      const [clientData, dynamicData, contactsDynamicData] = await Promise.all([
-        getClientApi(clientId),
-        listClientsDynamicApi().catch(() => null),
-        listContactsDynamicByClientApi(clientId).catch(() => null),
-      ]);
+  const { data: clientData, isLoading: clientLoading, error: clientError } = useQuery({
+    queryKey: ["client", clientId],
+    queryFn: () => getClientApi(clientId),
+  });
 
-      const dynamicColumns = dynamicData?.columns || [];
-      const dynamicRows = dynamicData?.rows || [];
-      const dynamicClientRow = dynamicRows.find(
-        (row) =>
-          String(row?.id) === String(clientData?.id ?? clientId),
-      );
-      const mergedClient =
-        dynamicClientRow
-          ? {
-              ...clientData,
-              ...dynamicClientRow,
-              id: clientData?.id ?? dynamicClientRow?.id,
-            }
-          : clientData;
+  const { data: dynamicData, isLoading: dynamicLoading } = useQuery({
+    queryKey: ["clientsDynamic"],
+    queryFn: listClientsDynamicApi,
+    staleTime: 5 * 60 * 1000,
+  });
 
-      const graphQlContacts = Array.isArray(clientData?.contacts)
-        ? clientData.contacts
-        : [];
-      const dynamicContactRows = Array.isArray(contactsDynamicData?.rows)
-        ? contactsDynamicData.rows
-        : [];
-      const dynamicContactColumns = Array.isArray(contactsDynamicData?.columns)
-        ? contactsDynamicData.columns
-        : [];
-      const fallbackRows = dynamicContactRows.length
-        ? dynamicContactRows
-        : graphQlContacts;
-      const graphQlContactsById = new Map(
-        graphQlContacts.map((contact) => [String(contact.id), contact]),
-      );
-      const mergedContactRows = fallbackRows.map((row) => ({
-        ...(graphQlContactsById.get(String(row?.id)) || {}),
-        ...row,
-      }));
-      const nextContactColumns = dynamicContactColumns.length
-        ? dynamicContactColumns
-        : CONTACT_FALLBACK_COLUMNS;
+  const { data: contactsDynamicData, isLoading: contactsDynamicLoading } = useQuery({
+    queryKey: ["contactsDynamic", clientId],
+    queryFn: () => listContactsDynamicByClientApi(clientId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-      setClient(mergedClient);
-      setClientDynamicColumns(dynamicColumns);
-      setContactRows(mergedContactRows);
-      setContactDynamicColumns(nextContactColumns);
+  const { data: productsListData, isLoading: productsLoading } = useQuery({
+    queryKey: ["products", clientId],
+    queryFn: () => listProductsApi(clientId),
+    staleTime: 5 * 60 * 1000,
+  });
 
-      const dynamicFormValues = dynamicColumns
-        .filter(
-          (column) => !CLIENT_DETAIL_HIDDEN_FIELDS.has(column?.name),
-        )
-        .reduce((values, column) => {
-          const rawValue = mergedClient?.[column.name];
-          values[column.name] =
-            rawValue === null || rawValue === undefined
-              ? ""
-              : String(rawValue);
-          return values;
-        }, {});
+  const loading = clientLoading || dynamicLoading || contactsDynamicLoading || productsLoading;
+  const error = clientError ? (clientError.message || "Error cargando cliente") : "";
 
-      setClientForm(
-        Object.keys(dynamicFormValues).length
-          ? dynamicFormValues
-          : getFallbackClientForm(mergedClient),
-      );
+  const clientDynamicColumns = dynamicData?.columns || [];
+  const contactDynamicColumns = Array.isArray(contactsDynamicData?.columns) && contactsDynamicData.columns.length > 0 
+    ? contactsDynamicData.columns 
+    : CONTACT_FALLBACK_COLUMNS;
+  const productsList = productsListData ? productsListData.filter(p => p.client_id == clientId) : [];
 
-      listProductsApi(clientId)
-        .then((products) => {
-          setProductsList(
-            products.filter((product) => product.client_id == clientId),
-          );
-        })
-        .catch((loadError) =>
-          logger.error("Error loading client products", loadError),
-        );
-    } catch (loadError) {
-      setError(loadError.message || "Error cargando cliente");
-    } finally {
-      setLoading(false);
-    }
-  }, [clientId]);
+  const client = useMemo(() => {
+    if (!clientData) return null;
+    const dynamicRows = dynamicData?.rows || [];
+    const dynamicClientRow = dynamicRows.find(
+      (row) => String(row?.id) === String(clientData?.id ?? clientId),
+    );
+    return dynamicClientRow
+      ? {
+          ...clientData,
+          ...dynamicClientRow,
+          id: clientData?.id ?? dynamicClientRow?.id,
+        }
+      : clientData;
+  }, [clientData, dynamicData, clientId]);
+
+  const contactRows = useMemo(() => {
+    if (!clientData) return [];
+    const graphQlContacts = Array.isArray(clientData.contacts) ? clientData.contacts : [];
+    const dynamicContactRows = Array.isArray(contactsDynamicData?.rows) ? contactsDynamicData.rows : [];
+    
+    const fallbackRows = dynamicContactRows.length ? dynamicContactRows : graphQlContacts;
+    const graphQlContactsById = new Map(
+      graphQlContacts.map((contact) => [String(contact.id), contact]),
+    );
+    
+    return fallbackRows.map((row) => ({
+      ...(graphQlContactsById.get(String(row?.id)) || {}),
+      ...row,
+    }));
+  }, [clientData, contactsDynamicData]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!client || !clientDynamicColumns.length) return;
+    const dynamicFormValues = clientDynamicColumns
+      .filter((column) => !CLIENT_DETAIL_HIDDEN_FIELDS.has(column?.name))
+      .reduce((values, column) => {
+        const rawValue = client?.[column.name];
+        values[column.name] = rawValue === null || rawValue === undefined ? "" : String(rawValue);
+        return values;
+      }, {});
+
+    setClientForm(
+      Object.keys(dynamicFormValues).length
+        ? dynamicFormValues
+        : getFallbackClientForm(client),
+    );
+  }, [client, clientDynamicColumns]);
+
+  // Removing manual load useEffect since useQuery handles it
 
   const clientGeneralColumns = useMemo(
     () =>
@@ -217,35 +202,55 @@ export function useClientRecord({ clientId, navigate }) {
     setIsEditingClient(true);
   }, [client, clientGeneralFields]);
 
-  const handleUpdateClient = useCallback(
-    async (event) => {
-      event.preventDefault();
-      try {
-        const payload = { ...clientForm };
-
-        if (Object.prototype.hasOwnProperty.call(payload, "rfc")) {
-          payload.rfc = client?.rfc ?? payload.rfc;
-        }
-
-        await updateClientDynamicApi(clientId, payload);
-        setIsEditingClient(false);
-        await load();
-        notificationService.success(
-          "¡Cliente actualizado!",
-          "Los datos del cliente se guardaron correctamente.",
-        );
-      } catch (updateError) {
-        notificationService.error("Error al actualizar", updateError.message);
+  const updateClientMutation = useMutation({
+    mutationFn: async (payload) => {
+      if (Object.prototype.hasOwnProperty.call(payload, "rfc")) {
+        payload.rfc = client?.rfc ?? payload.rfc;
       }
+      return updateClientDynamicApi(clientId, payload);
     },
-    [client, clientForm, clientId, load],
+    onSuccess: () => {
+      setIsEditingClient(false);
+      queryClient.invalidateQueries(["client", clientId]);
+      queryClient.invalidateQueries(["clientsDynamic"]);
+      notificationService.success(
+        "¡Cliente actualizado!",
+        "Los datos del cliente se guardaron correctamente.",
+      );
+    },
+    onError: (updateError) => {
+      notificationService.error("Error al actualizar", updateError.message);
+    }
+  });
+
+  const handleUpdateClient = useCallback(
+    (event) => {
+      event.preventDefault();
+      updateClientMutation.mutate({ ...clientForm });
+    },
+    [clientForm, updateClientMutation],
   );
+
+  const deleteClientMutation = useMutation({
+    mutationFn: () => deleteClientApi(clientId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["clientsDynamic"]);
+      notificationService.toast({
+        title: "Cliente eliminado correctamente",
+        icon: "success",
+      });
+      navigate("/clientes");
+    },
+    onError: (deleteError) => {
+      notificationService.error("Error", deleteError.message);
+    }
+  });
 
   const handleDeleteClient = useCallback(async () => {
     const contactCount = contactRows.length || 0;
     const text =
       contactCount > 0
-        ? `Este cliente tiene ${contactCount} contacto(s) asociado(s). Se eliminará "${client.business_name}" y todos sus datos.`
+        ? `Se eliminará "${client.business_name}" y sus ${contactCount} contacto(s). Las cotizaciones y ventas asociadas se conservarán.`
         : `Se eliminará el cliente "${client.business_name}".`;
     const confirm = await notificationService.confirm({
       title: "¿Estás seguro?",
@@ -256,17 +261,8 @@ export function useClientRecord({ clientId, navigate }) {
 
     if (!confirm) return;
 
-    try {
-      await deleteClientApi(clientId);
-      notificationService.toast({
-        title: "Cliente eliminado correctamente",
-        icon: "success",
-      });
-      navigate("/clientes");
-    } catch (deleteError) {
-      notificationService.error("Error", deleteError.message);
-    }
-  }, [client, clientId, contactRows.length, navigate]);
+    deleteClientMutation.mutate();
+  }, [client, contactRows.length, deleteClientMutation]);
 
   return {
     client,
@@ -275,7 +271,12 @@ export function useClientRecord({ clientId, navigate }) {
     productsList,
     loading,
     error,
-    load,
+    load: () => {
+      queryClient.invalidateQueries(["client", clientId]);
+      queryClient.invalidateQueries(["clientsDynamic"]);
+      queryClient.invalidateQueries(["contactsDynamic", clientId]);
+      queryClient.invalidateQueries(["products", clientId]);
+    },
     isEditingClient,
     setIsEditingClient,
     clientForm,

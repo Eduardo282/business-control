@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
+import { getSocket } from "../../utils/socketManager.js";
 import { useAuth } from "../../hooks/useAuth";
 import { logger } from "../../services/logger";
 import { Headphones, MessageCircle, Send, Clock, User, X, CheckCircle, Inbox, Mail, AlertCircle } from "@icons";
@@ -54,7 +55,8 @@ export default function AgentSupport() {
   useEffect(() => {
     const token = localStorage.getItem("bc_token");
     if (!token) return;
-    const s = io(API_URL, { auth: { token }, transports: ["websocket", "polling"], reconnection: true, reconnectionAttempts: 10, reconnectionDelay: 1000 });
+    const s = getSocket(token);
+    if (!s) return;
 
     s.on("connect", () => { setConnected(true); s.emit("queue:list"); });
     s.on("disconnect", () => { setConnected(false); addToast("Conexión perdida. ReConectando…", "warn"); });
@@ -111,7 +113,17 @@ export default function AgentSupport() {
     s.on("error", ({ message }) => logger.error("Socket error", message));
 
     setSocket(s);
-    return () => s.disconnect();
+    return () => {
+      s.off("connect");
+      s.off("disconnect");
+      s.off("queue:update");
+      s.off("agent:active");
+      s.off("conversation:created");
+      s.off("message:new");
+      s.off("conversation:ended");
+      s.off("message:status");
+      s.off("error");
+    };
   }, []);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, remoteTyping]);

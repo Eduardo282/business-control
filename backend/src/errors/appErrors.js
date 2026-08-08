@@ -12,12 +12,6 @@ export function forbidden(message = "No autorizado") {
   });
 }
 
-export function badUserInput(message, details = {}) {
-  return new GraphQLError(message, {
-    extensions: { code: "BAD_USER_INPUT", details },
-  });
-}
-
 export function notFound(message = "Recurso no encontrado") {
   return new GraphQLError(message, {
     extensions: { code: "NOT_FOUND" },

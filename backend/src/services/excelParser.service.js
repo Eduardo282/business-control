@@ -9,7 +9,7 @@ import * as XLSX from "xlsx";
  * @param {string[]} headers
  * @returns {string[]}
  */
-export function ensureUniqueHeaders(headers) {
+function ensureUniqueHeaders(headers) {
   const seen = new Map();
   return headers.map((header, index) => {
     const base = String(header || `column_${index + 1}`);

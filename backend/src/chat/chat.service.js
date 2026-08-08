@@ -77,18 +77,6 @@ export async function getActiveConversationsByAgent(agentUserId) {
   return rows;
 }
 
-export async function getConversationsByContact(contactId) {
-  const [rows] = await pool.execute(
-    `SELECT sc.*
-     FROM support_conversations sc
-     WHERE sc.contact_id = ?
-     ORDER BY sc.created_at DESC
-     LIMIT 50`,
-    [contactId]
-  );
-  return rows;
-}
-
 /** Get the active (non-closed) conversation for a contact, if any */
 export async function getOpenConversationByContact(contactId) {
   const [rows] = await pool.execute(
@@ -123,7 +111,7 @@ export async function addMessage(conversationId, senderType, senderId, body) {
   return getMessage(result.insertId);
 }
 
-export async function getMessage(id) {
+async function getMessage(id) {
   const [rows] = await pool.execute(
     `SELECT * FROM support_messages WHERE id = ?`,
     [id]

@@ -5,7 +5,7 @@ import {
 } from "../../../utils/excelExport";
 import { loadXlsx } from "../../../utils/dynamicImports";
 
-export const CONTACT_TEMPLATE_COLUMNS = [
+const CONTACT_TEMPLATE_COLUMNS = [
   "NOMBRE COMPLETO",
   "CORREO ELECTRONICO",
   "PUESTO",
@@ -149,7 +149,7 @@ export function buildContactExportContext(contactColumnsFromView, contactsTable)
   return { exportColumns, exportRows };
 }
 
-export function resolveContactExportValue(row, columnName) {
+function resolveContactExportValue(row, columnName) {
   if (columnName === "has_portal_access") {
     return row?.has_portal_access ? "Sí" : "No";
   }
@@ -215,11 +215,13 @@ export async function exportContactsToExcel({ exportColumns, exportRows }) {
   });
 }
 
-export async function downloadContactsTemplate() {
+export async function downloadContactsTemplate({ exportColumns }) {
+  const columnLabels = exportColumns.map((col) => col.label);
+
   await exportTemplateToExcel({
-    columns: CONTACT_TEMPLATE_COLUMNS,
+    columns: columnLabels,
     sheetName: "Plantilla Contactos",
     fileName: "Plantilla_Contactos.xlsx",
-    widths: [34, 34, 26, 20],
+    widths: columnLabels.map(() => 20),
   });
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { BadgeDollarSign, FileSpreadsheet, FileText, Search, SlidersHorizontal } from "@icons";
+import { BadgeDollarSign, FileSpreadsheet, FileText, Search, SlidersHorizontal, X } from "@icons";
 
 export function QuoteHistoryToolbar({
   activeFilterCount,
@@ -26,10 +26,12 @@ export function QuoteHistoryToolbar({
 
       <div className="w-full sm:w-auto flex items-center gap-2">
         <div className="relative flex-1 sm:flex-none">
-          <Search
-            size={18}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 pointer-events-none"
-          />
+          {!query && (
+            <Search
+              size={18}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 pointer-events-none"
+            />
+          )}
           <input
             type="text"
             value={query}
@@ -37,6 +39,16 @@ export function QuoteHistoryToolbar({
             placeholder="Buscar por cliente, contacto…"
             className="w-full sm:w-80 pl-4 pr-11 py-3 bg-white dark:bg-dark-900 border border-zinc-300 dark:border-dark-700 rounded-xl text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-500/30 focus:border-[#2277B4] dark:focus:border-blue-500 transition-all shadow-sm"
           />
+          {query && (
+            <button
+              type="button"
+              onClick={() => onQueryChange("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:focus:ring-blue-400/40 rounded"
+              title="Limpiar búsqueda"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
 
         <button

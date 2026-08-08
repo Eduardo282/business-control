@@ -113,7 +113,7 @@ export function ValidityGraph({ startDate, expirationDate }) {
       </div>
       <div className="h-2.5 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden shadow-inner">
         <div
-          className={`h-full ${colorClass} transition-all duration-1000 ease-out`}
+          className={`h-full ${colorClass} transition-all duration-300 ease-out`}
           style={{ width: `${remainingPercentage}%` }}
         />
       </div>

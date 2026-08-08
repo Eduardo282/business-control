@@ -100,7 +100,17 @@ export default function PoliciesView({ controller }) {
                 placeholder="Buscar cotización, folio, cliente o contacto…"
                 className="w-52 border-none bg-transparent px-3 text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none dark:text-zinc-200 md:w-72"
               />
-              <div className="px-3 py-1.5 text-zinc-400 dark:text-zinc-500">
+              {q && (
+                <button
+                  type="button"
+                  onClick={() => setQ("")}
+                  className="p-1.5 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+                  title="Limpiar búsqueda"
+                >
+                  <X size={14} />
+                </button>
+              )}
+              <div className="px-3 py-1.5 text-zinc-400 dark:text-zinc-500 flex items-center justify-center">
                 <Search size={16} />
               </div>
             </div>

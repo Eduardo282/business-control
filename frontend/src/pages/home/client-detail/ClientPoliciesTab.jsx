@@ -364,10 +364,12 @@ export const ClientPoliciesTab = ({ clientId }) => {
         {/* Buscador global */}
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search
-              size={14}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary dark:text-zinc-500"
-            />
+            {!globalFilter && (
+              <Search
+                size={14}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary dark:text-zinc-500"
+              />
+            )}
             <input
               type="text"
               placeholder="Buscar…"
@@ -375,6 +377,16 @@ export const ClientPoliciesTab = ({ clientId }) => {
               onChange={(e) => setGlobalFilter(e.target.value)}
               className="pl-3 pr-8 py-1.5 text-sm rounded-lg border border-light-border dark:border-dark-700 bg-white dark:bg-dark-900 focus:outline-none focus:ring-1 focus:ring-[#2277B4] dark:focus:ring-blue-400/40 focus:border-[#2277B4] dark:focus:border-blue-400 w-44 text-black dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 transition-colors"
             />
+            {globalFilter && (
+              <button
+                type="button"
+                onClick={() => setGlobalFilter("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+                title="Limpiar búsqueda"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
           <button
             onClick={() => setShowFilters((p) => !p)}
@@ -434,6 +446,15 @@ export const ClientPoliciesTab = ({ clientId }) => {
                     placeholder="Buscar valor…"
                     className="w-full bg-transparent dark:bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none"
                   />
+                  {policyFilterPickerSearch && (
+                    <button
+                      onClick={() => setPolicyFilterPickerSearch("")}
+                      className="p-1 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+                      title="Limpiar búsqueda"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
 
                 <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 dark:border-dark-700 divide-y divide-zinc-100 dark:divide-dark-700 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">

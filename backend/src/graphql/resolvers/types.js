@@ -16,7 +16,7 @@ export const Client = {
     if (ctx.user.role === "CONTACT_PORTAL" && String(parent.id) !== String(ctx.user.clientId)) {
       throw forbidden();
     }
-    return listContactsByClientAction(parent.id);
+    return ctx.loaders?.contactsByClientId?.load(parent.id) || listContactsByClientAction(parent.id);
   },
   address: (parent) => {
     const parts = [parent.ciudad, parent.codigo_postal].filter(Boolean);
@@ -36,7 +36,7 @@ export const Contact = {
       // Los admins pueden ver los servicios de todos
       requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
     }
-    return listContactProductsAction(parent.id);
+    return ctx.loaders?.activeServicesByContactId?.load(parent.id) || listContactProductsAction(parent.id);
   },
 };
 
@@ -61,11 +61,28 @@ export const ContactProduct = {
 
 export const Quote = {
   client: async (parent, _args, ctx) => {
-    return ctx.loaders?.clientById?.load(parent.client_id) || getClientAction(parent.client_id);
+    if (parent.client_id) {
+      const c = await (ctx.loaders?.clientById?.load(parent.client_id) || getClientAction(parent.client_id));
+      if (c) return c;
+    }
+    if (parent.client_name) {
+      return { id: String(parent.client_id || "deleted"), business_name: parent.client_name };
+    }
+    return null;
   },
   contact: async (parent, _args, ctx) => {
-    if (!parent.contact_id) return null;
-    return ctx.loaders?.contactById?.load(parent.contact_id) || getContactAction(parent.contact_id);
+    if (parent.contact_id) {
+      const c = await (ctx.loaders?.contactById?.load(parent.contact_id) || getContactAction(parent.contact_id));
+      if (c) return c;
+    }
+    if (parent.contact_name) {
+      return {
+        id: String(parent.contact_id || "deleted"),
+        client_id: String(parent.client_id || "deleted"),
+        full_name: parent.contact_name,
+      };
+    }
+    return null;
   },
   user: async (parent, _args, ctx) => {
     return ctx.loaders?.userById?.load(parent.user_id) || findUserWithRole(parent.user_id);
@@ -87,11 +104,28 @@ export const Sale = {
     return ctx.loaders?.quoteById?.load(parent.quote_id) || getQuoteAction(parent.quote_id);
   },
   client: async (parent, _args, ctx) => {
-    return ctx.loaders?.clientById?.load(parent.client_id) || getClientAction(parent.client_id);
+    if (parent.client_id) {
+      const c = await (ctx.loaders?.clientById?.load(parent.client_id) || getClientAction(parent.client_id));
+      if (c) return c;
+    }
+    if (parent.client_name) {
+      return { id: String(parent.client_id || "deleted"), business_name: parent.client_name };
+    }
+    return null;
   },
   contact: async (parent, _args, ctx) => {
-    if (!parent.contact_id) return null;
-    return ctx.loaders?.contactById?.load(parent.contact_id) || getContactAction(parent.contact_id);
+    if (parent.contact_id) {
+      const c = await (ctx.loaders?.contactById?.load(parent.contact_id) || getContactAction(parent.contact_id));
+      if (c) return c;
+    }
+    if (parent.contact_name) {
+      return {
+        id: String(parent.contact_id || "deleted"),
+        client_id: String(parent.client_id || "deleted"),
+        full_name: parent.contact_name,
+      };
+    }
+    return null;
   },
   user: async (parent, _args, ctx) => {
     if (!parent.user_id) return null;
@@ -113,6 +147,7 @@ export const Product = {
     if (!parent.client_id) return null;
     return ctx.loaders?.clientById?.load(parent.client_id) || getClientAction(parent.client_id);
   },
+  category: (parent) => parent.category || "Sin Categoría",
 };
 
 export const FormDraft = {

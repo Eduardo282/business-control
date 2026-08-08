@@ -94,11 +94,14 @@ export default function useClientExports(getExportContext) {
 
   const downloadTemplate = useCallback(async () => {
     try {
+      const { exportColumns } = getExportContext();
+      const columnLabels = exportColumns.map((col) => col.label);
+
       await exportTemplateToExcel({
-        columns: CLIENT_TEMPLATE_COLUMNS,
+        columns: columnLabels,
         sheetName: "Plantilla Clientes",
         fileName: "Plantilla_Clientes.xlsx",
-        widths: [34, 18, 30, 18, 20, 30, 18, 18],
+        widths: columnLabels.map(() => 20),
       });
     } catch (error) {
       notificationService.error(
@@ -106,7 +109,7 @@ export default function useClientExports(getExportContext) {
         error.message || "No se pudo generar la plantilla de Excel.",
       );
     }
-  }, []);
+  }, [getExportContext]);
 
   return {
     downloadTemplate,

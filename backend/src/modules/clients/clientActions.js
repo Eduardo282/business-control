@@ -1,3 +1,4 @@
+import { pool } from "../../config/db.js";
 import {
   bulkCreateClients,
   createClient,
@@ -106,15 +107,59 @@ export async function updateClientAction(idOrObj, inputObj) {
 }
 
 /**
- * Deletes a client record by ID.
+ * Deletes a client record by ID (physical deletion).
+ * Snapshots business_name and contact names on quotes and sales before deleting.
+ * Contacts cascade-delete, quotes and sales set client_id to NULL.
  * @param {object|string|number} idOrObj
  * @returns {Promise<boolean>}
  */
 export async function deleteClientAction(idOrObj) {
   const id = typeof idOrObj === "object" && idOrObj !== null ? idOrObj.id : idOrObj;
   if (!id) return false;
-  const rowsAffected = await deleteClient(id);
-  return rowsAffected > 0;
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    await connection.query(
+      `UPDATE quotes q
+       JOIN clients c ON q.client_id = c.id
+       SET q.client_name = COALESCE(q.client_name, c.business_name)
+       WHERE q.client_id = ?`,
+      [id],
+    );
+    await connection.query(
+      `UPDATE quotes q
+       JOIN client_contacts cc ON q.contact_id = cc.id
+       SET q.contact_name = COALESCE(q.contact_name, cc.full_name)
+       WHERE q.client_id = ?`,
+      [id],
+    );
+    await connection.query(
+      `UPDATE sales s
+       JOIN clients c ON s.client_id = c.id
+       SET s.client_name = COALESCE(s.client_name, c.business_name)
+       WHERE s.client_id = ?`,
+      [id],
+    );
+    await connection.query(
+      `UPDATE sales s
+       JOIN client_contacts cc ON s.contact_id = cc.id
+       SET s.contact_name = COALESCE(s.contact_name, cc.full_name)
+       WHERE s.client_id = ?`,
+      [id],
+    );
+
+    const [result] = await connection.query("DELETE FROM clients WHERE id = ?", [id]);
+
+    await connection.commit();
+    return result.affectedRows > 0;
+  } catch (err) {
+    await connection.rollback();
+    throw err;
+  } finally {
+    connection.release();
+  }
 }
 
 /**

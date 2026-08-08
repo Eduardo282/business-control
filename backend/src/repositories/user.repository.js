@@ -25,18 +25,6 @@ export async function findActiveUserByEmail(email) {
   return rows?.[0] || null;
 }
 
-/**
- * Busca un usuario por su ID.
- * @param {number|string} id
- * @returns {Promise<object|null>}
- */
-export async function findUserById(id) {
-  const [rows] = await pool.query(
-    "SELECT id, full_name, email, telefono, role_id FROM users WHERE id = ?",
-    [id],
-  );
-  return rows?.[0] || null;
-}
 
 /**
  * Busca un usuario por ID con su rol resuelto.
@@ -84,18 +72,6 @@ export async function findActiveUserWithRoleById(userId) {
 }
 
 
-/**
- * Busca un usuario por email (para verificar existencia antes de registro).
- * @param {string} email
- * @returns {Promise<object|null>}
- */
-export async function findUserByEmail(email) {
-  const [rows] = await pool.query(
-    "SELECT id, full_name, email FROM users WHERE email = ?",
-    [email],
-  );
-  return rows?.[0] || null;
-}
 
 /**
  * Busca un usuario por rol.

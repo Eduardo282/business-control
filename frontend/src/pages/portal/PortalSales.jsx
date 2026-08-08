@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ExternalLink, FileText, FolderOpen, Search, Trash2 } from "@icons";
+import { ExternalLink, FileText, FolderOpen, Search, Trash2, X } from "@icons";
 import {
   deletePortalSaleApi,
   listPortalSalesApi,
@@ -102,8 +102,17 @@ export default function PortalSales() {
             value={q}
             onChange={(event) => setQ(event.target.value)}
             placeholder="Buscar ventas..."
-            className="w-64 rounded-xl border border-zinc-200 bg-white py-2 pl-9 pr-4 text-sm text-zinc-700 shadow-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-black/20"
+            className="w-64 rounded-xl border border-zinc-200 bg-white py-2 pl-9 pr-8 text-sm text-zinc-700 shadow-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:shadow-black/20"
           />
+          {q && (
+            <button
+              onClick={() => setQ("")}
+              className="absolute right-3 top-2.5 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+              title="Limpiar búsqueda"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
 

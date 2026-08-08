@@ -25,7 +25,7 @@ export default function QuotePreviewModal({
   } = totals;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/65 backdrop-blur-md p-4 animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/65 backdrop-blur-sm p-4 animate-fade-in">
       <div className="w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-3xl bg-white dark:bg-dark-900 shadow-[0_30px_120px_rgba(8,20,45,0.45)] flex flex-col">
         <div className="px-6 md:px-7 py-4 border-b border-white/20 flex items-center justify-between bg-gradient-to-r from-[#102445] via-[#0F2B5A] to-[#0A1F43] text-white">
           <div className="flex items-center gap-3">

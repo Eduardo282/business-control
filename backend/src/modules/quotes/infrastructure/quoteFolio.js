@@ -5,9 +5,9 @@ import { pool } from "../../../config/db.js";
 const QUOTE_FOLIO_RETRY_LIMIT = 50;
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-export const QUOTE_FOLIO_PATTERN = /^[A-Z]{4}\d{3}$/;
+const QUOTE_FOLIO_PATTERN = /^[A-Z]{4}\d{3}$/;
 
-export function normalizeQuoteFolio(folio) {
+function normalizeQuoteFolio(folio) {
   const cleanFolio = String(folio || "").trim().toUpperCase();
   return QUOTE_FOLIO_PATTERN.test(cleanFolio) ? cleanFolio : "";
 }

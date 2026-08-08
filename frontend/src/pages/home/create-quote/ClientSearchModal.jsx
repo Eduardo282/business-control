@@ -46,6 +46,16 @@ export default function ClientSearchModal({
               className="w-full pl-4 pr-10 py-3 rounded-xl border border-zinc-200 dark:border-dark-700 bg-zinc-50 dark:bg-dark-800 text-zinc-700 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-dark-900 focus:border-[#2277B4] dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-500/30 transition-all"
               autoFocus
             />
+            {clientSearch && (
+              <button
+                type="button"
+                onClick={() => onSearchChange("")}
+                className="absolute right-9 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+                title="Limpiar búsqueda"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
 
           <div className="space-y-2 mt-4">
@@ -92,7 +102,7 @@ export default function ClientSearchModal({
             : clientSearch.trim().length > 0 ?
               <div className="text-center py-10 text-zinc-400 dark:text-zinc-500">
                 <Building2 size={40} className="mx-auto mb-3 opacity-20" />
-                No se encontraron clientes con &quot;{clientSearch}&quot;
+                No se encontraron clientes con la clave &quot;{clientSearch}&quot;
               </div>
             : <div className="text-center py-10 text-zinc-400 dark:text-zinc-500">
                 <Search size={40} className="mx-auto mb-3 opacity-20" />

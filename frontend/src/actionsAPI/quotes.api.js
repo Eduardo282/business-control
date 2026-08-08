@@ -44,30 +44,7 @@ export const listQuotesApi = async () => {
   const data = await gql(query);
   return data.quotes;
 };
-export const listQuotesByClientApi = async (client_id) => {
-  const query = `
-    query($client_id: ID!) {
-      quotesByClient(client_id: $client_id) {
-        id
-        folio
-        created_at
-        total
-        status
-        is_registered
-        registered_at
-        email_sent_at
-        user {
-          full_name
-        }
-        contact {
-          full_name
-        }
-      }
-    }
-  `;
-  const data = await gql(query, { client_id });
-  return data.quotesByClient;
-};
+
 export const getQuoteApi = async (id) => {
   const query = `
     query GetQuote($id: ID!) {

@@ -44,9 +44,19 @@ export default function ProductSearchModal({
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder="Buscar producto por folio, nombre o categoría…"
                 className="w-full glass-input bg-light-bg dark:!bg-black/30 text-light-text-primary dark:text-white border-light-border dark:border-white/10"
-                style={{ paddingRight: "2.5rem" }}
+                style={{ paddingRight: "4.5rem" }}
                 autoFocus
               />
+              {prodSearch && (
+                <button
+                  type="button"
+                  onClick={() => onSearchChange("")}
+                  className="absolute right-10 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+                  title="Limpiar búsqueda"
+                >
+                  <X size={16} />
+                </button>
+              )}
               <Search
                 size={18}
                 className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-light-text-secondary dark:text-zinc-400"
@@ -131,7 +141,7 @@ export default function ProductSearchModal({
                           {productTypeFilter && prodResults.length > 0
                             ? "No hay productos para el tipo seleccionado."
                             : prodSearch.trim().length > 0
-                            ? `No se encontraron productos con "${prodSearch}"`
+                            ? `No se encontraron productos con la clave "${prodSearch}"`
                             : "No hay productos disponibles."}
                         </p>
                       </td>

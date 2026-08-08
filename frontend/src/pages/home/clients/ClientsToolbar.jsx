@@ -39,7 +39,16 @@ export default function ClientsToolbar({
             title="Busca por todos los campos. Ignora acentos, mayusculas y caracteres especiales."
             className="bg-transparent dark:bg-transparent border-none text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 px-3 w-40 md:w-52 focus:outline-none"
           />
-          <div className="px-3 py-1.5 text-black dark:text-zinc-300">
+          {query && (
+            <button
+              onClick={() => onQueryChange("")}
+              className="p-1.5 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+              title="Limpiar búsqueda"
+            >
+              <X size={14} />
+            </button>
+          )}
+          <div className="px-3 py-1.5 text-black dark:text-zinc-300 flex items-center justify-center">
             <Search size={16} />
           </div>
         </div>

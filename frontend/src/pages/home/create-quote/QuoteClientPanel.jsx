@@ -173,7 +173,7 @@ export default function QuoteClientPanel({
       )}
 
       <Card
-        className={`sticky top-24${!selectedClient || items.length === 0 ? "opacity-40 pointer-events-none select-none grayscale" : "transition-all duration-500"}`}
+        className={`sticky top-24${!selectedClient || items.length === 0 ? "opacity-40 pointer-events-none select-none grayscale" : "transition-all duration-150"}`}
       >
         <button
           onClick={() => {

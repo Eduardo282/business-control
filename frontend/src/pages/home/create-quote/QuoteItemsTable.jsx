@@ -75,6 +75,15 @@ export default function QuoteItemsTable({
                     placeholder="Buscar valor…"
                     className="w-full bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none"
                   />
+                  {tableFilterPickerSearch && (
+                    <button
+                      onClick={() => setTableFilterPickerSearch("")}
+                      className="p-1 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+                      title="Limpiar búsqueda"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
 
                 <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 dark:border-dark-700 bg-white dark:bg-dark-900 divide-y divide-zinc-100 dark:divide-dark-700">
@@ -111,10 +120,10 @@ export default function QuoteItemsTable({
         )}
 
       <div
-        className={`glass-panel overflow-hidden rounded-xl border border-light-border dark:border-white/10 ${!selectedClient || items.length === 0 ? "opacity-40 pointer-events-none select-none grayscale relative" : "transition-all duration-500"}`}
+        className={`glass-panel overflow-hidden rounded-xl border border-light-border dark:border-white/10 ${!selectedClient || items.length === 0 ? "opacity-40 pointer-events-none select-none grayscale relative" : "transition-all duration-150"}`}
       >
         {(!selectedClient || items.length === 0) && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-50/50 dark:bg-zinc-900/50 backdrop-blur-[2px]">
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-50/50 dark:bg-zinc-900/50 backdrop-blur-sm-[2px]">
             <div className="p-3 bg-white dark:bg-zinc-800 rounded-full shadow-lg mb-3">
               <BadgeDollarSign size={32} className="text-zinc-400" />
             </div>

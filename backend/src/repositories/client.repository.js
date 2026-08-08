@@ -113,7 +113,7 @@ export async function updateClient(id, data, queryRunner = pool) {
 }
 
 /**
- * Elimina un cliente.
+ * Elimina un cliente de la base de datos MySQL (borrado físico).
  * @param {number|string} id
  * @param {object} [queryRunner]
  * @returns {Promise<number>} Número de filas afectadas
@@ -150,28 +150,7 @@ export async function searchClients(q, queryRunner = pool) {
  * @param {object} queryRunner
  * @returns {Promise<boolean>}
  */
-export async function deleteClientCascade(id, queryRunner) {
-  // 1. Eliminar contactos asociados (FK sin cascade)
-  await queryRunner.query("DELETE FROM client_contacts WHERE client_id = ?", [id]);
 
-  // 2. Eliminar historial de precios de los productos del cliente para evitar error de FK
-  const [products] = await queryRunner.query(
-    "SELECT id FROM products WHERE client_id = ?",
-    [id],
-  );
-
-  if (products.length > 0) {
-    const productIds = products.map((p) => p.id);
-    await queryRunner.query(
-      "DELETE FROM product_price_history WHERE product_id IN (?)",
-      [productIds],
-    );
-  }
-
-  // 3. Eliminar cliente
-  const [res] = await queryRunner.query("DELETE FROM clients WHERE id = ?", [id]);
-  return res.affectedRows > 0;
-}
 
 /**
  * Inserta múltiples clientes de forma masiva y retorna sus datos junto con el ID generado.
@@ -228,51 +207,6 @@ export async function bulkCreateClients(createdByUserId, clients, queryRunner = 
   }
 
   return results;
-}
-
-/**
- * Inserta un registro en client_products.
- * @param {object} data
- * @param {object} [queryRunner]
- * @returns {Promise<number>} ID insertado
- */
-export async function createClientProduct(data, queryRunner = pool) {
-  const { client_id, product_id, license_key, start_date, expiration_date } = data;
-  const [result] = await queryRunner.query(
-    `INSERT INTO client_products (client_id, product_id, license_key, start_date, expiration_date)
-     VALUES (?, ?, ?, ?, ?)`,
-    [client_id, product_id, license_key || null, start_date || null, expiration_date || null],
-  );
-  return result.insertId;
-}
-
-/**
- * Elimina un registro de client_products.
- * @param {number|string} id
- * @param {object} [queryRunner]
- * @returns {Promise<void>}
- */
-export async function deleteClientProduct(id, queryRunner = pool) {
-  await queryRunner.query("DELETE FROM client_products WHERE id = ?", [id]);
-}
-
-/**
- * Obtiene los productos (polizas/servicios) asignados indirectamente a través de los contactos de un cliente.
- * @param {number|string} clientId
- * @param {object} [queryRunner]
- * @returns {Promise<object[]>}
- */
-export async function listClientProducts(clientId, queryRunner = pool) {
-  const [rows] = await queryRunner.query(
-    `SELECT cp.id, cp.contact_id, cp.license_key, cp.start_date, cp.expiration_date, cp.status,
-            p.id as product_id, p.folio as product_folio, p.name as product_name, p.category as product_category, p.description as product_description
-     FROM contact_products cp
-     JOIN client_contacts cc ON cp.contact_id = cc.id
-     JOIN products p ON cp.product_id = p.id
-     WHERE cc.client_id = ?`,
-    [clientId],
-  );
-  return rows;
 }
 
 export function escapeIdentifier(identifier) {

@@ -8,6 +8,7 @@ import {
   createQuote,
   dismissAllQuoteNotifications,
   dismissQuoteNotification,
+  deleteQuote,
   fetchProductsForQuote,
   findContactRequestedQuoteForUpdate,
   findPortalQuote,
@@ -25,7 +26,6 @@ import {
   replaceQuoteItems,
   resolveQuoteRequest,
   softDeletePortalQuote,
-  softDeleteQuote,
   updatePortalQuoteResponseStatus,
   updateQuotePortalStatus,
   updateQuoteStatus,
@@ -61,7 +61,7 @@ async function getQuoteItemsWithProduct(quoteId, queryRunner) {
   return rows;
 }
 
-export async function registerQuoteWithConnection(id, quote, connection) {
+async function registerQuoteWithConnection(id, quote, connection) {
   if (quote.is_registered) {
     return quote;
   }
@@ -254,8 +254,22 @@ export async function rejectQuoteAction(id) {
 
 export async function deleteQuoteAction(id) {
   const targetId = typeof id === "object" ? id?.id : id;
-  const affected = await softDeleteQuote({ quoteId: targetId });
-  return affected > 0;
+  const connection = await getConnection();
+
+  try {
+    await connection.beginTransaction();
+    const affected = await deleteQuote({
+      quoteId: targetId,
+      queryRunner: connection,
+    });
+    await connection.commit();
+    return affected > 0;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 export async function getQuoteAction(id) {
@@ -430,6 +444,7 @@ async function sendResolvedQuoteToContact(quoteId, loadedQuote = null) {
     quote_id: quoteId,
     contact_email: contactEmail,
     message: buildAutomaticContactEmailMessage(quote),
+    prefetchedQuote: quote,
   });
 }
 
@@ -610,7 +625,7 @@ const defaultEmailDeps = {
   logger,
 };
 
-export async function sendQuoteEmailAction({ quote_id, contact_email, message }, dependencies = defaultEmailDeps) {
+export async function sendQuoteEmailAction({ quote_id, contact_email, message, prefetchedQuote }, dependencies = defaultEmailDeps) {
   const {
     fetchFullQuote: fetchQuote,
     renderHtmlToPdf: renderPdf,
@@ -627,7 +642,7 @@ export async function sendQuoteEmailAction({ quote_id, contact_email, message },
   const startedAt = Date.now();
 
   const [quote, emailValidation] = await Promise.all([
-    fetchQuote(quote_id),
+    prefetchedQuote ? Promise.resolve(prefetchedQuote) : fetchQuote(quote_id),
     validateEmail(contact_email),
   ]);
 
@@ -695,8 +710,8 @@ export function assertGenericQuoteStatusUpdateAllowed(quote) {
   if (!quote) {
     throw new Error("Cotización no encontrada");
   }
-  if (quote.is_contact_requested && quote.status === "SOLICITADA") {
-    throw new Error("Las cotizaciones solicitadas que están pendientes deben gestionarse desde notificaciones.");
+  if (quote.is_contact_requested) {
+    throw new Error("Las cotizaciones solicitadas por el contacto no pueden cambiarse mediante actualización genérica.");
   }
 }
 

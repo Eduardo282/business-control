@@ -11,7 +11,7 @@ export default function AuthDecorativePanel({
         <img
           src={logo}
           alt="Business Control"
-          className="w-80 mb-8 drop-shadow-[0_20px_25px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-500"
+          className="w-80 mb-8 drop-shadow-[0_20px_25px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform duration-150"
         />
         <h2 className="text-white text-3xl font-semibold text-center mb-4">
           {title}

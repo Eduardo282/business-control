@@ -258,21 +258,14 @@ test("upstream failures propagate without persistence", async (t) => {
 });
 
 test("quote creation exports remain compatible", async () => {
-  const [quoteModule, quoteDraftDomain, legacyDraftService] =
+  const [quoteModule, quoteDraftDomain] =
     await Promise.all([
       import("../src/modules/quotes/createQuote.js"),
       import("../src/modules/quotes/domain/quoteDraft.js"),
-      import("../src/services/quoteDraft.service.js"),
     ]);
 
   assert.equal(typeof quoteModule.createQuoteAction, "function");
   assert.equal(typeof quoteModule.createQuoteFromDraft, "function");
-  assert.equal(
-    legacyDraftService.createQuoteDraft,
-    quoteDraftDomain.createQuoteDraft,
-  );
-  assert.equal(
-    legacyDraftService.createQuoteActor,
-    quoteDraftDomain.createQuoteActor,
-  );
+  assert.equal(typeof quoteDraftDomain.createQuoteDraft, "function");
+  assert.equal(typeof quoteDraftDomain.createQuoteActor, "function");
 });

@@ -109,8 +109,21 @@ export default function CategoryManagerModal({
                 }}
                 placeholder="Buscar categoría..."
                 aria-label="Buscar categorías"
-                className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-9 pr-3 text-sm text-zinc-700 outline-none transition-colors placeholder:text-zinc-400 focus:border-[#2277B4] focus:ring-1 focus:ring-[#2277B4] dark:border-dark-700 dark:bg-dark-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/30"
+                className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-9 pr-8 text-sm text-zinc-700 outline-none transition-colors placeholder:text-zinc-400 focus:border-[#2277B4] focus:ring-1 focus:ring-[#2277B4] dark:border-dark-700 dark:bg-dark-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/30"
               />
+              {categorySearch && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCategorySearch("");
+                    setCategoryPage(1);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+                  title="Limpiar búsqueda"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
             {availableCategories.length === 0 ? (
               <p className="text-sm text-zinc-500 dark:text-zinc-400">

@@ -64,7 +64,8 @@ export function useContactExport({ contactColumnsFromView, contactsTable }) {
 
   const handleDownloadContactsTemplate = async () => {
     try {
-      await downloadContactsTemplate();
+      const context = getContactExportContext();
+      await downloadContactsTemplate({ exportColumns: context.exportColumns });
     } catch (e) {
       await showExportError(
         e.message || "No se pudo generar la plantilla de Excel.",

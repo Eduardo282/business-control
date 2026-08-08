@@ -67,4 +67,5 @@ Thumbs.db
 recover.*
 line*.jsonl
 table_code.json
-
+# --- HERRAMIENTAS Y REGISTROS LOCALES ---
+.atl/

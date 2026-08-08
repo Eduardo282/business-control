@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { flexRender } from "@tanstack/react-table";
 import { ChevronDown, ChevronUp, FolderOpen } from "@icons";
 
@@ -7,7 +7,7 @@ import {
   hasValue,
 } from "./clientTableHelpers";
 
-export default function ClientsTable({
+const ClientsTable = memo(function ClientsTable({
   columns,
   expandedRows,
   getRowDetailColumns,
@@ -154,4 +154,6 @@ export default function ClientsTable({
       </table>
     </div>
   );
-}
+});
+
+export default ClientsTable;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
 import { io } from "socket.io-client";
+import { getSocket } from "../../utils/socketManager.js";
 import { logger } from "../../services/logger";
 import {
   Send,
@@ -56,13 +57,8 @@ export default function PortalSupport() {
     const token = sessionStorage.getItem("bc_portal_token");
     if (!token) return;
 
-    const s = io(API_URL, {
-      auth: { token },
-      transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-    });
+    const s = getSocket(token);
+    if (!s) return;
 
     s.on("connect", () => {
       setConnected(true);
@@ -164,8 +160,17 @@ export default function PortalSupport() {
     socketRef.current = s;
 
     return () => {
-      socketRef.current = null;
-      s.disconnect();
+      s.off("connect");
+      s.off("disconnect");
+      s.off("reconnect");
+      s.off("conversation:created");
+      s.off("conversation:assigned");
+      s.off("conversation:closed");
+      s.off("message:new");
+      s.off("agent:typing");
+      s.off("agent:status");
+      s.off("message:status");
+      s.off("error");
     };
   }, [addToast]);
 

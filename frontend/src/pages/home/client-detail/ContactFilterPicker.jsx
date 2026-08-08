@@ -61,6 +61,18 @@ export default function ContactFilterPicker({
               placeholder="Buscar valor…"
               className="w-full bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
             />
+            {contactFilterPickerSearch && (
+              <button
+                onClick={() => {
+                  setContactFilterPickerSearch("");
+                  setContactFilterPickerPage(0);
+                }}
+                className="p-1 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+                title="Limpiar búsqueda"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
 
           <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 dark:border-dark-700 divide-y divide-zinc-100 dark:divide-dark-700">

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
+import { getSocket } from "../../utils/socketManager.js";
+import { useNotifications } from "../../context/NotificationContext.jsx";
 import logo from "../../assets/logo.png";
-import { getPendingQuoteRequestsCountApi } from "../../actionsAPI/quotes.api";
 import { logger } from "../../services/logger";
 import {
   LayoutDashboard,
@@ -56,61 +57,40 @@ function Item({
 }
 
 export default function Sidebar({ role }) {
-  const [pendingCount, setPendingCount] = useState(0);
+  const { notifications } = useNotifications();
+  const pendingCount = notifications ? notifications.filter(n => n.status === "SOLICITADA").length : 0;
+  
   const [supportWaitingCount, setSupportWaitingCount] = useState(0);
   const roleLabel = role === "ADMIN" ? "Administrador" : role;
-
-  useEffect(() => {
-    if (role === "ADMIN" || role === "VENTAS") {
-      const fetchCount = async () => {
-        try {
-          const count = await getPendingQuoteRequestsCountApi();
-          setPendingCount(count);
-        } catch (error) {
-          logger.warn("Unable to load pending quote requests count", error);
-        }
-      };
-      fetchCount();
-      // Poll cada 60 segundos
-      const interval = setInterval(fetchCount, 60000);
-      return () => clearInterval(interval);
-    }
-  }, [role]);
 
   useEffect(() => {
     if (!SUPPORT_ROLES.includes(role)) return;
     const token = localStorage.getItem("bc_token");
     if (!token) return;
 
-    const socket = io(API_URL, {
-      auth: { token },
-      transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-    });
+    const socket = getSocket(token);
+    if (!socket) return;
 
-    socket.on("connect", () => {
-      socket.emit("queue:list");
-    });
+    const handleConnect = () => socket.emit("queue:list");
+    const handleQueueUpdate = (queue) => setSupportWaitingCount(Array.isArray(queue) ? queue.length : 0);
+    const handleDisconnect = () => setSupportWaitingCount(0);
 
-    socket.on("queue:update", (queue) => {
-      setSupportWaitingCount(Array.isArray(queue) ? queue.length : 0);
-    });
-
-    socket.on("disconnect", () => {
-      setSupportWaitingCount(0);
-    });
+    socket.on("connect", handleConnect);
+    socket.on("queue:update", handleQueueUpdate);
+    socket.on("disconnect", handleDisconnect);
 
     return () => {
-      socket.disconnect();
+      // No disconnect here as socket is shared
+      socket.off("connect", handleConnect);
+      socket.off("queue:update", handleQueueUpdate);
+      socket.off("disconnect", handleDisconnect);
     };
   }, [role]);
 
   return (
-    <aside className="sticky top-0 z-40 flex h-screen w-64 flex-col border-r border-zinc-300/70 bg-white/70 px-4 pb-4 pt-6 text-zinc-800 shadow-xl shadow-zinc-900/5 backdrop-blur-2xl ring-1 ring-white/40 transition-all duration-300 dark:border-white/10 dark:bg-dark-800/80 dark:text-zinc-100 dark:shadow-black/30 dark:ring-white/5 motion-reduce:transition-none">
+    <aside className="sticky top-0 z-40 flex h-screen w-64 flex-col border-r border-zinc-300/70 bg-white/70 px-4 pb-4 pt-6 text-zinc-800 shadow-xl shadow-zinc-900/5 backdrop-blur-sm ring-1 ring-white/40 transition-all duration-150 dark:border-white/10 dark:bg-dark-800/80 dark:text-zinc-100 dark:shadow-black/30 dark:ring-white/5 motion-reduce:transition-none">
       {/* Rol actual */}
-      <div className="mb-6 px-3 py-3 rounded-xl bg-white/40 dark:bg-transparent border border-white/30 dark:border-transparent backdrop-blur-xl dark:backdrop-blur-none">
+      <div className="mb-6 px-3 py-3 rounded-xl bg-white/40 dark:bg-transparent border border-white/30 dark:border-transparent backdrop-blur-sm dark:backdrop-blur-none">
         <div className="flex items-center justify-center gap-3">
           <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200 tracking-wide whitespace-nowrap leading-none">
             {roleLabel}

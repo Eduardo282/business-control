@@ -36,5 +36,8 @@ export const deleteSale = async (_parent, { id }, ctx) => {
 export const deletePortalSale = async (_parent, { id }, ctx) => {
   if (!ctx.user) throw unauthenticated();
   if (ctx.user.role !== "CONTACT_PORTAL") throw forbidden();
-  return deletePortalSaleAction(id, ctx.user);
+  return deletePortalSaleAction({
+    id,
+    contactId: ctx.user.contactId,
+  });
 };

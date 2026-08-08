@@ -152,13 +152,7 @@ export const AlertCircle = createIcon(() => (
   </>
 ));
 
-export const AlertTriangle = createIcon(() => (
-  <>
-    <path d="M12 4 21 20H3L12 4z" />
-    <path d="M12 9v5" />
-    <circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none" />
-  </>
-));
+
 
 export const XCircle = createIcon(() => (
   <>
@@ -212,6 +206,31 @@ export const MapPin = createIcon(() => (
   </>
 ));
 
+export const ZoomIn = createIcon(() => (
+  <>
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.3-4.3" />
+    <path d="M8 11h6" />
+    <path d="M11 8v6" />
+  </>
+));
+
+export const Eye = createIcon(() => (
+  <>
+    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+    <circle cx="12" cy="12" r="3" />
+  </>
+));
+
+export const EyeOff = createIcon(() => (
+  <>
+    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+    <line x1="2" x2="22" y1="2" y2="22" />
+  </>
+));
+
 export const Key = createIcon(() => (
   <>
     <circle cx="8" cy="12" r="3" />
@@ -260,16 +279,6 @@ export const UserPlus = createIcon(() => (
   </>
 ));
 
-export const Contact = createIcon(() => (
-  <>
-    <rect x="4" y="5" width="16" height="14" rx="2" />
-    <circle cx="9" cy="11" r="2" />
-    <path d="M6.5 16a3.5 3.5 0 0 1 5 0" />
-    <path d="M14 9h4" />
-    <path d="M14 12h4" />
-    <path d="M14 15h3" />
-  </>
-));
 
 export const Tag = createIcon(() => (
   <>
@@ -278,12 +287,6 @@ export const Tag = createIcon(() => (
   </>
 ));
 
-export const Clipboard = createIcon(() => (
-  <>
-    <rect x="6" y="5" width="12" height="16" rx="2" />
-    <rect x="9" y="3" width="6" height="4" rx="1" />
-  </>
-));
 
 export const ClipboardList = createIcon(() => (
   <>
@@ -472,13 +475,6 @@ export const FileText = createIcon(() => (
   </>
 ));
 
-export const FileCheck = createIcon(() => (
-  <>
-    <path d="M6 3h8l4 4v14H6V3z" />
-    <path d="M14 3v4h4" />
-    <path d="m9 14 2 2 4-4" />
-  </>
-));
 
 export const FileSpreadsheet = createIcon(() => (
   <>
@@ -498,7 +494,7 @@ export const FolderOpen = createIcon(() => (
   </>
 ));
 
-export const Pencil = createIcon(() => (
+const Pencil = createIcon(() => (
   <>
     <path d="m4 20 4.5-1 9-9-3.5-3.5-9 9L4 20z" />
     <path d="m13.5 6.5 3.5 3.5" />
@@ -507,15 +503,6 @@ export const Pencil = createIcon(() => (
 
 export const Edit2 = Pencil;
 
-export const ScrollText = createIcon(() => (
-  <>
-    <path d="M6 4h11a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h9" />
-    <path d="M8 6h6" />
-    <path d="M8 9h6" />
-    <path d="M10 16h6" />
-    <path d="M10 19h6" />
-  </>
-));
 
 export const BadgeDollarSign = createIcon(() => (
   <>
@@ -533,14 +520,6 @@ export const CheckCircle = createIcon(() => (
 ));
 
 export const CheckCircle2 = CheckCircle;
-
-export const UploadCloud = Upload;
-
-export const ShieldCheck = Shield;
-
-export const Book = BookOpen;
-
-export const DownloadCloud = Download;
 
 export const MessageCircle = createIcon(() => (
   <>
@@ -594,7 +573,6 @@ export const Save = createIcon(() => (
 
 export default {
   AlertCircle,
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   BadgeDollarSign,
@@ -613,15 +591,12 @@ export default {
   ChevronsRight,
   ChevronsUpDown,
   CircleHelp,
-  Clipboard,
   ClipboardList,
   Clock,
   Construction,
-  Contact,
   Download,
   Edit2,
   ExternalLink,
-  FileCheck,
   FileSpreadsheet,
   FileText,
   Filter,
@@ -642,11 +617,9 @@ export default {
   Package,
   PackagePlus,
   PackageX,
-  Pencil,
   Phone,
   Plus,
   Printer,
-  ScrollText,
   Search,
   Send,
   Save,

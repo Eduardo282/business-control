@@ -127,6 +127,7 @@ export default function ClientDetailView({ controller }) {
         clientBusinessName={clientBusinessName}
         bulkContactDriveUrl={contacts.bulkContactDriveUrl}
         setBulkContactDriveUrl={contacts.setBulkContactDriveUrl}
+        clearBulkContactDriveUrl={contacts.clearBulkContactDriveUrl}
         executeBulkContactDriveImport={
           contacts.executeBulkContactDriveImport
         }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Lock, Save } from "@icons";
+import { Eye, EyeOff, Lock, Save } from "@icons";
 import { changePortalPasswordApi } from "../../actionsAPI/portal.api";
 import { notificationService } from "../../services/notificationService";
 import { useOutletContext } from "react-router-dom";
@@ -9,6 +9,9 @@ export default function PortalSettings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -79,42 +82,72 @@ export default function PortalSettings() {
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
               Contraseña Actual
             </label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="portal-settings-input w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#235b42]/30 dark:focus:ring-emerald-400/30 focus:border-[#235b42] dark:focus:border-emerald-400 transition-all"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showCurrentPassword ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="portal-settings-input w-full px-4 py-2.5 pr-11 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#235b42]/30 dark:focus:ring-emerald-400/30 focus:border-[#235b42] dark:focus:border-emerald-400 transition-all"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 top-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 focus:outline-none"
+                tabIndex="-1"
+              >
+                {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
               Nueva Contraseña
             </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
-              className="portal-settings-input w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#235b42]/30 dark:focus:ring-emerald-400/30 focus:border-[#235b42] dark:focus:border-emerald-400 transition-all"
-              required
-              minLength={6}
-            />
+            <div className="relative">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+                className="portal-settings-input w-full px-4 py-2.5 pr-11 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#235b42]/30 dark:focus:ring-emerald-400/30 focus:border-[#235b42] dark:focus:border-emerald-400 transition-all"
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 focus:outline-none"
+                tabIndex="-1"
+              >
+                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
               Confirmar Nueva Contraseña
             </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="portal-settings-input w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#235b42]/30 dark:focus:ring-emerald-400/30 focus:border-[#235b42] dark:focus:border-emerald-400 transition-all"
-              required
-              minLength={6}
-            />
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="portal-settings-input w-full px-4 py-2.5 pr-11 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#235b42]/30 dark:focus:ring-emerald-400/30 focus:border-[#235b42] dark:focus:border-emerald-400 transition-all"
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 focus:outline-none"
+                tabIndex="-1"
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           {error && (

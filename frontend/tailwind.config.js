@@ -84,8 +84,8 @@ export default {
         sans: ["Inter", "system-ui", "sans-serif"],
       },
       animation: {
-        "fade-in": "fadeIn 0.5s ease-out forwards",
-        "slide-up": "slideUp 0.5s ease-out forwards",
+        "fade-in": "fadeIn 0.15s ease-out forwards",
+        "slide-up": "slideUp 0.15s ease-out forwards",
         "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
       keyframes: {

@@ -2,51 +2,85 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "@icons";
 import Input from "../../../components/ui/Input";
-import { updateClientApi } from "../../../actionsAPI/clients.api";
+import { updateClientApi, updateClientDynamicApi } from "../../../actionsAPI/clients.api";
 import { notificationService } from "../../../services/notificationService";
 
-export default function ClientEditModal({ isOpen, onClose, client, onSuccess }) {
-  const [business_name, setBusinessName] = useState("");
-  const [rfc, setRfc] = useState("");
-  const [email1, setEmail1] = useState("");
-  const [email2, setEmail2] = useState("");
-  const [celular, setCelular] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [codigo_postal, setCodigoPostal] = useState("");
-  const [ciudad, setCiudad] = useState("");
+const STATIC_FIELDS = new Set([
+  "business_name",
+  "rfc",
+  "email1",
+  "email2",
+  "celular",
+  "telefono",
+  "codigo_postal",
+  "ciudad"
+]);
+
+const EXCLUDED_COLUMNS = new Set([
+  "id",
+  "created_at",
+  "updated_at",
+  "created_by_user_id",
+  "portal_password_hash",
+  "deleted_at"
+]);
+
+export default function ClientEditModal({ isOpen, onClose, client, onSuccess, dynamicColumns = [] }) {
+  const [formData, setFormData] = useState({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (client) {
-      setBusinessName(client.business_name || "");
-      setRfc(client.rfc || "");
-      setEmail1(client.email1 || "");
-      setEmail2(client.email2 || "");
-      setCelular(client.celular || "");
-      setTelefono(client.telefono || "");
-      setCodigoPostal(client.codigo_postal || "");
-      setCiudad(client.ciudad || "");
+      const initialData = {};
+      dynamicColumns.forEach((col) => {
+        initialData[col.name] = client[col.name] || "";
+      });
+      // Ensure static fields are also captured if they aren't in dynamicColumns for some reason
+      STATIC_FIELDS.forEach(field => {
+        if (!(field in initialData)) {
+          initialData[field] = client[field] || "";
+        }
+      });
+      setFormData(initialData);
     }
-  }, [client]);
+  }, [client, dynamicColumns]);
 
   if (!isOpen || !client) return null;
+
+  const handleChange = (name, value) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await updateClientApi(client.id, {
-        business_name,
-        rfc: rfc || null,
-        email1: email1 || null,
-        email2: email2 || null,
-        celular: celular || null,
-        telefono: telefono || null,
-        codigo_postal: codigo_postal || null,
-        ciudad: ciudad || null,
-      });
+      const staticInput = {
+        business_name: formData.business_name || "",
+        rfc: formData.rfc || null,
+        email1: formData.email1 || null,
+        email2: formData.email2 || null,
+        celular: formData.celular || null,
+        telefono: formData.telefono || null,
+        codigo_postal: formData.codigo_postal || null,
+        ciudad: formData.ciudad || null,
+      };
+
+      const dynamicInput = {};
+      for (const [key, value] of Object.entries(formData)) {
+        if (!STATIC_FIELDS.has(key)) {
+          dynamicInput[key] = value || null;
+        }
+      }
+
+      await updateClientApi(client.id, staticInput);
+
+      if (Object.keys(dynamicInput).length > 0) {
+        await updateClientDynamicApi(client.id, dynamicInput);
+      }
+
       notificationService.toast({ title: "Cliente actualizado con éxito", icon: "success" });
       onSuccess();
     } catch (err) {
@@ -80,117 +114,24 @@ export default function ClientEditModal({ isOpen, onClose, client, onSuccess }) 
             </div>
           )}
 
-          {/* Razón Social */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-              Razón Social *
-            </label>
-            <Input
-              type="text"
-              required
-              value={business_name}
-              onChange={(e) => setBusinessName(e.target.value)}
-              placeholder="Nombre de la empresa"
-              className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
-            />
-          </div>
-
-          {/* RFC y Correo Principal */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                RFC
-              </label>
-              <Input
-                type="text"
-                value={rfc}
-                onChange={(e) => setRfc(e.target.value)}
-                placeholder="XAXX010101000"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Correo Principal
-              </label>
-              <Input
-                type="email"
-                value={email1}
-                onChange={(e) => setEmail1(e.target.value)}
-                placeholder="contacto@empresa.com"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
-              />
-            </div>
-          </div>
-
-          {/* Correo Secundario */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-              Correo Secundario
-            </label>
-            <Input
-              type="email"
-              value={email2}
-              onChange={(e) => setEmail2(e.target.value)}
-              placeholder="ventas@empresa.com"
-              className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
-            />
-          </div>
-
-          {/* Celular y Teléfono */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Celular
-              </label>
-              <Input
-                type="tel"
-                value={celular}
-                onChange={(e) => setCelular(e.target.value)}
-                placeholder="55 1234 5678"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Teléfono
-              </label>
-              <Input
-                type="tel"
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-                placeholder="55 9876 5432"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
-              />
-            </div>
-          </div>
-
-          {/* Código Postal y Ciudad */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Código Postal
-              </label>
-              <Input
-                type="text"
-                value={codigo_postal}
-                onChange={(e) => setCodigoPostal(e.target.value)}
-                placeholder="06600"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-                Ciudad
-              </label>
-              <Input
-                type="text"
-                value={ciudad}
-                onChange={(e) => setCiudad(e.target.value)}
-                placeholder="Ciudad de México"
-                className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
-              />
-            </div>
+          <div className="grid grid-cols-1 gap-4">
+            {dynamicColumns
+              .filter((col) => !EXCLUDED_COLUMNS.has(col.name))
+              .map((col) => (
+              <div key={col.name}>
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                  {col.label} {col.name === "business_name" ? "*" : ""}
+                </label>
+                <Input
+                  type={col.name.includes("email") || col.name.includes("correo") ? "email" : col.name.includes("celular") || col.name.includes("telefono") ? "tel" : "text"}
+                  required={col.name === "business_name"}
+                  value={formData[col.name] || ""}
+                  onChange={(e) => handleChange(col.name, e.target.value)}
+                  placeholder={`Ej. ${col.label}`}
+                  className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#153465] dark:focus:ring-blue-400/40 focus:border-[#153465] dark:focus:border-blue-400 transition-colors"
+                />
+              </div>
+            ))}
           </div>
 
           {/* Botones */}

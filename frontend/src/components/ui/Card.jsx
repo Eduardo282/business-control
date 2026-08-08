@@ -5,7 +5,7 @@ export default function Card({ children, className = "", glow = false }) {
       {glow && (
         <div
           aria-hidden="true"
-          className="absolute -right-20 -top-20 size-40 rounded-full bg-primary-500/5 blur-3xl transition-colors duration-500 group-hover:bg-primary-500/10 motion-reduce:transition-none"
+          className="absolute -right-20 -top-20 size-40 rounded-full bg-primary-500/5 blur-3xl transition-colors duration-150 group-hover:bg-primary-500/10 motion-reduce:transition-none"
         />
       )}
       <div className="relative z-10">{children}</div>

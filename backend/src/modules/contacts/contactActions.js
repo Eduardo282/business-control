@@ -3,7 +3,6 @@ import { forbidden } from "../../errors/appErrors.js";
 import {
   bulkCreateContacts,
   createContact,
-  deleteContact,
   deleteContactProduct,
   deleteContactProductForContact,
   findContactById,
@@ -12,6 +11,7 @@ import {
   insertContactProduct,
   listContactProducts,
   listContactsByClient,
+  softDeleteContact,
   updateContact,
 } from "../../repositories/contact.repository.js";
 import { findProductByIdLean } from "../../repositories/product.repository.js";
@@ -152,16 +152,44 @@ export async function updateContactAction(id, input) {
 }
 
 /**
- * Deletes a contact record.
- * @param {object} params
- * @param {string|number} params.id
+ * Disables a contact record by ID without deleting it.
+ * Snapshots contact_name on quotes and sales before changing the contact state.
+ * @param {object|string|number} idOrObj
  * @returns {Promise<boolean>}
  */
 export async function deleteContactAction(idOrObj) {
   const id = typeof idOrObj === "object" && idOrObj !== null ? idOrObj.id : idOrObj;
   if (!id) return false;
-  const rowsAffected = await deleteContact(id);
-  return rowsAffected > 0;
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    await connection.query(
+      `UPDATE quotes q
+       JOIN client_contacts cc ON q.contact_id = cc.id
+       SET q.contact_name = COALESCE(q.contact_name, cc.full_name)
+       WHERE q.contact_id = ?`,
+      [id],
+    );
+    await connection.query(
+      `UPDATE sales s
+       JOIN client_contacts cc ON s.contact_id = cc.id
+       SET s.contact_name = COALESCE(s.contact_name, cc.full_name)
+       WHERE s.contact_id = ?`,
+      [id],
+    );
+
+    const disabled = await softDeleteContact(id, connection);
+
+    await connection.commit();
+    return disabled;
+  } catch (err) {
+    await connection.rollback();
+    throw err;
+  } finally {
+    connection.release();
+  }
 }
 
 /**

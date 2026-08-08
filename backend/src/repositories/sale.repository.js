@@ -1,20 +1,33 @@
 import { pool } from "../config/db.js";
 import { normalizePagination } from "./pagination.js";
 
-export const SALE_COLUMNS =
-  "id, folio, quote_id, client_id, contact_id, user_id, created_at, total, notes, status, email_sent_at, is_sent_to_client_portal, portal_sent_at, is_deleted_admin, is_deleted_portal";
+const SALE_COLUMNS =
+  "id, folio, quote_id, client_id, contact_id, client_name, contact_name, user_id, created_at, total, notes, status, email_sent_at, is_sent_to_client_portal, portal_sent_at, is_deleted_admin, is_deleted_portal";
 
-export const SALE_ITEM_COLUMNS =
+const SALE_ITEM_COLUMNS =
   "id, sale_id, quote_item_id, product_id, quantity, base_unit_price, unit_price, discount, total";
 
 export async function createSale(data, queryRunner = pool) {
+  let clientName = data.client_name || null;
+  if (!clientName && data.client_id) {
+    const [cRows] = await queryRunner.query("SELECT business_name FROM clients WHERE id = ?", [data.client_id]);
+    clientName = cRows[0]?.business_name || null;
+  }
+  let contactName = data.contact_name || null;
+  if (!contactName && data.contact_id) {
+    const [ccRows] = await queryRunner.query("SELECT full_name FROM client_contacts WHERE id = ?", [data.contact_id]);
+    contactName = ccRows[0]?.full_name || null;
+  }
+
   const [result] = await queryRunner.query(
-    `INSERT INTO sales (quote_id, client_id, contact_id, user_id, total, notes)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO sales (quote_id, client_id, contact_id, client_name, contact_name, user_id, total, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       data.quote_id,
       data.client_id,
       data.contact_id || null,
+      clientName,
+      contactName,
       data.user_id || null,
       data.total,
       data.notes || null,
@@ -31,23 +44,23 @@ export async function updateSaleFolio({ saleId, folio, queryRunner = pool }) {
 }
 
 export async function insertSaleItems(connection, { saleId, items }) {
-  for (const item of items) {
-    await connection.query(
-      `INSERT INTO sale_items
-       (sale_id, quote_item_id, product_id, quantity, base_unit_price, unit_price, discount, total)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        saleId,
-        item.quote_item_id,
-        item.product_id,
-        item.quantity,
-        item.base_unit_price,
-        item.unit_price,
-        item.discount,
-        item.total,
-      ],
-    );
-  }
+  if (!items || items.length === 0) return;
+  
+  const values = items.map(item => [
+    saleId,
+    item.quote_item_id,
+    item.product_id,
+    item.quantity,
+    item.base_unit_price,
+    item.unit_price,
+    item.discount,
+    item.total,
+  ]);
+  
+  await connection.query(
+    `INSERT INTO sale_items (sale_id, quote_item_id, product_id, quantity, base_unit_price, unit_price, discount, total) VALUES ?`,
+    [values]
+  );
 }
 
 export async function findSaleById(id, queryRunner = pool) {
@@ -172,6 +185,20 @@ export async function updateSalePortalStatus({
       saleId,
     ],
   );
+  return result.affectedRows || 0;
+}
+
+export async function deleteSale({ saleId, queryRunner = pool }) {
+  await queryRunner.query(
+    "DELETE FROM sale_items WHERE sale_id = ?",
+    [saleId],
+  );
+
+  const [result] = await queryRunner.query(
+    "DELETE FROM sales WHERE id = ?",
+    [saleId],
+  );
+
   return result.affectedRows || 0;
 }
 

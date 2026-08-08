@@ -104,7 +104,6 @@ export function QuoteHistoryTable({
                 }`}
               >
                 <span className="font-semibold">{fieldLabels[field]}</span>
-                <ChevronDown size={12} className="opacity-70" />
               </button>
             );
           })}

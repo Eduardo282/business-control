@@ -7,7 +7,7 @@ import { pool } from "../config/db.js";
 import { normalizePagination } from "./pagination.js";
 
 const QUOTE_COLUMNS =
-  "id, folio, client_id, contact_id, user_id, created_at, total, notes, status, is_contact_requested, is_registered, registered_at, email_sent_at, is_sent_to_client_portal, portal_responded_at, notification_read, notification_dismissed, is_deleted_admin, is_deleted_portal";
+  "id, folio, client_id, contact_id, client_name, contact_name, user_id, created_at, total, notes, status, is_contact_requested, is_registered, registered_at, email_sent_at, is_sent_to_client_portal, portal_responded_at, notification_read, notification_dismissed, is_deleted_admin, is_deleted_portal";
 
 const QUOTE_ITEM_COLUMNS =
   "id, quote_id, product_id, quantity, base_unit_price, unit_price, discount, total";
@@ -37,10 +37,21 @@ export async function createQuoteWithItems({
   try {
     await connection.beginTransaction();
 
+    let clientName = null;
+    if (client_id) {
+      const [cRows] = await connection.query("SELECT business_name FROM clients WHERE id = ?", [client_id]);
+      clientName = cRows[0]?.business_name || null;
+    }
+    let contactName = null;
+    if (contact_id) {
+      const [ccRows] = await connection.query("SELECT full_name FROM client_contacts WHERE id = ?", [contact_id]);
+      contactName = ccRows[0]?.full_name || null;
+    }
+
     const [resQuote] = await connection.query(
-      `INSERT INTO quotes (folio, client_id, contact_id, user_id, total, notes, status, is_contact_requested, is_registered)
-       VALUES (?, ?, ?, ?, ?, ?, 'PENDIENTE', 0, 0)`,
-      [folio, client_id, contact_id || null, user_id, total, notes],
+      `INSERT INTO quotes (folio, client_id, contact_id, client_name, contact_name, user_id, total, notes, status, is_contact_requested, is_registered)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDIENTE', 0, 0)`,
+      [folio, client_id, contact_id || null, clientName, contactName, user_id, total, notes],
     );
     const quoteId = resQuote.insertId;
 
@@ -57,20 +68,22 @@ export async function createQuoteWithItems({
 }
 
 export async function insertQuoteItems(connection, { quoteId, items }) {
-  for (const item of items) {
-    await connection.query(
-      `INSERT INTO quote_items (quote_id, product_id, quantity, base_unit_price, unit_price, discount, total) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        quoteId,
-        item.product_id,
-        item.quantity,
-        item.base_unit_price,
-        item.unit_price,
-        item.discount,
-        item.total,
-      ],
-    );
-  }
+  if (!items || items.length === 0) return;
+  
+  const values = items.map(item => [
+    quoteId,
+    item.product_id,
+    item.quantity,
+    item.base_unit_price,
+    item.unit_price,
+    item.discount,
+    item.total,
+  ]);
+  
+  await connection.query(
+    `INSERT INTO quote_items (quote_id, product_id, quantity, base_unit_price, unit_price, discount, total) VALUES ?`,
+    [values]
+  );
 }
 
 export async function replaceQuoteItems(connection, { quoteId, items }) {
@@ -132,6 +145,33 @@ export async function softDeleteQuote({ quoteId, queryRunner = pool }) {
 }
 
 /**
+ * Elimina físicamente una cotización y sus ítems.
+ * Las cotizaciones con una venta asociada se conservan para no eliminar la venta.
+ * @param {object} params
+ * @param {number|string} params.quoteId
+ * @param {object} [params.queryRunner]
+ * @returns {Promise<number>} Filas afectadas
+ */
+export async function deleteQuote({ quoteId, queryRunner = pool }) {
+  const [sales] = await queryRunner.query(
+    "SELECT id FROM sales WHERE quote_id = ? LIMIT 1",
+    [quoteId],
+  );
+
+  if (sales.length > 0) {
+    throw new Error("No se puede eliminar una cotización con una venta asociada.");
+  }
+
+  await queryRunner.query("DELETE FROM quote_items WHERE quote_id = ?", [quoteId]);
+  const [result] = await queryRunner.query(
+    "DELETE FROM quotes WHERE id = ?",
+    [quoteId],
+  );
+
+  return result.affectedRows || 0;
+}
+
+/**
  * Marca una cotizacion como eliminada solo para el portal del contacto.
  * @param {object} params
  * @param {number|string} params.quoteId
@@ -175,13 +215,7 @@ export async function updateQuoteTotal({ quoteId, total, folio, queryRunner = po
  * @param {object} [params.queryRunner]
  * @returns {Promise<object|null>}
  */
-export async function findQuoteByStatus({ quoteId, status, queryRunner = pool }) {
-  const [rows] = await queryRunner.query(
-    "SELECT id, folio FROM quotes WHERE id = ? AND status = ?",
-    [quoteId, status],
-  );
-  return rows?.[0] || null;
-}
+
 
 /**
  * Locks a contact-created quote request for exclusive resolution.
@@ -259,13 +293,26 @@ export async function createQuote(data, queryRunner = pool) {
     is_sent_to_client_portal,
   } = data;
 
+  let clientName = data.client_name || null;
+  if (!clientName && client_id) {
+    const [cRows] = await queryRunner.query("SELECT business_name FROM clients WHERE id = ?", [client_id]);
+    clientName = cRows[0]?.business_name || null;
+  }
+  let contactName = data.contact_name || null;
+  if (!contactName && contact_id) {
+    const [ccRows] = await queryRunner.query("SELECT full_name FROM client_contacts WHERE id = ?", [contact_id]);
+    contactName = ccRows[0]?.full_name || null;
+  }
+
   const [resQuote] = await queryRunner.query(
-    `INSERT INTO quotes (folio, client_id, contact_id, user_id, total, notes, status, is_contact_requested, is_registered, is_sent_to_client_portal)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO quotes (folio, client_id, contact_id, client_name, contact_name, user_id, total, notes, status, is_contact_requested, is_registered, is_sent_to_client_portal)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       folio || null,
       client_id,
       contact_id || null,
+      clientName,
+      contactName,
       user_id || null,
       total,
       notes || null,
@@ -349,33 +396,7 @@ export async function findQuoteItemsByQuoteId(quoteId, queryRunner = pool) {
   return rows;
 }
 
-/**
- * Lista cotizaciones filtrando opcionalmente por status, user_id e is_deleted_admin.
- * @param {object} filter
- * @param {string} [filter.status]
- * @param {number|string} [filter.user_id]
- * @param {number} [filter.is_deleted_admin]
- * @param {object} [queryRunner]
- * @returns {Promise<object[]>}
- */
-export async function listQuotesFiltered({ status, user_id, is_deleted_admin = 0 } = {}, queryRunner = pool) {
-  let query = `SELECT ${QUOTE_COLUMNS} FROM quotes WHERE is_deleted_admin = ?`;
-  const params = [is_deleted_admin];
 
-  if (status) {
-    query += " AND status = ?";
-    params.push(status);
-  }
-  if (user_id) {
-    query += " AND user_id = ?";
-    params.push(user_id);
-  }
-
-  query += " ORDER BY created_at DESC";
-
-  const [rows] = await queryRunner.query(query, params);
-  return rows;
-}
 
 /**
  * Actualiza el estado del portal de una cotización.
@@ -407,19 +428,6 @@ export async function updateQuotePortalStatus({ quoteId, isSentToClientPortal, c
   return result.affectedRows || 0;
 }
 
-/**
- * Marca una cotización como leída.
- * @param {number|string} quoteId
- * @param {object} [queryRunner]
- * @returns {Promise<number>}
- */
-export async function markQuoteAsRead(quoteId, queryRunner = pool) {
-  const [result] = await queryRunner.query(
-    "UPDATE quotes SET notification_read = 1 WHERE id = ?",
-    [quoteId]
-  );
-  return result.affectedRows || 0;
-}
 
 /**
  * Lista las cotizaciones del portal asociadas a un contacto.
@@ -637,23 +645,4 @@ export async function dismissAllQuoteNotifications(queryRunner = pool) {
        AND notification_dismissed = 0`
   );
   return result.affectedRows || 0;
-}
-
-/**
- * Lista las cotizaciones del portal asociadas a un cliente.
- * @param {number|string} clientId
- * @param {object} [queryRunner]
- * @returns {Promise<object[]>}
- */
-export async function listPortalQuotesByClientId(clientId, queryRunner = pool) {
-  const [rows] = await queryRunner.query(
-    `SELECT ${QUOTE_COLUMNS} FROM quotes 
-     WHERE client_id = ? 
-     AND is_registered = 1
-     AND is_sent_to_client_portal = 1 
-     AND is_deleted_portal = 0
-     ORDER BY created_at DESC`,
-    [clientId]
-  );
-  return rows;
 }

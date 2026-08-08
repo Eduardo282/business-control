@@ -14,7 +14,6 @@ import {
   findClientDynamicById,
 } from "../repositories/client.repository.js";
 
-const CLIENTS_TABLE = "clients";
 const HIDDEN_COLUMNS = new Set(["portal_password_hash"]);
 const INSERT_EXCLUDED_COLUMNS = new Set([
   "id",
@@ -202,7 +201,7 @@ export async function updateClientDynamicAction({ id, input }) {
   return client;
 }
 
-export async function importClientsFromBufferAction({
+async function importClientsFromBufferAction({
   fileBuffer,
   createdByUserId,
 }) {
@@ -229,7 +228,6 @@ export async function importClientsFromBufferAction({
   if (unmatched.length) {
     const clauses = unmatched.map(
       (header) => {
-        const existingNames = new Set(columnsMeta.map((column) => column.name));
         const columnName = header
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "")
