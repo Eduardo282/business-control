@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { io } from "socket.io-client";
 import { getSocket } from "../../utils/socketManager.js";
 import { useNotifications } from "../../context/NotificationContext.jsx";
 import logo from "../../assets/logo.png";
-import { logger } from "../../services/logger";
 import {
   LayoutDashboard,
   BadgeDollarSign,
@@ -15,9 +13,6 @@ import {
   Headphones,
 } from "@icons";
 
-const API_URL =
-  import.meta.env.VITE_API_URL?.replace("/graphql", "") ||
-  "http://localhost:4000";
 const SUPPORT_ROLES = ["ADMIN", "VENTAS", "SOPORTE"];
 
 function Item({

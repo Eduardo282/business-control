@@ -8,7 +8,6 @@ import {
 } from "../../../actionsAPI/clients.api";
 import { listContactsDynamicByClientApi } from "../../../actionsAPI/contacts.api";
 import { listProductsApi } from "../../../actionsAPI/products.api";
-import { logger } from "../../../services/logger";
 import { notificationService } from "../../../services/notificationService";
 import {
   CLIENT_DETAIL_HIDDEN_FIELDS,
@@ -101,7 +100,7 @@ export function useClientRecord({ clientId, navigate }) {
   const loading = clientLoading || dynamicLoading || contactsDynamicLoading || productsLoading;
   const error = clientError ? (clientError.message || "Error cargando cliente") : "";
 
-  const clientDynamicColumns = dynamicData?.columns || [];
+  const clientDynamicColumns = useMemo(() => dynamicData?.columns || [], [dynamicData?.columns]);
   const contactDynamicColumns = Array.isArray(contactsDynamicData?.columns) && contactsDynamicData.columns.length > 0 
     ? contactsDynamicData.columns 
     : CONTACT_FALLBACK_COLUMNS;

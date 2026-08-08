@@ -6,7 +6,6 @@ import {
 } from "../../../actionsAPI/clients.api";
 import { notificationService } from "../../../services/notificationService";
 import {
-  DEFAULT_VISIBLE_CLIENT_COLUMNS,
   EXCEL_VIEW_STORAGE_KEY,
 } from "./clientConstants";
 import {
