@@ -67,7 +67,6 @@ export function QuoteHistoryTable({
   loading,
   onClearSingleFilter,
   onOpenFilterPicker,
-  quotes,
   showFilters,
   tableState,
 }) {

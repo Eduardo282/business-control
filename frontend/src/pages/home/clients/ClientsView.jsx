@@ -22,7 +22,6 @@ export default function ClientsView({
     clients,
     closeEditModal,
     detailColumns,
-    dynamicColumns,
     editingClient,
     error,
     expandedRows,

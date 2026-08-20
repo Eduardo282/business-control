@@ -2,7 +2,6 @@ import { pool } from "../../config/db.js";
 import {
   bulkCreateClients,
   createClient,
-  deleteClient,
   findClientById,
   listClients,
   searchClients,

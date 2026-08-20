@@ -12,7 +12,6 @@ export default function QuoteHistoryView({ controller, tableState }) {
     clearSingleFilter,
     closeFilterPicker,
     error,
-    filteredQuotes,
     filterPickerSearch,
     filters,
     handleExportExcel,
