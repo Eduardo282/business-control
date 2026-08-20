@@ -1,14 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { io } from "socket.io-client";
 import { getSocket } from "../../utils/socketManager.js";
-import { useAuth } from "../../hooks/useAuth";
 import { logger } from "../../services/logger";
 import { Headphones, MessageCircle, Send, Clock, User, X, CheckCircle, Inbox, Mail, AlertCircle } from "@icons";
 
-const API_URL = import.meta.env.VITE_API_URL?.replace("/graphql", "") || "http://localhost:4000";
-
 export default function AgentSupport() {
-  const { user } = useAuth();
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
   const [waitingQueue, setWaitingQueue] = useState([]);
@@ -46,9 +41,10 @@ export default function AgentSupport() {
 
   // Cleanup toast timers on unmount
   useEffect(() => {
+    const toastTimers = toastTimersRef.current;
     return () => {
-      toastTimersRef.current.forEach((id) => clearTimeout(id));
-      toastTimersRef.current.clear();
+      toastTimers.forEach((id) => clearTimeout(id));
+      toastTimers.clear();
     };
   }, []);
 
@@ -142,7 +138,7 @@ export default function AgentSupport() {
       s.off("messages:seen", onMessagesSeen);
       s.off("error", onError);
     };
-  }, []);
+  }, [addToast]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, remoteTyping]);
 
@@ -151,7 +147,7 @@ export default function AgentSupport() {
       const last = messages[messages.length - 1];
       if (last.sender_type === "CLIENT") socket.emit("messages:seen", { conversationId: selectedConvId });
     }
-  }, [messages]);
+  }, [messages, socket, selectedConvId]);
 
   const takeConversation = (conv) => { if (!socket) return; socket.emit("conversation:take", { conversationId: conv.id }); socket.emit("conversation:join", { conversationId: conv.id }); setSelectedConvId(conv.id); setClientOnline(true); };
   const selectConversation = (conv) => { if (!socket) return; setSelectedConvId(conv.id); setCurrentConv(conv); setClientOnline(true); socket.emit("conversation:join", { conversationId: conv.id }); };

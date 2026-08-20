@@ -179,7 +179,7 @@ export default function useQuoteHistoryController() {
         timerProgressBar: true,
       });
     }
-  }, [dispatchData]);
+  }, [dispatchData, refreshNotifications]);
 
   const filteredQuotes = useMemo(() => {
     const s = normalizeSearchText(q);

@@ -13,9 +13,8 @@ export { getQuoteFolio, getQuoteFileToken };
  * Composed hook for Quote Detail page.
  * Orchestrates sub-hooks for loading, PDF generation, email sending, and portal configurations.
  * @param {string|number} id
- * @param {boolean} isPortal
  */
-export function useQuoteDetail(id, isPortal) {
+export function useQuoteDetail(id) {
   const quotePreviewRef = useRef(null);
   const [registeringQuote, setRegisteringQuote] = useState(false);
   const { refreshNotifications } = useNotifications();
@@ -42,9 +41,7 @@ export function useQuoteDetail(id, isPortal) {
     setShowEmailModal,
     sendingEmail,
     emailError,
-    setEmailError,
     emailSuccess,
-    setEmailSuccess,
     sendingToContact,
     quickNotice,
     setQuickNotice,

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Clock, ChevronDown, Trash2 } from "@icons";
-import { fmtDate, getProductTypeLabel } from "./portalDashboardHelpers";
 
 export function getDaysRemaining(expirationDate) {
   if (!expirationDate) return null;
