@@ -4,6 +4,7 @@ import {
   exportRowsToExcel,
   exportTemplateToExcel,
 } from "../../../utils/excelExport";
+import { exportPdfTable } from "../../../utils/pdfTableExport";
 import { notificationService } from "../../../services/notificationService";
 import { CLIENT_TEMPLATE_COLUMNS } from "./clientConstants";
 import { hasValue } from "./clientTableHelpers";
@@ -18,26 +19,9 @@ export default function useClientExports(getExportContext) {
     }
 
     try {
-      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
-        import("jspdf"),
-        import("jspdf-autotable"),
-      ]);
-      const autoTable = autoTableModule.default || autoTableModule.autoTable;
-      const doc = new jsPDF({ orientation: "landscape" });
-
-      doc.setFontSize(16);
-      doc.setTextColor(26, 43, 76);
-      doc.text("Clientes", 14, 16);
-      doc.setFontSize(10);
-      doc.setTextColor(90, 90, 90);
-      doc.text(
-        `Exportado: ${new Date().toLocaleString("es-MX")}`,
-        14,
-        23,
-      );
-
-      autoTable(doc, {
-        startY: 28,
+      await exportPdfTable({
+        title: "Clientes",
+        filename: `Clientes_${new Date().toISOString().slice(0, 10)}.pdf`,
         head: [exportColumns.map((column) => column.label.toUpperCase())],
         body: exportRows.map((row) =>
           exportColumns.map((column) => {
@@ -45,12 +29,8 @@ export default function useClientExports(getExportContext) {
             return hasValue(rawValue) ? String(rawValue) : "—";
           }),
         ),
-        theme: "grid",
-        headStyles: { fillColor: [34, 119, 180] },
-        styles: { fontSize: 8, cellPadding: 2.5 },
+        recordCount: exportRows.length,
       });
-
-      doc.save(`Clientes_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (error) {
       notificationService.error(
         "Error",

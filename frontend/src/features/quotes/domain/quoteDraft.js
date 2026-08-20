@@ -22,6 +22,7 @@ export function isMeaningfulQuoteDraft(draft) {
     draft?.selectedClient ||
       String(draft?.clientSearch || "").trim() ||
       String(draft?.folio || "").trim() ||
+      String(draft?.selectedContactId || "").trim() ||
       draft?.items?.length,
   );
 }
@@ -51,10 +52,9 @@ export function buildCreateQuotePayload({ client, contactId, items, folio }) {
   };
 }
 
-export function resolveQuoteDraftScope({ requestId, clientId } = {}) {
+export function resolveQuoteDraftScope({ requestId } = {}) {
   if (requestId) {
     return `request:${REQUEST_DRAFT_SCOPE_VERSION}:${requestId}`;
   }
-  if (clientId) return `client:${clientId}`;
   return "global";
 }

@@ -19,6 +19,7 @@ export const CONTACT_HIDDEN_FIELDS = new Set([
   "created_at",
   "updated_at",
   "portal_password_hash",
+  "is_deleted",
 ]);
 
 export const CONTACT_READONLY_FIELDS = new Set([

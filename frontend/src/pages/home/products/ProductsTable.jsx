@@ -13,6 +13,7 @@ export function ProductsTable({
   filterUsers,
   isTableScrollable,
   loading,
+  onClearSingleFilter,
   onOpenFilterPicker,
   productFilters,
   quickFilterButtons,
@@ -50,19 +51,40 @@ export function ProductsTable({
           {quickFilterButtons.map((button) => {
             const selectedValue = productFilters[button.id];
             return (
-              <button
+              <div
                 key={button.id}
-                type="button"
-                onClick={() => onOpenFilterPicker(button.id)}
-                tabIndex={showFilters ? 0 : -1}
-                className={`inline-flex items-center rounded-md border px-3 py-1 text-xs font-bold uppercase tracking-wide transition-colors ${
+                className={`inline-flex items-center rounded-md border text-xs transition-colors ${
                   selectedValue
-                    ? "border-[#2277B4] bg-[#2277B4] text-white dark:border-blue-600 dark:bg-blue-700 dark:text-white"
+                    ? "border-[#2277B4] bg-white dark:bg-dark-800 text-zinc-800 dark:text-zinc-200 dark:border-blue-500 shadow-sm"
                     : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-dark-700 dark:bg-dark-800 dark:text-zinc-300 dark:hover:bg-dark-700"
                 }`}
               >
-                {button.buttonLabel}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onOpenFilterPicker(button.id)}
+                  tabIndex={showFilters ? 0 : -1}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide px-3 py-1 hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-md transition-colors"
+                >
+                  <span className={selectedValue ? "text-[#2277B4] dark:text-blue-400 font-bold" : ""}>
+                    {button.buttonLabel}
+                  </span>
+                  {selectedValue && (
+                    <span className="max-w-28 truncate font-medium text-zinc-700 dark:text-zinc-300 lowercase">
+                      {selectedValue}
+                    </span>
+                  )}
+                </button>
+                {selectedValue && (
+                  <button
+                    type="button"
+                    onClick={() => onClearSingleFilter?.(button.id)}
+                    className="pr-2 pl-0.5 py-1 text-black hover:text-red-500 dark:text-zinc-100 dark:hover:text-red-400 transition-colors flex items-center justify-center focus:outline-none"
+                    title={`Quitar filtro ${button.buttonLabel}`}
+                  >
+                    <X size={12} className="text-black dark:text-zinc-100 hover:text-red-500" strokeWidth={2.5} />
+                  </button>
+                )}
+              </div>
             );
           })}
           <select

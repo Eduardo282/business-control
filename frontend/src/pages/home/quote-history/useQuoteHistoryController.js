@@ -3,7 +3,9 @@ import Swal from "sweetalert2";
 import { deleteQuoteApi, listQuotesApi, updateQuoteStatusApi } from "../../../actionsAPI/quotes.api";
 import { exportRowsToExcel } from "../../../utils/excelExport";
 import { normalizeSearchText } from "../../../utils/formatters";
+import { exportPdfTable } from "../../../utils/pdfTableExport";
 import { getQuoteDisplayStatus } from "../../../utils/quoteStatus";
+import { useNotifications } from "../../../context/NotificationContext.jsx";
 
 function dataReducer(state, action) {
   switch (action.type) {
@@ -50,12 +52,15 @@ function filterReducer(state, action) {
       };
     case "CLEAR_FILTERS":
       return { ...state, filters: { client: "", status: "", folio: "" }, activeFilterPickerField: null, filterPickerSearch: "" };
+    case "CLEAR_SINGLE_FILTER":
+      return { ...state, filters: { ...state.filters, [action.payload]: "" } };
     default:
       return state;
   }
 }
 
 export default function useQuoteHistoryController() {
+  const { refreshNotifications } = useNotifications();
   const [data, dispatchData] = useReducer(dataReducer, { quotes: [], loading: true, error: "" });
   const { quotes, loading, error } = data;
   const [fState, dispatchFilter] = useReducer(filterReducer, {
@@ -67,18 +72,41 @@ export default function useQuoteHistoryController() {
   });
   const { q, showFilters, filters, activeFilterPickerField, filterPickerSearch } = fState;
 
-  useEffect(() => {
-    dispatchData({ type: "FETCH_START" });
+  const loadQuotes = useCallback((background = false) => {
+    if (!background) dispatchData({ type: "FETCH_START" });
     listQuotesApi()
       .then((res) => dispatchData({ type: "FETCH_SUCCESS", payload: res }))
       .catch((e) => {
-        const msg =
-          e.response?.data?.errors?.[0]?.message ||
-          e.message ||
-          "Error al cargar cotizaciones";
-        dispatchData({ type: "FETCH_ERROR", payload: msg });
+        if (!background) {
+          const msg =
+            e.response?.data?.errors?.[0]?.message ||
+            e.message ||
+            "Error al cargar cotizaciones";
+          dispatchData({ type: "FETCH_ERROR", payload: msg });
+        }
       });
   }, []);
+
+  useEffect(() => {
+    loadQuotes(); // Initial foreground fetch
+    
+    const interval = setInterval(() => loadQuotes(true), 30000);
+
+    const handleFocus = () => {
+      if (document.visibilityState === "visible") {
+        loadQuotes(true);
+      }
+    };
+
+    window.addEventListener("visibilitychange", handleFocus);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("visibilitychange", handleFocus);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [loadQuotes]);
 
   const handleDeleteQuote = useCallback(async (id) => {
     const result = await Swal.fire({
@@ -97,6 +125,7 @@ export default function useQuoteHistoryController() {
     try {
       await deleteQuoteApi(id);
       dispatchData({ type: "DELETE_QUOTE", payload: id });
+      refreshNotifications?.();
       Swal.fire({
         title: "¡Eliminada!",
         text: "Cotización eliminada correctamente.",
@@ -120,12 +149,13 @@ export default function useQuoteHistoryController() {
         timerProgressBar: true,
       });
     }
-  }, []);
+  }, [refreshNotifications]);
 
   const handleStatusChange = useCallback(async (id, newStatus) => {
     try {
       await updateQuoteStatusApi(id, newStatus);
       dispatchData({ type: "UPDATE_QUOTE_STATUS", payload: { id, status: newStatus } });
+      refreshNotifications?.();
       
       const Toast = Swal.mixin({
         toast: true,
@@ -223,6 +253,10 @@ export default function useQuoteHistoryController() {
     dispatchFilter({ type: "CLEAR_FILTERS" });
   }, []);
 
+  const clearSingleFilter = useCallback((fieldName) => {
+    dispatchFilter({ type: "CLEAR_SINGLE_FILTER", payload: fieldName });
+  }, []);
+
   useEffect(() => {
     if (!showFilters) {
       dispatchFilter({ type: "CLOSE_FILTER_PICKER" });
@@ -278,22 +312,9 @@ export default function useQuoteHistoryController() {
     }
 
     try {
-      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
-        import("jspdf"),
-        import("jspdf-autotable"),
-      ]);
-      const autoTable = autoTableModule.default || autoTableModule;
-
-      const doc = new jsPDF({ orientation: "landscape" });
-      doc.setFontSize(16);
-      doc.setTextColor(26, 43, 76);
-      doc.text("Historial de Cotizaciones", 14, 16);
-      doc.setFontSize(10);
-      doc.setTextColor(90, 90, 90);
-      doc.text(`Exportado: ${new Date().toLocaleString("es-MX")}`, 14, 23);
-
-      autoTable(doc, {
-        startY: 28,
+      await exportPdfTable({
+        title: "Historial de Cotizaciones",
+        filename: `Historial_Cotizaciones_${new Date().toISOString().slice(0, 10)}.pdf`,
         head: [
           [
             "COTIZACIÓN",
@@ -315,23 +336,17 @@ export default function useQuoteHistoryController() {
           const statusStr = getQuoteDisplayStatus(row);
           return [idStr, folioStr, clientStr, contactStr, dateStr, totalStr, statusStr];
         }),
-        theme: "grid",
-        headStyles: { fillColor: [34, 119, 180] },
-        styles: { fontSize: 8, cellPadding: 2.5 },
+        recordCount: filteredQuotes.length,
         columnStyles: {
           0: { cellWidth: 25 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 65 },
-          3: { cellWidth: 50 },
-          4: { cellWidth: 25 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: "auto" },
+          3: { cellWidth: 45 },
+          4: { cellWidth: 24 },
           5: { cellWidth: 30 },
-          6: { cellWidth: 25 },
+          6: { cellWidth: 24 },
         },
       });
-
-      doc.save(
-        `Historial_Cotizaciones_${new Date().toISOString().slice(0, 10)}.pdf`,
-      );
     } catch (e) {
       Swal.fire({
         title: "Error",
@@ -396,6 +411,7 @@ export default function useQuoteHistoryController() {
     activeFilterPickerField,
     applyFilterValue,
     clearFilters,
+    clearSingleFilter,
     closeFilterPicker,
     dispatchFilter,
     error,

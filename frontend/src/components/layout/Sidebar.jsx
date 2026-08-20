@@ -53,7 +53,7 @@ function Item({
 
 export default function Sidebar({ role }) {
   const { notifications } = useNotifications();
-  const pendingCount = notifications ? notifications.filter(n => n.status === "SOLICITADA").length : 0;
+  const pendingCount = notifications ? notifications.filter(n => n.status === "SOLICITADA" && !n.notification_read).length : 0;
   
   const [supportWaitingCount, setSupportWaitingCount] = useState(0);
   const roleLabel = role === "ADMIN" ? "Administrador" : role;

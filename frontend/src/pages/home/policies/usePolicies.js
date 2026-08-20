@@ -3,6 +3,7 @@ import { deleteQuoteApi, listQuotesApi } from "../../../actionsAPI/quotes.api";
 import { notificationService } from "../../../services/notificationService";
 import { exportRowsToExcel } from "../../../utils/excelExport";
 import { normalizeSearchText } from "../../../utils/formatters";
+import { exportPdfTable } from "../../../utils/pdfTableExport";
 
 const PAGE_SIZE = 5;
 const CURRENCY_FORMATTER = new Intl.NumberFormat("es-MX", {
@@ -271,34 +272,15 @@ export function usePolicies() {
     }
 
     try {
-      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
-        import("jspdf"),
-        import("jspdf-autotable"),
-      ]);
-      const autoTable = autoTableModule.default || autoTableModule.autoTable;
-
-      const doc = new jsPDF({ orientation: "landscape" });
-      doc.setFontSize(16);
-      doc.setTextColor(26, 43, 76);
-      doc.text("Cotizaciones", 14, 16);
-      doc.setFontSize(10);
-      doc.setTextColor(90, 90, 90);
-      doc.text(`Exportado: ${new Date().toLocaleString("es-MX")}`, 14, 23);
-      doc.text(
-        `Resumen: ${metrics.totalSales} cotización(es) · ${metrics.uniqueClients} cliente(s)`,
-        14,
-        29,
-      );
-
       const pdfTableData = buildSalesPdfTableData(exportRows);
 
-      autoTable(doc, {
-        startY: 34,
+      await exportPdfTable({
+        title: "Cotizaciones",
+        filename: `Cotizaciones_${new Date().toISOString().slice(0, 10)}.pdf`,
         head: pdfTableData.head,
         body: pdfTableData.body,
-        theme: "grid",
-        headStyles: { fillColor: [34, 119, 180] },
-        styles: { fontSize: 8, cellPadding: 2.5 },
+        recordCount: exportRows.length,
+        summary: `${metrics.totalSales} cotización(es) | ${metrics.uniqueClients} cliente(s)`,
         columnStyles: {
           2: { cellWidth: 38 },
           3: { cellWidth: 34 },
@@ -307,8 +289,6 @@ export function usePolicies() {
           6: { halign: "right" },
         },
       });
-
-      doc.save(`Cotizaciones_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (e) {
       notificationService.error("Error", e.message || "No se pudo generar el PDF.");
     }

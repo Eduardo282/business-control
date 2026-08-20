@@ -1,59 +1,47 @@
 import { useCallback } from "react";
-import LogoImg from "../../../assets/logo.png";
 import { notificationService } from "../../../services/notificationService";
 import { exportRowsToExcel } from "../../../utils/excelExport";
+import { exportPdfTable } from "../../../utils/pdfTableExport";
 import { buildProductsPdfTableData } from "./productHelpers";
 
 export default function useProductExports(filteredProducts) {
   const handleExportPDF = useCallback(async () => {
+    if (!filteredProducts.length) {
+      notificationService.warning("Sin datos", "No hay productos para exportar.");
+      return;
+    }
+
     try {
-      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
-        import("jspdf"),
-        import("jspdf-autotable"),
-      ]);
-      const autoTable = autoTableModule.default || autoTableModule.autoTable;
-      const doc = new jsPDF();
-
-      // Page 1: Logo and Title
-      doc.addImage(LogoImg, "PNG", 15, 12, 50, 38);
-
-      doc.setFontSize(22);
-      doc.setTextColor(26, 43, 76);
-      doc.text("Catálogo de Productos", 15, 62);
-
-      doc.setFontSize(12);
-      doc.setTextColor(100, 100, 100);
-      doc.text(
-        `Fecha de exportación: ${new Date().toLocaleDateString()}`,
-        15,
-        72,
-      );
       const pdfTableData = buildProductsPdfTableData(filteredProducts);
-      doc.text(`Total de registros: ${filteredProducts.length}`, 15, 80);
-      doc.text(`Total de productos: ${pdfTableData.totalProducts}`, 15, 88);
 
-      // Page 2: Table
-      doc.addPage();
-
-      autoTable(doc, {
-        startY: 15,
+      await exportPdfTable({
+        title: "Catálogo de productos y servicios",
+        filename: "Productos_BusinessControl.pdf",
         head: pdfTableData.head,
         body: pdfTableData.body,
-        theme: "grid",
-        headStyles: { fillColor: [34, 119, 180] },
-        styles: { fontSize: 9, cellPadding: 3 },
+        recordCount: filteredProducts.length,
+        summary: `Productos: ${pdfTableData.totalProducts}`,
         columnStyles: {
-          6: { cellWidth: 60 },
+          0: { cellWidth: 27, fontStyle: "bold", textColor: [24, 94, 145] },
+          1: { cellWidth: 45, fontStyle: "bold" },
+          2: { cellWidth: 36 },
+          3: { cellWidth: 21, halign: "center" },
+          4: { cellWidth: 29, halign: "right" },
+          5: { cellWidth: 30, halign: "center" },
+          6: { cellWidth: "auto" },
         },
       });
-
-      doc.save("Productos_BusinessControl.pdf");
     } catch (e) {
       notificationService.error("Error", e.message || "No se pudo generar el PDF.");
     }
   }, [filteredProducts]);
 
   const handleExportExcel = useCallback(async () => {
+    if (!filteredProducts.length) {
+      notificationService.warning("Sin datos", "No hay productos para exportar.");
+      return;
+    }
+
     try {
       const data = filteredProducts.map((p) => ({
         Folio: p.folio || "",

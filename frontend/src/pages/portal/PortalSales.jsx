@@ -33,6 +33,10 @@ export default function PortalSales() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(5);
+
+  const SALES_PAGE_SIZE_OPTIONS = [5, 10, 25, 50, 100];
 
   useEffect(() => {
     let canceled = false;
@@ -63,6 +67,24 @@ export default function PortalSales() {
         .includes(search),
     );
   }, [q, sales]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredSales.length / pageSize));
+
+  const paginatedSales = useMemo(() => {
+    const start = pageIndex * pageSize;
+    return filteredSales.slice(start, start + pageSize);
+  }, [filteredSales, pageIndex, pageSize]);
+
+  useEffect(() => {
+    setPageIndex(0);
+  }, [q]);
+
+  useEffect(() => {
+    setPageIndex((current) => Math.min(current, pageCount - 1));
+  }, [pageCount]);
+
+  const canPreviousPage = pageIndex > 0;
+  const canNextPage = pageIndex < pageCount - 1;
 
   const handleDelete = async (id) => {
     const result = await Swal.fire({
@@ -122,19 +144,20 @@ export default function PortalSales() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-100 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
-            <tr>
-              <th className="p-4">Venta</th>
-              <th className="p-4">Cotización</th>
-              <th className="p-4">Productos</th>
-              <th className="p-4">Fecha</th>
-              <th className="p-4 text-right">Total</th>
-              <th className="p-4 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 relative">
+        <div className="overflow-y-auto max-h-[420px]">
+          <table className="w-full text-left text-sm">
+            <thead className="sticky top-0 z-10 border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
+              <tr>
+                <th className="p-4 bg-zinc-50 dark:bg-zinc-950">Venta</th>
+                <th className="p-4 bg-zinc-50 dark:bg-zinc-950">Cotización</th>
+                <th className="p-4 bg-zinc-50 dark:bg-zinc-950">Productos</th>
+                <th className="p-4 bg-zinc-50 dark:bg-zinc-950">Fecha</th>
+                <th className="p-4 text-right bg-zinc-50 dark:bg-zinc-950">Total</th>
+                <th className="p-4 text-right bg-zinc-50 dark:bg-zinc-950">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {loading ? (
               <tr>
                 <td className="p-8 text-center text-zinc-500" colSpan={6}>
@@ -151,7 +174,7 @@ export default function PortalSales() {
                 </td>
               </tr>
             ) : (
-              filteredSales.map((sale) => (
+              paginatedSales.map((sale) => (
                 <tr key={sale.id} className="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/70">
                   <td className="p-4">
                     <div className="font-semibold text-zinc-800 dark:text-zinc-100">
@@ -194,6 +217,68 @@ export default function PortalSales() {
             )}
           </tbody>
         </table>
+        </div>
+
+        {!loading && filteredSales.length > 0 && (
+          <div className="flex items-center justify-between gap-3 border-t border-zinc-100 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
+            <label className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+              Mostrar
+              <select
+                value={pageSize}
+                onChange={(event) => {
+                  setPageIndex(0);
+                  setPageSize(Number(event.target.value));
+                }}
+                className="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+              >
+                {SALES_PAGE_SIZE_OPTIONS.map((size) => (
+                  <option key={size} value={size} className="dark:bg-zinc-900 dark:text-zinc-100">
+                    {size}
+                  </option>
+                ))}
+              </select>
+              por página
+            </label>
+
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setPageIndex(0)}
+                disabled={!canPreviousPage}
+                className="rounded-lg bg-zinc-100 px-2 py-1 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+              >
+                ««
+              </button>
+              <button
+                type="button"
+                onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
+                disabled={!canPreviousPage}
+                className="rounded-lg bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+              >
+                Anterior
+              </button>
+              <span className="px-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                Pág. {pageIndex + 1} de {pageCount}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
+                disabled={!canNextPage}
+                className="rounded-lg bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+              >
+                Siguiente
+              </button>
+              <button
+                type="button"
+                onClick={() => setPageIndex(pageCount - 1)}
+                disabled={!canNextPage}
+                className="rounded-lg bg-zinc-100 px-2 py-1 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+              >
+                »»
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Card from "../../../components/ui/Card";
 import { Tag, UserPlus, Trash2 } from "@icons";
 import { listClientActiveServicesApi } from "../../../actionsAPI/clients.api";
@@ -19,7 +19,7 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
     expiration_date: "",
   });
 
-  const loadServices = () => {
+  const loadServices = useCallback(() => {
     setLoading(true);
     listClientActiveServicesApi(clientId)
       .then((res) => {
@@ -30,13 +30,13 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
         logger.error("Error loading services", e);
         setLoading(false);
       });
-  };
+  }, [clientId]);
 
   useEffect(() => {
     if (clientId) {
       loadServices();
     }
-  }, [clientId]);
+  }, [clientId, loadServices]);
 
   const handleAddService = async (e) => {
     e.preventDefault();
@@ -224,7 +224,7 @@ export const ServicesSection = ({ clientId, contacts = [], productsList = [] }) 
                     {s.license_key || "—"}
                   </td>
                   <td className="px-4 py-3 text-zinc-600 dark:text-zinc-300">
-                    {new Date(s.expiration_date).toLocaleDateString()}
+                    {s.expiration_date ? new Date(s.expiration_date).toLocaleDateString() : "—"}
                   </td>
                   <td className="px-4 py-3">
                     <span

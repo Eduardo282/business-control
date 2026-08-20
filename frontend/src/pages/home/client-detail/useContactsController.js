@@ -63,8 +63,8 @@ export function useContactsController({
     ],
   );
   const contactPrimaryColumns = useMemo(
-    () => getContactPrimaryColumns(contactColumnsFromView),
-    [contactColumnsFromView],
+    () => getContactPrimaryColumns(contactColumnsFromView, contactExcelViewColumns),
+    [contactColumnsFromView, contactExcelViewColumns],
   );
   const contactDetailColumns = useMemo(
     () =>
@@ -75,8 +75,8 @@ export function useContactsController({
     [contactColumnsFromView, contactPrimaryColumns],
   );
   const contactEditableColumns = useMemo(
-    () => getContactEditableColumns(contactColumnsFromView),
-    [contactColumnsFromView],
+    () => getContactEditableColumns(contactColumnsFromView, contactExcelViewColumns),
+    [contactColumnsFromView, contactExcelViewColumns],
   );
 
   const addContact = useCallback(

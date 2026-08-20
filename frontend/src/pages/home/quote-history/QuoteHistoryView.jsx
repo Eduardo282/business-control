@@ -9,6 +9,7 @@ export default function QuoteHistoryView({ controller, tableState }) {
     activeFilterPickerField,
     applyFilterValue,
     clearFilters,
+    clearSingleFilter,
     closeFilterPicker,
     error,
     filteredQuotes,
@@ -51,7 +52,9 @@ export default function QuoteHistoryView({ controller, tableState }) {
       <QuoteHistoryTable
         activeFilterCount={activeFilterCount}
         clearFilters={clearFilters}
+        filters={filters}
         loading={loading}
+        onClearSingleFilter={clearSingleFilter}
         onOpenFilterPicker={openFilterPicker}
         quotes={quotes}
         showFilters={showFilters}

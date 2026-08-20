@@ -77,6 +77,7 @@ export default function ProductsView({
         filterUsers={filterUsers}
         isTableScrollable={isTableScrollable}
         loading={loading}
+        onClearSingleFilter={(fieldId) => applyFilterValue(fieldId, "")}
         onOpenFilterPicker={(fieldId) => {
           setActiveFilterPickerField(fieldId);
           setFilterPickerSearch("");

@@ -279,6 +279,14 @@ export const UserPlus = createIcon(() => (
   </>
 ));
 
+export const UserCircle = createIcon(() => (
+  <>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="10" r="3" />
+    <path d="M6.2 18.2a7 7 0 0 1 11.6 0" />
+  </>
+));
+
 
 export const Tag = createIcon(() => (
   <>
@@ -635,6 +643,7 @@ export default {
   Trash2,
   Upload,
   User,
+  UserCircle,
   UserPlus,
   Users,
   X,

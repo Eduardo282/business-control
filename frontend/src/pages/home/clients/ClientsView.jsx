@@ -94,6 +94,7 @@ export default function ClientsView({
         <ClientsDetailsBar
           detailColumnCount={detailColumns.length}
           filters={filters}
+          onClearSingleFilter={(fieldName) => applyFilterValue(fieldName, "")}
           onDownloadTemplate={exportActions.downloadTemplate}
           onOpenFilterPicker={setActiveFilterPickerField}
           quickFilterButtons={quickFilterButtons}

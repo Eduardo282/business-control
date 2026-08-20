@@ -1,6 +1,8 @@
-import { Building2, Search, X } from "@icons";
+import { useState } from "react";
+import { Building2, ChevronDown, Search, UserCircle, X } from "@icons";
 import Card from "../../../components/ui/Card";
 import Input from "../../../components/ui/Input";
+import ContactSearchModal from "./ContactSearchModal";
 
 export default function QuoteClientPanel({
   fixedClientId,
@@ -17,6 +19,13 @@ export default function QuoteClientPanel({
   ensureQuoteFolio,
   setShowPreviewModal,
 }) {
+  const [showContactModal, setShowContactModal] = useState(false);
+
+  const selectedContact =
+    selectedClient?.contacts?.find(
+      (c) => String(c.id) === String(selectedContactId),
+    ) || null;
+
   return (
     <div className="lg:col-span-1 space-y-6">
       {!fixedClientId && (
@@ -88,28 +97,41 @@ export default function QuoteClientPanel({
               </div>
 
               {selectedClient.contacts?.length > 0 && (
-                <div className="mt-4 relative animate-fade-in">
+                <div className="mt-4 animate-fade-in">
                   <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 mb-1.5 block">
                     Contacto para cotización
                   </label>
-                  <select
-                    value={selectedContactId}
-                    onChange={(event) =>
-                      setSelectedContactId(event.target.value)
-                    }
-                    className="w-full p-3 rounded-xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 focus:border-[#1a2b4c] dark:focus:border-[#2277B4] focus:ring-1 focus:ring-[#1a2b4c] dark:focus:ring-[#2277B4] text-light-text-primary dark:text-zinc-100 text-sm outline-none transition-all"
+                  <button
+                    type="button"
+                    onClick={() => setShowContactModal(true)}
+                    className="w-full p-3 rounded-xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 hover:border-[#2277B4] dark:hover:border-blue-500 text-sm outline-none transition-all flex items-center justify-between gap-2"
                   >
-                    <option value="">-- Sin asignar --</option>
-                    {selectedClient.contacts.map((contact) => (
-                      <option
-                        key={contact.id}
-                        value={contact.id}
-                        className="dark:bg-dark-900 dark:text-zinc-100"
+                    <div className="flex items-center gap-2 min-w-0">
+                      <UserCircle
+                        size={18}
+                        className={
+                          selectedContact
+                            ? "text-[#2277B4] dark:text-blue-400 shrink-0"
+                            : "text-zinc-400 dark:text-zinc-500 shrink-0"
+                        }
+                      />
+                      <span
+                        className={`truncate ${
+                          selectedContact
+                            ? "text-light-text-primary dark:text-zinc-100 font-medium"
+                            : "text-zinc-400 dark:text-zinc-500"
+                        }`}
                       >
-                        {contact.full_name}
-                      </option>
-                    ))}
-                  </select>
+                        {selectedContact
+                          ? selectedContact.full_name
+                          : "-- Sin asignar --"}
+                      </span>
+                    </div>
+                    <ChevronDown
+                      size={16}
+                      className="text-zinc-400 dark:text-zinc-500 shrink-0"
+                    />
+                  </button>
                 </div>
               )}
             </>
@@ -128,6 +150,15 @@ export default function QuoteClientPanel({
                 Datos del Cliente
               </h3>
             </div>
+            {selectedContactId && (
+              <button
+                type="button"
+                onClick={resetClientData}
+                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+              >
+                <X size={13} /> Restablecer
+              </button>
+            )}
           </div>
 
           <div className="mt-4 p-3 rounded-xl border border-emerald-100 bg-emerald-50/60 dark:border-emerald-500/20 dark:bg-emerald-500/10 animate-fade-in">
@@ -143,26 +174,41 @@ export default function QuoteClientPanel({
           </div>
 
           {selectedClient.contacts?.length > 0 ?
-            <div className="mt-4 relative animate-fade-in">
+            <div className="mt-4 animate-fade-in">
               <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 mb-1.5 block">
                 Contacto para cotización
               </label>
-              <select
-                value={selectedContactId}
-                onChange={(event) => setSelectedContactId(event.target.value)}
-                className="w-full p-3 rounded-xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 focus:border-[#1a2b4c] dark:focus:border-[#2277B4] focus:ring-1 focus:ring-[#1a2b4c] dark:focus:ring-[#2277B4] text-light-text-primary dark:text-zinc-100 text-sm outline-none transition-all"
+              <button
+                type="button"
+                onClick={() => setShowContactModal(true)}
+                className="w-full p-3 rounded-xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 hover:border-[#2277B4] dark:hover:border-blue-500 text-sm outline-none transition-all flex items-center justify-between gap-2"
               >
-                <option value="">-- Sin asignar --</option>
-                {selectedClient.contacts.map((contact) => (
-                  <option
-                    key={contact.id}
-                    value={contact.id}
-                    className="dark:bg-dark-900 dark:text-zinc-100"
+                <div className="flex items-center gap-2 min-w-0">
+                  <UserCircle
+                    size={18}
+                    className={
+                      selectedContact
+                        ? "text-[#2277B4] dark:text-blue-400 shrink-0"
+                        : "text-zinc-400 dark:text-zinc-500 shrink-0"
+                    }
+                  />
+                  <span
+                    className={`truncate ${
+                      selectedContact
+                        ? "text-light-text-primary dark:text-zinc-100 font-medium"
+                        : "text-zinc-400 dark:text-zinc-500"
+                    }`}
                   >
-                    {contact.full_name}
-                  </option>
-                ))}
-              </select>
+                    {selectedContact
+                      ? selectedContact.full_name
+                      : "-- Sin asignar --"}
+                  </span>
+                </div>
+                <ChevronDown
+                  size={16}
+                  className="text-zinc-400 dark:text-zinc-500 shrink-0"
+                />
+              </button>
             </div>
           : <div className="mt-4 p-3 rounded-xl border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-200 text-sm">
               Este cliente no tiene contactos registrados. Agrégalo desde
@@ -186,6 +232,17 @@ export default function QuoteClientPanel({
           {loading ? "Procesando…" : "Ver Vista Previa"}
         </button>
       </Card>
+
+      {selectedClient?.contacts?.length > 0 && (
+        <ContactSearchModal
+          contacts={selectedClient.contacts}
+          isOpen={showContactModal}
+          onClose={() => setShowContactModal(false)}
+          onSelect={setSelectedContactId}
+          selectedContactId={selectedContactId}
+        />
+      )}
     </div>
   );
 }
+

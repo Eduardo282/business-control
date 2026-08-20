@@ -49,7 +49,9 @@ function useExcelViewPreferences(storageKey) {
         setColumnLabelOverrides(parsed.columnLabelOverrides);
       }
       if (Array.isArray(parsed?.excelViewColumns)) {
-        setExcelViewColumns(parsed.excelViewColumns);
+        // Auto-migrate stale 'telefono' column reference to 'phone'
+        const migrated = parsed.excelViewColumns.map(col => col === "telefono" ? "phone" : col);
+        setExcelViewColumns(migrated);
       }
     } catch {
       localStorage.removeItem(storageKey);

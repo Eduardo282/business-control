@@ -1,8 +1,9 @@
-import { ChevronRight, FileSpreadsheet, Lightbulb } from "@icons";
+import { ChevronRight, FileSpreadsheet, Lightbulb, X } from "@icons";
 
 export default function ClientsDetailsBar({
   detailColumnCount,
   filters,
+  onClearSingleFilter,
   onDownloadTemplate,
   onOpenFilterPicker,
   quickFilterButtons,
@@ -29,19 +30,38 @@ export default function ClientsDetailsBar({
             const selectedValue = String(filters[button.fieldName] || "");
 
             return (
-              <button
+              <div
                 key={button.id}
-                onClick={() => onOpenFilterPicker(button.fieldName)}
-                className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${
+                className={`inline-flex items-center rounded-md border text-xs transition-colors ${
                   selectedValue
-                    ? "bg-[#2277B4] text-white border-[#2277B4] dark:bg-blue-700 dark:text-white dark:border-blue-600"
-                    : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100 dark:bg-dark-800 dark:text-zinc-300 dark:border-dark-700 dark:hover:bg-dark-700"
+                    ? "border-[#2277B4] bg-white dark:bg-dark-800 text-zinc-800 dark:text-zinc-200 dark:border-blue-500 shadow-sm"
+                    : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-dark-700 dark:bg-dark-800 dark:text-zinc-300 dark:hover:bg-dark-700"
                 }`}
               >
-                <span className="uppercase font-bold tracking-wide">
-                  {button.buttonLabel}
-                </span>
-              </button>
+                <button
+                  onClick={() => onOpenFilterPicker(button.fieldName)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-md transition-colors whitespace-nowrap"
+                >
+                  <span className={`uppercase font-bold tracking-wide ${selectedValue ? "text-[#2277B4] dark:text-blue-400" : ""}`}>
+                    {button.buttonLabel}
+                  </span>
+                  {selectedValue && (
+                    <span className="max-w-28 truncate font-medium text-zinc-700 dark:text-zinc-300">
+                      {selectedValue}
+                    </span>
+                  )}
+                </button>
+                {selectedValue && (
+                  <button
+                    type="button"
+                    onClick={() => onClearSingleFilter(button.fieldName)}
+                    className="pr-2 pl-0.5 py-1 text-black hover:text-red-500 dark:text-zinc-100 dark:hover:text-red-400 transition-colors flex items-center justify-center focus:outline-none"
+                    title={`Quitar filtro ${button.buttonLabel}`}
+                  >
+                    <X size={12} className="text-black dark:text-zinc-100 hover:text-red-500" strokeWidth={2.5} />
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>

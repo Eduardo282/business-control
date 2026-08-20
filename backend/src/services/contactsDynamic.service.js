@@ -35,6 +35,24 @@ const RESERVED_COLUMN_NAMES = new Set([
   "column",
 ]);
 
+const COLUMN_ALIASES = {
+  nombre: "full_name",
+  nombre_completo: "full_name",
+  contacto: "full_name",
+  correo: "email",
+  correo_electronico: "email",
+  email: "email",
+  telefono: "phone",
+  telefono_contacto: "phone",
+  tel: "phone",
+  celular: "phone",
+  movil: "phone",
+  puesto: "position_title",
+  cargo: "position_title",
+  posicion: "position_title",
+  posicion_contacto: "position_title",
+};
+
 function normaliseKey(value) {
   return String(value || "")
     .normalize("NFD")
@@ -124,11 +142,12 @@ async function createDynamicColumnsForHeaders(headers, columnsMeta) {
 
   for (const header of headers) {
     const candidate = toSafeColumnName(header, existingNames);
-    if (
-      !candidate ||
-      (existingNames.has(candidate) &&
-        columnsMeta.some((c) => c.name === candidate))
-    ) {
+    if (!candidate) continue;
+    
+    if (existingNames.has(candidate)) continue;
+
+    // Si el candidato es un alias conocido y su destino ya existe, no la creamos.
+    if (COLUMN_ALIASES[candidate] && existingNames.has(COLUMN_ALIASES[candidate])) {
       continue;
     }
 
@@ -184,23 +203,7 @@ function getHeaderToColumnMap(headers, availableColumns, options = {}) {
     usableColumns.map((column) => [normaliseKey(column.name), column.name]),
   );
 
-  const aliases = {
-    nombre: "full_name",
-    nombre_completo: "full_name",
-    contacto: "full_name",
-    correo: "email",
-    correo_electronico: "email",
-    email: "email",
-    telefono: "phone",
-    telefono_contacto: "phone",
-    tel: "phone",
-    celular: "phone",
-    movil: "phone",
-    puesto: "position_title",
-    cargo: "position_title",
-    posicion: "position_title",
-    posicion_contacto: "position_title",
-  };
+  const aliases = COLUMN_ALIASES;
 
   const mapped = {};
   const usedColumns = new Set();

@@ -75,7 +75,7 @@ export function PortalDashboardServicesList({
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setStatusFilter(value)}
+                  onClick={() => setStatusFilter(statusFilter === value && value !== "ALL" ? "ALL" : value)}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
                     statusFilter === value ?
                       value === "ACTIVE" ? "bg-emerald-600 text-white dark:bg-emerald-400 dark:text-emerald-950"
@@ -90,6 +90,17 @@ export function PortalDashboardServicesList({
                 </button>
               ))}
             </div>
+
+            {statusFilter !== "ALL" && (
+              <button
+                type="button"
+                onClick={() => setStatusFilter("ALL")}
+                className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 border border-red-200 dark:border-red-800 transition-colors"
+                title="Limpiar filtro de estado"
+              >
+                <X size={12} /> Limpiar
+              </button>
+            )}
 
             {(searchTerm || statusFilter !== "ALL") && (
               <span className="text-xs text-zinc-500 dark:text-zinc-400">

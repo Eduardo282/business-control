@@ -149,11 +149,22 @@ export function useCreateQuote(navigate) {
     setTableFilterPickerSearch("");
   };
 
-  const applyTableFilterValue = (value) => {
+  const applyTableFilterValue = (fieldOrValue, optionalValue) => {
+    if (optionalValue !== undefined) {
+      setTableFilters((prev) => ({
+        ...prev,
+        [fieldOrValue]: optionalValue,
+      }));
+      if (activeTableFilterPickerField === fieldOrValue) {
+        closeTableFilterPicker();
+      }
+      return;
+    }
+
     if (!activeTableFilterPickerField) return;
     setTableFilters((prev) => ({
       ...prev,
-      [activeTableFilterPickerField]: value,
+      [activeTableFilterPickerField]: fieldOrValue,
     }));
     closeTableFilterPicker();
   };
@@ -193,14 +204,15 @@ export function useCreateQuote(navigate) {
 
   const quoteDraftScope = resolveQuoteDraftScope({
     requestId,
-    clientId: fixedClientId,
   });
   const loadedRequestDraftIdRef = useRef(null);
+  const loadedFixedClientIdRef = useRef(null);
   const loadingRequestIdRef = useRef(null);
   const [initializedRequestId, setInitializedRequestId] = useState("");
 
   useLayoutEffect(() => {
     loadedRequestDraftIdRef.current = null;
+    loadedFixedClientIdRef.current = null;
     loadingRequestIdRef.current = null;
     setInitializedRequestId("");
     setClientSearch("");
@@ -266,7 +278,7 @@ export function useCreateQuote(navigate) {
         setClientSearch(draft.clientSearch);
       }
 
-      if (draft?.selectedContactId) {
+      if (draft?.selectedContactId !== undefined && draft?.selectedContactId !== null) {
         setSelectedContactId(draft.selectedContactId);
       }
 
@@ -305,23 +317,26 @@ export function useCreateQuote(navigate) {
   const resetClientData = async () => {
     const confirmed = await notificationService.confirm({
       title: "¿Restablecer los datos del cliente?",
-      text: "Se eliminará el cliente y contacto guardados en este borrador.",
+      text: fixedClientId
+        ? "Se restablecerá la selección del contacto asignado."
+        : "Se eliminará el cliente y contacto guardados en este borrador.",
       confirmButtonText: "Sí, restablecer",
       cancelButtonText: "Cancelar",
     });
     if (!confirmed) return;
 
-    setClientSearch("");
-    setClientResults([]);
-    setSelectedClient(null);
+    if (!fixedClientId) {
+      setClientSearch("");
+      setClientResults([]);
+      setSelectedClient(null);
+    }
     setSelectedContactId("");
     setShowClientModal(false);
     setError("");
 
     await persistResetDraft({
       ...quoteDraftData,
-      clientSearch: "",
-      selectedClient: null,
+      ...(fixedClientId ? {} : { clientSearch: "", selectedClient: null }),
       selectedContactId: "",
     });
   };
@@ -485,10 +500,11 @@ export function useCreateQuote(navigate) {
         
         if (contactIdToSelect) {
           setSelectedContactId(contactIdToSelect);
-        } else if (client.contacts?.length > 0) {
-          setSelectedContactId(client.contacts[0].id);
         } else {
-          setSelectedContactId("");
+          setSelectedContactId((current) => {
+            if (current) return current;
+            return client.contacts?.length > 0 ? client.contacts[0].id : "";
+          });
         }
       }
     } catch (e) {
@@ -550,7 +566,14 @@ export function useCreateQuote(navigate) {
         });
       }
     } else if (fixedClientId) {
-      loadClient(fixedClientId);
+      if (
+        isDraftReady &&
+        readyScopeKey === quoteDraftScope &&
+        loadedFixedClientIdRef.current !== fixedClientId
+      ) {
+        loadedFixedClientIdRef.current = fixedClientId;
+        loadClient(fixedClientId);
+      }
     }
   }, [
     fixedClientId,

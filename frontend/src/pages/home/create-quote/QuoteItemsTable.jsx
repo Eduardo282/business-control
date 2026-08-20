@@ -166,19 +166,39 @@ export default function QuoteItemsTable({
                   );
 
                   return (
-                    <button
+                    <div
                       key={button.id}
-                      onClick={() => openTableFilterPicker(button.id)}
-                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] border transition-colors whitespace-nowrap ${
-                        selectedValue ?
-                          "bg-[#2277B4] text-white border-[#2277B4] dark:bg-blue-600 dark:border-blue-500"
-                        : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100 dark:bg-dark-900 dark:text-zinc-300 dark:border-dark-700 dark:hover:bg-dark-800"
+                      className={`inline-flex items-center rounded-md border text-[11px] transition-colors whitespace-nowrap ${
+                        selectedValue
+                          ? "border-[#2277B4] bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-200 dark:border-blue-500 shadow-sm"
+                          : "rounded-md bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100 dark:bg-dark-900 dark:text-zinc-300 dark:border-dark-700 dark:hover:bg-dark-800"
                       }`}
                     >
-                      <span className="uppercase font-bold tracking-wide">
-                        {button.label}
-                      </span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => openTableFilterPicker(button.id)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-md transition-colors"
+                      >
+                        <span className={`uppercase font-bold tracking-wide ${selectedValue ? "text-[#2277B4] dark:text-blue-400" : ""}`}>
+                          {button.label}
+                        </span>
+                        {selectedValue && (
+                          <span className="max-w-24 truncate font-medium text-zinc-700 dark:text-zinc-300 lowercase">
+                            {selectedValue}
+                          </span>
+                        )}
+                      </button>
+                      {selectedValue && (
+                        <button
+                          type="button"
+                          onClick={() => applyTableFilterValue(button.id, "")}
+                          className="pr-2 pl-0.5 py-1 text-black hover:text-red-500 dark:text-zinc-100 dark:hover:text-red-400 transition-colors flex items-center justify-center focus:outline-none"
+                          title={`Quitar filtro ${button.label}`}
+                        >
+                          <X size={12} className="text-black dark:text-zinc-100 hover:text-red-500" strokeWidth={2.5} />
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
 

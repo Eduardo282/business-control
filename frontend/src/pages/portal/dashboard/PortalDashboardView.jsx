@@ -116,7 +116,7 @@ export default function PortalDashboardView({ controller }) {
                             {svc.product?.folio || "Sin folio"}
                           </span>
                           <span className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                            {new Date(svc.start_date).toLocaleDateString()} — {new Date(svc.expiration_date).toLocaleDateString()}
+                            {svc.start_date ? new Date(svc.start_date).toLocaleDateString() : "—"} — {svc.expiration_date ? new Date(svc.expiration_date).toLocaleDateString() : "—"}
                           </span>
                         </div>
                         {isSelected && (

@@ -17,6 +17,41 @@ function safeParseDraftData(value) {
   }
 }
 
+function getLocalStorageKey(formKey, scopeKey) {
+  return `form_draft:${formKey}:${scopeKey}`;
+}
+
+function getLocalDraft(formKey, scopeKey) {
+  if (typeof window === "undefined" || !window.localStorage) return null;
+  try {
+    const raw = window.localStorage.getItem(getLocalStorageKey(formKey, scopeKey));
+    return safeParseDraftData(raw);
+  } catch {
+    return null;
+  }
+}
+
+function setLocalDraft(formKey, scopeKey, data) {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    window.localStorage.setItem(
+      getLocalStorageKey(formKey, scopeKey),
+      JSON.stringify(data || {})
+    );
+  } catch {
+    // Ignore localStorage write errors (e.g. quota exceeded or private mode)
+  }
+}
+
+function removeLocalDraft(formKey, scopeKey) {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    window.localStorage.removeItem(getLocalStorageKey(formKey, scopeKey));
+  } catch {
+    // Ignore localStorage removal errors
+  }
+}
+
 function createDraftStatus() {
   return {
     lastSavedPayload: "",
@@ -90,6 +125,7 @@ export function usePersistedFormDraft({
 
   const queueDraftDelete = useCallback((onlyIfKnown = false) => {
     cancelScheduledPersist();
+    removeLocalDraft(formKey, scopeKey);
     if (!formKey) return Promise.resolve();
 
     const status = getDraftStatus();
@@ -150,9 +186,11 @@ export function usePersistedFormDraft({
 
       const payload = safeParseDraftData(nextData) || {};
       if (!shouldPersistRef.current(payload)) {
+        removeLocalDraft(formKey, scopeKey);
         return queueDraftDelete();
       }
 
+      setLocalDraft(formKey, scopeKey, payload);
       const serializedPayload = JSON.stringify(payload);
       return queueDraftUpsert(payload, serializedPayload);
     },
@@ -161,6 +199,7 @@ export function usePersistedFormDraft({
       formKey,
       queueDraftUpsert,
       queueDraftDelete,
+      scopeKey,
     ],
   );
 
@@ -207,12 +246,21 @@ export function usePersistedFormDraft({
         await operationQueueRef.current.catch(() => undefined);
         if (cancelled) return;
 
-        const draft = await getFormDraftApi(formKey, scopeKey);
+        const localData = getLocalDraft(formKey, scopeKey);
+
+        let draft = null;
+        try {
+          draft = await getFormDraftApi(formKey, scopeKey);
+        } catch (apiError) {
+          logger.warn("Could not load form draft from API", apiError);
+        }
         if (cancelled) return;
 
-        const parsedData = safeParseDraftData(draft?.data_json);
-        status.knownToExist = Boolean(draft);
-        if (!draft) {
+        const parsedApiData = safeParseDraftData(draft?.data_json);
+        const parsedData = parsedApiData || localData;
+
+        status.knownToExist = Boolean(draft || localData);
+        if (!draft && !localData) {
           status.lastSavedPayload = "";
           status.awaitingLoadedMeaningfulData = false;
         }
@@ -269,6 +317,7 @@ export function usePersistedFormDraft({
     }
 
     if (!shouldPersist) {
+      removeLocalDraft(formKey, scopeKey);
       cancelScheduledPersist();
       if (
         (!status.knownToExist && status.pendingUpsertCount === 0) ||
@@ -282,6 +331,8 @@ export function usePersistedFormDraft({
       });
       return undefined;
     }
+
+    setLocalDraft(formKey, scopeKey, payload);
 
     if (status.lastSavedPayload === serializedData) return undefined;
 

@@ -290,8 +290,8 @@ export async function listContactProductsAction(contact_id) {
       id: row.id,
       contact_id: row.contact_id,
       license_key: row.license_key,
-      start_date: new Date(row.start_date).toISOString(),
-      expiration_date: new Date(row.expiration_date).toISOString(),
+      start_date: row.start_date && !isNaN(new Date(row.start_date)) ? new Date(row.start_date).toISOString() : null,
+      expiration_date: row.expiration_date && !isNaN(new Date(row.expiration_date)) ? new Date(row.expiration_date).toISOString() : null,
       status: determineStatus(row.status, row.expiration_date),
       product: {
         id: row.product_id,

@@ -7,17 +7,13 @@ import {
 } from "./quoteDraft.js";
 
 describe("resolveQuoteDraftScope", () => {
-  it("prefers a versioned request scope over a client scope", () => {
+  it("prefers a versioned request scope when requestId is provided", () => {
     expect(
-      resolveQuoteDraftScope({ requestId: "23", clientId: "7" }),
+      resolveQuoteDraftScope({ requestId: "23" }),
     ).toBe("request:v2:23");
   });
 
-  it("uses the client scope when there is no request", () => {
-    expect(resolveQuoteDraftScope({ clientId: "7" })).toBe("client:7");
-  });
-
-  it("falls back to the global scope", () => {
+  it("falls back to the global scope when no requestId is provided", () => {
     expect(resolveQuoteDraftScope({})).toBe("global");
   });
 });
@@ -27,6 +23,7 @@ describe("isMeaningfulQuoteDraft", () => {
     { selectedClient: { id: 1 } },
     { clientSearch: "Client" },
     { folio: "ABCD123" },
+    { selectedContactId: "5" },
     { items: [{ product_id: 1 }] },
   ])("accepts a draft with meaningful data", (draft) => {
     expect(isMeaningfulQuoteDraft(draft)).toBe(true);

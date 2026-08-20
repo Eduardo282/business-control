@@ -4,6 +4,7 @@ import {
   exportTemplateToExcel,
 } from "../../../utils/excelExport";
 import { loadXlsx } from "../../../utils/dynamicImports";
+import { exportPdfTable } from "../../../utils/pdfTableExport";
 
 const CONTACT_TEMPLATE_COLUMNS = [
   "NOMBRE COMPLETO",
@@ -23,6 +24,7 @@ const CONTACT_COLUMN_MAP = {
   "correo electronico": "email",
   "correo principal": "email",
   telefono: "phone",
+  "telefono (phone)": "phone",
   tel: "phone",
   phone: "phone",
   celular: "phone",
@@ -119,10 +121,18 @@ export async function parseContactWorkbook(fileBuffer) {
   return { contacts, errors };
 }
 
+const CONTACT_EXPORT_FIELDS = new Set([
+  "full_name",
+  "email",
+  "phone",
+  "position_title",
+  "has_portal_access",
+]);
+
 export function buildContactExportContext(contactColumnsFromView, contactsTable) {
   const usedLabels = new Set();
   const exportColumns = contactColumnsFromView
-    .filter((column) => column.name !== "is_active")
+    .filter((column) => column.name !== "is_active" && CONTACT_EXPORT_FIELDS.has(column.name))
     .map((column) => {
       const baseLabel = String(column.label || column.name || "").trim();
       const fallbackLabel = String(column.name || "").trim();
@@ -164,23 +174,9 @@ function resolveContactExportValue(row, columnName) {
 }
 
 export async function exportContactsToPdf({ exportColumns, exportRows }) {
-  const [{ default: jsPDF }, autoTableModule] = await Promise.all([
-    import("jspdf"),
-    import("jspdf-autotable"),
-  ]);
-
-  const autoTable = autoTableModule.default || autoTableModule.autoTable;
-  const doc = new jsPDF({ orientation: "landscape" });
-
-  doc.setFontSize(16);
-  doc.setTextColor(26, 43, 76);
-  doc.text("Contactos", 14, 16);
-  doc.setFontSize(10);
-  doc.setTextColor(90, 90, 90);
-  doc.text(`Exportado: ${new Date().toLocaleString("es-MX")}`, 14, 23);
-
-  autoTable(doc, {
-    startY: 28,
+  await exportPdfTable({
+    title: "Contactos",
+    filename: `Contactos_${new Date().toISOString().slice(0, 10)}.pdf`,
     head: [exportColumns.map((column) => column.label.toUpperCase())],
     body: exportRows.map((row) =>
       exportColumns.map((column) => {
@@ -188,12 +184,8 @@ export async function exportContactsToPdf({ exportColumns, exportRows }) {
         return hasValue(value) ? String(value) : "—";
       }),
     ),
-    theme: "grid",
-    headStyles: { fillColor: [34, 119, 180] },
-    styles: { fontSize: 8, cellPadding: 2.5 },
+    recordCount: exportRows.length,
   });
-
-  doc.save(`Contactos_${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
 export async function exportContactsToExcel({ exportColumns, exportRows }) {

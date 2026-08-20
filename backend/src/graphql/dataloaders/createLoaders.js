@@ -108,6 +108,8 @@ export function createLoaders() {
         // Match the shape expected by listContactProductsAction
         byContactId.get(cId).push({
           ...row,
+          start_date: row.start_date && !isNaN(new Date(row.start_date)) ? new Date(row.start_date).toISOString() : null,
+          expiration_date: row.expiration_date && !isNaN(new Date(row.expiration_date)) ? new Date(row.expiration_date).toISOString() : null,
           product: { id: row.product_id, name: row.product_name, folio: row.product_folio },
         });
       }

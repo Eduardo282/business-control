@@ -19,9 +19,24 @@ export const NotificationProvider = ({ children }) => {
           logger.error("Error fetching notifications", e);
         }
       };
+      
       fetchNotifs();
-      const interval = setInterval(fetchNotifs, 60000);
-      return () => clearInterval(interval);
+      const interval = setInterval(fetchNotifs, 30000); // Fetch every 30 seconds
+
+      const handleFocus = () => {
+        if (document.visibilityState === "visible") {
+          fetchNotifs();
+        }
+      };
+
+      window.addEventListener("visibilitychange", handleFocus);
+      window.addEventListener("focus", handleFocus);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener("visibilitychange", handleFocus);
+        window.removeEventListener("focus", handleFocus);
+      };
     }
   }, [user]);
 

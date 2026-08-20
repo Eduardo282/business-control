@@ -2,6 +2,7 @@ import {
   ChevronRight,
   FileSpreadsheet,
   Lightbulb,
+  X,
 } from "@icons";
 import Card from "../../../components/ui/Card";
 import ContactFilterPicker from "./ContactFilterPicker";
@@ -85,23 +86,42 @@ export default function ContactsPanel({
               );
 
               return (
-                <button
+                <div
                   key={button.id}
-                  onClick={() =>
-                    contacts.openContactFilterPicker(
-                      button.fieldName,
-                    )
-                  }
-                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${
+                  className={`inline-flex items-center rounded-md border text-xs transition-colors ${
                     selectedValue
-                      ? "bg-[#2277B4] text-white border-[#2277B4] dark:bg-blue-700 dark:text-white dark:border-blue-600"
-                      : "bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-100 dark:hover:bg-dark-800"
+                      ? "border-[#2277B4] bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-200 dark:border-blue-500 shadow-sm"
+                      : "rounded-md bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-100 dark:hover:bg-dark-800"
                   }`}
                 >
-                  <span className="font-semibold tracking-wide">
-                    {button.buttonLabel}
-                  </span>
-                </button>
+                  <button
+                    onClick={() =>
+                      contacts.openContactFilterPicker(
+                        button.fieldName,
+                      )
+                    }
+                    className="inline-flex items-center gap-1.5 px-3 py-1 text-xs hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-md transition-colors whitespace-nowrap"
+                  >
+                    <span className={`font-semibold tracking-wide ${selectedValue ? "text-[#2277B4] dark:text-blue-400 font-bold" : ""}`}>
+                      {button.buttonLabel}
+                    </span>
+                    {selectedValue && (
+                      <span className="max-w-28 truncate font-medium text-zinc-700 dark:text-zinc-300">
+                        {selectedValue}
+                      </span>
+                    )}
+                  </button>
+                  {selectedValue && (
+                    <button
+                      type="button"
+                      onClick={() => contacts.applyContactFilterValue(button.fieldName, "")}
+                      className="pr-2 pl-0.5 py-1 text-black hover:text-red-500 dark:text-zinc-100 dark:hover:text-red-400 transition-colors flex items-center justify-center focus:outline-none"
+                      title={`Quitar filtro ${button.buttonLabel}`}
+                    >
+                      <X size={12} className="text-black dark:text-zinc-100 hover:text-red-500" strokeWidth={2.5} />
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>

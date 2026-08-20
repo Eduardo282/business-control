@@ -113,7 +113,7 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess, dynamicC
               .filter((col) => !EXCLUDED_COLUMNS.has(col.name))
               .map((col) => (
               <div key={col.name} className={col.name === "business_name" ? "md:col-span-2" : ""}>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1.5">
                   {col.label} {col.name === "business_name" ? "*" : ""}
                 </label>
                 <input

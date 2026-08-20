@@ -58,25 +58,26 @@ export default function AgentSupport() {
     const s = getSocket(token);
     if (!s) return;
 
-    s.on("connect", () => { setConnected(true); s.emit("queue:list"); });
-    s.on("disconnect", () => { setConnected(false); addToast("Conexión perdida. ReConectando…", "warn"); });
+    if (s.connected) {
+      setConnected(true);
+      s.emit("queue:list");
+    }
 
-    s.on("queue:update", (q) => setWaitingQueue(q));
-    s.on("agent:active", (a) => setActiveChats(a));
-
-    s.on("conversation:created", ({ conversation: conv, messages: msgs }) => {
+    const onConnect = () => { setConnected(true); s.emit("queue:list"); };
+    const onDisconnect = () => { setConnected(false); addToast("Conexión perdida. ReConectando…", "warn"); };
+    const onQueueUpdate = (q) => setWaitingQueue(q);
+    const onAgentActive = (a) => setActiveChats(a);
+    const onConvCreated = ({ conversation: conv, messages: msgs }) => {
       setCurrentConv(conv); setMessages(msgs || []); setSelectedConvId(conv.id);
       setWaitingQueue((p) => p.filter((c) => c.id !== conv.id));
       setActiveChats((p) => p.some((c) => c.id === conv.id) ? p : [conv, ...p]);
-    });
-
-    s.on("conversation:assigned", ({ conversation: conv }) => {
+    };
+    const onConvAssigned = ({ conversation: conv }) => {
       setCurrentConv(conv);
       setWaitingQueue((p) => p.filter((c) => c.id !== conv.id));
       setActiveChats((p) => p.some((c) => c.id === conv.id) ? p : [conv, ...p]);
-    });
-
-    s.on("message:new", (msg) => {
+    };
+    const onMessageNew = (msg) => {
       setMessages((p) => p.some((m) => m.id === msg.id) ? p : [...p, msg]);
       setRemoteTyping(false); setSeen(false);
       if (msg.sender_type === "CLIENT") {
@@ -91,9 +92,8 @@ export default function AgentSupport() {
           logger.warn("Unable to play support notification sound", audioError);
         }
       }
-    });
-
-    s.on("conversation:closed", ({ conversation: conv }) => {
+    };
+    const onConvClosed = ({ conversation: conv }) => {
       setActiveChats((p) => p.filter((c) => c.id !== conv.id));
       setSelectedConvId((cur) => {
         if (cur === conv.id) {
@@ -102,27 +102,45 @@ export default function AgentSupport() {
         return cur;
       });
       addToast("Chat suspendido. El historial se conservó.", "info");
-    });
+    };
+    const onTypingStart = ({ conversationId }) => { if (conversationId === selectedConvIdRef.current) setRemoteTyping(true); };
+    const onTypingStop = ({ conversationId }) => { if (conversationId === selectedConvIdRef.current) setRemoteTyping(false); };
+    const onUserDisconnected = ({ isAgent: a }) => { if (!a) { setClientOnline(false); addToast("El cliente se ha desconectado", "warn"); } };
+    const onUserReconnected = ({ isAgent: a }) => { if (!a) { setClientOnline(true); addToast("El cliente se ha reconectado", "success"); } };
+    const onMessagesSeen = ({ seenBy }) => { if (seenBy === "CLIENT") setSeen(true); };
+    const onError = ({ message }) => logger.error("Socket error", message);
 
-    s.on("typing:start", ({ conversationId }) => { if (conversationId === selectedConvIdRef.current) setRemoteTyping(true); });
-    s.on("typing:stop", ({ conversationId }) => { if (conversationId === selectedConvIdRef.current) setRemoteTyping(false); });
-
-    s.on("user:disconnected", ({ isAgent: a }) => { if (!a) { setClientOnline(false); addToast("El cliente se ha desconectado", "warn"); } });
-    s.on("user:reconnected", ({ isAgent: a }) => { if (!a) { setClientOnline(true); addToast("El cliente se ha reconectado", "success"); } });
-    s.on("messages:seen", ({ seenBy }) => { if (seenBy === "CLIENT") setSeen(true); });
-    s.on("error", ({ message }) => logger.error("Socket error", message));
+    s.on("connect", onConnect);
+    s.on("disconnect", onDisconnect);
+    s.on("queue:update", onQueueUpdate);
+    s.on("agent:active", onAgentActive);
+    s.on("conversation:created", onConvCreated);
+    s.on("conversation:assigned", onConvAssigned);
+    s.on("message:new", onMessageNew);
+    s.on("conversation:closed", onConvClosed);
+    s.on("typing:start", onTypingStart);
+    s.on("typing:stop", onTypingStop);
+    s.on("user:disconnected", onUserDisconnected);
+    s.on("user:reconnected", onUserReconnected);
+    s.on("messages:seen", onMessagesSeen);
+    s.on("error", onError);
 
     setSocket(s);
     return () => {
-      s.off("connect");
-      s.off("disconnect");
-      s.off("queue:update");
-      s.off("agent:active");
-      s.off("conversation:created");
-      s.off("message:new");
-      s.off("conversation:ended");
-      s.off("message:status");
-      s.off("error");
+      s.off("connect", onConnect);
+      s.off("disconnect", onDisconnect);
+      s.off("queue:update", onQueueUpdate);
+      s.off("agent:active", onAgentActive);
+      s.off("conversation:created", onConvCreated);
+      s.off("conversation:assigned", onConvAssigned);
+      s.off("message:new", onMessageNew);
+      s.off("conversation:closed", onConvClosed);
+      s.off("typing:start", onTypingStart);
+      s.off("typing:stop", onTypingStop);
+      s.off("user:disconnected", onUserDisconnected);
+      s.off("user:reconnected", onUserReconnected);
+      s.off("messages:seen", onMessagesSeen);
+      s.off("error", onError);
     };
   }, []);
 

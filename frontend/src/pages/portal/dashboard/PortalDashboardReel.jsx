@@ -286,7 +286,7 @@ export function ServiceReel({ service, spinCount, index, isDeleting, onDelete, o
                       <div className="flex justify-between text-[11px]">
                         <span className="text-zinc-500 dark:text-zinc-400">Inicio:</span>
                         <span className="text-zinc-600 dark:text-zinc-300">
-                          {new Date(item.start_date).toLocaleDateString()}
+                          {item.start_date ? new Date(item.start_date).toLocaleDateString() : "—"}
                         </span>
                       </div>
                       <div className="flex justify-between text-[11px] items-center">
@@ -297,7 +297,7 @@ export function ServiceReel({ service, spinCount, index, isDeleting, onDelete, o
                             daysRemaining
                           )}`}
                         >
-                          {new Date(item.expiration_date).toLocaleDateString()}
+                          {item.expiration_date ? new Date(item.expiration_date).toLocaleDateString() : "—"}
                         </span>
                       </div>
                     </div>

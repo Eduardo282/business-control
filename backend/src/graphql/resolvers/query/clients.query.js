@@ -21,5 +21,5 @@ export const client = async (_parent, { id }, ctx) => {
 export const searchClients = async (_parent, { q }, ctx) => {
   requireRoles(ctx.user, ["ADMIN", "VENTAS"]);
   if (!q?.trim()) return [];
-  return searchClientsAction(q);
+  return searchClientsAction({ q });
 };

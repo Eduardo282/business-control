@@ -34,7 +34,8 @@ export async function getClientAction(idOrObj) {
  * @param {string} params.q
  * @returns {Promise<Array<object>>}
  */
-export async function searchClientsAction({ q }) {
+export async function searchClientsAction(params) {
+  const q = typeof params === "string" ? params : params?.q;
   return searchClients(q);
 }
 

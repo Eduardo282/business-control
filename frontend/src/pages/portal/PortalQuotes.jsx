@@ -145,7 +145,7 @@ function PortalHeader({ filter, statusFilter, onStatusFilterChange }) {
           </>
         )}
       </h2>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <div className="relative">
           <select
             value={statusFilter}
@@ -162,6 +162,16 @@ function PortalHeader({ filter, statusFilter, onStatusFilterChange }) {
             <Search size={14} />
           </div>
         </div>
+        {statusFilter && (
+          <button
+            type="button"
+            onClick={() => onStatusFilterChange("")}
+            className="inline-flex items-center gap-1 px-2.5 py-2 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 border border-red-200 dark:border-red-800 transition-colors shadow-sm"
+            title="Quitar filtro de estado"
+          >
+            <X size={13} /> Limpiar
+          </button>
+        )}
       </div>
     </div>
   );
@@ -411,20 +421,39 @@ export default function PortalQuotes() {
   const [respondingQuoteId, setRespondingQuoteId] = useState(null);
   const { quotes, loading, error, statusFilter, page, pageSize, editingQuote, editItems, savingEdit } = state;
 
-  const loadQuotes = useCallback(async () => {
-    dispatch({ type: "FETCH_START" });
+  const loadQuotes = useCallback(async (background = false) => {
+    if (!background) dispatch({ type: "FETCH_START" });
     try {
       const data = await listPortalQuotesApi();
       dispatch({ type: "FETCH_SUCCESS", payload: data });
     } catch (e) {
       logger.error("Error loading portal quotes", e);
-      const msg = e.response?.data?.errors?.[0]?.message || e.message || "Error al cargar cotizaciones";
-      dispatch({ type: "FETCH_ERROR", payload: msg });
+      if (!background) {
+        const msg = e.response?.data?.errors?.[0]?.message || e.message || "Error al cargar cotizaciones";
+        dispatch({ type: "FETCH_ERROR", payload: msg });
+      }
     }
   }, []);
 
   useEffect(() => {
-    loadQuotes();
+    loadQuotes(); // Initial foreground fetch
+    
+    const interval = setInterval(() => loadQuotes(true), 30000);
+
+    const handleFocus = () => {
+      if (document.visibilityState === "visible") {
+        loadQuotes(true);
+      }
+    };
+
+    window.addEventListener("visibilitychange", handleFocus);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("visibilitychange", handleFocus);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [loadQuotes]);
 
   const handleDelete = async (id) => {

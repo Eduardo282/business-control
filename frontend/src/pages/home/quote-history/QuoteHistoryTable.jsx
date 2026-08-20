@@ -63,7 +63,9 @@ export function QuoteHistoryPagination({ table }) {
 export function QuoteHistoryTable({
   activeFilterCount,
   clearFilters,
+  filters = {},
   loading,
+  onClearSingleFilter,
   onOpenFilterPicker,
   quotes,
   showFilters,
@@ -86,25 +88,46 @@ export function QuoteHistoryTable({
         <div className="flex flex-wrap items-center gap-2">
           {["client", "status", "folio"].map((field) => {
             const fieldLabels = { client: "Cliente", status: "Estado", folio: "Folio" };
-            const selectedValue = ""; // handled in view
+            const selectedValue = filters[field] || "";
             return (
-              <button
+              <div
                 key={field}
-                type="button"
-                onClick={() => onOpenFilterPicker(field)}
-                tabIndex={showFilters ? 0 : -1}
-                className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] border transition-all whitespace-nowrap ${
-                  selectedValue ?
-                    "bg-[#2277B4] text-white border-[#2277B4] dark:bg-blue-600 dark:border-blue-500"
-                  : "bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-100 dark:hover:bg-dark-800"
+                className={`inline-flex items-center rounded-md border text-[11px] transition-all whitespace-nowrap ${
+                  selectedValue
+                    ? "border-[#2277B4] bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-200 dark:border-blue-500 shadow-sm"
+                    : "bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-100 dark:hover:bg-dark-800"
                 } ${
-                  showFilters ?
-                    "opacity-100 translate-y-0"
-                  : "opacity-0 -translate-y-1 pointer-events-none"
+                  showFilters
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 -translate-y-1 pointer-events-none"
                 }`}
               >
-                <span className="font-semibold">{fieldLabels[field]}</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onOpenFilterPicker(field)}
+                  tabIndex={showFilters ? 0 : -1}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 font-semibold hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-md transition-colors"
+                >
+                  <span className={selectedValue ? "text-[#2277B4] dark:text-blue-400 font-bold" : ""}>
+                    {fieldLabels[field]}
+                  </span>
+                  {selectedValue && (
+                    <span className="max-w-28 truncate font-medium text-zinc-700 dark:text-zinc-300">
+                      {selectedValue}
+                    </span>
+                  )}
+                </button>
+                {selectedValue && showFilters && (
+                  <button
+                    type="button"
+                    onClick={() => onClearSingleFilter?.(field)}
+                    className="pr-2 pl-0.5 py-1 text-black hover:text-red-500 dark:text-zinc-100 dark:hover:text-red-400 transition-colors flex items-center justify-center focus:outline-none"
+                    title={`Quitar filtro ${fieldLabels[field]}`}
+                  >
+                    <X size={12} className="text-black dark:text-zinc-100 hover:text-red-500" strokeWidth={2.5} />
+                  </button>
+                )}
+              </div>
             );
           })}
 
@@ -122,10 +145,12 @@ export function QuoteHistoryTable({
           </button>
         </div>
 
-        <span className="text-xs text-light-text-secondary dark:text-zinc-400">
-          Pág. {table.getState().pagination.pageIndex + 1} de{" "}
-          {Math.max(1, table.getPageCount())}
-        </span>
+        {table.getRowModel().rows.length > 0 && (
+          <span className="text-xs text-light-text-secondary dark:text-zinc-400">
+            Pág. {table.getState().pagination.pageIndex + 1} de{" "}
+            {Math.max(1, table.getPageCount())}
+          </span>
+        )}
       </div>
 
       <div className="max-h-[65vh] overflow-auto overscroll-contain">
@@ -211,7 +236,7 @@ export function QuoteHistoryTable({
         </table>
       </div>
 
-      <QuoteHistoryPagination table={table} />
+      {table.getRowModel().rows.length > 0 && <QuoteHistoryPagination table={table} />}
     </div>
   );
 }

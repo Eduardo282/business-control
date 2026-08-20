@@ -104,12 +104,23 @@ export function useContactFilters({ contactRows, contactColumnsFromView }) {
   }, []);
 
   const applyContactFilterValue = useCallback(
-    (value) => {
+    (fieldOrValue, optionalValue) => {
+      if (optionalValue !== undefined) {
+        setContactFilters((currentFilters) => ({
+          ...currentFilters,
+          [fieldOrValue]: optionalValue,
+        }));
+        if (activeContactFilterPickerField === fieldOrValue) {
+          closeContactFilterPicker();
+        }
+        return;
+      }
+
       if (!activeContactFilterPickerField) return;
 
       setContactFilters((currentFilters) => ({
         ...currentFilters,
-        [activeContactFilterPickerField]: value,
+        [activeContactFilterPickerField]: fieldOrValue,
       }));
       closeContactFilterPicker();
     },

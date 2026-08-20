@@ -209,6 +209,8 @@ export function getContactColumnsFromView(
       .map((columnName) => columnsByName.get(columnName))
       .filter(Boolean);
     if (excelSubset.length) {
+      // Excel columns come first (preserves import order), then the remaining
+      // DB columns so existing contact data is never hidden in the detail panel.
       const excelSet = new Set(excelSubset.map((column) => column.name));
       const remaining = availableColumns.filter(
         (column) => !excelSet.has(column.name),
@@ -226,25 +228,31 @@ export function getContactColumnsFromView(
   }));
 }
 
-export function getContactPrimaryColumns(contactColumnsFromView) {
+export function getContactPrimaryColumns(
+  contactColumnsFromView,
+  contactExcelViewColumns,
+) {
   const columnsByName = new Map(
     contactColumnsFromView.map((column) => [column.name, column]),
   );
 
-  let orderedColumns = CONTACT_DEFAULT_MAIN_COLUMNS.map((columnName) =>
-    columnsByName.get(columnName),
-  ).filter(Boolean);
+  // When an Excel import is active, primary (thead) columns must come ONLY from
+  // the Excel column list — remaining DB columns must never become primary.
+  // Without an active Excel view, fall back to the full DB column order.
+  const pool =
+    Array.isArray(contactExcelViewColumns) && contactExcelViewColumns.length
+      ? contactExcelViewColumns
+          .map((name) => columnsByName.get(name))
+          .filter(Boolean)
+      : contactColumnsFromView;
 
-  if (orderedColumns.length < CONTACT_FIXED_MAIN_COLUMNS_COUNT) {
-    const selected = new Set(orderedColumns.map((column) => column.name));
-    const needed = CONTACT_FIXED_MAIN_COLUMNS_COUNT - orderedColumns.length;
-    const fallback = contactColumnsFromView
-      .filter((column) => !selected.has(column.name))
-      .slice(0, needed);
-    orderedColumns = [...orderedColumns, ...fallback];
-  }
+  const fullNameColumn = pool.find((column) => column.name === "full_name");
+  const remaining = pool.filter((column) => column.name !== "full_name");
+  const candidates = fullNameColumn
+    ? [fullNameColumn, ...remaining]
+    : [...remaining];
 
-  return orderedColumns.slice(0, CONTACT_FIXED_MAIN_COLUMNS_COUNT);
+  return candidates.slice(0, CONTACT_FIXED_MAIN_COLUMNS_COUNT);
 }
 
 export function getContactDetailColumns(
@@ -262,10 +270,23 @@ export function getContactDetailColumns(
   );
 }
 
-export function getContactEditableColumns(contactColumnsFromView) {
-  return contactColumnsFromView.filter(
+export function getContactEditableColumns(
+  contactColumnsFromView,
+  contactExcelViewColumns,
+) {
+  const editable = contactColumnsFromView.filter(
     (column) => !CONTACT_READONLY_FIELDS.has(column.name),
   );
+
+  // When an Excel import is active, restrict the edit form to only the columns
+  // that came from that Excel — avoids showing fields like `email` that don't
+  // exist in the imported structure.
+  if (Array.isArray(contactExcelViewColumns) && contactExcelViewColumns.length) {
+    const excelSet = new Set(contactExcelViewColumns);
+    return editable.filter((column) => excelSet.has(column.name));
+  }
+
+  return editable;
 }
 
 export function getContactQuickFilterButtons(contactColumnsFromView) {

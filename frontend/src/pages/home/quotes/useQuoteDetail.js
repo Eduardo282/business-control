@@ -5,6 +5,7 @@ import { useQuotePdf, getQuoteFolio, getQuoteFileToken } from "./hooks/useQuoteP
 import { useQuoteEmail } from "./hooks/useQuoteEmail.js";
 import { getQuoteStatusAfterSend } from "../../../utils/quoteStatus.js";
 import { notificationService } from "../../../services/notificationService.js";
+import { useNotifications } from "../../../context/NotificationContext.jsx";
 
 export { getQuoteFolio, getQuoteFileToken };
 
@@ -17,6 +18,7 @@ export { getQuoteFolio, getQuoteFileToken };
 export function useQuoteDetail(id, isPortal) {
   const quotePreviewRef = useRef(null);
   const [registeringQuote, setRegisteringQuote] = useState(false);
+  const { refreshNotifications } = useNotifications();
 
   // 1. Status & Base Loading Hook
   const {
@@ -58,6 +60,7 @@ export function useQuoteDetail(id, isPortal) {
           }
         : current,
     );
+    refreshNotifications?.();
   });
 
   const handleRegisterQuote = async () => {
@@ -71,6 +74,7 @@ export function useQuoteDetail(id, isPortal) {
         ...updatedQuote,
         is_registered: true,
       }));
+      refreshNotifications?.();
       notificationService.success(
         "Cotización enviada",
         "Cotización enviada correctamente."

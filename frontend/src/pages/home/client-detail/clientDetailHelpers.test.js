@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   filterContacts,
   getContactColumnsFromView,
+  getContactEditableColumns,
   getContactFilterOptions,
   getContactPrimaryColumns,
   getOrphanClientGeneralFieldName,
@@ -54,13 +55,14 @@ describe("client detail contact helpers", () => {
     { name: "department", label: "Departamento" },
   ];
 
-  it("preserves imported ordering, appends remaining columns, and applies labels", () => {
+  it("orders Excel columns first, appends remaining DB columns, and applies labels", () => {
     const columns = getContactColumnsFromView(
       dynamicColumns,
       ["full_name", "email"],
       { department: "Área" },
     );
 
+    // Excel columns come first; remaining DB columns are appended for detail panel
     expect(columns.map((column) => column.name)).toEqual([
       "full_name",
       "email",
@@ -73,9 +75,48 @@ describe("client detail contact helpers", () => {
       "Teléfono",
       "Área",
     ]);
-    expect(getContactPrimaryColumns(columns).map((column) => column.name)).toEqual(
-      ["full_name", "email"],
+    // Primary columns restricted to Excel pool: [full_name, email]
+    expect(
+      getContactPrimaryColumns(columns, ["full_name", "email"]).map((c) => c.name),
+    ).toEqual(["full_name", "email"]);
+  });
+
+  it("uses the Excel-driven column order for primary columns when email is not present", () => {
+    // Simulates an Excel that has full_name and phone but no email column
+    const columnsNoEmail = getContactColumnsFromView(
+      [
+        { name: "full_name", label: "Nombre" },
+        { name: "phone", label: "Teléfono" },
+        { name: "department", label: "Dept" },
+      ],
+      ["full_name", "phone"],
+      {},
     );
+
+    // Primary columns follow the Excel order — email is NOT in the pool
+    expect(
+      getContactPrimaryColumns(columnsNoEmail, ["full_name", "phone"]).map((c) => c.name),
+    ).toEqual(["full_name", "phone"]);
+
+    // Edit form is restricted to Excel columns only — no email field
+    expect(
+      getContactEditableColumns(columnsNoEmail, ["full_name", "phone"]).map((c) => c.name),
+    ).toEqual(["full_name", "phone"]);
+  });
+
+  it("never promotes a DB-only column to primary when Excel view is active", () => {
+    // DB has full_name and email; Excel only exported full_name (single column)
+    const cols = getContactColumnsFromView(
+      [{ name: "full_name", label: "Nombre" }, { name: "email", label: "Email" }],
+      ["full_name"],
+      {},
+    );
+    // email appears in contactColumnsFromView as a remaining DB column
+    expect(cols.map((c) => c.name)).toContain("email");
+    // but it must NOT become a primary column because it's not in the Excel view
+    expect(
+      getContactPrimaryColumns(cols, ["full_name"]).map((c) => c.name),
+    ).toEqual(["full_name"]);
   });
 
   it("filters only active contacts across search and exact normalized filters", () => {

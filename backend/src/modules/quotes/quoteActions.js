@@ -653,7 +653,6 @@ export async function sendQuoteEmailAction({ quote_id, contact_email, message, p
 
   const pdfHtml = buildPdfHtml(quote);
   const folio = quote.folio || `#${quote.id}`;
-  const pdfBuffer = await renderPdf(pdfHtml, { folio });
 
   const preparationMs = Date.now() - startedAt;
   const pricingData = calcPricing({ items: quote.items || [] });
@@ -672,6 +671,8 @@ export async function sendQuoteEmailAction({ quote_id, contact_email, message, p
   const deliveryPromise = (async () => {
     const deliveryStartedAt = Date.now();
     try {
+      const pdfBuffer = await renderPdf(pdfHtml, { folio });
+      
       await sendEmail({
         to: contact_email,
         subject,

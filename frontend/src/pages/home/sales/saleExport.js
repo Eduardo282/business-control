@@ -1,5 +1,6 @@
 import { calculateQuotePricing } from "@shared/quotePricingRules.js";
 import { notificationService } from "../../../services/notificationService";
+import { addPdfPageFooters } from "../../../utils/pdfTableExport";
 
 export function getSaleFolio(sale) {
   const rawFolio = sale?.folio ? String(sale.folio).trim() : "";
@@ -282,29 +283,71 @@ export async function exportSalePdf(sale, element) {
       logging: false,
     });
 
-    const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
       format: "a4",
     });
 
-    const imgWidth = 210;
-    const pageHeight = 297;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const horizontalMargin = 10;
+    const topMargin = 10;
+    const bottomMargin = 17;
+    const imgWidth = pageWidth - horizontalMargin * 2;
+    const printableHeight = pageHeight - topMargin - bottomMargin;
+    const pixelsPerMillimeter = canvas.width / imgWidth;
+    const sourcePageHeight = Math.max(
+      1,
+      Math.floor(printableHeight * pixelsPerMillimeter),
+    );
+    const pageCount = Math.max(
+      1,
+      Math.ceil(canvas.height / sourcePageHeight),
+    );
 
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+    for (let page = 0; page < pageCount; page += 1) {
+      if (page > 0) pdf.addPage();
 
-    while (heightLeft > 5) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      const sourceY = page * sourcePageHeight;
+      const sliceHeight = Math.min(
+        sourcePageHeight,
+        canvas.height - sourceY,
+      );
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sliceHeight;
+      const pageContext = pageCanvas.getContext("2d");
+
+      if (!pageContext) {
+        throw new Error("No se pudo preparar una página del PDF.");
+      }
+
+      pageContext.fillStyle = "#ffffff";
+      pageContext.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      pageContext.drawImage(
+        canvas,
+        0,
+        sourceY,
+        canvas.width,
+        sliceHeight,
+        0,
+        0,
+        canvas.width,
+        sliceHeight,
+      );
+
+      pdf.addImage(
+        pageCanvas.toDataURL("image/png"),
+        "PNG",
+        horizontalMargin,
+        topMargin,
+        imgWidth,
+        sliceHeight / pixelsPerMillimeter,
+      );
     }
 
+    addPdfPageFooters(pdf, { margin: horizontalMargin });
     pdf.save(`Venta_${fileToken}.pdf`);
     notificationService.toast({ title: "PDF exportado correctamente.", icon: "success" });
   } catch (e) {

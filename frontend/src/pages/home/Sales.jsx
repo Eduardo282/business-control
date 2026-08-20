@@ -18,6 +18,7 @@ import {
 import { notificationService } from "../../services/notificationService";
 import { exportRowsToExcel } from "../../utils/excelExport";
 import { normalizeSearchText } from "../../utils/formatters";
+import { exportPdfTable } from "../../utils/pdfTableExport";
 
 const SALES_FILTER_BUTTONS = [
   {
@@ -262,23 +263,9 @@ export default function Sales() {
     }
 
     try {
-      const [{ default: jsPDF }, autoTableModule] = await Promise.all([
-        import("jspdf"),
-        import("jspdf-autotable"),
-      ]);
-      const autoTable = autoTableModule.default || autoTableModule.autoTable;
-      const doc = new jsPDF({ orientation: "landscape" });
-
-      doc.setFontSize(16);
-      doc.setTextColor(26, 43, 76);
-      doc.text("Ventas", 14, 16);
-      doc.setFontSize(10);
-      doc.setTextColor(90, 90, 90);
-      doc.text(`Exportado: ${new Date().toLocaleString("es-MX")}`, 14, 23);
-      doc.text(`Registros: ${exportRows.length}`, 14, 29);
-
-      autoTable(doc, {
-        startY: 34,
+      await exportPdfTable({
+        title: "Ventas",
+        filename: `Ventas_${new Date().toISOString().slice(0, 10)}.pdf`,
         head: [[
           "VENTA",
           "FOLIO",
@@ -299,19 +286,15 @@ export default function Sales() {
           row.date,
           row.status,
         ]),
-        theme: "grid",
-        headStyles: { fillColor: [34, 119, 180] },
-        styles: { fontSize: 8, cellPadding: 2.5 },
+        recordCount: exportRows.length,
         columnStyles: {
-          2: { cellWidth: 42 },
-          3: { cellWidth: 38 },
-          4: { cellWidth: 55 },
-          5: { halign: "right", cellWidth: 28 },
-          7: { cellWidth: 24 },
+          2: { cellWidth: 38 },
+          3: { cellWidth: 34 },
+          4: { cellWidth: 46 },
+          5: { halign: "right", cellWidth: 25 },
+          7: { cellWidth: 23 },
         },
       });
-
-      doc.save(`Ventas_${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (e) {
       notificationService.error("Error", e.message || "No se pudo generar el PDF.");
     }
@@ -452,23 +435,39 @@ export default function Sales() {
                 const selectedValue = filters[button.fieldName];
 
                 return (
-                  <button
+                  <div
                     key={button.id}
-                    type="button"
-                    onClick={() => openFilterPicker(button.fieldName)}
-                    className={`inline-flex items-center gap-2 whitespace-nowrap rounded-md border px-3 py-1 text-xs font-semibold transition-colors ${
+                    className={`inline-flex items-center rounded-md border text-xs transition-colors ${
                       selectedValue
-                        ? "border-[#2277B4] bg-[#2277B4] text-white"
+                        ? "border-[#2277B4] bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-200 dark:border-blue-500 shadow-sm"
                         : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-dark-700 dark:bg-dark-900 dark:text-zinc-200 dark:hover:bg-dark-700"
                     }`}
                   >
-                    {button.buttonLabel}
-                    {selectedValue && (
-                      <span className="max-w-28 truncate font-normal opacity-90">
-                        {selectedValue}
+                    <button
+                      type="button"
+                      onClick={() => openFilterPicker(button.fieldName)}
+                      className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold px-3 py-1 hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-md transition-colors"
+                    >
+                      <span className={selectedValue ? "text-[#2277B4] dark:text-blue-400 font-bold" : ""}>
+                        {button.buttonLabel}
                       </span>
+                      {selectedValue && (
+                        <span className="max-w-28 truncate font-medium text-zinc-700 dark:text-zinc-300">
+                          {selectedValue}
+                        </span>
+                      )}
+                    </button>
+                    {selectedValue && (
+                      <button
+                        type="button"
+                        onClick={() => applyFilterValue(button.fieldName, "")}
+                        className="pr-2 pl-0.5 py-1 text-black hover:text-red-500 dark:text-zinc-100 dark:hover:text-red-400 transition-colors flex items-center justify-center focus:outline-none"
+                        title={`Quitar filtro ${button.buttonLabel}`}
+                      >
+                        <X size={12} className="text-black dark:text-zinc-100 hover:text-red-500" strokeWidth={2.5} />
+                      </button>
                     )}
-                  </button>
+                  </div>
                 );
               })}
 
@@ -485,20 +484,21 @@ export default function Sales() {
           )}
         </div>
 
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-zinc-100 bg-zinc-50 text-xs uppercase text-[#2277B4] dark:border-dark-700 dark:bg-dark-800 dark:text-blue-400">
-            <tr>
-              <th className="p-4">Venta</th>
-              <th className="p-4">Cliente</th>
-              <th className="p-4">Productos</th>
-              <th className="p-4">Total</th>
-              <th className="p-4">Fecha</th>
-              <th className="p-4">Estado</th>
-              <th className="p-4">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-100 dark:divide-dark-700">
-            {loading ? (
+        <div className="overflow-y-auto max-h-[420px] relative">
+          <table className="w-full text-left text-sm">
+            <thead className="sticky top-0 z-10 border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-[#2277B4] dark:border-dark-600 dark:bg-dark-800 dark:text-blue-400">
+              <tr>
+                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Venta</th>
+                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Cliente</th>
+                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Productos</th>
+                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Total</th>
+                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Fecha</th>
+                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Estado</th>
+                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-dark-700">
+              {loading ? (
               <tr>
                 <td className="p-8 text-center text-zinc-500" colSpan={7}>
                   Cargando ventas...
@@ -568,6 +568,7 @@ export default function Sales() {
             )}
           </tbody>
         </table>
+        </div>
 
         {!loading && filteredSales.length > 0 && (
           <div className="flex items-center justify-between gap-3 border-t border-zinc-100 bg-white px-4 py-3 dark:border-dark-700 dark:bg-dark-900">
