@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import { memo } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import ProductDetailView from "./product-detail/ProductDetailView";
 import useProductDetailController from "./product-detail/useProductDetailController";

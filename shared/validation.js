@@ -2,7 +2,7 @@ export const PASSWORD_PATTERN =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{}|;:,.<>?/]).{8,}$/;
 
 export const PASSWORD_REQUIREMENTS_MESSAGE =
-  "Password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters.";
+  "La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y caracteres especiales.";
 
 export function isStrongPassword(password) {
   return PASSWORD_PATTERN.test(String(password || ""));

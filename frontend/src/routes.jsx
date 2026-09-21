@@ -141,7 +141,7 @@ export default function AppRoutes() {
                     <Route path="/polizas" element={<PageMeta title="Cotizaciones" desc="Cotizaciones aceptadas por contactos del portal."><Policies /></PageMeta>} />
                     <Route path="/ventas" element={<PageMeta title="Ventas" desc="Ventas generadas desde cotizaciones aceptadas."><Sales /></PageMeta>} />
                     <Route path="/ventas/:id" element={<PageMeta title="Detalle de Venta" desc="Documento de venta generado desde cotización aceptada."><SaleDetail /></PageMeta>} />
-                    <Route path="/productos/:id" element={<PageMeta title="Detalle de Producto" desc="Información detallada, precios e historial del producto."><ProductDetail /></PageMeta>} />
+                    <Route path="/productos/:id" element={<PageMeta title="Detalle de Producto" desc="Información detallada, precios e historial del producto."><ProductDetail /></PageMeta>} /> 
                     <Route
                       path="/cotizaciones/historial"
                       element={<PageMeta title="Historial de Cotizaciones" desc="Historial completo de cotizaciones generadas."><QuoteHistory /></PageMeta>}

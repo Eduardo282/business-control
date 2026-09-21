@@ -67,7 +67,7 @@ export default function useRegistrarProductsController() {
     isMeaningfulDraft: (draft) => {
       const product = draft?.newProduct || {};
       return Boolean(
-        String(product.name || "").trim() ||
+        String(product.name || "").trim() || 
           String(product.category || "").trim() ||
           String(product.description || "").trim() ||
           Number(product.price || 0) > 0 ||

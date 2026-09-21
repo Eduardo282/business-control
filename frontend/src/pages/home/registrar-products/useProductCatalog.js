@@ -42,7 +42,7 @@ export default function useProductCatalog() {
             const productType = inferProductType(product);
             if (!categoryKey) return;
             if (shouldReplaceCategoryType(next[categoryKey], productType)) {
-              next[categoryKey] = productType;
+              next[categoryKey] = productType;//{TESORERIA: CONTPAQI COMERCIAL: CONTPAQI}
             }
           });
           return next;
@@ -108,7 +108,7 @@ export default function useProductCatalog() {
           uniqueByNormalizedValue([...prev, ...allCategories])
         );
       } catch (error) {
-        logger.error("Failed to load categories from API", error);
+        logger.error("Fallo al cargar categorias desde la API", error);
       }
     }
 
@@ -140,7 +140,7 @@ export default function useProductCatalog() {
           return next;
         });
       } catch (error) {
-        console.warn(
+        logger.warn(
           "No se pudieron cargar categorías desde el servidor:",
           error.message
         );
