@@ -10,7 +10,7 @@ export default function ClientsDetailsBar({
   showFilters,
 }) {
   return (
-    <div className="px-4 py-2 min-h-10 bg-blue-50 dark:bg-blue-500/10 border-b border-blue-100 dark:border-blue-500/20 text-xs text-[#2277B4] dark:text-blue-300 flex items-center justify-between gap-3">
+    <div className="px-5 py-2.5 min-h-10 bg-blue-500/[0.08] dark:bg-blue-500/10 backdrop-blur-md border-b border-blue-200/40 dark:border-blue-500/20 text-xs text-[#2277B4] dark:text-blue-300 flex items-center justify-between gap-3">
       {detailColumnCount > 0 ? (
         <div className="flex items-center gap-1 shrink-0">
           <Lightbulb size={14} className="inline" /> Clic en{" "}
@@ -32,15 +32,15 @@ export default function ClientsDetailsBar({
             return (
               <div
                 key={button.id}
-                className={`inline-flex items-center rounded-md border text-xs transition-colors ${
+                className={`inline-flex items-center rounded-xl border text-xs transition-colors backdrop-blur-md shadow-glass-sm ${
                   selectedValue
-                    ? "border-[#2277B4] bg-white dark:bg-dark-800 text-zinc-800 dark:text-zinc-200 dark:border-blue-500 shadow-sm"
-                    : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-dark-700 dark:bg-dark-800 dark:text-zinc-300 dark:hover:bg-dark-700"
+                    ? "border-[#2277B4] bg-white/90 dark:bg-dark-800 text-zinc-800 dark:text-zinc-200 dark:border-blue-500"
+                    : "border-white/80 bg-white/70 text-zinc-700 hover:bg-white/95 dark:border-dark-700 dark:bg-dark-800 dark:text-zinc-300 dark:hover:bg-dark-700"
                 }`}
               >
                 <button
                   onClick={() => onOpenFilterPicker(button.fieldName)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-md transition-colors whitespace-nowrap"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-xl transition-colors whitespace-nowrap"
                 >
                   <span className={`uppercase font-bold tracking-wide ${selectedValue ? "text-[#2277B4] dark:text-blue-400" : ""}`}>
                     {button.buttonLabel}
@@ -68,7 +68,7 @@ export default function ClientsDetailsBar({
 
         <button
           onClick={onDownloadTemplate}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-dark-800 border border-zinc-200 dark:border-dark-700 hover:bg-zinc-100 dark:hover:bg-dark-700 transition-colors whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:focus:ring-emerald-400/40"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-white/70 dark:bg-dark-800 border border-white/80 dark:border-dark-700 hover:bg-white/95 dark:hover:bg-dark-700 backdrop-blur-md shadow-glass-sm transition-colors whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:focus:ring-emerald-400/40"
           title="Descargar plantilla de carga masiva"
         >
           <FileSpreadsheet size={13} /> Descargar plantilla excel

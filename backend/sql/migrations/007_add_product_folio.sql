@@ -6,7 +6,6 @@ UPDATE products
 SET folio = CONCAT(
   CASE
     WHEN UPPER(COALESCE(product_type, 'PRODUCT')) = 'SERVICE' THEN 'SRV'
-    WHEN UPPER(COALESCE(product_type, 'PRODUCT')) = 'POLICY' THEN 'POL'
     ELSE 'PRD'
   END,
   '-',

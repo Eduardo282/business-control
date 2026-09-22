@@ -1,5 +1,5 @@
 import React from "react";
-import { Library, Package, Shield, ShoppingBag } from "@icons";
+import { Library, Package, ShoppingBag } from "@icons";
 import CategoryManagerModal from "./CategoryManagerModal";
 import ProductSelectorModal from "./ProductSelectorModal";
 import SourceSelectionModal from "./SourceSelectionModal";
@@ -14,18 +14,16 @@ export default function RegistrarProductModals({
   closeSourceModal,
   filteredContpaqiProducts,
   filteredGeneralProducts,
-  filteredPolicies,
   filteredServices,
   handleAddCategory,
   handleSourceSelection,
   isCategoriesModalOpen,
   isContpaqiModalOpen,
   isGeneralProductsModalOpen,
-  isPoliciesModalOpen,
   isServicesModalOpen,
   isSourceModalOpen,
   newCategoryName,
-  normalizeServicePolicyCategory,
+  normalizeServiceCategory,
   returnToSource,
   selectedCategory,
   selectProduct,
@@ -49,7 +47,7 @@ export default function RegistrarProductModals({
         setNewCategoryName={setNewCategoryName}
         handleAddCategory={handleAddCategory}
         availableCategories={availableCategories}
-        normalizeServicePolicyCategory={normalizeServicePolicyCategory}
+        normalizeServiceCategory={normalizeServiceCategory}
         selectedCategory={selectedCategory}
         applyCategorySelection={applyCategorySelection}
         categoryPage={categoryPage}
@@ -68,19 +66,6 @@ export default function RegistrarProductModals({
         productLogoMap={PRODUCT_LOGO_MAP}
         Icon={Package}
         onNewProductClick={() => startNewProduct("CONTPAQI")}
-      />
-
-      <ProductSelectorModal
-        isOpen={isPoliciesModalOpen}
-        onClose={() => closeSelector("POLICY")}
-        onBack={() => returnToSource("POLICY")}
-        title="Pólizas"
-        type="POLICY"
-        products={filteredPolicies}
-        selectedCategory={selectedCategory}
-        onSelectProduct={(item) => selectProduct(item, "POLICY")}
-        Icon={Shield}
-        onNewProductClick={() => startNewProduct("POLICY")}
       />
 
       <ProductSelectorModal

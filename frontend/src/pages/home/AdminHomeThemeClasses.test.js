@@ -61,11 +61,11 @@ const productDetailFeatureSource = readFeatureSource([
   "./product-detail/ProductDetailView.jsx",
 ]);
 
-const policiesFeatureSource = readFeatureSource([
-  "./Policies.jsx",
-  "./policies/policiesHelpers.jsx",
-  "./policies/policiesColumns.jsx",
-  "./policies/PoliciesView.jsx",
+const acceptedSalesFeatureSource = readFeatureSource([
+  "./AcceptedSales.jsx",
+  "./accepted-sales/acceptedSalesHelpers.jsx",
+  "./accepted-sales/acceptedSalesColumns.jsx",
+  "./accepted-sales/AcceptedSalesView.jsx",
 ]);
 
 const ownedSources = [
@@ -75,7 +75,7 @@ const ownedSources = [
   "./clients/ClientCreateModal.jsx",
   "./clients/ClientEditModal.jsx",
   "./clients/ClientFilterPicker.jsx",
-  "./client-detail/ClientPoliciesTab.jsx",
+  "./client-detail/ClientServicesTab.jsx",
   "./client-detail/ManagePortalModal.jsx",
   "./client-detail/ServicesSection.jsx",
   "./registrar-products/CategoryManagerModal.jsx",
@@ -90,7 +90,7 @@ ownedSources.push(
   ["Products feature", productsSource],
   ["QuoteHistory feature", quoteHistorySource],
   ["ProductDetail feature", productDetailFeatureSource],
-  ["Policies feature", policiesFeatureSource],
+  ["AcceptedSales feature", acceptedSalesFeatureSource],
 );
 
 describe("ADMIN/HOME theme class contracts", () => {
@@ -106,7 +106,7 @@ describe("ADMIN/HOME theme class contracts", () => {
   it("pairs selected filter surfaces and inverse count chips", () => {
     for (const path of [
       "./clients/ClientFilterPicker.jsx",
-      "./client-detail/ClientPoliciesTab.jsx",
+      "./client-detail/ClientServicesTab.jsx",
       "./registrar-products/CategoryManagerModal.jsx",
       "./products/ProductsTable.jsx",
     ]) {
@@ -123,7 +123,7 @@ describe("ADMIN/HOME theme class contracts", () => {
     );
 
     for (const path of [
-      "./client-detail/ClientPoliciesTab.jsx",
+      "./client-detail/ClientServicesTab.jsx",
       "./products/ProductsToolbar.jsx",
     ]) {
       expect(readSource(path), path).toContain(

@@ -17,9 +17,7 @@ export function inferQuoteProductType(product = {}) {
   if (explicitType === "CONTPAQI" || searchableText.includes("contpaqi")) {
     return "CONTPAQI";
   }
-  if (explicitType === "POLICY") return "POLICY";
   if (explicitType === "SERVICE") return "SERVICE";
-  if (searchableText.includes("poliza")) return "POLICY";
   if (searchableText.includes("servicio")) return "SERVICE";
   return "PRODUCT";
 }

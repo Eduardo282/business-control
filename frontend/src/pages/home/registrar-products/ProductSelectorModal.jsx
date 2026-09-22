@@ -19,15 +19,14 @@ export default function ProductSelectorModal({
 
   const getButtonText = () => {
     if (type === "SERVICE") return "Nuevo servicio";
-    if (type === "POLICY") return "Nueva póliza";
     return "Nuevo producto";
   };
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-500/50 dark:bg-black/70 backdrop-blur-sm">
-      <div className="bg-white dark:bg-dark-800 rounded-3xl w-full max-w-2xl shadow-2xl dark:shadow-black/50 animate-fade-in flex flex-col max-h-[85vh] overflow-hidden border border-transparent dark:border-dark-700">
+      <div className="bg-[#1a2b4c] dark:bg-blue-950 rounded-3xl w-full max-w-2xl shadow-2xl dark:shadow-black/60 animate-fade-in flex flex-col max-h-[85vh] overflow-hidden border border-white/15 dark:border-white/10">
         {/* Header */}
-        <div className="p-4 border-b border-[#24395f] dark:border-dark-700 bg-[#1a2b4c] dark:bg-blue-950 flex items-center gap-3">
+        <div className="p-4 border-b border-white/10 dark:border-white/10 bg-[#1a2b4c] dark:bg-blue-950 flex items-center gap-3 rounded-t-3xl">
           <button
             onClick={onBack}
             className="text-white/80 dark:text-white/80 hover:text-white dark:hover:text-white transition-colors p-2 bg-white/10 dark:bg-white/10 hover:bg-white/20 dark:hover:bg-white/20 rounded-full focus:outline-none focus:ring-2 focus:ring-white/40"
@@ -47,7 +46,7 @@ export default function ProductSelectorModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-8 bg-[#f8fafc] dark:bg-dark-800 flex-1 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
+        <div className="p-6 overflow-y-auto space-y-8 bg-[#f8fafc] dark:bg-dark-800 rounded-b-3xl flex-1 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
           <div className="space-y-3">
             {products.length === 0 ? (
               <div className="rounded-xl border border-dashed border-zinc-300 dark:border-dark-700 bg-white dark:bg-dark-900 p-5 text-sm text-zinc-500 dark:text-zinc-400 text-center">

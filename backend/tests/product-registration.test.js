@@ -19,7 +19,9 @@ describe("product registration catalog rules", () => {
   test("normalizes product type aliases before persistence", () => {
     assert.equal(normalizeCatalogProductType("contpaqi_product"), "CONTPAQI");
     assert.equal(normalizeCatalogProductType(" service "), "SERVICE");
-    assert.equal(normalizeCatalogProductType("POLICY"), "POLICY");
+    assert.throws(() => normalizeCatalogProductType("POLICY"), {
+      extensions: { code: "BAD_USER_INPUT" },
+    });
     assert.equal(normalizeCatalogProductType("unknown"), "PRODUCT");
   });
 

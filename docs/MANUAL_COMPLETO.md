@@ -104,11 +104,11 @@ flowchart LR
 | --- | --- |
 | Cliente | Empresa o razón social administrada por el backoffice |
 | Contacto | Persona vinculada con un cliente; puede recibir acceso al portal |
-| Producto | Elemento comercial del catálogo; también puede representar un servicio o una póliza |
+| Producto | Elemento comercial del catálogo; también puede representar un servicio |
 | Categoría | Clasificación del catálogo, opcionalmente asociada con un tipo de producto |
 | Cotización | Propuesta comercial con partidas, cantidades, precios y descuentos |
 | Venta | Documento generado desde una cotización aceptada |
-| Asignación | Relación de un producto, servicio o póliza con un contacto |
+| Asignación | Relación de un producto o servicio con un contacto |
 | Conversación | Hilo persistente de soporte entre un contacto y el equipo interno |
 
 ### 3.2 Roles del backoffice
@@ -121,7 +121,7 @@ Los roles base usados por la aplicación son:
 | `VENTAS` | Clientes, productos, cotizaciones, ventas y soporte |
 | `SOPORTE` | La interfaz muestra productos, cotizaciones, ventas y centro de soporte |
 
-La página de clientes está protegida en el frontend para `ADMIN` y `VENTAS`. La interfaz permite que `SOPORTE` abra productos, cotizaciones, pólizas, ventas y soporte; sin embargo, los resolvers actuales de cotizaciones y ventas solamente autorizan `ADMIN`, `VENTAS` y, en operaciones específicas, `CONTACT_PORTAL`. Por ello, `SOPORTE` puede alcanzar esas pantallas pero no completar sus consultas o mutaciones principales. Es una inconsistencia vigente entre frontend y backend.
+La página de clientes está protegida en el frontend para `ADMIN` y `VENTAS`. La interfaz permite que `SOPORTE` abra productos, cotizaciones, ventas y soporte; sin embargo, los resolvers actuales de cotizaciones y ventas solamente autorizan `ADMIN`, `VENTAS` y, en operaciones específicas, `CONTACT_PORTAL`. Por ello, `SOPORTE` puede alcanzar esas pantallas pero no completar sus consultas o mutaciones principales. Es una inconsistencia vigente entre frontend y backend.
 
 > [!IMPORTANT]
 > Las restricciones del frontend mejoran la navegación, pero no sustituyen la autorización del backend. Los resolvers y rutas deben validar siempre al usuario autenticado y sus roles.
@@ -165,7 +165,7 @@ Funciones disponibles:
 - Exportación tabular a PDF y Excel.
 - Navegación al detalle del cliente.
 
-El detalle en `/clientes/:id` reúne información general, contactos, productos asignados, servicios y pólizas relacionados.
+El detalle en `/clientes/:id` reúne información general, contactos, productos asignados y servicios relacionados.
 
 #### Columnas dinámicas
 
@@ -188,7 +188,7 @@ Funciones principales:
 - Exportar la tabla a PDF o Excel.
 - Habilitar o revocar acceso al portal.
 - Administrar credenciales y datos de contacto.
-- Asignar productos, servicios o pólizas.
+- Asignar productos o servicios.
 - Mostrar por separado contactos activos y deshabilitados.
 
 #### Deshabilitación de contactos
@@ -281,9 +281,9 @@ Una solicitud del portal se registra como cotización `SOLICITADA` con `is_conta
 
 Al resolver una solicitud, el caso de uso transforma la selección del contacto en una cotización comercial completa y actualiza su estado. Las notificaciones pueden marcarse como leídas o descartarse sin borrar el documento comercial.
 
-### 4.9 Cotizaciones aceptadas y pólizas
+### 4.9 Servicios asignados
 
-La ruta `/polizas` presenta cotizaciones aceptadas y asignaciones relacionadas. En el modelo de datos, `contact_products` es la relación principal con el contacto. Dependiendo del tipo del producto, el registro de cumplimiento puede materializarse en `services` o `policies`.
+En el modelo de datos, `contact_products` es la relación principal con el contacto. Los servicios asignados se registran además en `services` y se consultan desde el detalle del cliente y el portal del contacto.
 
 Las fechas, licencia y estado de la asignación se actualizan mediante operaciones específicas; no deben inferirse solamente desde la fecha de la cotización.
 
@@ -607,7 +607,7 @@ Página pequeña
   -> tabla, toolbar, modales y helpers
 ```
 
-Ejemplos: clientes, detalle de cliente, productos, creación de cotización, historial, pólizas y módulos del portal.
+Ejemplos: clientes, detalle de cliente, productos, creación de cotización, historial, servicios y módulos del portal.
 
 Una ampliación debe continuar este patrón cuando una página empiece a mezclar carga de datos, estado, eventos, modales y renderizado.
 
@@ -653,7 +653,7 @@ La introspección está deshabilitada cuando `NODE_ENV=production`.
 | `clients` | Alta, edición, consulta y eliminación de clientes |
 | `contacts` | Contactos, portal y asignaciones |
 | `drafts` | Borradores de formularios |
-| `policies` | Asignaciones y vigencias |
+| `services` | Asignaciones de servicios y vigencias |
 | `products` | Catálogo, precio, historial y categorías |
 | `quotes` | Solicitudes, cotizaciones, estados, PDF y portal |
 | `sales` | Creación, correo, portal y eliminación de ventas |
@@ -698,7 +698,7 @@ Reglas mínimas:
 | Clientes | `clients`, `client`, `searchClients` |
 | Contactos | `contactsByClient`, `contact` |
 | Productos | `products`, `portalProducts`, `product`, `searchProducts`, `productCategories` |
-| Asignaciones | `policies` |
+| Asignaciones | `services` |
 | Cotizaciones | `quotes`, `quote`, `quotesByClient`, `pendingQuoteRequestsCount`, `unreadQuoteRequests`, `generateQuotePdf` |
 | Ventas | `sales`, `sale` |
 
@@ -776,7 +776,7 @@ Por lo tanto, ZeroBounce y las credenciales SMTP no son opcionales para iniciar 
 | Formularios | `form_drafts` |
 | Clientes | `clients`, `clients_column_meta`, `client_contacts` |
 | Catálogo | `products`, `product_categories`, `product_price_history`, `product_update_history` |
-| Asignaciones | `client_products`, `contact_products`, `services`, `policies` |
+| Asignaciones | `client_products`, `contact_products`, `services` |
 | Cotizaciones | `quotes`, `quote_items` |
 | Ventas | `sales`, `sale_items` |
 | Soporte | `support_conversations`, `support_messages` |
@@ -796,7 +796,6 @@ erDiagram
   CLIENT_CONTACTS ||--o{ CONTACT_PRODUCTS : posee
   PRODUCTS ||--o{ CONTACT_PRODUCTS : asignado
   CONTACT_PRODUCTS ||--o| SERVICES : materializa
-  CONTACT_PRODUCTS ||--o| POLICIES : materializa
   CLIENT_CONTACTS ||--o{ SUPPORT_CONVERSATIONS : inicia
   SUPPORT_CONVERSATIONS ||--o{ SUPPORT_MESSAGES : contiene
 ```
@@ -804,12 +803,12 @@ erDiagram
 ### 13.3 Baseline y migraciones
 
 - `backend/sql/baseline.sql` pretende crear el esquema inicial.
-- `backend/sql/migrations/` contiene migraciones `001` a `024`.
+- `backend/sql/migrations/` contiene migraciones `001` a `025`.
 - `schema_migrations` registra archivos aplicados.
 - `pnpm --dir backend migrate` ejecuta solamente los pendientes.
 - `RUN_MIGRATIONS=true` ejecuta el mismo proceso al arrancar el backend.
 
-Cada migración corre dentro de una transacción. El runner tolera determinados errores de duplicación para convivir con instalaciones que recibieron cambios previos.
+El runner inicia una transacción por migración, pero MySQL confirma implícitamente las operaciones DDL, como `DROP TABLE`. Antes de aplicar cambios destructivos se debe guardar un respaldo y verificar su restauración. El runner tolera determinados errores de duplicación para convivir con instalaciones que recibieron cambios previos.
 
 > [!CAUTION]
 > El baseline actual combina varias columnas `client_id INT NOT NULL` con claves foráneas `ON DELETE SET NULL`. MySQL rechaza esa combinación al crear una base vacía. La migración `022_soft_delete_clients.sql` vuelve anulables esas columnas, pero no puede ejecutarse si el baseline falla antes. El bootstrap limpio no debe considerarse reproducible hasta corregir y probar el baseline sobre un volumen vacío.

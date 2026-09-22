@@ -194,7 +194,7 @@ export function getSalesMetrics(sales) {
   };
 }
 
-export function usePolicies() {
+export function useAcceptedSales() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

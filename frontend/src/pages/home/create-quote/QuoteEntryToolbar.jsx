@@ -44,7 +44,7 @@ export default function QuoteEntryToolbar({
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-3 items-end p-4 rounded-xl border border-zinc-200 bg-zinc-50/70 dark:border-white/10 dark:bg-white/[0.03]">
+      <div className="flex flex-col md:flex-row gap-3 items-end p-4 rounded-xl border border-white/80 bg-white/40 dark:border-white/10 dark:bg-white/[0.03] backdrop-blur-md">
         <div className="flex-1 w-full relative z-10">
           <label className="text-xs font-semibold text-light-text-secondary dark:text-zinc-400 mb-1.5 block">
             Producto
@@ -58,7 +58,7 @@ export default function QuoteEntryToolbar({
                 setShowProductModal(true);
               }}
               placeholder="Buscar folio, producto o servicio…"
-              className="glass-input bg-light-bg dark:!bg-black/30 text-light-text-primary dark:text-white border-light-border dark:border-white/10"
+              className="glass-input bg-white/70 dark:!bg-black/30 text-light-text-primary dark:text-white border-white/80 dark:border-white/10 backdrop-blur-md"
               style={{ paddingRight: "4rem" }}
             />
             {prodSearch && (

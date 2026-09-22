@@ -3,17 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { createSaleFromQuoteApi } from "../../../actionsAPI/sales.api";
 import { notificationService } from "../../../services/notificationService";
 import { normalizeSearchText } from "../../../utils/formatters";
-import { SALES_FILTER_BUTTONS } from "./policyConstants";
-import { usePolicies } from "./usePolicies";
+import { SALES_FILTER_BUTTONS } from "./acceptedSalesConstants";
+import { useAcceptedSales } from "./useAcceptedSales";
 
-export default function usePoliciesController() {
+export default function useAcceptedSalesController() {
   const navigate = useNavigate();
   const [activeFilterPickerField, setActiveFilterPickerField] = useState(null);
   const [filterPickerSearch, setFilterPickerSearch] = useState("");
   const [filterPickerPage, setFilterPickerPage] = useState(0);
   const [creatingSale, setCreatingSale] = useState(false);
 
-  const policiesData = usePolicies();
+  const acceptedSalesData = useAcceptedSales();
 
   const {
     activeFilterCount,
@@ -39,7 +39,7 @@ export default function usePoliciesController() {
     setSorting,
     showFilters,
     sorting,
-  } = policiesData;
+  } = acceptedSalesData;
 
   const activeFilterPickerConfig = useMemo(
     () =>

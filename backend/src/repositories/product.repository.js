@@ -7,6 +7,7 @@
  */
 import { pool } from "../config/db.js";
 import { normalizePagination } from "./pagination.js";
+import { GraphQLError } from "graphql";
 
 // ─── Productos ──────────────────────────────────────────────────────────────
 
@@ -16,13 +17,18 @@ const PRODUCT_COLUMNS =
 const PRODUCT_UPDATE_HISTORY_COLUMNS =
   "id, product_id, update_version, change_type, summary, changed_at";
 
-const PRODUCT_TYPE_VALUES = ["PRODUCT", "CONTPAQI", "SERVICE", "POLICY"];
+const PRODUCT_TYPE_VALUES = ["PRODUCT", "CONTPAQI", "SERVICE"];
 
 export function normalizeCatalogProductType(value) {
   const normalized = String(value || "")
     .trim()
     .toUpperCase();
 
+  if (normalized === "POLICY") {
+    throw new GraphQLError("El tipo de producto POLICY ya no está disponible.", {
+      extensions: { code: "BAD_USER_INPUT" },
+    });
+  }
   if (normalized === "CONTPAQI" || normalized === "CONTPAQI_PRODUCT") return "CONTPAQI";
   if (PRODUCT_TYPE_VALUES.includes(normalized)) return normalized;
   return "PRODUCT";

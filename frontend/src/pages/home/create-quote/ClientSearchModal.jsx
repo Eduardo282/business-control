@@ -15,8 +15,8 @@ export default function ClientSearchModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 rounded-2xl shadow-2xl w-full max-w-2xl h-[85vh] overflow-hidden flex flex-col">
-        <div className="px-6 py-4 border-b border-zinc-100 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c]">
+      <div className="bg-[#1a2b4c] dark:bg-blue-950 border border-white/15 dark:border-white/10 rounded-2xl shadow-2xl dark:shadow-black/60 w-full max-w-2xl h-[85vh] overflow-hidden flex flex-col">
+        <div className="px-6 py-4 border-b border-white/10 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c] dark:bg-blue-950 rounded-t-2xl">
           <div>
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               Buscar Cliente
@@ -32,7 +32,7 @@ export default function ClientSearchModal({
           </button>
         </div>
 
-        <div className="p-6 flex-1 overflow-y-auto bg-white dark:bg-dark-900">
+        <div className="p-6 flex-1 overflow-y-auto bg-white dark:bg-dark-900 rounded-b-2xl">
           <div className="mb-4 relative">
             <Search
               className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500"

@@ -14,7 +14,7 @@ import {
   softDeleteContact,
   updateContact,
 } from "../../repositories/contact.repository.js";
-import { findProductByIdLean } from "../../repositories/product.repository.js";
+import { findProductByIdLean, normalizeCatalogProductType } from "../../repositories/product.repository.js";
 import {
   insertProductFulfillmentRecord,
   resolveProductFulfillmentTarget,
@@ -25,17 +25,17 @@ import { logger } from "../../utils/logger.js";
 import { comparePassword, hashPassword } from "../../utils/password.js";
 import {
   determineStatus,
-  isServiceOrPolicy,
+  isService,
   normalizeProductType,
-} from "../../utils/policyStatus.js";
+} from "../../utils/serviceStatus.js";
 
-const POLICY_ALLOWED_STATUS = new Set(["ACTIVE", "EXPIRED", "CANCELLED"]);
+const SERVICE_ALLOWED_STATUS = new Set(["ACTIVE", "EXPIRED", "CANCELLED"]);
 
 function normalizeStoredStatus(status) {
   const normalized = String(status || "")
     .trim()
     .toUpperCase();
-  return POLICY_ALLOWED_STATUS.has(normalized) ? normalized : "ACTIVE";
+  return SERVICE_ALLOWED_STATUS.has(normalized) ? normalized : "ACTIVE";
 }
 
 /**
@@ -230,6 +230,7 @@ export async function createContactProductAction({
       throw new Error("Product not found");
     }
 
+    normalizeCatalogProductType(product.product_type);
     const target = resolveProductFulfillmentTarget(product);
 
     const contactProductId = await insertContactProduct(
@@ -285,7 +286,7 @@ export async function listContactProductsAction(contact_id) {
   const rows = await listContactProducts(contact_id);
 
   return rows
-    .filter((row) => isServiceOrPolicy(row))
+    .filter((row) => isService(row))
     .map((row) => ({
       id: row.id,
       contact_id: row.contact_id,
@@ -328,11 +329,11 @@ export async function deletePortalContactProductAction(id, user) {
     );
 
     if (!row) {
-      throw new Error("Servicio o póliza no encontrado.");
+      throw new Error("Servicio no encontrado.");
     }
 
-    if (!isServiceOrPolicy(row)) {
-      throw forbidden("Solo puedes eliminar servicios o pólizas.");
+    if (!isService(row)) {
+      throw forbidden("Solo puedes eliminar servicios.");
     }
 
     const affected = await deleteContactProductForContact(

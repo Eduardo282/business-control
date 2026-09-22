@@ -313,9 +313,9 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
 
   return createPortal(
     <div className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-      <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl dark:shadow-black/50 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-transparent dark:border-dark-700">
+      <div className="bg-[#1a2b4c] dark:bg-blue-950 rounded-2xl shadow-2xl dark:shadow-black/60 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-white/15 dark:border-white/10">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-zinc-100 dark:border-dark-700 bg-[#1a2b4c] dark:bg-blue-950 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-white/10 dark:border-white/10 bg-[#1a2b4c] dark:bg-blue-950 flex items-center justify-between rounded-t-2xl">
           <h3 className="text-white dark:text-white text-lg font-semibold flex items-center gap-2">
             Carga de Clientes
           </h3>
@@ -324,7 +324,7 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1 space-y-5 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
+        <div className="p-6 overflow-y-auto flex-1 space-y-5 bg-white dark:bg-dark-800 rounded-b-2xl [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
           {bulkResult?.success && bulkResult?.details?.ignoredHeaders?.length > 0 && (
             <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-xl p-4 text-xs text-amber-800 dark:text-amber-200">
               <p className="font-semibold mb-1">Columnas ignoradas del Excel</p>
@@ -486,7 +486,7 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
                     <button
                       onClick={() => setPreviewPage(p => Math.max(1, p - 1))}
                       disabled={previewPage === 1}
-                      className="px-3 py-1.5 rounded bg-zinc-100 dark:bg-dark-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-dark-600 disabled:opacity-50 transition-colors"
+                      className="px-3 py-1.5 rounded bg-zinc-100 dark:bg-dark-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-dark-800 disabled:opacity-50 transition-colors"
                     >
                       Anterior
                     </button>
@@ -496,7 +496,7 @@ export default function ClientBulkModal({ isOpen, onClose, onSuccess }) {
                     <button
                       onClick={() => setPreviewPage(p => Math.min(Math.ceil(bulkData.length / previewPageSize), p + 1))}
                       disabled={previewPage === Math.ceil(bulkData.length / previewPageSize)}
-                      className="px-3 py-1.5 rounded bg-zinc-100 dark:bg-dark-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-dark-600 disabled:opacity-50 transition-colors"
+                      className="px-3 py-1.5 rounded bg-zinc-100 dark:bg-dark-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-dark-800 disabled:opacity-50 transition-colors"
                     >
                       Siguiente
                     </button>

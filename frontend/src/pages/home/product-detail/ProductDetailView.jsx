@@ -170,7 +170,6 @@ export default function ProductDetailView({ controller, userRole }) {
     PRODUCT: "PRD",
     CONTPAQI: "PRD",
     SERVICE: "SRV",
-    POLICY: "POL",
   }[inferProductType(product)] || "PRD";
   const productFolio =
     String(product.folio || "").trim() ||
@@ -246,7 +245,7 @@ export default function ProductDetailView({ controller, userRole }) {
                   </div>
                 </div>
 
-                {!["SERVICE", "POLICY"].includes(inferProductType(product)) && product.users_count > 0 && (
+                {inferProductType(product) !== "SERVICE" && product.users_count > 0 && (
                   <div className="flex items-start gap-3 p-4 w-fit">
                     <div className="p-2 rounded-lg">
                       <Users size={20} className="text-black dark:text-zinc-400" />
@@ -329,7 +328,7 @@ export default function ProductDetailView({ controller, userRole }) {
 
                 <Input
                   label={
-                    inferProductType(editForm) === "SERVICE" || inferProductType(editForm) === "POLICY"
+                    inferProductType(editForm) === "SERVICE"
                       ? "USUARIOS"
                       : `USUARIOS (MÁXIMA CAPACIDAD. ${currentMaxUsers})`
                   }
@@ -337,11 +336,11 @@ export default function ProductDetailView({ controller, userRole }) {
                   min="1"
                   max={currentMaxUsers.toString()}
                   value={
-                    inferProductType(editForm) === "SERVICE" || inferProductType(editForm) === "POLICY"
+                    inferProductType(editForm) === "SERVICE"
                       ? 1
                       : editForm.users_count
                   }
-                  disabled={inferProductType(editForm) === "SERVICE" || inferProductType(editForm) === "POLICY"}
+                  disabled={inferProductType(editForm) === "SERVICE"}
                   onChange={(e) => {
                     let val = e.target.value;
                     if (val === "") {

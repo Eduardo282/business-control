@@ -40,7 +40,7 @@ export default function ContactsToolbar({
             user?.role?.name === "VENTAS") && (
             <button
               onClick={openBulkContactModal}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#1a2b4c] dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-dark-700 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-400/40"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-[#1a2b4c] dark:text-zinc-100 bg-white/60 dark:bg-dark-900/60 border border-white/30 dark:border-white/10 hover:bg-white/90 dark:hover:bg-dark-700 transition-all backdrop-blur-md shadow-glass-sm focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-400/40"
             >
               <Upload size={15} />
               Cargar contactos
@@ -50,7 +50,7 @@ export default function ContactsToolbar({
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        <div className="flex gap-1 bg-white dark:bg-dark-900 p-1 rounded-lg border border-zinc-200 dark:border-dark-700 flex-1 min-w-[200px] focus-within:border-[#2277B4] dark:focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-[#2277B4]/20 dark:focus-within:ring-blue-400/20 transition-colors">
+        <div className="flex gap-1 bg-white/60 dark:bg-dark-900/60 p-1 rounded-xl border border-white/25 dark:border-white/15 flex-1 min-w-[200px] backdrop-blur-md shadow-glass-sm focus-within:border-[#2277B4] dark:focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-[#2277B4]/20 dark:focus-within:ring-blue-400/20 transition-all">
           <input
             value={contactSearch}
             onChange={(event) => setContactSearch(event.target.value)}
@@ -75,7 +75,7 @@ export default function ContactsToolbar({
           <div className="flex items-center gap-2">
             <button
               onClick={handleExportContactsPDF}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 dark:border-red-500/30 bg-white dark:bg-red-500/10 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/20 transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-red-200/80 dark:border-red-500/30 bg-white/70 dark:bg-red-500/10 text-red-700 dark:text-red-400 hover:bg-white/95 dark:hover:bg-red-500/20 transition-all backdrop-blur-md shadow-glass-sm whitespace-nowrap"
               title="Exportar a PDF"
             >
               <FileText size={14} /> Exportar a PDF
@@ -83,7 +83,7 @@ export default function ContactsToolbar({
 
             <button
               onClick={handleExportContactsExcel}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 dark:border-emerald-500/30 bg-white dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-emerald-200/80 dark:border-emerald-500/30 bg-white/70 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-white/95 dark:hover:bg-emerald-500/20 transition-all backdrop-blur-md shadow-glass-sm whitespace-nowrap"
               title="Exportar a Excel"
             >
               <FileSpreadsheet size={14} /> Exportar a Excel
@@ -93,10 +93,10 @@ export default function ContactsToolbar({
 
         <button
           onClick={() => setShowContactFilters((value) => !value)}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all backdrop-blur-md shadow-glass-sm ${
             showContactFilters || activeContactFilterCount > 0
               ? "bg-[#2277B4] text-white border-[#2277B4] dark:bg-blue-700 dark:text-white dark:border-blue-600"
-              : "bg-white dark:bg-dark-900 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-50 dark:hover:bg-dark-800"
+              : "bg-white/70 dark:bg-dark-900/60 text-zinc-700 dark:text-zinc-300 border-white/25 dark:border-white/15 hover:bg-white/95 dark:hover:bg-dark-800"
           }`}
         >
           <SlidersHorizontal size={15} />

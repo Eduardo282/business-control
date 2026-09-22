@@ -32,14 +32,13 @@ export function inferProductType(product) {
   const explicitType = String(product?.product_type || "")
     .trim()
     .toUpperCase();
-  if (["PRODUCT", "CONTPAQI", "SERVICE", "POLICY"].includes(explicitType)) {
+  if (["PRODUCT", "CONTPAQI", "SERVICE"].includes(explicitType)) {
     return explicitType;
   }
 
   const source = `${product?.name || ""} ${product?.category || ""}`;
   const normalized = normalizeCategory(source);
 
-  if (normalized.includes("poliza")) return "POLICY";
   if (normalized.includes("servicio")) return "SERVICE";
   if (normalized.includes("contpaqi")) return "CONTPAQI";
   return "PRODUCT";

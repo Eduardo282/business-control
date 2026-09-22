@@ -21,7 +21,6 @@ const PRODUCT_FOLIO_PREFIXES = {
   PRODUCT: "PRD",
   CONTPAQI: "PRD",
   SERVICE: "SRV",
-  POLICY: "POL",
 };
 
 function buildProductFolio(productId, productType) {
@@ -90,13 +89,13 @@ export async function createProductAction({
   client_id,
   product_type,
 }) {
+  const safeType = normalizeCatalogProductType(product_type);
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
 
-    const safeType = normalizeCatalogProductType(product_type);
     const safeUsersCount =
-      safeType === "SERVICE" || safeType === "POLICY" ? 1 : users_count || 0;
+      safeType === "SERVICE" ? 1 : users_count || 0;
 
     const productId = await insertProduct(
       {

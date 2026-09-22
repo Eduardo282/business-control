@@ -16,7 +16,6 @@ export function getProductTypeLabel(service) {
 
   if (explicit === "CONTPAQI") return "CONTPAQi";
   if (explicit === "SERVICE") return "Servicio";
-  if (explicit === "POLICY") return "Póliza de servicio";
   if (explicit === "PRODUCT") return "Producto / Licencia";
 
   const source = `${service?.product?.name || ""} ${service?.product?.category || ""}`
@@ -24,7 +23,6 @@ export function getProductTypeLabel(service) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-  if (source.includes("poliza")) return "Póliza de servicio";
   if (source.includes("servicio")) return "Servicio";
   if (source.includes("contpaqi")) return "CONTPAQi";
 

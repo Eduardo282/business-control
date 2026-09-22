@@ -65,7 +65,7 @@ export default function ContactsPanel({
         normalizeSearchText={normalizeSearchText}
       />
 
-      <div className="px-4 py-2 min-h-10 bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 border-b-0 rounded-t-md text-xs text-[#2277B4] dark:text-blue-300 flex items-center justify-between gap-3">
+      <div className="px-4 py-2 min-h-10 bg-blue-50/70 dark:bg-blue-500/10 border border-blue-200/50 dark:border-blue-500/20 border-b-0 rounded-t-xl text-xs text-[#2277B4] dark:text-blue-300 flex items-center justify-between gap-3 backdrop-blur-md">
         <div className="flex items-center gap-1 shrink-0">
           <Lightbulb size={14} className="inline" /> Clic en
           <ChevronRight size={12} className="inline" /> para más
@@ -88,10 +88,10 @@ export default function ContactsPanel({
               return (
                 <div
                   key={button.id}
-                  className={`inline-flex items-center rounded-md border text-xs transition-colors ${
+                  className={`inline-flex items-center rounded-xl border text-xs transition-all backdrop-blur-md shadow-glass-sm ${
                     selectedValue
-                      ? "border-[#2277B4] bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-200 dark:border-blue-500 shadow-sm"
-                      : "rounded-md bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-100 dark:hover:bg-dark-800"
+                      ? "border-[#2277B4] bg-white/90 dark:bg-dark-900 text-zinc-800 dark:text-zinc-200 dark:border-blue-500 shadow-glass-sm"
+                      : "rounded-xl bg-white/70 dark:bg-dark-900/60 text-zinc-700 dark:text-zinc-300 border-white/25 dark:border-white/15 hover:bg-white/95 dark:hover:bg-dark-800"
                   }`}
                 >
                   <button
@@ -100,7 +100,7 @@ export default function ContactsPanel({
                         button.fieldName,
                       )
                     }
-                    className="inline-flex items-center gap-1.5 px-3 py-1 text-xs hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-md transition-colors whitespace-nowrap"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 text-xs hover:bg-white/50 dark:hover:bg-white/5 rounded-l-xl transition-colors whitespace-nowrap"
                   >
                     <span className={`font-semibold tracking-wide ${selectedValue ? "text-[#2277B4] dark:text-blue-400 font-bold" : ""}`}>
                       {button.buttonLabel}
@@ -128,7 +128,7 @@ export default function ContactsPanel({
 
           <button
             onClick={contacts.handleDownloadContactsTemplate}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-dark-800 border border-zinc-200 dark:border-dark-700 hover:bg-zinc-50 dark:hover:bg-dark-700 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-white/70 dark:bg-dark-900/60 border border-white/25 dark:border-white/15 hover:bg-white/95 dark:hover:bg-dark-700 transition-all backdrop-blur-md shadow-glass-sm whitespace-nowrap"
             title="Descargar plantilla de carga masiva de contactos"
           >
             <FileSpreadsheet size={13} /> Descargar plantilla excel

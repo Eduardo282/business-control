@@ -346,74 +346,72 @@ export default function Sales() {
 
   return (
     <div className="space-y-6 pb-20">
-      <div className="rounded-md border border-zinc-200 bg-white p-6 shadow-sm dark:border-dark-700 dark:bg-dark-900">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-              Ventas
-            </h1>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              Ventas generadas desde cotizaciones aceptadas.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex gap-1 rounded-lg border border-zinc-200 bg-white p-1 dark:border-dark-700 dark:bg-dark-800">
-              <input
-                value={q}
-                onChange={(event) => setQ(event.target.value)}
-                placeholder="Buscar venta, folio, cliente o contacto..."
-                className="w-52 border-none bg-transparent px-3 text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none dark:text-zinc-200 md:w-72"
-              />
-              {q && (
-                <button
-                  type="button"
-                  onClick={() => setQ("")}
-                  className="p-1.5 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
-                  title="Limpiar búsqueda"
-                >
-                  <X size={14} />
-                </button>
-              )}
-              <div className="px-3 py-1.5 text-zinc-400 dark:text-zinc-500 flex items-center justify-center">
-                <Search size={16} />
-              </div>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Ventas
+          </h1>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Ventas generadas desde cotizaciones aceptadas.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-1 rounded-xl border border-white/25 dark:border-white/15 bg-white/70 p-1 dark:bg-dark-900/70 backdrop-blur-md shadow-glass-sm">
+            <input
+              value={q}
+              onChange={(event) => setQ(event.target.value)}
+              placeholder="Buscar venta, folio, cliente o contacto..."
+              className="w-52 border-none bg-transparent px-3 text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none dark:text-zinc-200 md:w-72"
+            />
+            {q && (
+              <button
+                type="button"
+                onClick={() => setQ("")}
+                className="p-1.5 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
+                title="Limpiar búsqueda"
+              >
+                <X size={14} />
+              </button>
+            )}
+            <div className="px-3 py-1.5 text-zinc-400 dark:text-zinc-500 flex items-center justify-center">
+              <Search size={16} />
             </div>
-
-            <button
-              type="button"
-              onClick={handleExportPDF}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 dark:border-red-900/50 dark:bg-dark-900 dark:text-red-400 dark:hover:bg-red-900/10"
-              title="Exportar a PDF"
-            >
-              <FileText size={14} /> Exportar a PDF
-            </button>
-
-            <button
-              type="button"
-              onClick={handleExportExcel}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 dark:border-emerald-900/50 dark:bg-dark-900 dark:text-emerald-400 dark:hover:bg-emerald-900/10"
-              title="Exportar a Excel"
-            >
-              <FileSpreadsheet size={14} /> Exportar a Excel
-            </button>
-
-            <button
-              type="button"
-              onClick={toggleFilters}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
-                showFilters || activeFilterCount > 0
-                  ? "border-[#2277B4] bg-[#2277B4] text-white dark:border-blue-600 dark:bg-blue-600"
-                  : "border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 dark:border-dark-700 dark:bg-dark-900 dark:text-zinc-300 dark:hover:bg-dark-800"
-              }`}
-            >
-              <SlidersHorizontal size={15} /> Filtros
-              {activeFilterCount > 0 && (
-                <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-white text-xs font-bold text-[#2277B4] dark:text-blue-600">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
           </div>
+
+          <button
+            type="button"
+            onClick={handleExportPDF}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-red-200/80 bg-white/70 px-3 py-2 text-sm font-semibold text-red-700 transition-all hover:bg-white/95 dark:border-red-900/50 dark:bg-dark-900/60 dark:text-red-400 dark:hover:bg-red-900/10 backdrop-blur-md shadow-glass-sm"
+            title="Exportar a PDF"
+          >
+            <FileText size={14} /> Exportar a PDF
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200/80 bg-white/70 px-3 py-2 text-sm font-semibold text-emerald-700 transition-all hover:bg-white/95 dark:border-emerald-900/50 dark:bg-dark-900/60 dark:text-emerald-400 dark:hover:bg-emerald-900/10 backdrop-blur-md shadow-glass-sm"
+            title="Exportar a Excel"
+          >
+            <FileSpreadsheet size={14} /> Exportar a Excel
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleFilters}
+            className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all backdrop-blur-md shadow-glass-sm ${
+              showFilters || activeFilterCount > 0
+                ? "border-[#2277B4] bg-[#2277B4] text-white dark:border-blue-600 dark:bg-blue-600"
+                : "border-white/25 bg-white/70 text-zinc-700 hover:bg-white/95 dark:border-white/15 dark:bg-dark-900/60 dark:text-zinc-300 dark:hover:bg-dark-800"
+            }`}
+          >
+            <SlidersHorizontal size={15} /> Filtros
+            {activeFilterCount > 0 && (
+              <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-white text-xs font-bold text-[#2277B4] dark:text-blue-600">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -423,8 +421,8 @@ export default function Sales() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-dark-700 dark:bg-dark-900">
-        <div className="flex min-h-[44px] flex-wrap items-center justify-between gap-2 border-b border-blue-100 bg-blue-50 px-4 py-2 text-xs text-zinc-600 dark:border-dark-700 dark:bg-dark-800/50 dark:text-zinc-400">
+      <div className="glass-panel glass-mirror overflow-hidden rounded-2xl border border-white/25 dark:border-white/15 bg-white/35 dark:bg-dark-900/60 backdrop-blur-xl shadow-glass-sm dark:shadow-glass-mirror">
+        <div className="flex min-h-[44px] flex-wrap items-center justify-between gap-2 border-b border-white/15 dark:border-white/10 bg-white/30 dark:bg-dark-900/30 backdrop-blur-md px-5 py-3.5 text-xs text-zinc-600 dark:text-zinc-400">
           <span className="font-semibold">
             {filteredSales.length} venta(s)
           </span>
@@ -437,16 +435,16 @@ export default function Sales() {
                 return (
                   <div
                     key={button.id}
-                    className={`inline-flex items-center rounded-md border text-xs transition-colors ${
+                    className={`inline-flex items-center rounded-xl border text-xs transition-colors backdrop-blur-md shadow-glass-sm ${
                       selectedValue
-                        ? "border-[#2277B4] bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-200 dark:border-blue-500 shadow-sm"
-                        : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-dark-700 dark:bg-dark-900 dark:text-zinc-200 dark:hover:bg-dark-700"
+                        ? "border-[#2277B4] bg-white/90 dark:bg-dark-900 text-zinc-800 dark:text-zinc-200 dark:border-blue-500"
+                        : "border-white/25 bg-white/70 text-zinc-700 hover:bg-white/95 dark:border-white/15 dark:bg-dark-900/60 dark:text-zinc-200 dark:hover:bg-dark-700"
                     }`}
                   >
                     <button
                       type="button"
                       onClick={() => openFilterPicker(button.fieldName)}
-                      className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold px-3 py-1 hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-md transition-colors"
+                      className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold px-3 py-1 hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-xl transition-colors"
                     >
                       <span className={selectedValue ? "text-[#2277B4] dark:text-blue-400 font-bold" : ""}>
                         {button.buttonLabel}
@@ -475,7 +473,7 @@ export default function Sales() {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/10"
+                  className="inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/10"
                 >
                   <X size={13} /> Limpiar
                 </button>
@@ -486,18 +484,18 @@ export default function Sales() {
 
         <div className="overflow-y-auto max-h-[420px] relative">
           <table className="w-full text-left text-sm">
-            <thead className="sticky top-0 z-10 border-b border-zinc-200 bg-zinc-50 text-xs uppercase text-[#2277B4] dark:border-dark-600 dark:bg-dark-800 dark:text-blue-400">
+            <thead className="sticky top-0 z-10 border-b border-white/15 dark:border-white/10 bg-white/40 dark:bg-dark-900/40 backdrop-blur-md text-xs uppercase text-[#2277B4] dark:text-blue-300">
               <tr>
-                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Venta</th>
-                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Cliente</th>
-                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Productos</th>
-                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Total</th>
-                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Fecha</th>
-                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Estado</th>
-                <th className="p-4 bg-zinc-50 dark:bg-dark-800">Acciones</th>
+                <th className="p-4">Venta</th>
+                <th className="p-4">Cliente</th>
+                <th className="p-4">Productos</th>
+                <th className="p-4">Total</th>
+                <th className="p-4">Fecha</th>
+                <th className="p-4">Estado</th>
+                <th className="p-4">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-dark-700">
+            <tbody className="divide-y divide-white/20 dark:divide-white/5 text-sm">
               {loading ? (
               <tr>
                 <td className="p-8 text-center text-zinc-500" colSpan={7}>
@@ -515,12 +513,12 @@ export default function Sales() {
               </tr>
             ) : (
               paginatedSales.map((sale) => (
-                <tr key={sale.id} className="transition-colors hover:bg-zinc-50 dark:hover:bg-white/5">
+                <tr key={sale.id} className="transition-colors hover:bg-white/50 dark:hover:bg-white/[0.04]">
                   <td className="p-4">
                     <div className="font-bold text-zinc-900 dark:text-zinc-100">
                       Venta #{sale.id}
                     </div>
-                    <code className="mt-1 inline-flex rounded-md bg-blue-50 px-2 py-0.5 font-mono text-[11px] font-bold text-[#2277B4] dark:bg-blue-500/10 dark:text-blue-300">
+                    <code className="mt-1 inline-flex rounded-xl bg-blue-500/10 px-2 py-0.5 font-mono text-[11px] font-bold text-[#2277B4] dark:text-blue-300">
                       {getSaleFolio(sale) || "Sin folio"}
                     </code>
                   </td>
@@ -542,7 +540,7 @@ export default function Sales() {
                     {formatDate(sale.created_at)}
                   </td>
                   <td className="p-4">
-                    <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                    <span className="rounded-lg border border-emerald-200/80 bg-emerald-500/10 px-2 py-1 text-[10px] font-bold uppercase text-emerald-700 dark:border-emerald-500/30 dark:text-emerald-300">
                       {getSaleStatus(sale)}
                     </span>
                   </td>
@@ -550,14 +548,14 @@ export default function Sales() {
                     <div className="flex items-center gap-2">
                       <Link
                         to={`/ventas/${sale.id}`}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-bold text-[#2277B4] transition-colors hover:bg-blue-50 dark:border-blue-500/20 dark:bg-dark-900 dark:text-blue-300 dark:hover:bg-blue-500/10"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200/80 bg-white/70 px-3 py-1.5 text-xs font-bold text-[#2277B4] transition-all hover:bg-white/95 dark:border-blue-500/20 dark:bg-dark-900/60 dark:text-blue-300 dark:hover:bg-blue-500/10 backdrop-blur-md shadow-glass-sm"
                       >
                         <ExternalLink size={14} /> Ver
                       </Link>
                       <button
                         type="button"
                         onClick={() => handleDelete(sale)}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-700 transition-colors hover:bg-red-50 dark:border-red-500/20 dark:bg-dark-900 dark:text-red-300 dark:hover:bg-red-500/10"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-red-200/80 bg-white/70 px-3 py-1.5 text-xs font-bold text-red-700 transition-all hover:bg-white/95 dark:border-red-500/20 dark:bg-dark-900/60 dark:text-red-300 dark:hover:bg-red-500/10 backdrop-blur-md shadow-glass-sm"
                       >
                         <Trash2 size={14} /> Eliminar
                       </button>
@@ -571,7 +569,7 @@ export default function Sales() {
         </div>
 
         {!loading && filteredSales.length > 0 && (
-          <div className="flex items-center justify-between gap-3 border-t border-zinc-100 bg-white px-4 py-3 dark:border-dark-700 dark:bg-dark-900">
+          <div className="flex items-center justify-between gap-3 border-t border-white/15 dark:border-white/10 bg-white/30 dark:bg-dark-900/30 backdrop-blur-md px-5 py-3.5">
             <label className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
               Mostrar
               <select
@@ -580,7 +578,7 @@ export default function Sales() {
                   setPageIndex(0);
                   setPageSize(Number(event.target.value));
                 }}
-                className="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1 text-sm text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-dark-700 dark:bg-dark-900 dark:text-zinc-100"
+                className="rounded-xl border border-white/25 dark:border-white/15 bg-white/70 dark:bg-dark-900/70 backdrop-blur-md px-2.5 py-1 text-sm text-zinc-700 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-glass-sm"
               >
                 {SALES_PAGE_SIZE_OPTIONS.map((size) => (
                   <option key={size} value={size} className="dark:bg-dark-900 dark:text-zinc-100">
@@ -591,12 +589,12 @@ export default function Sales() {
               por página
             </label>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setPageIndex(0)}
                 disabled={!canPreviousPage}
-                className="rounded-lg bg-zinc-100 px-2 py-1 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+                className="rounded-xl border border-white/25 dark:border-white/15 bg-white/60 dark:bg-white/5 px-2.5 py-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-all hover:bg-white/95 dark:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 shadow-glass-sm"
               >
                 ««
               </button>
@@ -604,7 +602,7 @@ export default function Sales() {
                 type="button"
                 onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
                 disabled={!canPreviousPage}
-                className="rounded-lg bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+                className="rounded-xl border border-white/25 dark:border-white/15 bg-white/60 dark:bg-white/5 px-3 py-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-all hover:bg-white/95 dark:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 shadow-glass-sm"
               >
                 Anterior
               </button>
@@ -615,7 +613,7 @@ export default function Sales() {
                 type="button"
                 onClick={() => setPageIndex((current) => Math.min(pageCount - 1, current + 1))}
                 disabled={!canNextPage}
-                className="rounded-lg bg-zinc-100 px-3 py-1 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+                className="rounded-xl border border-white/25 dark:border-white/15 bg-white/60 dark:bg-white/5 px-3 py-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-all hover:bg-white/95 dark:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 shadow-glass-sm"
               >
                 Siguiente
               </button>
@@ -623,7 +621,7 @@ export default function Sales() {
                 type="button"
                 onClick={() => setPageIndex(pageCount - 1)}
                 disabled={!canNextPage}
-                className="rounded-lg bg-zinc-100 px-2 py-1 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
+                className="rounded-xl border border-white/25 dark:border-white/15 bg-white/60 dark:bg-white/5 px-2.5 py-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-all hover:bg-white/95 dark:hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 shadow-glass-sm"
               >
                 »»
               </button>

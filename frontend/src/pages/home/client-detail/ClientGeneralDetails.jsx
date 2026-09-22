@@ -22,17 +22,17 @@ export default function ClientGeneralDetails({
         <div className="flex gap-2">
           <button
             onClick={openEditClientModal}
-            className="p-1.5 rounded-lg text-[#92400E] dark:text-amber-400 transition-all hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:scale-90 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:focus:ring-amber-400/40"
+            className="p-1.5 rounded-xl text-[#92400E] dark:text-amber-400 bg-white/60 dark:bg-dark-900/60 border border-white/30 dark:border-white/10 transition-all hover:bg-white/90 dark:hover:bg-amber-500/10 hover:scale-95 shadow-glass-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:focus:ring-amber-400/40"
             title="Editar"
           >
-            <Edit2 size={18} />
+            <Edit2 size={16} />
           </button>
           <button
             onClick={handleDeleteClient}
-            className="p-1.5 rounded-lg text-red-800 dark:text-red-400 transition-all hover:bg-red-50 dark:hover:bg-red-500/10 hover:scale-90 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:focus:ring-red-400/40"
+            className="p-1.5 rounded-xl text-red-800 dark:text-red-400 bg-white/60 dark:bg-dark-900/60 border border-white/30 dark:border-white/10 transition-all hover:bg-white/90 dark:hover:bg-red-500/10 hover:scale-95 shadow-glass-sm focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:focus:ring-red-400/40"
             title="Eliminar cliente"
           >
-            <Trash2 size={18} />
+            <Trash2 size={16} />
           </button>
         </div>
       </div>
@@ -49,7 +49,7 @@ export default function ClientGeneralDetails({
               key={field.name}
               className={`${
                 isFullWidthField ? "md:col-span-2" : ""
-              } h-full p-3.5 rounded-xl bg-white dark:bg-dark-800 border border-zinc-200/80 dark:border-dark-700 shadow-sm dark:shadow-black/20`}
+              } h-full p-3.5 rounded-xl bg-white/45 dark:bg-white/[0.03] border border-white/25 dark:border-white/10 backdrop-blur-md shadow-glass-sm`}
             >
               <span className="text-xs font-semibold text-[#2277B4] dark:text-blue-400 uppercase block mb-1.5 tracking-wide">
                 {field.label}

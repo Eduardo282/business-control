@@ -52,9 +52,7 @@ export function inferProductType(product) {
   const normalized = normalizeCategory(source);
 
   if (explicitType === "CONTPAQI" || normalized.includes("contpaqi")) return "CONTPAQI";
-  if (explicitType === "POLICY") return "POLICY";
   if (explicitType === "SERVICE") return "SERVICE";
-  if (normalized.includes("poliza")) return "POLICY";
   if (normalized.includes("servicio")) return "SERVICE";
   return "PRODUCT";
 }

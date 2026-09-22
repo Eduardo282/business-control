@@ -16,7 +16,6 @@ import {
 
 export default function useProductCatalog() {
   const [customCategories, setCustomCategories] = useState([]);
-  const [customPolicies, setCustomPolicies] = useState([]);
   const [customGeneralProducts, setCustomGeneralProducts] = useState([]);
   const [customContpaqiProducts, setCustomContpaqiProducts] = useState([]);
   const [customServices, setCustomServices] = useState([]);
@@ -56,19 +55,6 @@ export default function useProductCatalog() {
             let next = prev || [];
             apiServices.forEach((apiService) => {
               next = upsertCatalogItem(next, toCatalogItem(apiService));
-            });
-            return next;
-          });
-        }
-
-        const apiPolicies = apiProducts.filter(
-          (product) => inferProductType(product) === "POLICY"
-        );
-        if (apiPolicies.length > 0) {
-          setCustomPolicies((prev) => {
-            let next = prev || [];
-            apiPolicies.forEach((apiPolicy) => {
-              next = upsertCatalogItem(next, toCatalogItem(apiPolicy));
             });
             return next;
           });
@@ -164,8 +150,6 @@ export default function useProductCatalog() {
   const upsertProduct = (productType, item) => {
     if (productType === "SERVICE") {
       setCustomServices((prev) => upsertCatalogItem(prev, item));
-    } else if (productType === "POLICY") {
-      setCustomPolicies((prev) => upsertCatalogItem(prev, item));
     } else if (productType === "CONTPAQI") {
       setCustomContpaqiProducts((prev) => upsertCatalogItem(prev, item));
     } else {
@@ -179,7 +163,6 @@ export default function useProductCatalog() {
     categoryTypeByName,
     customContpaqiProducts,
     customGeneralProducts,
-    customPolicies,
     customServices,
     mergeCategories,
     setCategoryType,

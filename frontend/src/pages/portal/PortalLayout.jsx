@@ -9,6 +9,7 @@ import {
 import { BadgeDollarSign, Clock, History, LayoutDashboard, BookOpen, Headphones, Settings } from "@icons";
 import logo from "../../assets/logo.png";
 import ThemeToggle from "../../components/layout/ThemeToggle";
+import AmbientGlowBackground from "../../components/layout/AmbientGlowBackground";
 import { getContactDataApi } from "../../actionsAPI/portal.api";
 import { notificationService } from "../../services/notificationService";
 import { logger } from "../../services/logger";
@@ -29,7 +30,7 @@ function PortalItem({ to, children, icon: Icon, matchFilter }) {
       className={() =>
         `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all relative ${
           isActive ?
-            "bg-white dark:bg-white/10 text-zinc-900 dark:text-zinc-100 border border-white/70 dark:border-white/10 shadow-[0_5px_5px_0px_#00000050] ring-1 ring-white/50 dark:ring-white/10"
+            "bg-white/80 dark:bg-white/10 text-zinc-900 dark:text-zinc-100 border border-white/80 dark:border-white/20 border-t-white dark:border-t-white/30 shadow-glass-sm ring-1 ring-white/50 dark:ring-white/10 backdrop-blur-md"
           : "text-zinc-500 dark:text-zinc-400 border border-transparent hover:border-white/70 dark:hover:border-white/10 hover:bg-white/40 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-zinc-100"
         }`
       }>
@@ -115,9 +116,11 @@ export default function PortalLayout() {
   };
 
   return (
-    <div className="min-h-screen flex bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 font-sans transition-colors">
+    <div className="min-h-screen flex relative bg-transparent text-zinc-800 dark:text-zinc-100 font-sans transition-colors">
+      <AmbientGlowBackground />
+
       {/* ── Sidebar ── */}
-      <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-150 z-40 border-r border-white/30 dark:border-zinc-800 bg-white/35 dark:bg-zinc-900/80 backdrop-blur-sm shadow-xl shadow-zinc-900/5 dark:shadow-black/30 ring-1 ring-white/20 dark:ring-white/5">
+      <aside className="w-64 flex flex-col pt-6 pb-4 px-4 h-screen sticky top-0 transition-all duration-150 z-40 border-r border-white/60 dark:border-white/10 bg-white/70 dark:bg-dark-900/60 backdrop-blur-xl shadow-glass-lg dark:shadow-[8px_0_32px_rgba(0,0,0,0.5)] ring-1 ring-white/40 dark:ring-white/5">
         {/* Nombre del contacto */}
         <div className="mb-6 mx-2 px-4 py-3 rounded-xl bg-white/40 dark:bg-zinc-950/40 border border-white/30 dark:border-zinc-800 backdrop-blur-sm dark:backdrop-blur-none">
           <div className="text-sm font-bold text-zinc-800 dark:text-zinc-200 word-break">
@@ -128,7 +131,7 @@ export default function PortalLayout() {
         {/* Navegación */}
         <nav className="space-y-1 flex-1">
           <PortalItem to="/portal/dashboard" icon={LayoutDashboard}>
-            Mis Servicios y pólizas
+            Mis Servicios
           </PortalItem>
           <PortalItem
             to="/portal/quotes?filter=recent"
@@ -166,9 +169,9 @@ export default function PortalLayout() {
       </aside>
 
       {/* ── Área derecha ── */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative z-10">
         {/* Topbar */}
-        <header className="bg-[#1B4733] dark:bg-emerald-950 text-white shadow-md dark:shadow-black/30 border-b border-transparent dark:border-emerald-900">
+        <header className="bg-[#1B4733]/85 dark:bg-emerald-950/75 backdrop-blur-xl text-white shadow-glass-sm border-b border-white/20 dark:border-emerald-800/40">
           <div className="px-6 py-4 flex justify-between items-center">
             <div>
               <h1 className="text-xl font-semibold">Portal</h1>
@@ -185,14 +188,14 @@ export default function PortalLayout() {
               <ThemeToggle />
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100 rounded-xl bg-white dark:bg-zinc-900 border border-[#CBD5E1] dark:border-zinc-700 hover:bg-[#F8FAFC] dark:hover:bg-zinc-800 hover:border-[#B8C6D8] dark:hover:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/70 dark:focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-[#1B4733] dark:focus:ring-offset-emerald-950 shadow-sm dark:shadow-black/20 transition-colors duration-150">
+                className="px-4 py-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100 rounded-xl bg-white/85 dark:bg-zinc-900/80 backdrop-blur-md border border-white/80 dark:border-zinc-700 hover:bg-white dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-white/70 dark:focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-[#1B4733] dark:focus:ring-offset-emerald-950 shadow-glass-sm transition-colors duration-150">
                 Cerrar Sesión
               </button>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-gradient-to-br from-zinc-50 via-zinc-200 to-zinc-400 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-800 text-zinc-800 dark:text-zinc-100 transition-colors">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-transparent text-zinc-800 dark:text-zinc-100 transition-colors">
           <Suspense fallback={
             <div className="w-full h-full flex items-center justify-center p-8">
               <span className="size-6 animate-spin rounded-full border-2 border-zinc-300 border-t-[#1B4733] dark:border-zinc-700 dark:border-t-emerald-400 motion-reduce:animate-none" />

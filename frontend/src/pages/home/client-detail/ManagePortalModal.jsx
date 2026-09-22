@@ -60,9 +60,9 @@ export const ManagePortalModal = ({ contact, onClose }) => {
     <div
       style={{ zIndex: 9999 }}
       className="fixed inset-0 bg-black/50 dark:bg-black/75 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl dark:shadow-black/50 w-full max-w-lg overflow-hidden flex flex-col border border-transparent dark:border-dark-700">
+      <div className="bg-[#1a2b4c] dark:bg-blue-950 rounded-2xl shadow-2xl dark:shadow-black/60 w-full max-w-lg overflow-hidden flex flex-col border border-white/15 dark:border-white/10">
         {/* Header del modal */}
-        <div className="px-6 py-4 border-b border-zinc-100 dark:border-dark-700 flex items-center justify-between bg-[#1a2b4c] dark:bg-blue-950">
+        <div className="px-6 py-4 border-b border-white/10 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c] dark:bg-blue-950 rounded-t-2xl">
           <div>
             <h2 className="text-lg font-semibold text-white dark:text-white flex items-center gap-2">
               Portal del Contacto
@@ -82,7 +82,7 @@ export const ManagePortalModal = ({ contact, onClose }) => {
         </div>
 
         {/* Body del modal */}
-        <div className="p-6 space-y-6 bg-zinc-50/50 dark:bg-dark-900/60">
+        <div className="p-6 space-y-6 bg-zinc-50/50 dark:bg-dark-900/60 rounded-b-2xl">
           <div className="p-5 rounded-2xl bg-white dark:bg-dark-800 border border-zinc-200 dark:border-dark-700 shadow-sm dark:shadow-black/20 relative overflow-hidden">
             {/* Decoration */}
             <div className="absolute top-0 right-0 size-32 bg-[#2277B4]/10 dark:bg-blue-400/10 blur-2xl -translate-y-1/2 translate-x-1/2 rounded-full"></div>

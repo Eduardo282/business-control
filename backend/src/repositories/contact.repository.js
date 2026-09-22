@@ -1,6 +1,6 @@
 /**
  * ContactRepository — Puerto de datos para la entidad ClientContact y ContactProduct.
- * Centraliza las consultas, inserciones y actualizaciones de contactos y licencias/pólizas en MySQL.
+ * Centraliza las consultas, inserciones y actualizaciones de contactos y servicios en MySQL.
  */
 import { pool } from "../config/db.js";
 
@@ -143,7 +143,7 @@ export async function softDeleteContact(id, queryRunner = pool) {
 }
 
 /**
- * Inserta un producto asignado al contacto (Póliza o Licencia de servicio).
+ * Inserta un producto o servicio asignado al contacto.
  * @param {object} data
  * @param {object} [queryRunner]
  * @returns {Promise<number>} ID de la relación insertada
@@ -211,7 +211,7 @@ export async function deleteContactProduct(id, queryRunner = pool) {
 }
 
 /**
- * Busca una asignación de servicio/póliza por contacto para operaciones del portal.
+ * Busca una asignación de servicio por contacto para operaciones del portal.
  * @param {number|string} id
  * @param {number|string} contactId
  * @param {object} [queryRunner]

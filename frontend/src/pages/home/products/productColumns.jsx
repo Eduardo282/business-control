@@ -95,8 +95,8 @@ export function createProductColumns({ user, onOpenFolioGroup, onRemove }) {
       enableSorting: true,
       cell: ({ row: { original: p }, getValue }) => {
         const type = inferProductType(p);
-        const isServiceOrPolicy = type === "SERVICE" || type === "POLICY";
-        const v = isServiceOrPolicy ? 1 : getValue();
+        const isService = type === "SERVICE";
+        const v = isService ? 1 : getValue();
 
         if (!v) return <span className="text-zinc-300 dark:text-zinc-600 text-xs">—</span>;
         return (

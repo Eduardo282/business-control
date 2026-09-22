@@ -19,7 +19,7 @@ export default function ContactTable({
 }) {
   return (
     <div
-      className={`bg-white dark:bg-dark-900 overflow-x-auto border border-zinc-200 dark:border-dark-700 border-t-0 rounded-b-md [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent] ${
+      className={`glass-panel glass-mirror bg-white/35 dark:bg-dark-900/60 backdrop-blur-xl overflow-x-auto border border-white/25 dark:border-white/15 border-t-0 rounded-b-2xl [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent] ${
         shouldEnableContactTableScroll
           ? "h-[65vh] overflow-y-scroll"
           : ""
@@ -35,7 +35,7 @@ export default function ContactTable({
           {contactsTable.getHeaderGroups().map((headerGroup) => (
             <tr
               key={headerGroup.id}
-              className="bg-zinc-50 dark:bg-dark-800 border-b border-zinc-200 dark:border-dark-700"
+              className="bg-white/40 dark:bg-dark-900/40 border-b border-white/15 dark:border-white/10 backdrop-blur-md"
             >
               {headerGroup.headers.map((header) => (
                 <th
@@ -47,11 +47,11 @@ export default function ContactTable({
                   }
                   className={`px-4 py-3 text-left text-xs font-semibold text-[#2277B4] dark:text-blue-400 uppercase tracking-wider transition-colors ${
                     shouldEnableContactTableScroll
-                      ? "sticky top-0 z-20 bg-zinc-50 dark:bg-dark-800"
+                      ? "sticky top-0 z-20 bg-white/60 dark:bg-dark-900/60 backdrop-blur-md"
                       : ""
                   } ${
                     header.column.getCanSort()
-                      ? "cursor-pointer hover:bg-zinc-100 dark:hover:bg-dark-700"
+                      ? "cursor-pointer hover:bg-white/40 dark:hover:bg-white/5"
                       : "cursor-default"
                   } ${
                     header.column.id === "expander" ? "w-12" : ""
@@ -106,7 +106,7 @@ export default function ContactTable({
 
             return (
               <Fragment key={row.id}>
-                <tr className="hover:bg-zinc-50 dark:hover:bg-dark-800 transition-colors">
+                <tr className="hover:bg-white/50 dark:hover:bg-white/[0.04] transition-colors">
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3 align-top">
                       {flexRender(
@@ -118,7 +118,7 @@ export default function ContactTable({
                 </tr>
 
                 {isExpanded && rowDetailColumns.length > 0 && (
-                  <tr className="bg-zinc-50/80 dark:bg-dark-800/80">
+                  <tr className="bg-white/25 dark:bg-white/[0.02]">
                     {row.getVisibleCells().map((cell) => {
                       const alignedDetails =
                         detailColumnsByPrimary[cell.column.id] || [];

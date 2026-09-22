@@ -26,7 +26,7 @@ export const CATALOG = [
         price: 4590,
         max_users: 15,
         description:
-          "Sistema estándar en México para contadores. Automatiza el registro de pólizas a partir de los CFDI, genera estados financieros y cumple con toda la normativa de Contabilidad Electrónica del SAT.",
+          "Sistema estándar en México para contadores. Automatiza el registro de asientos contables a partir de los CFDI, genera estados financieros y cumple con toda la normativa de Contabilidad Electrónica del SAT.",
       },
       {
         name: "CONTPAQi Bancos",

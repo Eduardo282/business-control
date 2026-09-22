@@ -73,7 +73,7 @@ export default function ClientsView({
         </div>
       )}
 
-      <div className="glass-panel bg-white dark:bg-dark-800 rounded-md border border-zinc-200 dark:border-dark-700 overflow-hidden">
+      <div className="glass-panel glass-mirror rounded-2xl border border-white/25 dark:border-white/10 bg-white/35 dark:bg-dark-900/60 backdrop-blur-xl shadow-glass-sm dark:shadow-glass-mirror overflow-hidden transition-all duration-200">
         <ClientsToolbar
           activeFilterCount={activeFilterCount}
           canManageClients={canManageClients}

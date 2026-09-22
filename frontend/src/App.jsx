@@ -8,7 +8,7 @@ export default function App() {
         defaultTitle="Business Control"
         titleTemplate="%s | Business Control"
       >
-        <meta name="description" content="Sistema de gestión empresarial: cotizaciones, clientes, productos y pólizas." />
+        <meta name="description" content="Sistema de gestión empresarial: cotizaciones, clientes, productos y servicios." />
       </Helmet>
       <AppRoutes />
     </>

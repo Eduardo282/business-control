@@ -23,14 +23,13 @@ describe("SourceSelectionModal", () => {
     expect(screen.getByText(/Categoría activa:/i)).toBeInTheDocument();
     expect(screen.getByText("Automatización")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Productos de CONTPAQI/i })).toBeVisible();
-    expect(screen.getByRole("button", { name: /Pólizas/i })).toBeVisible();
+    expect(screen.queryByRole("button", { name: /Pólizas/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /^Productos$/i })).toBeVisible();
     expect(screen.getByRole("button", { name: /Servicios/i })).toBeVisible();
   });
 
   it.each([
     [/Productos de CONTPAQI/i, "CONTPAQI"],
-    [/Pólizas/i, "POLICY"],
     [/^Productos$/i, "PRODUCT"],
     [/Servicios/i, "SERVICE"],
   ])("emits %s source selection", async (buttonName, expectedType) => {

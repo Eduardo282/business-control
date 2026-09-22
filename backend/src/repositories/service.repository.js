@@ -1,6 +1,5 @@
 /**
- * PolicyRepository — Puerto de datos para la entidad Policy/Service.
- * Centraliza las consultas, inserciones y actualizaciones de productos asignados (contact_products) y tablas vinculadas (services, policies).
+ * ServiceRepository: assigned services and their linked contact products.
  */
 import { pool } from "../config/db.js";
 
@@ -24,11 +23,11 @@ const VISIBLE_CONTACT_PRODUCT_CONDITION = `
 `;
 
 /**
- * Obtiene los contact_products que son servicios/pólizas.
+ * Lists contact products that represent services.
  * @param {object} [queryRunner]
  * @returns {Promise<object[]>}
  */
-export async function getAssignedPolicies(queryRunner = pool) {
+export async function getAssignedServices(queryRunner = pool) {
   const [rows] = await queryRunner.query(`
     SELECT
       cp.id AS contact_product_id,
@@ -50,33 +49,30 @@ export async function getAssignedPolicies(queryRunner = pool) {
     FROM (
       SELECT contact_product_id FROM services
       UNION
-      SELECT contact_product_id FROM policies
-      UNION
       SELECT cp.id AS contact_product_id
       FROM contact_products cp
       JOIN products p ON cp.product_id = p.id
-      WHERE p.product_type IN ('SERVICE', 'POLICY')
+      WHERE p.product_type = 'SERVICE'
          OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-         OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
          OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-         OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
     ) sp
     JOIN contact_products cp ON cp.id = sp.contact_product_id
     JOIN products p ON cp.product_id = p.id
     JOIN client_contacts cc ON cp.contact_id = cc.id
     JOIN clients c ON cc.client_id = c.id
     WHERE ${VISIBLE_CONTACT_PRODUCT_CONDITION}
+      AND COALESCE(UPPER(TRIM(p.product_type)), '') <> 'POLICY'
     ORDER BY cp.id DESC
   `);
   return rows;
 }
 
 /**
- * Obtiene los productos tipo servicio/póliza que no tienen ningún contact_product.
+ * Lists standalone service products without a visible assignment.
  * @param {object} [queryRunner]
  * @returns {Promise<object[]>}
  */
-export async function getStandalonePolicies(queryRunner = pool) {
+export async function getStandaloneServices(queryRunner = pool) {
   const [rows] = await queryRunner.query(`
     SELECT
       p.id AS product_id,
@@ -90,12 +86,11 @@ export async function getStandalonePolicies(queryRunner = pool) {
     FROM products p
     LEFT JOIN clients c ON p.client_id = c.id
     WHERE (
-      p.product_type IN ('SERVICE', 'POLICY')
+      p.product_type = 'SERVICE'
       OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-      OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
       OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-      OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
     )
+    AND COALESCE(UPPER(TRIM(p.product_type)), '') <> 'POLICY'
     AND p.name NOT LIKE '%CONTPAQi%'
     AND p.name NOT LIKE '%CONTPAQI%'
     AND p.id NOT IN (
@@ -109,11 +104,11 @@ export async function getStandalonePolicies(queryRunner = pool) {
 }
 
 /**
- * Obtiene los contact_products en modo legacy (cuando no hay tablas services/policies).
+ * Lists legacy assignments when the services table does not exist.
  * @param {object} [queryRunner]
  * @returns {Promise<object[]>}
  */
-export async function getLegacyAssignedPolicies(queryRunner = pool) {
+export async function getLegacyAssignedServices(queryRunner = pool) {
   const [rows] = await queryRunner.query(`
     SELECT
       cp.id AS contact_product_id,
@@ -137,13 +132,12 @@ export async function getLegacyAssignedPolicies(queryRunner = pool) {
     JOIN client_contacts cc ON cp.contact_id = cc.id
     JOIN clients c ON cc.client_id = c.id
     WHERE (
-      p.product_type IN ('SERVICE', 'POLICY')
+      p.product_type = 'SERVICE'
       OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-      OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
       OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%servicio%'
-      OR LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.name, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) LIKE '%poliza%'
     )
     AND ${VISIBLE_CONTACT_PRODUCT_CONDITION}
+    AND COALESCE(UPPER(TRIM(p.product_type)), '') <> 'POLICY'
     ORDER BY cp.id DESC
   `);
   return rows;
@@ -152,7 +146,7 @@ export async function getLegacyAssignedPolicies(queryRunner = pool) {
 
 
 /**
- * Actualiza la vigencia y el estado de un contact_product y sus tablas vinculadas (services, policies) de manera transaccional.
+ * Updates contact product dates and status together with its linked service.
  * @param {number|string} id
  * @param {object} input
  * @param {string} [input.start_date]
@@ -205,21 +199,18 @@ export async function updateContactProductDatesTx(id, { start_date, expiration_d
         { ...values, id }
       );
 
-      // 2. services
-      try {
-        await connection.query(
-          `UPDATE services SET ${updates.join(", ")} WHERE contact_product_id = :id`,
-          { ...values, id }
-        );
-      } catch { /* tabla services puede no existir */ }
-
-      // 3. policies
-      try {
-        await connection.query(
-          `UPDATE policies SET ${updates.join(", ")} WHERE contact_product_id = :id`,
-          { ...values, id }
-        );
-      } catch { /* tabla policies puede no existir */ }
+      // License keys belong to contact_products; services has its own folio.
+      const serviceUpdates = updates.filter((update) => !update.startsWith("license_key"));
+      if (serviceUpdates.length > 0) {
+        try {
+          await connection.query(
+            `UPDATE services SET ${serviceUpdates.join(", ")} WHERE contact_product_id = :id`,
+            { ...values, id }
+          );
+        } catch (error) {
+          if (error.code !== "ER_NO_SUCH_TABLE") throw error;
+        }
+      }
     }
 
     await connection.commit();

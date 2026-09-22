@@ -19,7 +19,7 @@ function getSectionLabel(pathname = "") {
   if (pathname.startsWith("/clientes")) return "CONTACTOS";
   if (pathname.startsWith("/registrar-productos")) return "REGISTRAR PRODUCTOS";
   if (pathname.startsWith("/productos")) return "PRODUCTOS";
-  if (pathname.startsWith("/polizas")) return "COTIZACIONES";
+  if (pathname.startsWith("/polizas") || pathname.startsWith("/cotizaciones/aceptadas")) return "COTIZACIONES";
   if (pathname.startsWith("/ventas")) return "VENTAS";
   if (pathname.startsWith("/cotizaciones/historial")) {
     return "HISTORIAL DE COTIZACIONES";
@@ -257,7 +257,7 @@ export default function Topbar() {
   const paginatedNotifications = notifications.slice((safeNotifPage - 1) * notifPageSize, safeNotifPage * notifPageSize);
 
   return (
-    <div className="sticky top-0 z-50 flex items-center justify-between border-b border-zinc-300/70 bg-white/85 px-8 py-4 shadow-md backdrop-blur-sm transition-all duration-150 dark:border-white/10 dark:bg-dark-800/90 dark:shadow-black/30 motion-reduce:transition-none">
+    <div className="sticky top-0 z-50 flex items-center justify-between border-b border-white/60 dark:border-white/10 bg-white/70 dark:bg-dark-900/60 px-8 py-4 shadow-glass-sm backdrop-blur-xl transition-all duration-150 dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] motion-reduce:transition-none">
       <div className="text-zinc-800 dark:text-zinc-100 tracking-tight flex items-center gap-4">
         <div>
           <div className="font-semibold text-lg">Panel de Control</div>
@@ -309,7 +309,7 @@ export default function Topbar() {
 
             {/* Dropdown Panel */}
             {showNotifications && (
-              <div className="absolute right-0 mt-3 w-80 md:w-96 max-w-[calc(100vw-2rem)] bg-[#ffffff] dark:bg-dark-900 rounded-2xl shadow-2xl dark:shadow-[0_8px_30px_rgba(0,0,0,0.8)] border border-zinc-200 dark:border-dark-700 overflow-hidden z-[100] animate-fade-in-down opacity-100">
+              <div className="glass-panel absolute right-0 mt-3 w-80 md:w-96 max-w-[calc(100vw-2rem)] bg-white/90 dark:bg-dark-900/80 backdrop-blur-2xl rounded-2xl shadow-glass-lg dark:shadow-[0_16px_48px_rgba(0,0,0,0.7)] border border-white/80 dark:border-white/15 dark:border-t-white/30 overflow-hidden z-[100] animate-fade-in-down opacity-100">
                 <div className="px-4 py-3 border-b border-zinc-200 dark:border-dark-700 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-dark-800">
                   <h3 className="font-semibold text-zinc-800 dark:text-zinc-100 truncate">
                     Notificaciones

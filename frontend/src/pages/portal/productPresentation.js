@@ -27,11 +27,6 @@ export const PRODUCT_TYPE_PRESENTATION = {
     badgeClass:
       "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30",
   },
-  POLICY: {
-    label: "Póliza",
-    badgeClass:
-      "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900/30",
-  },
 };
 
 export const PRODUCT_TYPE_FILTER_OPTIONS = Object.entries(

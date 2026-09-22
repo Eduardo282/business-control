@@ -26,8 +26,8 @@ export default function QuotePreviewModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/65 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-3xl bg-white dark:bg-dark-900 shadow-[0_30px_120px_rgba(8,20,45,0.45)] flex flex-col">
-        <div className="px-6 md:px-7 py-4 border-b border-white/20 flex items-center justify-between bg-gradient-to-r from-[#102445] via-[#0F2B5A] to-[#0A1F43] text-white">
+      <div className="w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-3xl bg-[#102445] dark:bg-dark-900 border border-white/15 dark:border-white/10 shadow-[0_30px_120px_rgba(8,20,45,0.45)] flex flex-col">
+        <div className="px-6 md:px-7 py-4 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-[#102445] via-[#0F2B5A] to-[#0A1F43] text-white rounded-t-3xl">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-xl ring-1 ring-white/20">
               <BadgeDollarSign size={24} className="text-white" />
@@ -48,7 +48,7 @@ export default function QuotePreviewModal({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 md:px-7 py-6 bg-gradient-to-b from-zinc-100/70 via-white to-zinc-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900">
+        <div className="flex-1 overflow-y-auto px-6 md:px-7 py-6 bg-gradient-to-b from-zinc-100/70 via-white to-zinc-50 dark:from-dark-900 dark:via-dark-800 dark:to-dark-900 rounded-b-3xl">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2 space-y-6">
               <div className="grid md:grid-cols-2 gap-4">

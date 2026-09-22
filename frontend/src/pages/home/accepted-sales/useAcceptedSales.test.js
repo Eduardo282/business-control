@@ -6,7 +6,7 @@ import {
   getSalesMetrics,
   getSalesFilterOptions,
   isRegisteredPortalSale,
-} from "./usePolicies";
+} from "./useAcceptedSales";
 
 const sales = [
   {

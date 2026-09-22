@@ -5,7 +5,7 @@ export const CATALOG = [
       {
         name: "CONTPAQi Contabilidad (Desktop)",
         description:
-          "El sistema estándar para contadores que integra la gestión de CFDI y generación de pólizas.",
+          "El sistema estándar para contadores que integra la gestión de CFDI y generación de asientos contables.",
       },
       {
         name: "CONTPAQi Contabiliza (Nube)",

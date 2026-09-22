@@ -1,8 +1,8 @@
 import React from "react";
 import { ExternalLink, Trash2 } from "@icons";
-import { formatSaleDateTime, formatSaleMoney, getSaleProductsSummary } from "./usePolicies";
+import { formatSaleDateTime, formatSaleMoney, getSaleProductsSummary } from "./useAcceptedSales";
 
-export function createPoliciesColumns({ openSaleSummary, handleDeleteSale }) {
+export function createAcceptedSalesColumns({ openSaleSummary, handleDeleteSale }) {
   return [
     {
       id: "sale",

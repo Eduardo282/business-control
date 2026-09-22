@@ -29,7 +29,7 @@ export default function QuoteClientPanel({
   return (
     <div className="lg:col-span-1 space-y-6">
       {!fixedClientId && (
-        <Card className="border-2 border-zinc-200 dark:border-dark-700 shadow-sm !overflow-visible z-30">
+        <Card className="!overflow-visible z-30">
           <div className="flex justify-between items-center gap-2">
             <div className="flex justify-center items-center">
               <div className="p-2 rounded-lg text-black dark:text-zinc-100">
@@ -54,7 +54,7 @@ export default function QuoteClientPanel({
             <div
               className={`w-full relative rounded-xl border ${
                 selectedClient ? " " : (
-                  "bg-white border-zinc-200 hover:border-[#2277B4] dark:bg-dark-900 dark:border-dark-700 dark:hover:border-blue-500"
+                  "bg-white/70 border-white/80 hover:border-[#2277B4] dark:bg-dark-900/70 dark:border-white/15 dark:hover:border-blue-500 backdrop-blur-md shadow-glass-sm"
                 )
               }`}
             >
@@ -104,7 +104,7 @@ export default function QuoteClientPanel({
                   <button
                     type="button"
                     onClick={() => setShowContactModal(true)}
-                    className="w-full p-3 rounded-xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 hover:border-[#2277B4] dark:hover:border-blue-500 text-sm outline-none transition-all flex items-center justify-between gap-2"
+                    className="w-full p-3 rounded-xl bg-white/70 dark:bg-dark-900/70 border border-white/80 dark:border-white/15 hover:border-[#2277B4] dark:hover:border-blue-500 text-sm outline-none transition-all flex items-center justify-between gap-2 backdrop-blur-md shadow-glass-sm"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <UserCircle
@@ -140,7 +140,7 @@ export default function QuoteClientPanel({
       )}
 
       {fixedClientId && selectedClient && (
-        <Card className="border-2 border-zinc-200 dark:border-dark-700 shadow-sm !overflow-visible z-30">
+        <Card className="!overflow-visible z-30">
           <div className="flex justify-between items-center gap-2">
             <div className="flex justify-center items-center">
               <div className="p-2 rounded-lg text-black dark:text-zinc-100">
@@ -181,7 +181,7 @@ export default function QuoteClientPanel({
               <button
                 type="button"
                 onClick={() => setShowContactModal(true)}
-                className="w-full p-3 rounded-xl bg-white dark:bg-dark-900 border border-light-border dark:border-dark-700 hover:border-[#2277B4] dark:hover:border-blue-500 text-sm outline-none transition-all flex items-center justify-between gap-2"
+                className="w-full p-3 rounded-xl bg-white/70 dark:bg-dark-900/70 border border-white/80 dark:border-white/15 hover:border-[#2277B4] dark:hover:border-blue-500 text-sm outline-none transition-all flex items-center justify-between gap-2 backdrop-blur-md shadow-glass-sm"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <UserCircle

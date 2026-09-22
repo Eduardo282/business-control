@@ -40,10 +40,10 @@ export default function QuoteItemsTable({
             onClick={closeTableFilterPicker}
           >
             <div
-              className="bg-white dark:bg-dark-900 rounded-2xl border border-zinc-200 dark:border-dark-700 shadow-2xl w-full max-w-md overflow-hidden"
+              className="bg-[#1a2b4c] dark:bg-blue-950 rounded-2xl border border-white/15 dark:border-white/10 shadow-2xl dark:shadow-black/60 w-full max-w-md overflow-hidden"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="px-5 py-4 border-b border-zinc-100 dark:border-white/10 bg-[#1a2b4c] flex items-center justify-between">
+              <div className="px-5 py-4 border-b border-white/10 dark:border-white/10 bg-[#1a2b4c] dark:bg-blue-950 flex items-center justify-between rounded-t-2xl">
                 <div>
                   <h3 className="text-white font-semibold text-base uppercase">
                     Filtrar por{" "}
@@ -61,7 +61,7 @@ export default function QuoteItemsTable({
                 </button>
               </div>
 
-              <div className="p-4 space-y-3 bg-white dark:bg-dark-900">
+              <div className="p-4 space-y-3 bg-white dark:bg-dark-900 rounded-b-2xl">
                 <div className="flex items-center gap-2 bg-zinc-50 dark:bg-dark-800 border border-zinc-200 dark:border-dark-700 rounded-lg px-3 py-2 focus-within:border-[#2277B4] dark:focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-[#2277B4]/20 dark:focus-within:ring-blue-500/20">
                   <Search
                     size={15}
@@ -120,11 +120,11 @@ export default function QuoteItemsTable({
         )}
 
       <div
-        className={`glass-panel overflow-hidden rounded-xl border border-light-border dark:border-white/10 ${!selectedClient || items.length === 0 ? "opacity-40 pointer-events-none select-none grayscale relative" : "transition-all duration-150"}`}
+        className={`glass-panel glass-mirror overflow-hidden rounded-2xl border border-white/80 dark:border-white/15 bg-white/35 dark:bg-dark-900/60 backdrop-blur-xl shadow-glass-sm dark:shadow-glass-mirror ${!selectedClient || items.length === 0 ? "opacity-40 pointer-events-none select-none grayscale relative" : "transition-all duration-150"}`}
       >
         {(!selectedClient || items.length === 0) && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-zinc-50/50 dark:bg-zinc-900/50 backdrop-blur-sm-[2px]">
-            <div className="p-3 bg-white dark:bg-zinc-800 rounded-full shadow-lg mb-3">
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/40 dark:bg-dark-900/50 backdrop-blur-sm">
+            <div className="p-3 bg-white/80 dark:bg-dark-800 rounded-full shadow-glass-sm mb-3">
               <BadgeDollarSign size={32} className="text-zinc-400" />
             </div>
             <p className="text-zinc-600 dark:text-zinc-200 font-semibold max-w-sm text-center px-4">
@@ -135,7 +135,7 @@ export default function QuoteItemsTable({
         )}
 
         {items.length > 0 && (
-          <div className="flex items-center justify-between gap-2 px-4 pt-3 pb-1 flex-wrap">
+          <div className="flex items-center justify-between gap-2 px-5 py-3.5 border-b border-white/60 dark:border-white/10 bg-white/30 dark:bg-dark-900/30 backdrop-blur-md flex-wrap">
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() =>
@@ -145,10 +145,10 @@ export default function QuoteItemsTable({
                     return next;
                   })
                 }
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold border transition-colors whitespace-nowrap ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-semibold border transition-all backdrop-blur-md shadow-glass-sm whitespace-nowrap ${
                   showTableFilters || activeTableFilterCount > 0 ?
                     "bg-[#2277B4] text-white border-[#2277B4] dark:bg-blue-600 dark:border-blue-500"
-                  : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100 dark:bg-dark-900 dark:text-zinc-300 dark:border-dark-700 dark:hover:bg-dark-800"
+                  : "bg-white/70 text-zinc-700 border-white/80 hover:bg-white/95 dark:bg-dark-900/60 dark:text-zinc-300 dark:border-white/15 dark:hover:bg-dark-800"
                 }`}
               >
                 <SlidersHorizontal size={12} /> Filtros
@@ -168,18 +168,18 @@ export default function QuoteItemsTable({
                   return (
                     <div
                       key={button.id}
-                      className={`inline-flex items-center rounded-md border text-[11px] transition-colors whitespace-nowrap ${
+                      className={`inline-flex items-center rounded-xl border text-[11px] transition-colors backdrop-blur-md shadow-glass-sm whitespace-nowrap ${
                         selectedValue
-                          ? "border-[#2277B4] bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-200 dark:border-blue-500 shadow-sm"
-                          : "rounded-md bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100 dark:bg-dark-900 dark:text-zinc-300 dark:border-dark-700 dark:hover:bg-dark-800"
+                          ? "border-[#2277B4] bg-white/90 dark:bg-dark-900 text-zinc-800 dark:text-zinc-200 dark:border-blue-500"
+                          : "bg-white/70 text-zinc-700 border-white/80 hover:bg-white/95 dark:bg-dark-900/60 dark:text-zinc-300 dark:border-white/15 dark:hover:bg-dark-800"
                       }`}
                     >
                       <button
                         type="button"
                         onClick={() => openTableFilterPicker(button.id)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-md transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 hover:bg-zinc-50 dark:hover:bg-white/5 rounded-l-xl transition-colors"
                       >
-                        <span className={`uppercase font-bold tracking-wide ${selectedValue ? "text-[#2277B4] dark:text-blue-400" : ""}`}>
+                        <span className={`uppercase font-bold tracking-wide ${selectedValue ? "text-[#2277B4] dark:text-blue-400 font-bold" : ""}`}>
                           {button.label}
                         </span>
                         {selectedValue && (
@@ -205,14 +205,14 @@ export default function QuoteItemsTable({
               {showTableFilters && activeTableFilterCount > 0 && (
                 <button
                   onClick={clearTableFilters}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 border border-red-100 dark:border-red-500/30 transition-colors"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 border border-red-200/60 dark:border-red-500/30 transition-colors shadow-glass-sm"
                 >
                   <X size={12} /> Limpiar
                 </button>
               )}
             </div>
 
-            <span className="text-xs text-light-text-secondary dark:text-zinc-400">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
               Pág. {itemsTable.getState().pagination.pageIndex + 1} de{" "}
               {Math.max(1, itemsTable.getPageCount())}
             </span>
@@ -221,7 +221,7 @@ export default function QuoteItemsTable({
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-light-bg/50 dark:bg-dark-800 uppercase text-xs font-bold text-[#2277B4] dark:text-blue-400 tracking-wider">
+            <thead className="bg-white/40 dark:bg-dark-900/40 backdrop-blur-md border-b border-white/60 dark:border-white/10 uppercase text-xs font-bold text-[#2277B4] dark:text-blue-300 tracking-wider">
               {itemsTable.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
@@ -238,7 +238,7 @@ export default function QuoteItemsTable({
                         : ""
                       } ${
                         header.column.getCanSort() ?
-                          "cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors"
+                          "cursor-pointer hover:bg-white/40 dark:hover:bg-white/5 transition-colors"
                         : ""
                       }`}
                     >
@@ -259,12 +259,12 @@ export default function QuoteItemsTable({
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-light-border dark:divide-dark-700">
+            <tbody className="divide-y divide-white/50 dark:divide-white/5">
               {itemsTable.getRowModel().rows.length > 0 ?
                 itemsTable.getRowModel().rows.map((row) => (
                   <tr
                     key={row.id}
-                    className="hover:bg-light-bg/50 dark:hover:bg-white/5 transition-colors group animate-fade-in"
+                    className="hover:bg-white/50 dark:hover:bg-white/[0.04] transition-colors group animate-fade-in"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td

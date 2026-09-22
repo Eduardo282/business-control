@@ -68,7 +68,6 @@ describe("ProductSelectorModal", () => {
 
   it.each([
     ["SERVICE", "Nuevo servicio"],
-    ["POLICY", "Nueva póliza"],
     ["PRODUCT", "Nuevo producto"],
   ])("uses the right creation label for %s", (type, label) => {
     renderModal({ type, products: [] });

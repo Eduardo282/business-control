@@ -18,7 +18,7 @@ function renderModal(overrides = {}) {
     setNewCategoryName: vi.fn(),
     handleAddCategory: vi.fn(),
     availableCategories: ["Contabilidad", "Servicios"],
-    normalizeServicePolicyCategory: normalize,
+    normalizeServiceCategory: normalize,
     selectedCategory: "Servicios",
     applyCategorySelection: vi.fn(),
     categoryPage: 1,

@@ -9,31 +9,12 @@ export function getDaysRemaining(expirationDate) {
   return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
 }
 
-export function getProductType(service) {
-  const raw = String(service?.product?.product_type || "").trim().toUpperCase();
-  if (raw === "POLICY" || raw === "SERVICE") return raw;
-
-  const source = `${service?.product?.name || ""} ${service?.product?.category || ""}`
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
-  if (source.includes("poliza")) return "POLICY";
-  return "SERVICE";
-}
-
-export function TypeBadge({ service }) {
-  const isPolicy = getProductType(service) === "POLICY";
-
+export function TypeBadge() {
   return (
     <span
-      className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide border ${
-        isPolicy ?
-          "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/15 dark:text-violet-300 dark:border-violet-500/30"
-        : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30"
-      }`}
+      className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wide border bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30"
     >
-      {isPolicy ? "Póliza" : "Servicio"}
+      Servicio
     </span>
   );
 }
@@ -267,7 +248,7 @@ export function ServiceReel({ service, spinCount, index, isDeleting, onDelete, o
                   <div className="space-y-2 mt-auto">
                     <div className="flex items-center gap-2 mb-2">
                       <StatusBadge status={item.status} daysRemaining={daysRemaining} />
-                      <TypeBadge service={item} />
+                      <TypeBadge />
                     </div>
 
                     {item.license_key && (

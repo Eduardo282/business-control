@@ -37,7 +37,7 @@ export function QuoteHistoryToolbar({
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="Buscar por cliente, contacto…"
-            className="w-full sm:w-80 pl-4 pr-11 py-3 bg-white dark:bg-dark-900 border border-zinc-300 dark:border-dark-700 rounded-xl text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-500/30 focus:border-[#2277B4] dark:focus:border-blue-500 transition-all shadow-sm"
+            className="w-full sm:w-80 pl-4 pr-11 py-2.5 bg-white/70 dark:bg-dark-900/70 border border-white/80 dark:border-white/15 rounded-xl text-sm text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/25 dark:focus:ring-blue-500/30 focus:border-blue-500 transition-all backdrop-blur-md shadow-glass-sm"
           />
           {query && (
             <button
@@ -54,7 +54,7 @@ export function QuoteHistoryToolbar({
         <button
           type="button"
           onClick={onExportPdf}
-          className="inline-flex items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold bg-white dark:bg-dark-900 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors whitespace-nowrap shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold bg-white/70 dark:bg-dark-900/60 text-red-600 dark:text-red-400 border border-red-200/80 dark:border-red-500/30 hover:bg-white/95 dark:hover:bg-red-500/10 transition-all whitespace-nowrap backdrop-blur-md shadow-glass-sm"
           title="Exportar a PDF"
         >
           <FileText size={16} /> Exportar PDF
@@ -62,7 +62,7 @@ export function QuoteHistoryToolbar({
         <button
           type="button"
           onClick={onExportExcel}
-          className="inline-flex items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold bg-white dark:bg-dark-900 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors whitespace-nowrap shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold bg-white/70 dark:bg-dark-900/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-500/30 hover:bg-white/95 dark:hover:bg-emerald-500/10 transition-all whitespace-nowrap backdrop-blur-md shadow-glass-sm"
           title="Exportar a Excel"
         >
           <FileSpreadsheet size={16} /> Exportar Excel
@@ -71,10 +71,10 @@ export function QuoteHistoryToolbar({
         <button
           type="button"
           onClick={onToggleFilters}
-          className={`inline-flex items-center gap-1.5 px-3 py-3 rounded-xl text-sm font-semibold border transition-colors whitespace-nowrap ${
+          className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold border transition-all backdrop-blur-md shadow-glass-sm whitespace-nowrap ${
             showFilters || activeFilterCount > 0 ?
               "bg-[#2277B4] text-white border-[#2277B4] dark:bg-blue-600 dark:border-blue-500"
-            : "bg-white dark:bg-dark-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-dark-700 hover:bg-zinc-100 dark:hover:bg-dark-800"
+            : "bg-white/70 dark:bg-dark-900/60 text-zinc-700 dark:text-zinc-300 border-white/80 dark:border-white/15 hover:bg-white/90 dark:hover:bg-dark-800"
           }`}
         >
           <SlidersHorizontal size={14} /> Filtros

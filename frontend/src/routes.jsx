@@ -38,7 +38,7 @@ const RegistrarProducts = lazy(() => import("./pages/home/RegistrarProducts"));
 const CreateQuote = lazy(() => import("./pages/home/CreateQuote"));
 const QuoteDetail = lazy(() => import("./pages/home/QuoteDetail"));
 const QuoteHistory = lazy(() => import("./pages/home/QuoteHistory"));
-const Policies = lazy(() => import("./pages/home/Policies"));
+const AcceptedSales = lazy(() => import("./pages/home/AcceptedSales"));
 const Sales = lazy(() => import("./pages/home/Sales"));
 const SaleDetail = lazy(() => import("./pages/home/SaleDetail"));
 const AgentSupport = lazy(() => import("./pages/home/AgentSupport"));
@@ -138,7 +138,8 @@ export default function AppRoutes() {
                       path="/registrar-productos"
                       element={<PageMeta title="Registrar Productos" desc="Registro de nuevos productos y servicios al catálogo."><RegistrarProducts /></PageMeta>}
                     />
-                    <Route path="/polizas" element={<PageMeta title="Cotizaciones" desc="Cotizaciones aceptadas por contactos del portal."><Policies /></PageMeta>} />
+                    <Route path="/polizas" element={<Navigate to="/cotizaciones/aceptadas" replace />} />
+                    <Route path="/cotizaciones/aceptadas" element={<PageMeta title="Cotizaciones" desc="Cotizaciones aceptadas por contactos del portal."><AcceptedSales /></PageMeta>} />
                     <Route path="/ventas" element={<PageMeta title="Ventas" desc="Ventas generadas desde cotizaciones aceptadas."><Sales /></PageMeta>} />
                     <Route path="/ventas/:id" element={<PageMeta title="Detalle de Venta" desc="Documento de venta generado desde cotización aceptada."><SaleDetail /></PageMeta>} />
                     <Route path="/productos/:id" element={<PageMeta title="Detalle de Producto" desc="Información detallada, precios e historial del producto."><ProductDetail /></PageMeta>} /> 

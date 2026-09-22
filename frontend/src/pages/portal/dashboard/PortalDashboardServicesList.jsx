@@ -36,8 +36,7 @@ export function PortalDashboardServicesList({
       <div className="flex flex-col gap-3 mb-6">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
           <h2 className="text-2xl font-semibold text-zinc-800 dark:text-zinc-100 flex items-center gap-2">
-            <Package className="text-black dark:text-zinc-100" size={24} /> Mis Servicios y
-            Polizas
+            <Package className="text-black dark:text-zinc-100" size={24} /> Mis Servicios
           </h2>
 
           <div className="flex flex-wrap items-center gap-2">

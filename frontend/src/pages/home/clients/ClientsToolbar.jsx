@@ -23,15 +23,15 @@ export default function ClientsToolbar({
   showFilters,
 }) {
   return (
-    <div className="px-4 py-3 border-b border-zinc-100 dark:border-dark-700 bg-white dark:bg-dark-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div className="px-5 py-3.5 border-b border-white/60 dark:border-white/10 bg-white/40 dark:bg-dark-900/40 backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-3">
       <div className="flex items-center gap-3">
-        <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">
+        <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
           Total clientes ({clientCount})
         </span>
       </div>
 
       <div className="flex items-center gap-2 flex-wrap justify-end">
-        <div className="flex gap-1 bg-white dark:bg-dark-900 p-1 rounded-lg border border-zinc-200 dark:border-dark-700 focus-within:border-[#2277B4] dark:focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-[#2277B4]/20 dark:focus-within:ring-blue-400/20 transition-colors">
+        <div className="flex gap-1 bg-white/70 dark:bg-dark-900/70 backdrop-blur-md p-1 rounded-xl border border-white/80 dark:border-white/15 focus-within:border-[#2277B4] dark:focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-[#2277B4]/20 transition-all shadow-glass-sm">
           <input
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
@@ -56,7 +56,7 @@ export default function ClientsToolbar({
         <div className="flex items-center gap-2">
           <button
             onClick={onExportPdf}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-red-200 dark:border-red-900/60 bg-white dark:bg-dark-900 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:focus:ring-red-400/40"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-red-200/80 dark:border-red-900/60 bg-white/70 dark:bg-dark-900/60 backdrop-blur-md text-red-700 dark:text-red-400 hover:bg-white/90 dark:hover:bg-red-900/30 transition-all shadow-glass-sm whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:focus:ring-red-400/40"
             title="Exportar a PDF"
           >
             <FileText size={14} /> Exportar a PDF
@@ -64,7 +64,7 @@ export default function ClientsToolbar({
 
           <button
             onClick={onExportExcel}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-dark-900 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:focus:ring-emerald-400/40"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border border-emerald-200/80 dark:border-emerald-900/60 bg-white/70 dark:bg-dark-900/60 backdrop-blur-md text-emerald-700 dark:text-emerald-400 hover:bg-white/90 dark:hover:bg-emerald-900/30 transition-all shadow-glass-sm whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:focus:ring-emerald-400/40"
             title="Exportar a Excel"
           >
             <FileSpreadsheet size={14} /> Exportar a Excel
@@ -73,10 +73,10 @@ export default function ClientsToolbar({
 
         <button
           onClick={onToggleFilters}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold border backdrop-blur-md transition-all shadow-glass-sm ${
             showFilters || activeFilterCount > 0
               ? "bg-[#2277B4] text-white border-[#2277B4] dark:bg-blue-700 dark:text-white dark:border-blue-600"
-              : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50 dark:bg-dark-900 dark:text-zinc-300 dark:border-dark-700 dark:hover:bg-dark-700"
+              : "bg-white/70 text-zinc-700 border-white/80 hover:bg-white/95 dark:bg-dark-900/60 dark:text-zinc-300 dark:border-white/15 dark:hover:bg-dark-800"
           }`}
         >
           <SlidersHorizontal size={15} />
@@ -91,7 +91,7 @@ export default function ClientsToolbar({
         {canManageClients && (
           <button
             onClick={onOpenBulk}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-[#1a2b4c] dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-dark-700 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-400/40"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold text-[#1a2b4c] dark:text-zinc-200 bg-white/60 dark:bg-white/[0.04] border border-white/75 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/10 backdrop-blur-md transition-all shadow-glass-sm focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-400/40"
           >
             <Upload size={15} />
             Cargar clientes

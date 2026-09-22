@@ -41,10 +41,10 @@ const STATUS_STYLES = {
     "text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-500/15",
 };
 
-const POLICIES_COLUMNS = [
+const SERVICES_COLUMNS = [
   {
     accessorKey: "product_name",
-    header: "Póliza o servicio",
+    header: "Servicio",
     cell: ({ getValue }) => (
       <span className="font-medium text-light-text-primary dark:text-zinc-100 hover:text-[#2277B4] dark:hover:text-blue-300">
         {getValue()}
@@ -97,7 +97,7 @@ const POLICIES_COLUMNS = [
   },
 ];
 
-export const ClientPoliciesTab = ({ clientId }) => {
+export const ClientServicesTab = ({ clientId }) => {
   const [services, setServices] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState([]);
@@ -107,9 +107,9 @@ export const ClientPoliciesTab = ({ clientId }) => {
     status: "",
     license_key: "",
   });
-  const [activePolicyFilterPickerField, setActivePolicyFilterPickerField] =
+  const [activeServiceFilterPickerField, setActiveServiceFilterPickerField] =
     useState(null);
-  const [policyFilterPickerSearch, setPolicyFilterPickerSearch] = useState("");
+  const [serviceFilterPickerSearch, setServiceFilterPickerSearch] = useState("");
 
   const loadServices = () => {
     listClientActiveServicesApi(clientId)
@@ -122,7 +122,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
         ),
       )
       .catch((e) => {
-        logger.error("Error loading policies", e);
+        logger.error("Error loading services", e);
       });
   };
 
@@ -134,7 +134,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
 
   const handleDeleteService = async (service) => {
     const confirmed = await notificationService.confirm({
-      title: "¿Eliminar póliza o servicio?",
+      title: "¿Eliminar servicio?",
       text: "Esta acción desasignará el registro del cliente de manera permanente.",
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
@@ -145,7 +145,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
     try {
       setDeletingServiceId(service.id);
       await deleteContactProductApi(service.id);
-      notificationService.success("Eliminado", "La póliza o servicio fue desasignado correctamente.");
+      notificationService.success("Eliminado", "El servicio fue desasignado correctamente.");
       loadServices();
     } catch (e) {
       notificationService.error("Error", e.message || "No se pudo eliminar el registro.");
@@ -159,48 +159,48 @@ export const ClientPoliciesTab = ({ clientId }) => {
   ).length;
   const canClearFilters = activeFilterCount > 0 || globalFilter.trim() !== "";
 
-  const policyFilterFieldLabels = {
+  const serviceFilterFieldLabels = {
     status: "Estado",
     license_key: "Folio",
   };
 
-  const openPolicyFilterPicker = (fieldName) => {
-    setActivePolicyFilterPickerField(fieldName);
-    setPolicyFilterPickerSearch("");
+  const openServiceFilterPicker = (fieldName) => {
+    setActiveServiceFilterPickerField(fieldName);
+    setServiceFilterPickerSearch("");
   };
 
-  const closePolicyFilterPicker = () => {
-    setActivePolicyFilterPickerField(null);
-    setPolicyFilterPickerSearch("");
+  const closeServiceFilterPicker = () => {
+    setActiveServiceFilterPickerField(null);
+    setServiceFilterPickerSearch("");
   };
 
-  const applyPolicyFilterValue = (value) => {
-    if (!activePolicyFilterPickerField) return;
+  const applyServiceFilterValue = (value) => {
+    if (!activeServiceFilterPickerField) return;
 
     setFilters((prev) => ({
       ...prev,
-      [activePolicyFilterPickerField]: value,
+      [activeServiceFilterPickerField]: value,
     }));
-    closePolicyFilterPicker();
+    closeServiceFilterPicker();
   };
 
   useEffect(() => {
     if (!showFilters) {
-      closePolicyFilterPicker();
+      closeServiceFilterPicker();
     }
   }, [showFilters]);
 
-  const policyFilterPickerOptions = useMemo(() => {
-    if (!activePolicyFilterPickerField) return [];
+  const serviceFilterPickerOptions = useMemo(() => {
+    if (!activeServiceFilterPickerField) return [];
 
     const uniqueValues = new Map();
 
     services.forEach((service) => {
       let value = "";
 
-      if (activePolicyFilterPickerField === "license_key") {
+      if (activeServiceFilterPickerField === "license_key") {
         value = service.license_key || "";
-      } else if (activePolicyFilterPickerField === "status") {
+      } else if (activeServiceFilterPickerField === "status") {
         value = STATUS_LABELS[service.status] || service.status || "";
       }
 
@@ -212,16 +212,16 @@ export const ClientPoliciesTab = ({ clientId }) => {
     return Array.from(uniqueValues.values()).sort((a, b) =>
       a.localeCompare(b, "es", { sensitivity: "base" }),
     );
-  }, [services, activePolicyFilterPickerField]);
+  }, [services, activeServiceFilterPickerField]);
 
-  const visiblePolicyFilterPickerOptions = useMemo(() => {
-    const s = normalizeSearchText(policyFilterPickerSearch);
-    if (!s) return policyFilterPickerOptions;
+  const visibleServiceFilterPickerOptions = useMemo(() => {
+    const s = normalizeSearchText(serviceFilterPickerSearch);
+    if (!s) return serviceFilterPickerOptions;
 
-    return policyFilterPickerOptions.filter((value) =>
+    return serviceFilterPickerOptions.filter((value) =>
       normalizeSearchText(value).includes(s),
     );
-  }, [policyFilterPickerSearch, policyFilterPickerOptions]);
+  }, [serviceFilterPickerSearch, serviceFilterPickerOptions]);
 
   const filteredServices = useMemo(() => {
     const s = normalizeSearchText(globalFilter);
@@ -268,11 +268,11 @@ export const ClientPoliciesTab = ({ clientId }) => {
       status: "",
       license_key: "",
     });
-    closePolicyFilterPicker();
+    closeServiceFilterPicker();
   };
 
-  const policyColumns = [
-    ...POLICIES_COLUMNS,
+  const serviceColumns = [
+    ...SERVICES_COLUMNS,
     {
       id: "actions",
       header: "Acciones",
@@ -286,7 +286,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
             onClick={() => handleDeleteService(service)}
             disabled={isDeleting}
             className="inline-flex items-center justify-center size-8 rounded-lg text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-150 hover:scale-90 disabled:opacity-60 disabled:bg-zinc-100 disabled:text-zinc-400 dark:disabled:bg-dark-700 dark:disabled:text-zinc-600 disabled:hover:scale-100 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:focus:ring-red-400/40"
-            title={isDeleting ? "Eliminando…" : "Eliminar póliza o servicio"}>
+            title={isDeleting ? "Eliminando…" : "Eliminar servicio"}>
             <Trash2 size={13} className={isDeleting ? "animate-pulse" : ""} />
           </button>
         );
@@ -296,7 +296,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
 
   const table = useReactTable({
     data: filteredServices,
-    columns: policyColumns,
+    columns: serviceColumns,
     state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -315,7 +315,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
         <h3 className="font-semibold text-light-text-primary dark:text-zinc-100 flex items-center gap-2 flex-1">
-          <FileText size={18} /> Pólizas y Servicios
+          <FileText size={18} /> Servicios
           {totalRows !== services.length && (
             <span className="ml-2 text-xs font-normal text-light-text-secondary dark:text-zinc-400">
               ({totalRows} de {services.length})
@@ -342,7 +342,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
             return (
               <button
                 key={button.id}
-                onClick={() => openPolicyFilterPicker(button.id)}
+                onClick={() => openServiceFilterPicker(button.id)}
                 tabIndex={showFilters ? 0 : -1}
                 className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] border transition-all whitespace-nowrap ${
                   selectedValue ?
@@ -409,46 +409,46 @@ export const ClientPoliciesTab = ({ clientId }) => {
         </div>
       </div>
 
-      {activePolicyFilterPickerField &&
+      {activeServiceFilterPickerField &&
         showFilters &&
         createPortal(
           <div
             className="fixed inset-0 z-[9999] bg-black/45 dark:bg-black/70 flex items-center justify-center p-4"
-            onClick={closePolicyFilterPicker}>
+            onClick={closeServiceFilterPicker}>
             <div
-              className="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl dark:shadow-black/50 w-full max-w-md overflow-hidden border border-transparent dark:border-dark-700"
+              className="bg-[#1a2b4c] dark:bg-blue-950 rounded-2xl shadow-2xl dark:shadow-black/60 w-full max-w-md overflow-hidden border border-white/15 dark:border-white/10"
               onClick={(e) => e.stopPropagation()}>
-              <div className="px-5 py-4 border-b border-zinc-100 dark:border-dark-700 bg-[#1a2b4c] dark:bg-blue-950 flex items-center justify-between">
+              <div className="px-5 py-4 border-b border-white/10 dark:border-white/10 bg-[#1a2b4c] dark:bg-blue-950 flex items-center justify-between rounded-t-2xl">
                 <div>
                   <h3 className="text-white dark:text-white font-semibold text-base uppercase">
                     FILTRAR POR{" "}
-                    {policyFilterFieldLabels[activePolicyFilterPickerField]}
+                    {serviceFilterFieldLabels[activeServiceFilterPickerField]}
                   </h3>
                   <p className="text-[11px] text-zinc-300 dark:text-zinc-300 mt-1">
                     Selecciona o busca un valor para filtrar 
                   </p>
                 </div>
                 <button
-                  onClick={closePolicyFilterPicker}
+                  onClick={closeServiceFilterPicker}
                   className="size-8 rounded-lg text-white dark:text-white hover:bg-white/10 dark:hover:bg-white/10 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-white/40 dark:focus:ring-white/40">
                   <X size={16} />
                 </button>
               </div>
 
-              <div className="p-4 space-y-3">
+              <div className="p-4 space-y-3 bg-white dark:bg-dark-800 rounded-b-2xl">
                 <div className="flex items-center gap-2 bg-zinc-50 dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 rounded-lg px-3 py-2 focus-within:border-[#2277B4] dark:focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-[#2277B4]/20 dark:focus-within:ring-blue-400/20 transition-colors">
                   <Search size={15} className="text-zinc-500 dark:text-zinc-400" />
                   <input
-                    value={policyFilterPickerSearch}
+                    value={serviceFilterPickerSearch}
                     onChange={(e) =>
-                      setPolicyFilterPickerSearch(e.target.value)
+                      setServiceFilterPickerSearch(e.target.value)
                     }
                     placeholder="Buscar valor…"
                     className="w-full bg-transparent dark:bg-transparent text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none"
                   />
-                  {policyFilterPickerSearch && (
+                  {serviceFilterPickerSearch && (
                     <button
-                      onClick={() => setPolicyFilterPickerSearch("")}
+                      onClick={() => setServiceFilterPickerSearch("")}
                       className="p-1 text-zinc-400 hover:text-red-500 transition-colors focus:outline-none"
                       title="Limpiar búsqueda"
                     >
@@ -458,17 +458,17 @@ export const ClientPoliciesTab = ({ clientId }) => {
                 </div>
 
                 <div className="h-72 overflow-y-auto rounded-lg border border-zinc-100 dark:border-dark-700 divide-y divide-zinc-100 dark:divide-dark-700 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
-                  {visiblePolicyFilterPickerOptions.length > 0 ?
-                    visiblePolicyFilterPickerOptions.map((value) => {
+                  {visibleServiceFilterPickerOptions.length > 0 ?
+                    visibleServiceFilterPickerOptions.map((value) => {
                       const isSelected =
                         normalizeSearchText(
-                          filters[activePolicyFilterPickerField],
+                          filters[activeServiceFilterPickerField],
                         ) === normalizeSearchText(value);
 
                       return (
                         <button
-                          key={`${activePolicyFilterPickerField}_${value}`}
-                          onClick={() => applyPolicyFilterValue(value)}
+                          key={`${activeServiceFilterPickerField}_${value}`}
+                          onClick={() => applyServiceFilterValue(value)}
                           className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                             isSelected ?
                               "bg-[#2277B4]/10 text-[#125280] dark:bg-blue-500/10 dark:text-blue-300 font-semibold"
@@ -548,7 +548,7 @@ export const ClientPoliciesTab = ({ clientId }) => {
               ))
             : <tr>
                 <td
-                  colSpan={policyColumns.length}
+                  colSpan={serviceColumns.length}
                   className="text-center py-10 text-light-text-secondary dark:text-zinc-400 text-sm">
                   {services.length === 0 ?
                     "No hay servicios activos."

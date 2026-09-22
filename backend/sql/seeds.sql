@@ -104,10 +104,6 @@ SELECT 'Licencia Anual ERP', 'Licencias', 12000.00, 'Acceso completo al sistema 
 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Licencia Anual ERP');
 
 INSERT INTO products (name, category, current_price, description, users_count, client_id)
-SELECT 'Poliza de Soporte Premium', 'Servicios', 5000.00, 'Soporte 24/7 y tiempo de respuesta menor a 2 horas.', 0, NULL
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Poliza de Soporte Premium');
-
-INSERT INTO products (name, category, current_price, description, users_count, client_id)
 SELECT 'Modulo de Facturacion', 'Add-ons', 3500.00, 'Timbrado ilimitado.', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Modulo de Facturacion');
 
@@ -118,10 +114,6 @@ WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Instalacion en Sitio');
 INSERT INTO products (name, category, current_price, description, users_count, client_id)
 SELECT 'Servicio Personalizado Demo', 'Servicio Personalizado', 1800.00, 'Servicio asignable a contacto para pruebas.', 0, NULL
 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Servicio Personalizado Demo');
-
-INSERT INTO products (name, category, current_price, description, users_count, client_id)
-SELECT 'Poliza Personalizada Demo', 'Poliza Personalizada', 4200.00, 'Poliza asignable a contacto para pruebas.', 0, NULL
-WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Poliza Personalizada Demo');
 
 INSERT INTO products (name, category, current_price, description, users_count, client_id)
 SELECT 'CONTPAQi Contabilidad (Desktop)', 'Contabilidad y Finanzas', 4590.00, 'Licencia oficial CONTPAQi', 1, NULL
@@ -184,14 +176,6 @@ SELECT 'CONTPAQi Respaldos', 'Herramientas de Productividad y Nube', 1290.00, 'L
 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'CONTPAQi Respaldos');
 
 UPDATE products
-SET product_type = 'POLICY'
-WHERE UPPER(COALESCE(product_type, 'PRODUCT')) = 'PRODUCT'
-  AND (
-    UPPER(COALESCE(name, '')) LIKE '%POLIZA%'
-    OR UPPER(COALESCE(category, '')) LIKE '%POLIZA%'
-  );
-
-UPDATE products
 SET product_type = 'SERVICE'
 WHERE UPPER(COALESCE(product_type, 'PRODUCT')) = 'PRODUCT'
   AND (
@@ -209,7 +193,6 @@ SELECT
   category AS name,
   CASE
     WHEN SUM(UPPER(COALESCE(product_type, 'PRODUCT')) = 'SERVICE') > 0 THEN 'SERVICE'
-    WHEN SUM(UPPER(COALESCE(product_type, 'PRODUCT')) = 'POLICY') > 0 THEN 'POLICY'
     WHEN SUM(
       UPPER(COALESCE(product_type, 'PRODUCT')) = 'CONTPAQI'
       OR UPPER(COALESCE(name, '')) LIKE '%CONTPAQI%'
@@ -235,7 +218,6 @@ UPDATE products
 SET folio = CONCAT(
   CASE
     WHEN UPPER(COALESCE(product_type, 'PRODUCT')) = 'SERVICE' THEN 'SRV'
-    WHEN UPPER(COALESCE(product_type, 'PRODUCT')) = 'POLICY' THEN 'POL'
     ELSE 'PRD'
   END,
   '-',
@@ -259,7 +241,6 @@ WHERE NOT EXISTS (
 
 SET @contact_id := (SELECT id FROM client_contacts WHERE email = 'contacto@cliente.com' LIMIT 1);
 SET @service_product_id := (SELECT id FROM products WHERE name = 'Servicio Personalizado Demo' LIMIT 1);
-SET @policy_product_id := (SELECT id FROM products WHERE name = 'Poliza Personalizada Demo' LIMIT 1);
 SET @license_product_id := (SELECT id FROM products WHERE name = 'CONTPAQi Contabilidad (Desktop)' LIMIT 1);
 
 INSERT INTO contact_products (client_id, contact_id, product_id, license_key, start_date, expiration_date, status)
@@ -282,17 +263,6 @@ WHERE @contact_id IS NOT NULL
     WHERE contact_id = @contact_id
       AND product_id = @service_product_id
       AND license_key = 'SRV-DEMO-001'
-  );
-
-INSERT INTO contact_products (client_id, contact_id, product_id, license_key, start_date, expiration_date, status)
-SELECT @client_id, @contact_id, @policy_product_id, 'POL-DEMO-001', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 1 YEAR), 'ACTIVE'
-WHERE @contact_id IS NOT NULL
-  AND @policy_product_id IS NOT NULL
-  AND NOT EXISTS (
-    SELECT 1 FROM contact_products
-    WHERE contact_id = @contact_id
-      AND product_id = @policy_product_id
-      AND license_key = 'POL-DEMO-001'
   );
 
 INSERT INTO services (
@@ -319,31 +289,6 @@ JOIN products p ON p.id = cp.product_id
 LEFT JOIN services s ON s.contact_product_id = cp.id
 WHERE s.id IS NULL
   AND LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) = 'servicio personalizado';
-
-INSERT INTO policies (
-  contact_product_id,
-  client_id,
-  contact_id,
-  product_id,
-  folio,
-  start_date,
-  expiration_date,
-  status
-)
-SELECT
-  cp.id,
-  cp.client_id,
-  cp.contact_id,
-  cp.product_id,
-  cp.license_key,
-  cp.start_date,
-  cp.expiration_date,
-  cp.status
-FROM contact_products cp
-JOIN products p ON p.id = cp.product_id
-LEFT JOIN policies pol ON pol.contact_product_id = cp.id
-WHERE pol.id IS NULL
-  AND LOWER(TRIM(REPLACE(REPLACE(REPLACE(p.category, 'á', 'a'), 'Á', 'a'), 'ó', 'o'))) = 'poliza personalizada';
 
 SET @quote_product_id := (SELECT id FROM products WHERE name = 'Licencia Anual ERP' LIMIT 1);
 SET @quote_demo_folio := 'DEMO001';

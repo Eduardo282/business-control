@@ -9,7 +9,7 @@ import {
   inferProductType,
   isServiceProductMode,
   normalizeCatalogProductType,
-  normalizeServicePolicyCategory,
+  normalizeServiceCategory,
   sanitizeCategoryLabel,
   uniqueByNormalizedValue,
   upsertCatalogItem,
@@ -17,27 +17,27 @@ import {
 
 describe("product category helpers", () => {
   it("sanitizes and normalizes category labels", () => {
-    expect(sanitizeCategoryLabel("  Pólizas   anuales ")).toBe("Pólizas anuales");
-    expect(normalizeServicePolicyCategory("  Pólizas   anuales ")).toBe(
-      "polizas anuales"
+    expect(sanitizeCategoryLabel("  Asesorías   anuales ")).toBe("Asesorías anuales");
+    expect(normalizeServiceCategory("  Asesorías   anuales ")).toBe(
+      "asesorias anuales"
     );
   });
 
   it("keeps the first label when removing normalized duplicates", () => {
     expect(
       uniqueByNormalizedValue([
-        "Pólizas",
-        " polizas ",
+        "Asesorías",
+        " asesorias ",
         "",
         "Servicios",
         "SERVICIOS",
       ])
-    ).toEqual(["Pólizas", "Servicios"]);
+    ).toEqual(["Asesorías", "Servicios"]);
   });
 
   it("matches exact and partially overlapping normalized categories", () => {
     expect(categoryMatches("Servicio", "Servicios empresariales")).toBe(true);
-    expect(categoryMatches("Pólizas", "polizas")).toBe(true);
+    expect(categoryMatches("Asesorías", "asesorias")).toBe(true);
     expect(categoryMatches("Productos", "Servicios")).toBe(false);
     expect(categoryMatches("Productos", "")).toBe(true);
   });
@@ -47,6 +47,7 @@ describe("product type helpers", () => {
   it("normalizes supported API product types", () => {
     expect(normalizeCatalogProductType("contpaqi_product")).toBe("CONTPAQI");
     expect(normalizeCatalogProductType(" service ")).toBe("SERVICE");
+    expect(normalizeCatalogProductType("POLICY")).toBe("");
     expect(normalizeCatalogProductType("unknown")).toBe("");
   });
 
@@ -57,8 +58,8 @@ describe("product type helpers", () => {
         product_type: "PRODUCT",
       })
     ).toBe("PRODUCT");
-    expect(inferProductType({ name: "Póliza de servicio CONTPAQi" })).toBe(
-      "POLICY"
+    expect(inferProductType({ name: "Servicio CONTPAQi" })).toBe(
+      "SERVICE"
     );
     expect(inferProductType({ category: "Servicios" })).toBe("SERVICE");
     expect(inferProductType({ name: "CONTPAQi Nóminas" })).toBe("CONTPAQI");
@@ -67,25 +68,25 @@ describe("product type helpers", () => {
   it("upserts products by normalized name and category", () => {
     const existing = {
       id: "old",
-      name: "Póliza anual",
+      name: "Asesoría anual",
       category: "Servicios",
     };
     const replacement = {
       id: "new",
-      name: "poliza anual",
+      name: "asesoria anual",
       category: " servicios ",
     };
 
     expect(upsertCatalogItem([existing], replacement)).toEqual([replacement]);
   });
 
-  it("preserves success messages and returned folios by product type", () => {
+  it("preserves success messages for the remaining product types", () => {
     expect(
       buildProductSuccessMessage({
         productType: "PRODUCT",
         folio: "PRD-123",
       })
-    ).toBe("Producto registrado correctamente. Folio: PRD-123.");
+    ).toBe("Producto registrado correctamente.");
 
     expect(
       buildProductSuccessMessage({
@@ -93,16 +94,16 @@ describe("product type helpers", () => {
         folio: "SRV-456",
       })
     ).toBe(
-      "Servicio registrado en Productos y en Historial de Servicios y Pólizas. Folio: SRV-456."
+      "Servicio registrado correctamente."
     );
 
     expect(
       buildProductSuccessMessage({
-        productType: "POLICY",
+        productType: "CONTPAQI",
         folio: "",
       })
     ).toBe(
-      "Póliza registrado en Productos y en Historial de Servicios y Pólizas."
+      "Producto CONTPAQi registrado correctamente."
     );
   });
 });
@@ -174,23 +175,23 @@ describe("form mode helpers", () => {
     ).toBe(true);
   });
 
-  it("preserves the current labels for policies and services", () => {
+  it("preserves the current labels for services", () => {
     expect(
       getProductTypeLabel({
-        activeFormMode: "POLICY",
+        activeFormMode: "SERVICE",
         selectedCategoryType: "PRODUCT",
         category: "General",
       })
-    ).toBe("Póliza");
+    ).toBe("Servicio");
     expect(
       getFormLabels({
         selectedCategoryType: "",
         isServiceMode: true,
-        category: "Pólizas anuales",
+        category: "Servicios anuales",
       })
     ).toEqual({
-      nameLabel: "NOMBRE DE LA PÓLIZA",
-      button: "Registrar Póliza",
+      nameLabel: "NOMBRE DEL SERVICIO",
+      button: "Registrar Servicio",
     });
   });
 });

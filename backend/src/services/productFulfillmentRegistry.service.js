@@ -1,4 +1,4 @@
-import { normalizeProductType } from "../utils/policyStatus.js";
+import { normalizeProductType } from "../utils/serviceStatus.js";
 
 const PRODUCT_FULFILLMENT_TARGETS = [
   {
@@ -7,38 +7,13 @@ const PRODUCT_FULFILLMENT_TARGETS = [
     foreignKeyPrefix: "services",
     keywords: ["servicio"],
   },
-  {
-    type: "POLICY",
-    tableName: "policies",
-    foreignKeyPrefix: "policies",
-    keywords: ["poliza"],
-  },
 ];
 
 
-function normalizeText(value = "") {
-  return String(value)
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-}
-
 export function resolveProductFulfillmentTarget(product = {}) {
   const normalizedType = normalizeProductType(product);
-  const typeTarget = PRODUCT_FULFILLMENT_TARGETS.find(
-    (target) => target.type === normalizedType,
-  );
-  if (typeTarget) return typeTarget;
-
-  const searchableText = normalizeText(
-    `${product.name || product.product_name || ""} ${product.category || product.product_category || ""}`,
-  );
-
   return (
-    PRODUCT_FULFILLMENT_TARGETS.find((target) =>
-      target.keywords.some((keyword) => searchableText.includes(keyword)),
-    ) || null
+    PRODUCT_FULFILLMENT_TARGETS.find((target) => target.type === normalizedType) || null
   );
 }
 
@@ -57,6 +32,9 @@ export async function insertProductFulfillmentRecord(
   },
 ) {
   if (!target) return;
+  if (target.type !== "SERVICE" || target.tableName !== "services") {
+    throw new Error("Unsupported product fulfillment target");
+  }
 
   await connection.query(
     `INSERT INTO ${target.tableName} (

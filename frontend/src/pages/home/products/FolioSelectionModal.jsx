@@ -14,10 +14,10 @@ export function FolioSelectionModal({ group, onClose, onSelect }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="folio-selection-title"
-        className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-dark-800 dark:shadow-black/50 border border-transparent dark:border-dark-700"
+        className="w-full max-w-md overflow-hidden rounded-2xl bg-[#1a2b4c] dark:bg-blue-950 shadow-2xl dark:shadow-black/60 border border-white/15 dark:border-white/10"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-zinc-100 bg-[#1a2b4c] px-5 py-4 dark:border-dark-700 dark:bg-blue-950">
+        <div className="flex items-center justify-between border-b border-white/10 bg-[#1a2b4c] px-5 py-4 dark:border-white/10 dark:bg-blue-950 rounded-t-2xl">
           <div className="min-w-0">
             <h3
               id="folio-selection-title"
@@ -39,7 +39,7 @@ export function FolioSelectionModal({ group, onClose, onSelect }) {
           </button>
         </div>
 
-        <div className="max-h-80 divide-y divide-zinc-100 overflow-y-auto p-3 dark:divide-dark-700 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
+        <div className="max-h-80 divide-y divide-zinc-100 overflow-y-auto p-3 bg-white dark:bg-dark-800 rounded-b-2xl dark:divide-dark-700 [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
           {group.items.map((product) => {
             const isSelected = String(product.id) === String(group.selectedId);
 

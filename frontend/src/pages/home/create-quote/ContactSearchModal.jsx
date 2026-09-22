@@ -45,9 +45,9 @@ export default function ContactSearchModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+      <div className="bg-[#1a2b4c] dark:bg-blue-950 border border-white/15 dark:border-white/10 rounded-2xl shadow-2xl dark:shadow-black/60 w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-zinc-100 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c]">
+        <div className="px-6 py-4 border-b border-white/10 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c] dark:bg-blue-950 rounded-t-2xl">
           <div>
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               Seleccionar Contacto
@@ -66,7 +66,7 @@ export default function ContactSearchModal({
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-zinc-100 dark:border-dark-700">
+        <div className="p-4 border-b border-zinc-100 dark:border-dark-700 bg-white dark:bg-dark-900">
           <div className="relative">
             <Search
               className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500"
@@ -74,10 +74,10 @@ export default function ContactSearchModal({
             />
             <input
               type="text"
+              placeholder="Buscar por nombre, puesto, email…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre, email o teléfono…"
-              className="w-full pl-4 pr-10 py-3 rounded-xl border border-zinc-200 dark:border-dark-700 bg-zinc-50 dark:bg-dark-800 text-zinc-700 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-dark-900 focus:border-[#2277B4] dark:focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 dark:focus:ring-blue-500/30 transition-all"
+              className="w-full pl-3 pr-16 py-2 border border-zinc-300 dark:border-dark-700 rounded-xl text-sm bg-white dark:bg-dark-900 text-zinc-800 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#2277B4]/30 focus:border-blue-500 transition-all"
               autoFocus
             />
             {search && (
@@ -94,7 +94,7 @@ export default function ContactSearchModal({
         </div>
 
         {/* List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-white dark:bg-dark-900 rounded-b-2xl">
           {/* Sin asignar option */}
           <div
             onClick={() => handleSelect(null)}

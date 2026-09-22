@@ -100,10 +100,15 @@ export default {
       },
       boxShadow: {
         glass: "0 8px 32px 0 rgba(0, 0, 0, 0.37)",
+        "glass-sm": "0 4px 16px 0 rgba(0, 0, 0, 0.25)",
+        "glass-lg": "0 16px 48px 0 rgba(0, 0, 0, 0.45)",
+        "glass-mirror": "0 8px 32px 0 rgba(0, 0, 0, 0.36), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25), inset 0 -1px 1px 0 rgba(0, 0, 0, 0.2)",
         "neon-blue":
           "0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)",
         "neon-purple":
           "0 0 10px rgba(139, 92, 246, 0.5), 0 0 20px rgba(139, 92, 246, 0.3)",
+        "neon-cyan":
+          "0 0 10px rgba(6, 182, 212, 0.5), 0 0 20px rgba(6, 182, 212, 0.3)",
       },
     },
   },

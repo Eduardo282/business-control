@@ -23,9 +23,3 @@ ALTER TABLE services DROP FOREIGN KEY fk_services_clients;
 ALTER TABLE services MODIFY COLUMN client_id INT NULL;
 ALTER TABLE services ADD CONSTRAINT fk_services_clients
   FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL;
-
--- 5. Change policies FK from CASCADE to SET NULL
-ALTER TABLE policies DROP FOREIGN KEY fk_policies_clients;
-ALTER TABLE policies MODIFY COLUMN client_id INT NULL;
-ALTER TABLE policies ADD CONSTRAINT fk_policies_clients
-  FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL;

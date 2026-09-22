@@ -6,7 +6,7 @@ import { deleteContactAction } from "../../../modules/contacts/contactActions.js
 import { createContactProductAction } from "../../../modules/contacts/contactActions.js";
 import { deleteContactProductAction } from "../../../modules/contacts/contactActions.js";
 import { deletePortalContactProductAction } from "../../../modules/contacts/contactActions.js";
-import { updateContactProductDatesAction } from "../../../modules/policies/policyActions.js";
+import { updateContactProductDatesAction } from "../../../modules/services/serviceActions.js";
 import { unauthenticated, forbidden } from "../../../errors/appErrors.js";
 
 export const createContact = async (_parent, { input }, ctx) => {

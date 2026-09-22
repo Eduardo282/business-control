@@ -24,7 +24,7 @@ export default function ClientsTable({
     >
       <table className="w-full table-fixed">
         <thead
-          className={`bg-zinc-50 dark:bg-dark-900 border-b border-zinc-100 dark:border-dark-700 ${
+          className={`bg-white/50 dark:bg-dark-900/50 backdrop-blur-md border-b border-white/60 dark:border-white/10 ${
             isTableScrollable ? "sticky top-0 z-20" : ""
           }`}
         >
@@ -38,7 +38,7 @@ export default function ClientsTable({
                     header.column.id === "expander" ? "glass-flash " : ""
                   }px-4 py-3 text-left text-xs font-semibold text-[#2277B4] dark:text-blue-300 uppercase tracking-wider transition-colors ${
                     header.column.getCanSort()
-                      ? "cursor-pointer hover:bg-zinc-100 dark:hover:bg-dark-700"
+                      ? "cursor-pointer hover:bg-white/50 dark:hover:bg-dark-700"
                       : "cursor-default"
                   }`}
                   onClick={
@@ -63,7 +63,7 @@ export default function ClientsTable({
           ))}
         </thead>
 
-        <tbody className="divide-y divide-zinc-100 dark:divide-dark-700">
+        <tbody className="divide-y divide-white/50 dark:divide-white/5">
           {table.getRowModel().rows.length > 0 ? (
             table.getRowModel().rows.map((row) => {
               const rowDetailColumns = getRowDetailColumns(row.original);
@@ -75,11 +75,11 @@ export default function ClientsTable({
 
               return (
                 <React.Fragment key={row.id}>
-                  <tr className="hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">
+                  <tr className="hover:bg-white/45 dark:hover:bg-white/5 transition-colors">
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}
-                        className="px-4 py-3 text-sm align-top"
+                        className="px-4 py-3.5 text-sm align-top"
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
@@ -90,7 +90,7 @@ export default function ClientsTable({
                   </tr>
 
                   {isExpanded && rowDetailColumns.length > 0 && (
-                    <tr className="bg-zinc-50/80 dark:bg-dark-800/80">
+                    <tr className="bg-white/30 dark:bg-white/[0.02] backdrop-blur-sm">
                       {row.getVisibleCells().map((cell) => {
                         const alignedDetails =
                           detailColumnsByPrimary[cell.column.id] || [];

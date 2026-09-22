@@ -18,7 +18,7 @@ import {
   inferProductType,
   isServiceProductMode,
   normalizeCatalogProductType,
-  normalizeServicePolicyCategory,
+  normalizeServiceCategory,
   sanitizeCategoryLabel,
 } from "./productHelpers";
 import useProductCatalog from "./useProductCatalog";
@@ -33,7 +33,6 @@ export default function useRegistrarProductsController() {
   const [isContpaqiModalOpen, setIsContpaqiModalOpen] = useState(false);
   const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
-  const [isPoliciesModalOpen, setIsPoliciesModalOpen] = useState(false);
   const [isGeneralProductsModalOpen, setIsGeneralProductsModalOpen] = useState(false);
   const [activeFormMode, setActiveFormMode] = useState(null);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -115,13 +114,6 @@ export default function useRegistrarProductsController() {
       ),
     [catalog.customServices, selectedCategory]
   );
-  const filteredPolicies = useMemo(
-    () =>
-      catalog.customPolicies.filter((policy) =>
-        categoryMatches(policy.category, selectedCategory)
-      ),
-    [catalog.customPolicies, selectedCategory]
-  );
   const filteredGeneralProducts = useMemo(
     () =>
       catalog.customGeneralProducts.filter((product) =>
@@ -198,8 +190,8 @@ export default function useRegistrarProductsController() {
     const nextCategory = sanitizeCategoryLabel(category);
     if (!nextCategory) return;
     const isSameCategory =
-      normalizeServicePolicyCategory(nextCategory) ===
-      normalizeServicePolicyCategory(selectedCategory);
+      normalizeServiceCategory(nextCategory) ===
+      normalizeServiceCategory(selectedCategory);
     if (isSameCategory) return;
 
     const nextCategoryType =
@@ -218,12 +210,12 @@ export default function useRegistrarProductsController() {
     const nextCategory = sanitizeCategoryLabel(newCategoryName);
     if (!nextCategory) return;
     const normalizedNewCategoryName =
-      normalizeServicePolicyCategory(newCategoryName);
+      normalizeServiceCategory(newCategoryName);
     const isDuplicateCategory =
       !!normalizedNewCategoryName &&
       catalog.availableCategories.some(
         (category) =>
-          normalizeServicePolicyCategory(category) === normalizedNewCategoryName
+          normalizeServiceCategory(category) === normalizedNewCategoryName
       );
 
     if (isDuplicateCategory) {
@@ -250,7 +242,6 @@ export default function useRegistrarProductsController() {
 
   const setSelectorOpen = (source, isOpen) => {
     if (source === "CONTPAQI") setIsContpaqiModalOpen(isOpen);
-    if (source === "POLICY") setIsPoliciesModalOpen(isOpen);
     if (source === "PRODUCT") setIsGeneralProductsModalOpen(isOpen);
     if (source === "SERVICE") setIsServicesModalOpen(isOpen);
   };
@@ -279,7 +270,7 @@ export default function useRegistrarProductsController() {
   };
 
   const selectProduct = (item, productType) => {
-    const isService = productType === "SERVICE" || productType === "POLICY";
+    const isService = productType === "SERVICE";
     setNewProduct((prev) => ({
       ...prev,
       name: item.name,
@@ -381,7 +372,7 @@ export default function useRegistrarProductsController() {
         category: safeCategory,
         price: parseFloat(newProduct.price) || 0,
         users_count:
-          productType === "SERVICE" || productType === "POLICY"
+          productType === "SERVICE"
             ? 1
             : parseInt(newProduct.users_count, 10) || 1,
         client_id: fixedClientId || null,
@@ -431,7 +422,7 @@ export default function useRegistrarProductsController() {
       category: selectedCategory,
       product_type: productType,
     });
-    setCurrentMaxUsers(productType === "SERVICE" || productType === "POLICY" ? 1 : 30);
+    setCurrentMaxUsers(productType === "SERVICE" ? 1 : 30);
     setActiveFormMode(productType);
     triggerFormHighlight();
   };
@@ -469,18 +460,16 @@ export default function useRegistrarProductsController() {
       closeSourceModal: () => setIsSourceModalOpen(false),
       filteredContpaqiProducts,
       filteredGeneralProducts,
-      filteredPolicies,
       filteredServices,
       handleAddCategory,
       handleSourceSelection,
       isCategoriesModalOpen,
       isContpaqiModalOpen,
       isGeneralProductsModalOpen,
-      isPoliciesModalOpen,
       isServicesModalOpen,
       isSourceModalOpen,
       newCategoryName,
-      normalizeServicePolicyCategory,
+      normalizeServiceCategory,
       returnToSource,
       selectedCategory,
       selectProduct,

@@ -158,7 +158,7 @@ type Query {
   product(id: ID!): Product
   searchProducts(q: String!, client_id: ID): [Product!]!
 
-  policies: [ContactProduct!]!
+  services: [ContactProduct!]!
 
   quotes(limit: Int, offset: Int): [Quote!]!
   quote(id: ID!): Quote

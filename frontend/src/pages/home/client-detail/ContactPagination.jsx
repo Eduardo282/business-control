@@ -10,7 +10,7 @@ export default function ContactPagination({ table, pageSizes }) {
           onChange={(event) =>
             table.setPageSize(Number(event.target.value))
           }
-          className="px-2 py-1 rounded-lg text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465]/30 dark:focus:ring-blue-400/30 focus:border-[#153465] dark:focus:border-blue-400 bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 dark:[color-scheme:dark] transition-colors"
+          className="px-2.5 py-1 rounded-xl text-sm text-[#1a2b4c] dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-[#153465]/30 dark:focus:ring-blue-400/30 focus:border-[#153465] dark:focus:border-blue-400 bg-white/70 dark:bg-dark-900/70 border border-white/25 dark:border-white/15 backdrop-blur-md shadow-glass-sm dark:[color-scheme:dark] transition-all"
         >
           {pageSizes.map((size) => (
             <option
@@ -27,25 +27,25 @@ export default function ContactPagination({ table, pageSizes }) {
         </span>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         <button
           onClick={() => table.setPageIndex(0)}
           disabled={!table.getCanPreviousPage()}
-          className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:bg-zinc-50 disabled:text-zinc-400 dark:disabled:bg-dark-800 dark:disabled:text-zinc-600 disabled:hover:bg-zinc-50 dark:disabled:hover:bg-dark-800 disabled:cursor-not-allowed transition-colors"
+          className="px-2.5 py-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300 bg-white/60 dark:bg-white/5 border border-white/25 dark:border-white/15 rounded-xl hover:bg-white/95 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-glass-sm"
         >
           ««
         </button>
         <button
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
-          className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:bg-zinc-50 disabled:text-zinc-400 dark:disabled:bg-dark-800 dark:disabled:text-zinc-600 disabled:hover:bg-zinc-50 dark:disabled:hover:bg-dark-800 disabled:cursor-not-allowed transition-colors"
+          className="px-3 py-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300 bg-white/60 dark:bg-white/5 border border-white/25 dark:border-white/15 rounded-xl hover:bg-white/95 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-glass-sm"
         >
           Anterior
         </button>
         <button
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
-          className="px-3 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:bg-zinc-50 disabled:text-zinc-400 dark:disabled:bg-dark-800 dark:disabled:text-zinc-600 disabled:hover:bg-zinc-50 dark:disabled:hover:bg-dark-800 disabled:cursor-not-allowed transition-colors"
+          className="px-3 py-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300 bg-white/60 dark:bg-white/5 border border-white/25 dark:border-white/15 rounded-xl hover:bg-white/95 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-glass-sm"
         >
           Siguiente
         </button>
@@ -54,7 +54,7 @@ export default function ContactPagination({ table, pageSizes }) {
             table.setPageIndex(table.getPageCount() - 1)
           }
           disabled={!table.getCanNextPage()}
-          className="px-2 py-1 text-sm font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-white/5 rounded-lg hover:bg-zinc-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:bg-zinc-50 disabled:text-zinc-400 dark:disabled:bg-dark-800 dark:disabled:text-zinc-600 disabled:hover:bg-zinc-50 dark:disabled:hover:bg-dark-800 disabled:cursor-not-allowed transition-colors"
+          className="px-2.5 py-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300 bg-white/60 dark:bg-white/5 border border-white/25 dark:border-white/15 rounded-xl hover:bg-white/95 dark:hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-glass-sm"
         >
           »»
         </button>

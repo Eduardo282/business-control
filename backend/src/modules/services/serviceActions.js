@@ -1,10 +1,10 @@
 import {
-  getAssignedPolicies,
-  getLegacyAssignedPolicies,
-  getStandalonePolicies,
+  getAssignedServices,
+  getLegacyAssignedServices,
+  getStandaloneServices,
   updateContactProductDatesTx,
-} from "../../repositories/policy.repository.js";
-import { determineStatus } from "../../utils/policyStatus.js";
+} from "../../repositories/service.repository.js";
+import { determineStatus, normalizeProductType } from "../../utils/serviceStatus.js";
 
 const ALLOWED_STATUS = new Set(["ACTIVE", "EXPIRED", "CANCELLED"]);
 
@@ -13,7 +13,7 @@ function normalizeStatus(status) {
   return ALLOWED_STATUS.has(normalized) ? normalized : "ACTIVE";
 }
 
-function mapPolicyRows(rows) {
+function mapServiceRows(rows) {
   return rows.map((row) => ({
     id: row.contact_product_id,
     contact_id: row.contact_id,
@@ -28,7 +28,7 @@ function mapPolicyRows(rows) {
       name: row.product_name,
       category: row.product_category,
       current_price: row.current_price,
-      product_type: row.product_type || null,
+      product_type: normalizeProductType(row),
     },
     contact: row.contact_id ? {
       id: row.contact_id,
@@ -62,7 +62,7 @@ function mapStandaloneProducts(rows) {
       name: row.product_name,
       category: row.product_category,
       current_price: row.current_price,
-      product_type: row.product_type || null,
+      product_type: normalizeProductType(row),
     },
     contact: null,
     client: row.client_id ? {
@@ -73,14 +73,14 @@ function mapStandaloneProducts(rows) {
 }
 
 /**
- * Lists all assigned and standalone policies/services.
+ * Lists all assigned and standalone services.
  */
-export async function listAllPoliciesAction() {
+export async function listAllServicesAction() {
   try {
-    const cpRows = await getAssignedPolicies();
-    const assignedResults = mapPolicyRows(cpRows);
+    const cpRows = await getAssignedServices();
+    const assignedResults = mapServiceRows(cpRows);
 
-    const standaloneRows = await getStandalonePolicies();
+    const standaloneRows = await getStandaloneServices();
     const standaloneResults = mapStandaloneProducts(standaloneRows);
 
     return [...assignedResults, ...standaloneResults];
@@ -89,11 +89,11 @@ export async function listAllPoliciesAction() {
       throw error;
     }
 
-    const legacyRows = await getLegacyAssignedPolicies();
-    const assignedResults = mapPolicyRows(legacyRows);
+    const legacyRows = await getLegacyAssignedServices();
+    const assignedResults = mapServiceRows(legacyRows);
 
     try {
-      const standaloneRows = await getStandalonePolicies();
+      const standaloneRows = await getStandaloneServices();
       const standaloneResults = mapStandaloneProducts(standaloneRows);
       return [...assignedResults, ...standaloneResults];
     } catch {
@@ -103,11 +103,11 @@ export async function listAllPoliciesAction() {
 }
 
 /**
- * Updates expiration dates, status, or license key of a policy/service assignment.
+ * Updates expiration dates, status, or license key of a service assignment.
  */
 export async function updateContactProductDatesAction(id, { start_date, expiration_date, status, license_key }) {
   if (String(id).startsWith("product-")) {
-    throw new Error("Este servicio/póliza aún no tiene asignación. Asígnelo a un contacto primero para editar su vigencia.");
+    throw new Error("Este servicio aún no tiene asignación. Asígnelo a un contacto primero para editar su vigencia.");
   }
 
   const normalizedStatus = status !== undefined && status !== null ? normalizeStatus(status) : undefined;

@@ -43,7 +43,7 @@ import {
   resolveProductFulfillmentTarget,
 } from "../../services/productFulfillmentRegistry.service.js";
 import { logger } from "../../utils/logger.js";
-import { isServiceOrPolicy } from "../../utils/policyStatus.js";
+import { isService } from "../../utils/serviceStatus.js";
 import { resolveQuoteFolio } from "./infrastructure/quoteFolio.js";
 
 const QUOTE_VALIDITY_DAYS = 15;
@@ -73,7 +73,7 @@ async function registerQuoteWithConnection(id, quote, connection) {
 
   if (quote.contact_id) {
     const items = await getQuoteItemsWithProduct(id, connection);
-    const serviceItems = items.filter((item) => isServiceOrPolicy(item));
+    const serviceItems = items.filter((item) => isService(item));
 
     if (serviceItems.length > 0) {
       const startDate = new Date(quote.created_at);

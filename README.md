@@ -345,7 +345,7 @@ La persistencia se organiza alrededor de estos grupos:
 - Productos, categorías, precios e historial de actualizaciones.
 - Cotizaciones, partidas y estados de respuesta.
 - Ventas y partidas de venta.
-- Productos asignados, servicios y pólizas.
+- Productos asignados y servicios.
 - Conversaciones y mensajes de soporte.
 
 Archivos principales:

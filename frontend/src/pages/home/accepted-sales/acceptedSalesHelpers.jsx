@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Package, X } from "@icons";
-import { formatSaleDateTime, formatSaleMoney, getSaleProductsSummary } from "./usePolicies";
+import { formatSaleDateTime, formatSaleMoney, getSaleProductsSummary } from "./useAcceptedSales";
 
 export function StatCard({ icon: Icon, label, value, helper, tone = "blue" }) {
   const tones = {
@@ -11,10 +11,10 @@ export function StatCard({ icon: Icon, label, value, helper, tone = "blue" }) {
   };
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-dark-700 dark:bg-dark-900">
+    <div className="glass-panel glass-mirror rounded-2xl border border-white/80 dark:border-white/15 bg-white/60 dark:bg-dark-900/60 p-5 shadow-glass-sm backdrop-blur-xl">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             {label}
           </p>
           <p className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">
@@ -26,7 +26,7 @@ export function StatCard({ icon: Icon, label, value, helper, tone = "blue" }) {
             </p>
           )}
         </div>
-        <div className={`rounded-xl p-2.5 ${tones[tone] || tones.blue}`}>
+        <div className={`rounded-xl p-2.5 backdrop-blur-md ${tones[tone] || tones.blue}`}>
           <Icon size={18} />
         </div>
       </div>

@@ -15,19 +15,19 @@ export function determineStatus(storedStatus, expirationDate) {
 
 export function normalizeProductType(row = {}) {
   const raw = String(row.product_type || "").trim().toUpperCase();
-  if (raw === "SERVICE" || raw === "POLICY") return raw;
+  if (raw === "POLICY") return null;
+  if (raw === "SERVICE") return raw;
 
   const source = `${row.product_name || row.name || ""} ${row.product_category || row.category || ""}`
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
-  if (source.includes("poliza")) return "POLICY";
   if (source.includes("servicio")) return "SERVICE";
   return "PRODUCT";
 }
 
-export function isServiceOrPolicy(row = {}) {
+export function isService(row = {}) {
   const normalized = normalizeProductType(row);
-  return normalized === "SERVICE" || normalized === "POLICY";
+  return normalized === "SERVICE";
 }

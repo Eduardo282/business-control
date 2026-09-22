@@ -54,16 +54,16 @@
 
 .dark {
   color-scheme: dark;
-  --color-app-background: #0f111a;
-  --color-surface: #1a1d2d;
-  --color-surface-muted: #151725;
-  --color-surface-elevated: #252840;
-  --color-border: #3f4557;
-  --color-control-border: #64748b;
-  --color-control-disabled: #252840;
+  --color-app-background: #060913;
+  --color-surface: rgba(16, 20, 36, 0.75);
+  --color-surface-muted: rgba(12, 16, 30, 0.65);
+  --color-surface-elevated: rgba(24, 30, 54, 0.85);
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-control-border: rgba(255, 255, 255, 0.18);
+  --color-control-disabled: rgba(255, 255, 255, 0.05);
   --color-text-primary: #f1f5f9;
   --color-text-secondary: #cbd5e1;
-  --color-text-muted: #a1a1aa;
+  --color-text-muted: #94a3b8;
   --color-brand: #60a5fa;
   --color-focus: #60a5fa;
   --color-danger: #fca5a5;
@@ -71,7 +71,7 @@
   --color-danger-surface: rgba(239, 68, 68, 0.15);
   --color-success-surface: rgba(34, 197, 94, 0.15);
   --scrollbar-track: transparent;
-  --scrollbar-thumb: rgba(148, 163, 184, 0.4);
+  --scrollbar-thumb: rgba(148, 163, 184, 0.35);
   --scrollbar-thumb-hover: #60a5fa;
   --scrollbar-corner: transparent;
 }
@@ -84,9 +84,25 @@ body {
 }
 
 body {
+  background-color: #f6f8fc;
+  background-image:
+    radial-gradient(at 15% 12%, rgba(219, 234, 254, 0.75) 0px, transparent 50%),
+    radial-gradient(at 88% 18%, rgba(237, 233, 254, 0.65) 0px, transparent 48%),
+    radial-gradient(at 45% 65%, rgba(207, 250, 254, 0.55) 0px, transparent 52%),
+    radial-gradient(at 82% 88%, rgba(224, 231, 255, 0.55) 0px, transparent 50%);
   background-size: cover;
   background-attachment: fixed;
   background-position: center;
+}
+
+.dark body {
+  background-color: #060913;
+  background-image:
+    radial-gradient(at 12% 10%, rgba(37, 99, 235, 0.28) 0px, transparent 55%),
+    radial-gradient(at 88% 16%, rgba(139, 92, 246, 0.24) 0px, transparent 50%),
+    radial-gradient(at 48% 62%, rgba(6, 182, 212, 0.18) 0px, transparent 55%),
+    radial-gradient(at 84% 88%, rgba(99, 102, 241, 0.22) 0px, transparent 52%),
+    radial-gradient(at 16% 92%, rgba(59, 130, 246, 0.18) 0px, transparent 50%);
 }
 
 ::selection {
@@ -136,53 +152,81 @@ body {
 
 @layer components {
   .glass-panel {
-    @apply backdrop-blur-sm transition-colors duration-150 text-light-text-body dark:text-zinc-100;
+    @apply transition-all duration-200 text-light-text-body dark:text-zinc-100;
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
 
-    /* Modo claro: efecto de vidrio intensificado */
+    /* Modo claro: efecto espejo suave y traslúcido */
     background: linear-gradient(
       135deg,
-      rgba(255, 255, 255, 0.5),
-      rgba(255, 255, 255, 0.1)
+      rgba(255, 255, 255, 0.55) 0%,
+      rgba(255, 255, 255, 0.25) 100%
     );
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     box-shadow:
-      0 4px 30px rgba(0, 0, 0, 0.1),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+      0 12px 32px -4px rgba(0, 0, 0, 0.04),
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
   }
 
   .dark .glass-panel {
     background: linear-gradient(
       135deg,
-      rgba(255, 255, 255, 0.1),
-      rgba(255, 255, 255, 0.03)
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.02) 100%
     );
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    border-top: 1px solid rgba(255, 255, 255, 0.25);
-    border-left: 1px solid rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 16px 40px -8px rgba(0, 0, 0, 0.5),
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .glass-mirror {
+    position: relative;
+    backdrop-filter: blur(20px) saturate(190%);
+    -webkit-backdrop-filter: blur(20px) saturate(190%);
+  }
+
+  .glass-mirror::before {
+    display: none;
+  }
+
+  .dark .glass-mirror {
+    background: linear-gradient(
+      140deg,
+      rgba(255, 255, 255, 0.07) 0%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+    box-shadow:
+      0 20px 48px -10px rgba(0, 0, 0, 0.58),
+      inset 0 1px 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .glass-input {
-    @apply text-light-text-body dark:text-zinc-100 placeholder:text-light-text-muted dark:placeholder:text-zinc-500 outline-none transition-colors duration-150;
+    @apply text-light-text-body dark:text-zinc-100 placeholder:text-light-text-muted dark:placeholder:text-zinc-500 outline-none transition-all duration-150;
 
-    /* Entrada de luz */
+    /* Entrada de luz sutil */
     background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 
     &:focus {
-      background: rgba(255, 255, 255, 0.8);
-      border-color: rgba(21, 67, 240, 0.5); /* Brand accent */
-      box-shadow: 0 0 0 2px rgba(21, 67, 240, 0.1);
+      background: rgba(255, 255, 255, 0.85);
+      border-color: rgba(34, 119, 180, 0.4);
+      box-shadow: 0 0 0 3px rgba(34, 119, 180, 0.12);
     }
   }
 
   .dark .glass-input {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 
     &:focus {
-      box-shadow: 0px 0px 20px 0px rgba(59, 130, 246, 0.2);
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(96, 165, 250, 0.4);
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
     }
   }
 
@@ -649,11 +693,23 @@ html.dark .react-datepicker__day-name {
   background-color: rgba(255, 255, 255, 0.03);
 }
 
-:where(.dark) [class~="border-white/60"] {
-  border-color: rgba(255, 255, 255, 0.1);
+/* ── Bordes sutiles y casi imperceptibles ── */
+[class*="border-white/80"],
+[class*="border-white/70"] {
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
-:where(.dark) [class~="border-white/30"] {
+[class*="border-white/60"],
+[class*="border-white/50"] {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+:where(.dark) [class*="border-white/80"],
+:where(.dark) [class*="border-white/70"],
+:where(.dark) [class*="border-white/60"],
+:where(.dark) [class*="border-white/50"],
+:where(.dark) [class*="border-white/30"],
+:where(.dark) [class*="border-white/15"] {
   border-color: rgba(255, 255, 255, 0.08);
 }
 

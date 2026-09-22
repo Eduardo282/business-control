@@ -9,14 +9,6 @@ ALTER TABLE product_categories
   ADD COLUMN product_type VARCHAR(20) NULL AFTER name;
 
 UPDATE products
-SET product_type = 'POLICY'
-WHERE UPPER(COALESCE(product_type, 'PRODUCT')) = 'PRODUCT'
-  AND (
-    UPPER(COALESCE(name, '')) LIKE '%POLIZA%'
-    OR UPPER(COALESCE(category, '')) LIKE '%POLIZA%'
-  );
-
-UPDATE products
 SET product_type = 'SERVICE'
 WHERE UPPER(COALESCE(product_type, 'PRODUCT')) = 'PRODUCT'
   AND (
@@ -34,7 +26,6 @@ SELECT
   category AS name,
   CASE
     WHEN SUM(UPPER(COALESCE(product_type, 'PRODUCT')) = 'SERVICE') > 0 THEN 'SERVICE'
-    WHEN SUM(UPPER(COALESCE(product_type, 'PRODUCT')) = 'POLICY') > 0 THEN 'POLICY'
     WHEN SUM(
       UPPER(COALESCE(product_type, 'PRODUCT')) = 'CONTPAQI'
       OR UPPER(COALESCE(name, '')) LIKE '%CONTPAQI%'

@@ -19,8 +19,8 @@ export default function ProductSearchModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col">
-        <div className="px-6 py-4 border-b border-zinc-100 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c]">
+      <div className="bg-[#1a2b4c] dark:bg-blue-950 border border-white/15 dark:border-white/10 rounded-2xl shadow-2xl dark:shadow-black/60 w-full max-w-4xl h-[85vh] overflow-hidden flex flex-col">
+        <div className="px-6 py-4 border-b border-white/10 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c] dark:bg-blue-950 rounded-t-2xl">
           <div>
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               Buscar Productos
@@ -36,7 +36,7 @@ export default function ProductSearchModal({
           </button>
         </div>
 
-        <div className="p-6 flex-1 flex flex-col overflow-hidden">
+        <div className="p-6 flex-1 flex flex-col overflow-hidden bg-white dark:bg-dark-900 rounded-b-2xl">
           <div className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px] shrink-0">
             <div className="relative">
               <Input
@@ -73,7 +73,6 @@ export default function ProductSearchModal({
               <option value="PRODUCT">Productos normales</option>
               <option value="CONTPAQI">Productos CONTPAQi</option>
               <option value="SERVICE">Servicios</option>
-              <option value="POLICY">Pólizas</option>
             </select>
           </div>
 

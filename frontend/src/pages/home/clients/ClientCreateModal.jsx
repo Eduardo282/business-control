@@ -86,9 +86,9 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess, dynamicC
 
   return createPortal(
     <div className="fixed inset-0 bg-black/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-      <div className="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl dark:shadow-black/50 w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col border border-transparent dark:border-dark-700">
+      <div className="bg-[#1a2b4c] dark:bg-blue-950 rounded-2xl shadow-2xl dark:shadow-black/60 w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col border border-white/15 dark:border-white/10">
         {/* Header del modal */}
-        <div className="px-6 py-4 border-b border-zinc-100 dark:border-dark-700 flex items-center justify-between bg-[#1a2b4c] dark:bg-blue-950">
+        <div className="px-6 py-4 border-b border-white/10 dark:border-white/10 flex items-center justify-between bg-[#1a2b4c] dark:bg-blue-950 rounded-t-2xl">
           <h3 className="text-lg font-semibold text-white dark:text-white">
             Nuevo Cliente
           </h3>
@@ -101,7 +101,7 @@ export default function ClientCreateModal({ isOpen, onClose, onSuccess, dynamicC
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto bg-white dark:bg-dark-800 rounded-b-2xl [scrollbar-width:thin] [scrollbar-color:#d4d4d8_transparent] dark:[scrollbar-color:#52525b_transparent]">
           {error && (
             <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-300 px-4 py-3 rounded-xl text-sm">
               ⚠️ {error}

@@ -8,16 +8,14 @@ export const EMPTY_PRODUCT = {
   product_type: "PRODUCT",
 };
 
-const PRODUCT_TYPE_VALUES = ["PRODUCT", "CONTPAQI", "SERVICE", "POLICY"];
+const PRODUCT_TYPE_VALUES = ["PRODUCT", "CONTPAQI", "SERVICE"];
 const PRODUCT_TYPE_PRIORITY = {
   PRODUCT: 1,
   CONTPAQI: 2,
   SERVICE: 3,
-  POLICY: 3,
 };
 const PRODUCT_TYPE_LABELS = {
   SERVICE: "Servicio",
-  POLICY: "Póliza",
   CONTPAQI: "Producto CONTPAQi",
   PRODUCT: "Producto",
 };
@@ -26,7 +24,7 @@ export function sanitizeCategoryLabel(category = "") {
   return String(category).replace(/\s+/g, " ").trim();
 }
 
-export function normalizeServicePolicyCategory(category = "") {
+export function normalizeServiceCategory(category = "") {
   return sanitizeCategoryLabel(category)
     .toLowerCase()
     .normalize("NFD")
@@ -41,7 +39,7 @@ export function uniqueByNormalizedValue(values = []) {
     const value = String(entry || "").trim();
     if (!value) return;
 
-    const normalized = normalizeServicePolicyCategory(value);
+    const normalized = normalizeServiceCategory(value);
     if (seen.has(normalized)) return;
 
     seen.add(normalized);
@@ -52,8 +50,8 @@ export function uniqueByNormalizedValue(values = []) {
 }
 
 export function categoryMatches(sourceCategory, selectedCategory) {
-  const source = normalizeServicePolicyCategory(sourceCategory);
-  const selected = normalizeServicePolicyCategory(selectedCategory);
+  const source = normalizeServiceCategory(sourceCategory);
+  const selected = normalizeServiceCategory(selectedCategory);
 
   if (!selected) return true;
   if (!source) return false;
@@ -70,12 +68,7 @@ export function normalizeCatalogProductType(value) {
 
 export function buildProductSuccessMessage({ productType}) {
   const typeLabel = PRODUCT_TYPE_LABELS[productType] || "Producto";
-  const appearsInServiceHistory =
-    productType === "SERVICE" || productType === "POLICY";
-
-  return appearsInServiceHistory
-  ? `${typeLabel} registrado correctamente.`
-  : `${typeLabel} registrado correctamente.`;
+  return `${typeLabel} registrado correctamente.`;
 }
 
 export function inferProductType(product = {}) {
@@ -83,16 +76,15 @@ export function inferProductType(product = {}) {
   if (explicitType) return explicitType;
 
   const source = `${product?.name || ""} ${product?.category || ""}`;
-  const normalized = normalizeServicePolicyCategory(source);
+  const normalized = normalizeServiceCategory(source);
 
-  if (normalized.includes("poliza")) return "POLICY";
   if (normalized.includes("servicio")) return "SERVICE";
   if (normalized.includes("contpaqi")) return "CONTPAQI";
   return "PRODUCT";
 }
 
 export function getCategoryTypeKey(category = "") {
-  return normalizeServicePolicyCategory(category);
+  return normalizeServiceCategory(category);
 }
 
 export function shouldReplaceCategoryType(currentType, nextType) {
@@ -115,11 +107,11 @@ export function toCatalogItem(product = {}) {
 }
 
 export function upsertCatalogItem(list, nextItem) {
-  const nextName = normalizeServicePolicyCategory(nextItem.name);
-  const nextCategory = normalizeServicePolicyCategory(nextItem.category);
+  const nextName = normalizeServiceCategory(nextItem.name);
+  const nextCategory = normalizeServiceCategory(nextItem.category);
   const filtered = list.filter((item) => {
-    const itemName = normalizeServicePolicyCategory(item.name);
-    const itemCategory = normalizeServicePolicyCategory(item.category);
+    const itemName = normalizeServiceCategory(item.name);
+    const itemCategory = normalizeServiceCategory(item.category);
     return !(itemName === nextName && itemCategory === nextCategory);
   });
 
@@ -159,16 +151,15 @@ export function isServiceProductMode({
   selectedSourceType,
   category,
 }) {
-  if (activeFormMode === "SERVICE" || activeFormMode === "POLICY") return true;
+  if (activeFormMode === "SERVICE") return true;
   if (activeFormMode === "PRODUCT" || activeFormMode === "CONTPAQI") return false;
-  if (selectedCategoryType === "SERVICE" || selectedCategoryType === "POLICY") return true;
+  if (selectedCategoryType === "SERVICE") return true;
   if (selectedCategoryType === "PRODUCT" || selectedCategoryType === "CONTPAQI") return false;
 
-  const normalizedCategory = normalizeServicePolicyCategory(category);
+  const normalizedCategory = normalizeServiceCategory(category);
   return (
     selectedSourceType === "SERVICE" ||
-    normalizedCategory.includes("servicio") ||
-    normalizedCategory.includes("poliza")
+    normalizedCategory.includes("servicio")
   );
 }
 
@@ -177,17 +168,14 @@ export function getProductTypeLabel({
   selectedCategoryType,
   category,
 }) {
-  if (activeFormMode === "POLICY") return "Póliza";
   if (activeFormMode === "SERVICE") return "Servicio";
   if (activeFormMode === "CONTPAQI") return "Producto CONTPAQi";
   if (activeFormMode === "PRODUCT") return "Producto";
-  if (selectedCategoryType === "POLICY") return "Póliza";
   if (selectedCategoryType === "SERVICE") return "Servicio";
   if (selectedCategoryType === "CONTPAQI") return "Producto CONTPAQi";
   if (selectedCategoryType === "PRODUCT") return "Producto";
 
-  const normalizedCategory = normalizeServicePolicyCategory(category);
-  if (normalizedCategory.includes("poliza")) return "Póliza";
+  const normalizedCategory = normalizeServiceCategory(category);
   if (normalizedCategory.includes("servicio")) return "Servicio";
   if (normalizedCategory.includes("contpaqi")) return "Producto CONTPAQi";
 
@@ -198,25 +186,17 @@ export function getFormLabels({
   activeFormMode,
   selectedCategoryType,
   isServiceMode,
-  category,
 }) {
-  if (activeFormMode === "POLICY")
-    return { nameLabel: "NOMBRE DE LA PÓLIZA", button: "Registrar Póliza" };
   if (activeFormMode === "SERVICE")
     return { nameLabel: "NOMBRE DEL SERVICIO", button: "Registrar Servicio" };
   if (activeFormMode === "CONTPAQI")
     return { nameLabel: "NOMBRE DEL PRODUCTO", button: "Registrar Producto" };
   if (activeFormMode === "PRODUCT")
     return { nameLabel: "NOMBRE DEL PRODUCTO", button: "Registrar Producto" };
-  if (selectedCategoryType === "POLICY")
-    return { nameLabel: "NOMBRE DE LA PÓLIZA", button: "Registrar Póliza" };
   if (selectedCategoryType === "SERVICE")
     return { nameLabel: "NOMBRE DEL SERVICIO", button: "Registrar Servicio" };
 
   if (isServiceMode) {
-    const normalizedCategory = normalizeServicePolicyCategory(category);
-    if (normalizedCategory.includes("poliza"))
-      return { nameLabel: "NOMBRE DE LA PÓLIZA", button: "Registrar Póliza" };
     return { nameLabel: "NOMBRE DEL SERVICIO", button: "Registrar Servicio" };
   }
   return { nameLabel: "NOMBRE DEL PRODUCTO", button: "Registrar Producto" };

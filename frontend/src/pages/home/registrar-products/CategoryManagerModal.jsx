@@ -11,7 +11,7 @@ export default function CategoryManagerModal({
   setNewCategoryName,
   handleAddCategory,
   availableCategories,
-  normalizeServicePolicyCategory,
+  normalizeServiceCategory,
   selectedCategory,
   applyCategorySelection,
   categoryPage,
@@ -22,10 +22,10 @@ export default function CategoryManagerModal({
   if (!isOpen) return null;
 
   const normalizedCategorySearch =
-    normalizeServicePolicyCategory(categorySearch);
+    normalizeServiceCategory(categorySearch);
   const filteredCategories = normalizedCategorySearch
     ? availableCategories.filter((category) =>
-        normalizeServicePolicyCategory(category).includes(
+        normalizeServiceCategory(category).includes(
           normalizedCategorySearch
         )
       )
@@ -44,17 +44,17 @@ export default function CategoryManagerModal({
   );
 
   const isDuplicate =
-    !!normalizeServicePolicyCategory(newCategoryName) &&
+    !!normalizeServiceCategory(newCategoryName) &&
     availableCategories.some(
       (c) =>
-        normalizeServicePolicyCategory(c) ===
-        normalizeServicePolicyCategory(newCategoryName)
+        normalizeServiceCategory(c) ===
+        normalizeServiceCategory(newCategoryName)
     );
 
   return createPortal(
     <div className="fixed inset-0 z-[105] flex items-center justify-center p-4 bg-zinc-500/50 dark:bg-black/70 backdrop-blur-sm">
-      <div className="bg-white dark:bg-dark-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl dark:shadow-black/50 animate-fade-in relative border border-transparent dark:border-dark-700">
-        <div className="p-4 rounded-t-2xl border-b border-[#24395f] dark:border-dark-700 bg-[#1a2b4c] dark:bg-blue-950 flex items-center justify-between">
+      <div className="bg-[#1a2b4c] dark:bg-blue-950 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl dark:shadow-black/60 animate-fade-in relative border border-white/15 dark:border-white/10">
+        <div className="p-4 rounded-t-2xl border-b border-white/10 dark:border-white/10 bg-[#1a2b4c] dark:bg-blue-950 flex items-center justify-between">
           <h2 className="font-semibold text-white dark:text-white text-lg">Categorías</h2>
           <button
             onClick={onClose}
@@ -64,7 +64,7 @@ export default function CategoryManagerModal({
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="p-5 space-y-4 bg-white dark:bg-dark-800 rounded-b-2xl">
           <div className="flex gap-2">
             <input
               value={newCategoryName}
@@ -76,7 +76,7 @@ export default function CategoryManagerModal({
               type="button"
               onClick={handleAddCategory}
               disabled={
-                !normalizeServicePolicyCategory(newCategoryName) || isDuplicate
+                !normalizeServiceCategory(newCategoryName) || isDuplicate
               }
               className="px-4 py-2 rounded-lg bg-[#2277B4] dark:bg-blue-700 text-white dark:text-white text-sm font-semibold hover:bg-[#125280] dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:bg-zinc-300 disabled:text-zinc-500 dark:disabled:bg-dark-700 dark:disabled:text-zinc-500 disabled:cursor-not-allowed disabled:hover:bg-zinc-300 dark:disabled:hover:bg-dark-700"
             >
@@ -138,8 +138,8 @@ export default function CategoryManagerModal({
                 <div className="flex flex-wrap content-start gap-2 h-[138px] overflow-hidden pr-1">
                   {visibleCategories.map((category) => {
                     const isSelected =
-                      normalizeServicePolicyCategory(category) ===
-                      normalizeServicePolicyCategory(selectedCategory);
+                      normalizeServiceCategory(category) ===
+                      normalizeServiceCategory(selectedCategory);
 
                     return (
                       <button

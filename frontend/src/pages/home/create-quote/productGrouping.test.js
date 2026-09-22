@@ -7,7 +7,7 @@ import {
 describe("inferQuoteProductType", () => {
   it("preserves explicit product types and infers normalized catalog text", () => {
     expect(inferQuoteProductType({ product_type: "SERVICE" })).toBe("SERVICE");
-    expect(inferQuoteProductType({ name: "Póliza anual" })).toBe("POLICY");
+    expect(inferQuoteProductType({ name: "Servicio anual" })).toBe("SERVICE");
     expect(inferQuoteProductType({ category: "CONTPAQi Comercial" })).toBe(
       "CONTPAQI",
     );

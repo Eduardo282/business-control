@@ -26,10 +26,10 @@ export default function ContactFilterPicker({
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+        className="bg-[#1a2b4c] dark:bg-blue-950 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-white/15 dark:border-white/10"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-5 py-4 border-b border-zinc-100 dark:border-dark-700 bg-[#1a2b4c] flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-white/10 dark:border-white/10 bg-[#1a2b4c] dark:bg-blue-950 flex items-center justify-between rounded-t-2xl">
           <div>
             <h3 className="text-white font-semibold text-base">
               Filtrar por{" "}
@@ -49,7 +49,7 @@ export default function ContactFilterPicker({
           </button>
         </div>
 
-        <div className="p-4 space-y-3">
+        <div className="p-4 space-y-3 bg-white dark:bg-dark-800 rounded-b-2xl">
           <div className="flex items-center gap-2 bg-zinc-50 dark:bg-dark-900 border border-zinc-200 dark:border-dark-700 rounded-lg px-3 py-2">
             <Search size={15} className="text-zinc-500" />
             <input
